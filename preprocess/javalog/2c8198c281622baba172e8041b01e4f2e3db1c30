@@ -1,9 +1,0 @@
-commit 2c8198c281622baba172e8041b01e4f2e3db1c30
-Merge: 1066b67 4228b7c
-Author:     Sam Harwell <sam@tunnelvisionlabs.com>
-AuthorDate: Wed Feb 22 12:24:12 2012 -0600
-Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
-CommitDate: Wed Feb 22 12:24:12 2012 -0600
-
-Merge remote-tracking branch 'antlr/master' into maven-updates
-

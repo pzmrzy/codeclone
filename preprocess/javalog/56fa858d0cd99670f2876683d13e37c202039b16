@@ -1,9 +1,0 @@
-commit 56fa858d0cd99670f2876683d13e37c202039b16
-Merge: de30e05 45fc004
-Author:     Terence Parr <parrt@antlr.org>
-AuthorDate: Fri Jul 13 17:29:36 2012 -0700
-Commit:     Terence Parr <parrt@antlr.org>
-CommitDate: Fri Jul 13 17:29:36 2012 -0700
-
-Merge branch 'master' of https://github.com/antlr/antlr3
-

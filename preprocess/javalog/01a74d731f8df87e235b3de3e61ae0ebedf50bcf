@@ -1,9 +1,0 @@
-commit 01a74d731f8df87e235b3de3e61ae0ebedf50bcf
-Merge: 54fcf1b fa10653
-Author:     Terence Parr <parrt@antlr.org>
-AuthorDate: Fri Dec 14 10:07:56 2012 -0800
-Commit:     Terence Parr <parrt@antlr.org>
-CommitDate: Fri Dec 14 10:07:56 2012 -0800
-
-Merge branch 'unused-tree-field' of git://github.com/sharwell/antlr3
-

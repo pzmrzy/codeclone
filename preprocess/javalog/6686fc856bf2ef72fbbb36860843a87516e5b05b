@@ -1,9 +1,0 @@
-commit 6686fc856bf2ef72fbbb36860843a87516e5b05b
-Merge: 6809d61 e348617
-Author:     Terence Parr <parrt@antlr.org>
-AuthorDate: Tue Mar 27 14:58:58 2012 -0700
-Commit:     Terence Parr <parrt@antlr.org>
-CommitDate: Tue Mar 27 14:58:58 2012 -0700
-
-Merge branch 'update-version' of git://github.com/sharwell/antlr3
-

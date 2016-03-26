@@ -1,9 +1,0 @@
-commit 831247112b0bdc1c33db49a220f54f42275674a3
-Merge: 0c71ad5 3626f1c
-Author:     Terence Parr <parrt@antlr.org>
-AuthorDate: Fri Apr 27 15:48:44 2012 -0700
-Commit:     Terence Parr <parrt@antlr.org>
-CommitDate: Fri Apr 27 15:48:44 2012 -0700
-
-Merge branch 'dev' of https://github.com/muggins/antlr3
-

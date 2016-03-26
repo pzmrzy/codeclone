@@ -1,9 +1,0 @@
-commit 98adf369019a5ef5abc43101f5a5ef8665ee762b
-Merge: a61d7f3 753ea54
-Author:     Terence Parr <parrt@antlr.org>
-AuthorDate: Sat Sep 15 16:13:17 2012 -0700
-Commit:     Terence Parr <parrt@antlr.org>
-CommitDate: Sat Sep 15 16:13:17 2012 -0700
-
-Merge branch 'la_stream_bug' of git://github.com/martint/antlr3
-

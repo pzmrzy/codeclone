@@ -1,9 +1,0 @@
-commit 7dd51098c6b06c71668a02295c11774075b8c16f
-Merge: 6686fc8 00bf3fc
-Author:     Terence Parr <parrt@antlr.org>
-AuthorDate: Tue Mar 27 15:01:34 2012 -0700
-Commit:     Terence Parr <parrt@antlr.org>
-CommitDate: Tue Mar 27 15:01:34 2012 -0700
-
-Merge branch 'template-tweaks' of git://github.com/sharwell/antlr3
-
