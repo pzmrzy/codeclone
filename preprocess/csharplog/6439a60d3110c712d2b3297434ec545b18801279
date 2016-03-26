@@ -1,0 +1,27 @@
+commit 6439a60d3110c712d2b3297434ec545b18801279
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Apr 11 12:42:38 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Apr 11 12:42:38 2011 -0800
+
+(C# 3) Fix TemplateModelAdaptor exceptions
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8169]
+
+diff --git a/Antlr4.StringTemplate/Misc/TemplateModelAdaptor.cs b/Antlr4.StringTemplate/Misc/TemplateModelAdaptor.cs
+index 2796648..33f75a8 100644
+--- a/Antlr4.StringTemplate/Misc/TemplateModelAdaptor.cs
++++ b/Antlr4.StringTemplate/Misc/TemplateModelAdaptor.cs
+@@ -37,10 +37,7 @@ namespace Antlr4.StringTemplate.Misc
+public virtual object GetProperty(Interpreter interpreter, TemplateFrame frame, object o, object property, string propertyName)
+{
+Template template = (Template)o;
+-            if (frame.Template != template)
+-                frame = new TemplateFrame(template, frame);
+-
+-            return interpreter.GetAttribute(frame, propertyName);
++            return template.GetAttribute(propertyName);
+}
+}
+}
+

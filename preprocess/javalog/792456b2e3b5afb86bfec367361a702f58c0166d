@@ -1,0 +1,25 @@
+commit 792456b2e3b5afb86bfec367361a702f58c0166d
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Thu Dec 13 15:10:19 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Thu Dec 13 18:00:34 2012 -0600
+
+Prevent duplication of first operand of SemanticContext.AND
+
+diff --git a/tool/src/main/java/org/antlr/analysis/SemanticContext.java b/tool/src/main/java/org/antlr/analysis/SemanticContext.java
+index feb3758..e553ff9 100644
+--- a/tool/src/main/java/org/antlr/analysis/SemanticContext.java
++++ b/tool/src/main/java/org/antlr/analysis/SemanticContext.java
+@@ -455,8 +455,10 @@ public abstract class SemanticContext {
+{
+ST result = null;
+for (SemanticContext operand : operands) {
+-				if (result == null)
++				if (result == null) {
+result = operand.genExpr(generator, templates, dfa);
++					continue;
++				}
+
+ST eST;
+if ( templates!=null ) {
+

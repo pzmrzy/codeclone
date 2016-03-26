@@ -1,0 +1,239 @@
+commit f80b757cd1272c979da28fb4652f1a3858128cdf
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Wed Feb 22 09:28:19 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Wed Feb 22 12:25:59 2012 -0600
+
+Remove unused imports
+
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/MismatchedTreeNodeException.java b/runtime/Java/src/main/java/org/antlr/runtime/MismatchedTreeNodeException.java
+index 399eb93..66403d0 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/MismatchedTreeNodeException.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/MismatchedTreeNodeException.java
+@@ -28,7 +28,6 @@
+package org.antlr.runtime;
+
+import org.antlr.runtime.tree.TreeNodeStream;
+-import org.antlr.runtime.tree.Tree;
+
+/**
+*/
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/Parser.java b/runtime/Java/src/main/java/org/antlr/runtime/Parser.java
+index 7e719f6..779828f 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/Parser.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/Parser.java
+@@ -27,8 +27,6 @@
+*/
+package org.antlr.runtime;
+
+-import org.antlr.runtime.debug.DebugTokenStream;
+-
+/** A parser for TokenStreams.  "parser grammars" result in a subclass
+*  of this.
+*/
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/ParserRuleReturnScope.java b/runtime/Java/src/main/java/org/antlr/runtime/ParserRuleReturnScope.java
+index 442fbcf..caf2286 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/ParserRuleReturnScope.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/ParserRuleReturnScope.java
+@@ -27,8 +27,6 @@
+*/
+package org.antlr.runtime;
+
+-import org.antlr.runtime.tree.CommonTree;
+-
+/** Rules that return more than a single value must return an object
+*  containing all the values.  Besides the properties defined in
+*  RuleLabelScope.predefinedRulePropertiesScope there may be user-defined
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/TokenStream.java b/runtime/Java/src/main/java/org/antlr/runtime/TokenStream.java
+index 1b43c14..7d419ae 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/TokenStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/TokenStream.java
+@@ -27,8 +27,6 @@
+*/
+package org.antlr.runtime;
+
+-import java.util.List;
+-
+/** A stream of tokens accessing tokens from a TokenSource */
+public interface TokenStream extends IntStream {
+/** Get Token at current input pointer + i ahead where i=1 is next Token.
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/UnbufferedTokenStream.java b/runtime/Java/src/main/java/org/antlr/runtime/UnbufferedTokenStream.java
+index c0b5330..d9ae3d5 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/UnbufferedTokenStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/UnbufferedTokenStream.java
+@@ -29,9 +29,6 @@ package org.antlr.runtime;
+
+import org.antlr.runtime.misc.LookaheadStream;
+
+-import java.util.List;
+-import java.util.NoSuchElementException;
+-
+/** A token stream that pulls tokens from the code source on-demand and
+*  without tracking a complete buffer of the tokens. This stream buffers
+*  the minimum number of tokens possible.  It's the same as
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugTokenStream.java b/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugTokenStream.java
+index affddc2..8fec032 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugTokenStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugTokenStream.java
+@@ -29,8 +29,6 @@ package org.antlr.runtime.debug;
+
+import org.antlr.runtime.*;
+
+-import java.util.List;
+-
+public class DebugTokenStream implements TokenStream {
+protected DebugEventListener dbg;
+public TokenStream input;
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/misc/LookaheadStream.java b/runtime/Java/src/main/java/org/antlr/runtime/misc/LookaheadStream.java
+index c47e18a..586cef7 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/misc/LookaheadStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/misc/LookaheadStream.java
+@@ -27,8 +27,6 @@
+*/
+package org.antlr.runtime.misc;
+
+-import org.antlr.runtime.Token;
+-
+import java.util.NoSuchElementException;
+
+/** A lookahead queue that knows how to mark/release locations
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonTreeNodeStream.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonTreeNodeStream.java
+index 2d442ab..c55f6b1 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonTreeNodeStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonTreeNodeStream.java
+@@ -32,8 +32,6 @@ import org.antlr.runtime.TokenStream;
+import org.antlr.runtime.misc.LookaheadStream;
+import org.antlr.runtime.misc.IntArray;
+
+-import java.util.*;
+-
+public class CommonTreeNodeStream extends LookaheadStream<Object> implements TreeNodeStream {
+public static final int DEFAULT_INITIAL_BUFFER_SIZE = 100;
+public static final int INITIAL_CALL_STACK_SIZE = 10;
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeIterator.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeIterator.java
+index 4c5d0cc..b1d891e 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeIterator.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeIterator.java
+@@ -28,7 +28,6 @@
+package org.antlr.runtime.tree;
+
+import org.antlr.runtime.Token;
+-import org.antlr.runtime.CommonToken;
+import org.antlr.runtime.misc.FastQueue;
+
+import java.util.Iterator;
+diff --git a/tool/src/main/java/org/antlr/codegen/CPPTarget.java b/tool/src/main/java/org/antlr/codegen/CPPTarget.java
+index 5abc4b4..4ac6454 100644
+--- a/tool/src/main/java/org/antlr/codegen/CPPTarget.java
++++ b/tool/src/main/java/org/antlr/codegen/CPPTarget.java
+@@ -29,7 +29,6 @@ package org.antlr.codegen;
+
+import org.antlr.Tool;
+import org.stringtemplate.v4.ST;
+-import org.stringtemplate.v4.STGroup;
+import org.antlr.tool.Grammar;
+
+import java.io.IOException;
+diff --git a/tool/src/main/java/org/antlr/misc/Utils.java b/tool/src/main/java/org/antlr/misc/Utils.java
+index cfdd019..3207577 100644
+--- a/tool/src/main/java/org/antlr/misc/Utils.java
++++ b/tool/src/main/java/org/antlr/misc/Utils.java
+@@ -27,9 +27,6 @@
+*/
+package org.antlr.misc;
+
+-import java.util.HashMap;
+-import java.util.Map;
+-
+public class Utils {
+public static final int INTEGER_POOL_MAX_VALUE = 1000;
+static Integer[] ints = new Integer[INTEGER_POOL_MAX_VALUE+1];
+diff --git a/tool/src/main/java/org/antlr/tool/AssignTokenTypesBehavior.java b/tool/src/main/java/org/antlr/tool/AssignTokenTypesBehavior.java
+index 02f5311..616b78a 100644
+--- a/tool/src/main/java/org/antlr/tool/AssignTokenTypesBehavior.java
++++ b/tool/src/main/java/org/antlr/tool/AssignTokenTypesBehavior.java
+@@ -30,7 +30,6 @@ package org.antlr.tool;
+import org.antlr.analysis.Label;
+import org.antlr.grammar.v3.AssignTokenTypesWalker;
+import org.antlr.misc.Utils;
+-import org.antlr.runtime.tree.TreeNodeStream;
+
+import java.util.*;
+
+diff --git a/tool/src/main/java/org/antlr/tool/ErrorManager.java b/tool/src/main/java/org/antlr/tool/ErrorManager.java
+index ade4889..e815af3 100644
+--- a/tool/src/main/java/org/antlr/tool/ErrorManager.java
++++ b/tool/src/main/java/org/antlr/tool/ErrorManager.java
+@@ -40,12 +40,7 @@ import org.stringtemplate.v4.STGroup;
+import org.stringtemplate.v4.STGroupFile;
+import org.stringtemplate.v4.misc.STMessage;
+
+-import java.io.BufferedReader;
+-import java.io.IOException;
+-import java.io.InputStream;
+-import java.io.InputStreamReader;
+import java.lang.reflect.Field;
+-import java.lang.reflect.InvocationTargetException;
+import java.util.*;
+
+/** Defines all the errors ANTLR can generator for both the tool and for
+diff --git a/tool/src/main/java/org/antlr/tool/GrammarAST.java b/tool/src/main/java/org/antlr/tool/GrammarAST.java
+index 60547df..99fa11b 100644
+--- a/tool/src/main/java/org/antlr/tool/GrammarAST.java
++++ b/tool/src/main/java/org/antlr/tool/GrammarAST.java
+@@ -31,15 +31,11 @@ import org.antlr.analysis.DFA;
+import org.antlr.analysis.NFAState;
+import org.antlr.grammar.v3.ANTLRParser;
+import org.antlr.misc.IntSet;
+-import org.antlr.misc.Interval;
+import org.antlr.runtime.CommonToken;
+import org.antlr.runtime.Token;
+-import org.antlr.runtime.TokenSource;
+import org.antlr.runtime.tree.CommonTree;
+import org.antlr.runtime.tree.Tree;
+-import org.antlr.runtime.tree.TreeAdaptor;
+import org.stringtemplate.v4.ST;
+-import org.omg.PortableInterceptor.ORBInitInfoPackage.DuplicateName;
+
+import java.util.*;
+
+diff --git a/tool/src/main/java/org/antlr/tool/GrammarNonDeterminismMessage.java b/tool/src/main/java/org/antlr/tool/GrammarNonDeterminismMessage.java
+index d56da8c..f87319f 100644
+--- a/tool/src/main/java/org/antlr/tool/GrammarNonDeterminismMessage.java
++++ b/tool/src/main/java/org/antlr/tool/GrammarNonDeterminismMessage.java
+@@ -31,7 +31,6 @@ import org.antlr.analysis.DFAState;
+import org.antlr.analysis.DecisionProbe;
+import org.antlr.analysis.Label;
+import org.antlr.analysis.NFAState;
+-import org.antlr.misc.Utils;
+import org.stringtemplate.v4.ST;
+
+import java.util.Iterator;
+diff --git a/tool/src/test/java/org/antlr/test/TestIntervalSet.java b/tool/src/test/java/org/antlr/test/TestIntervalSet.java
+index 2a3cd84..ee8a8c0 100644
+--- a/tool/src/test/java/org/antlr/test/TestIntervalSet.java
++++ b/tool/src/test/java/org/antlr/test/TestIntervalSet.java
+@@ -31,10 +31,6 @@ import org.antlr.analysis.Label;
+import org.antlr.misc.IntervalSet;
+import org.junit.Test;
+
+-import java.util.ArrayList;
+-import java.util.List;
+-
+-
+public class TestIntervalSet extends BaseTest {
+
+/** Public default constructor used by TestRig */
+diff --git a/tool/src/test/java/org/antlr/test/TestTreeGrammarRewriteAST.java b/tool/src/test/java/org/antlr/test/TestTreeGrammarRewriteAST.java
+index ef99767..5898a08 100644
+--- a/tool/src/test/java/org/antlr/test/TestTreeGrammarRewriteAST.java
++++ b/tool/src/test/java/org/antlr/test/TestTreeGrammarRewriteAST.java
+@@ -33,7 +33,6 @@ import org.antlr.runtime.RecognitionException;
+import org.antlr.tool.ErrorManager;
+import org.antlr.tool.Grammar;
+import org.antlr.tool.GrammarSyntaxMessage;
+-import org.junit.Ignore;
+import org.junit.Test;
+
+/** Tree rewrites in tree parsers are basically identical to rewrites
+

@@ -1,0 +1,346 @@
+commit 7d7d2b7d41b69d86cd57eae902200bc7254c4806
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Wed Jan 30 13:22:48 2013 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Wed Jan 30 13:24:54 2013 -0600
+
+Updated C# ST4 port to latest reference code
+
+diff --git a/Antlr4.StringTemplate/Compiler/Group.g3 b/Antlr4.StringTemplate/Compiler/Group.g3
+index 93ba535..c663e6d 100644
+--- a/Antlr4.StringTemplate/Compiler/Group.g3
++++ b/Antlr4.StringTemplate/Compiler/Group.g3
+@@ -237,11 +237,23 @@ STRING
+{$text = $text.Replace("\\\"","\"");}
+;
+
++/** Match <<...>> but also allow <<..<x>>> so we can have tag on end.
++ *  Escapes: >\> means >> inside of <<...>>.
++ *  Escapes: \>> means >> inside of <<...>> unless at end like <<...\>>>>.
++ *  In that case, use <%..>>%> instead.
++ */
+BIGSTRING
+-	:	'<<' .* '>>'
+-		// >\> is the escape to avoid end of string
++	:	'<<'
++		(	options {greedy=false;}
++		:	'\\' '>'  // \> escape
++		|	'\\' ~'>' // allow this but don't collapse in action
++		|	~'\\'
++		)*
++		'>>'
+{
+-		Text = Text.Replace(">\\>",">>");
++		string txt = Text;
++		txt = Utility.ReplaceEscapedRightAngle(txt); // replace \> with > unless <\\>
++		Text = txt;
+}
+;
+
+diff --git a/Antlr4.StringTemplate/Compiler/TemplateLexer.cs b/Antlr4.StringTemplate/Compiler/TemplateLexer.cs
+index 56f6a19..e19a4c8 100644
+--- a/Antlr4.StringTemplate/Compiler/TemplateLexer.cs
++++ b/Antlr4.StringTemplate/Compiler/TemplateLexer.cs
+@@ -689,12 +689,24 @@ namespace Antlr4.StringTemplate.Compiler
+
+private void ConsumeLineBreak()
+{
+-            Match('\\'); // only kill 2nd \ as outside() kills first one
++            Match('\\'); // only kill 2nd \ as MatchEscape() kills first one
+Match(delimiterStopChar);
+while (c == ' ' || c == '\t')
+Consume(); // scarf WS after <\\>
++
++            if (c == EOF)
++            {
++                RecognitionException re = new RecognitionException(input);
++                re.Line = input.Line;
++                re.CharPositionInLine = input.CharPositionInLine;
++                errMgr.LexerError(input.SourceName, "Missing newline after newline escape <\\\\>",
++                                  templateToken, re);
++                return;
++            }
++
+if (c == '\r')
+Consume();
++
+Match('\n');
+while (c == ' ' || c == '\t')
+Consume(); // scarf any indent
+diff --git a/Antlr4.StringTemplate/Misc/Utility.cs b/Antlr4.StringTemplate/Misc/Utility.cs
+index cbd333c..ecec040 100644
+--- a/Antlr4.StringTemplate/Misc/Utility.cs
++++ b/Antlr4.StringTemplate/Misc/Utility.cs
+@@ -32,6 +32,8 @@
+
+namespace Antlr4.StringTemplate.Misc
+{
++    using StringBuilder = System.Text.StringBuilder;
++
+public static class Utility
+{
+public static string Strip(string s, int n)
+@@ -95,6 +97,45 @@ namespace Antlr4.StringTemplate.Misc
+return s;
+}
+
++        /** Replace >\> with >> in s. Replace \>> unless prefix of \>>> with >>.
++         *  Do NOT replace if it's <\\>
++         */
++        public static string ReplaceEscapedRightAngle(string s)
++        {
++            StringBuilder buf = new StringBuilder();
++            int i = 0;
++            while (i < s.Length)
++            {
++                char c = s[i];
++                if (c == '<' && s.Substring(i).StartsWith("<\\\\>"))
++                {
++                    buf.Append("<\\\\>");
++                    i += "<\\\\>".Length;
++                    continue;
++                }
++
++                if (c == '>' && s.Substring(i).StartsWith(">\\>"))
++                {
++                    buf.Append(">>");
++                    i += ">\\>".Length;
++                    continue;
++                }
++
++                if (c == '\\' && s.Substring(i).StartsWith("\\>>") &&
++                    !s.Substring(i).StartsWith("\\>>>"))
++                {
++                    buf.Append(">>");
++                    i += "\\>>".Length;
++                    continue;
++                }
++
++                buf.Append(c);
++                i++;
++            }
++
++            return buf.ToString();
++        }
++
+/** Given index into string, compute the line and char position in line */
+public static Coordinate GetLineCharPosition(string s, int index)
+{
+diff --git a/Antlr4.Test.StringTemplate/TestGroups.cs b/Antlr4.Test.StringTemplate/TestGroups.cs
+index 69d6aea..df265f8 100644
+--- a/Antlr4.Test.StringTemplate/TestGroups.cs
++++ b/Antlr4.Test.StringTemplate/TestGroups.cs
+@@ -55,7 +55,78 @@ namespace Antlr4.Test.StringTemplate
+Assert.AreEqual(expected, result);
+}
+
+-        [TestMethod][TestCategory(TestCategories.ST4)]
++        [TestMethod]
++        [TestCategory(TestCategories.ST4)]
++        public void TestEscapeOneRightAngle()
++        {
++            string dir = tmpdir;
++            writeFile(dir, "a.st", "a(x) ::= << > >>");
++            TemplateGroup group = new TemplateGroupDirectory(dir);
++            Template st = group.GetInstanceOf("a");
++            st.Add("x", "parrt");
++            string expected = " > ";
++            string result = st.Render();
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
++        [TestCategory(TestCategories.ST4)]
++        public void TestEscapeJavaRightShift()
++        {
++            string dir = tmpdir;
++            writeFile(dir, "a.st", "a(x) ::= << \\>> >>");
++            TemplateGroup group = new TemplateGroupDirectory(dir);
++            Template st = group.GetInstanceOf("a");
++            st.Add("x", "parrt");
++            string expected = " >> ";
++            string result = st.Render();
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
++        [TestCategory(TestCategories.ST4)]
++        public void TestEscapeJavaRightShift2()
++        {
++            string dir = tmpdir;
++            writeFile(dir, "a.st", "a(x) ::= << >\\> >>");
++            TemplateGroup group = new TemplateGroupDirectory(dir);
++            Template st = group.GetInstanceOf("a");
++            st.Add("x", "parrt");
++            string expected = " >> ";
++            string result = st.Render();
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
++        [TestCategory(TestCategories.ST4)]
++        public void TestEscapeJavaRightShiftAtRightEdge()
++        {
++            string dir = tmpdir;
++            writeFile(dir, "a.st", "a(x) ::= <<\\>>>"); // <<\>>>
++            TemplateGroup group = new TemplateGroupDirectory(dir);
++            Template st = group.GetInstanceOf("a");
++            st.Add("x", "parrt");
++            string expected = "\\>";
++            string result = st.Render();
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
++        [TestCategory(TestCategories.ST4)]
++        public void TestEscapeJavaRightShiftAtRightEdge2()
++        {
++            string dir = tmpdir;
++            writeFile(dir, "a.st", "a(x) ::= <<>\\>>>");
++            TemplateGroup group = new TemplateGroupDirectory(dir);
++            Template st = group.GetInstanceOf("a");
++            st.Add("x", "parrt");
++            string expected = ">>";
++            string result = st.Render();
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
++        [TestCategory(TestCategories.ST4)]
+public void TestSimpleGroupFromString()
+{
+string g =
+@@ -775,5 +846,37 @@ namespace Antlr4.Test.StringTemplate
+string expecting = "Foo bar";     // expect \n in output
+Assert.AreEqual(expecting, st.Render());
+}
++
++        [TestMethod]
++        [TestCategory(TestCategories.ST4)]
++        public void TestLineBreakMissingTrailingNewline()
++        {
++            writeFile(tmpdir, "t.stg", "a(x) ::= <<<\\\\>\r\n>>"); // that is <<<\\>>> not an escaped >>
++            ErrorBuffer errors = new ErrorBuffer();
++            TemplateGroup group = new TemplateGroupFile(tmpdir + "/" + "t.stg");
++            group.Listener = errors;
++            Template st = group.GetInstanceOf("a");
++            Assert.AreEqual("t.stg 1:15: Missing newline after newline escape <\\\\>" + newline, errors.ToString());
++            st.Add("x", "parrt");
++            string expected = "";
++            string result = st.Render();
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
++        [TestCategory(TestCategories.ST4)]
++        public void TestLineBreakWithScarfedTrailingNewline()
++        {
++            writeFile(tmpdir, "t.stg", "a(x) ::= <<<\\\\>\r\n>>"); // \r\n removed as trailing whitespace
++            ErrorBuffer errors = new ErrorBuffer();
++            TemplateGroup group = new TemplateGroupFile(tmpdir + "/" + "t.stg");
++            group.Listener = errors;
++            Template st = group.GetInstanceOf("a");
++            Assert.AreEqual("t.stg 1:15: Missing newline after newline escape <\\\\>" + newline, errors.ToString());
++            st.Add("x", "parrt");
++            string expected = "";
++            string result = st.Render();
++            Assert.AreEqual(expected, result);
++        }
+}
+}
+diff --git a/Antlr4.Test.StringTemplate/TestLineWrap.cs b/Antlr4.Test.StringTemplate/TestLineWrap.cs
+index b458953..176cea0 100644
+--- a/Antlr4.Test.StringTemplate/TestLineWrap.cs
++++ b/Antlr4.Test.StringTemplate/TestLineWrap.cs
+@@ -157,7 +157,7 @@ namespace Antlr4.Test.StringTemplate
+public void TestLineWrapEdgeCase()
+{
+string templates =
+-                    "duh(chars) ::= <<<chars; wrap=\"\\n\">\\>>" + newline;
++                "duh(chars) ::= \"<chars; wrap={<\\n>}>\"" + newline;
+writeFile(tmpdir, "t.stg", templates);
+TemplateGroup group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
+
+@@ -174,7 +174,9 @@ namespace Antlr4.Test.StringTemplate
+public void TestLineWrapLastCharIsNewline()
+{
+string templates =
+-                    "duh(chars) ::= <<<chars; wrap=\"\\n\">\\>>" + newline;
++                "duh(chars) ::= <<" + newline +
++                "<chars; wrap=\"\\n\"\\>" + newline +
++                ">>" + newline;
+writeFile(tmpdir, "t.stg", templates);
+TemplateGroup group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
+
+@@ -191,7 +193,9 @@ namespace Antlr4.Test.StringTemplate
+public void TestLineWrapCharAfterWrapIsNewline()
+{
+string templates =
+-                    "duh(chars) ::= <<<chars; wrap=\"\\n\">\\>>" + newline;
++                "duh(chars) ::= <<" + newline +
++                "<chars; wrap=\"\\n\"\\>" + newline +
++                ">>" + newline;
+writeFile(tmpdir, "t.stg", templates);
+TemplateGroup group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
+
+@@ -284,7 +288,9 @@ namespace Antlr4.Test.StringTemplate
+public void TestIndentBeyondLineWidth()
+{
+string templates =
+-                    "duh(chars) ::= <<    <chars; wrap=\"\\n\">\\>>" + newline;
++                    "duh(chars) ::= <<" + newline +
++                    "    <chars; wrap=\"\\n\">" + newline +
++                    ">>" + newline;
+writeFile(tmpdir, "t.stg", templates);
+TemplateGroup group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
+
+@@ -304,7 +310,9 @@ namespace Antlr4.Test.StringTemplate
+public void TestIndentedExpr()
+{
+string templates =
+-                    "duh(chars) ::= <<    <chars; wrap=\"\\n\">\\>>" + newline;
++                    "duh(chars) ::= <<" + newline +
++                    "    <chars; wrap=\"\\n\">" + newline +
++                    ">>" + newline;
+writeFile(tmpdir, "t.stg", templates);
+TemplateGroup group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
+
+@@ -324,7 +332,9 @@ namespace Antlr4.Test.StringTemplate
+{
+string templates =
+"top(d) ::= <<  <d>!>>" + newline +
+-                    "duh(chars) ::= <<  <chars; wrap=\"\\n\">\\>>" + newline;
++                    "duh(chars) ::= <<" + newline +
++                    "  <chars; wrap=\"\\n\">" + newline +
++                    ">>" + newline;
+writeFile(tmpdir, "t.stg", templates);
+TemplateGroup group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
+
+@@ -345,7 +355,9 @@ namespace Antlr4.Test.StringTemplate
+{
+string templates =
+"top(d) ::= <<  <d>!>>" + newline +
+-                    "duh(chars) ::= <<x: <chars; anchor, wrap=\"\\n\">\\>>" + newline;
++                    "duh(chars) ::= <<" + newline +
++                    "x: <chars; anchor, wrap=\"\\n\">" + newline +
++                    ">>" + newline;
+writeFile(tmpdir, "t.stg", templates);
+TemplateGroup group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
+
+@@ -402,7 +414,7 @@ namespace Antlr4.Test.StringTemplate
+{
+string templates =
+"top(arrays) ::= <<Arrays: <arrays>done>>" + newline +
+-                    "array(values) ::= <<int[] a = { <values; anchor, wrap=\"\\n\", separator=\",\"> };<\\n>\\>>" + newline;
++                    "array(values) ::= <%int[] a = { <values; anchor, wrap=\"\\n\", separator=\",\"> };<\\n>%>" + newline;
+writeFile(tmpdir, "t.stg", templates);
+TemplateGroup group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
+
+diff --git a/Reference/stringtemplate4 b/Reference/stringtemplate4
+index 5c64dc6..21484ed 160000
+--- a/Reference/stringtemplate4
++++ b/Reference/stringtemplate4
+@@ -1 +1 @@
+-Subproject commit 5c64dc6fe7062399fd341bac41bcb8d4b6dbb93b
++Subproject commit 21484ed46f1b20b2cdaec49f9d5a626fb26a493c
+

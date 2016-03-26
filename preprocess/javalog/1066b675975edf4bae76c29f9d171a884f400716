@@ -1,0 +1,54 @@
+commit 1066b675975edf4bae76c29f9d171a884f400716
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Wed Feb 22 12:16:59 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Wed Feb 22 12:16:59 2012 -0600
+
+Work around IntelliJ's inability to handle Maven stupidity
+
+diff --git a/pom.xml b/pom.xml
+index 176d19b..24ca4ff 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -184,9 +184,9 @@
+<target>1.6</target>
+<sourceDirectory>src</sourceDirectory>
+<showWarnings>true</showWarnings>
++                    <compilerArgument>-Xlint:-serial</compilerArgument>
+<compilerArguments>
+<Xlint/>
+-                        <Xlint:-serial/>
+</compilerArguments>
+</configuration>
+</plugin>
+diff --git a/runtime/Java/pom.xml b/runtime/Java/pom.xml
+index 963f5db..0f08c59 100644
+--- a/runtime/Java/pom.xml
++++ b/runtime/Java/pom.xml
+@@ -104,9 +104,9 @@
+<source>1.6</source>
+<target>1.6</target>
+<showWarnings>true</showWarnings>
++                <compilerArgument>-Xlint:-serial</compilerArgument>
+<compilerArguments>
+<Xlint/>
+-                    <Xlint:-serial/>
+</compilerArguments>
+</configuration>
+</plugin>
+diff --git a/tool/pom.xml b/tool/pom.xml
+index 705fd0e..8257447 100644
+--- a/tool/pom.xml
++++ b/tool/pom.xml
+@@ -86,9 +86,9 @@
+<target>1.6</target>
+<sourceDirectory>src</sourceDirectory>
+<showWarnings>true</showWarnings>
++                    <compilerArgument>-Xlint:-serial</compilerArgument>
+<compilerArguments>
+<Xlint/>
+-                        <Xlint:-serial/>
+</compilerArguments>
+</configuration>
+</plugin>
+

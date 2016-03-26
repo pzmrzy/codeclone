@@ -1,0 +1,32 @@
+commit 4a1a5f8e04a8017a4a8b11b4259cbd176800e9a2
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sun Apr 10 18:06:45 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sun Apr 10 18:06:45 2011 -0800
+
+(C# 3) Merge 8146: Set alreadyLoaded flag
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8159]
+
+diff --git a/Antlr4.StringTemplate/TemplateGroupString.cs b/Antlr4.StringTemplate/TemplateGroupString.cs
+index 45bee88..1a51f00 100644
+--- a/Antlr4.StringTemplate/TemplateGroupString.cs
++++ b/Antlr4.StringTemplate/TemplateGroupString.cs
+@@ -74,6 +74,7 @@ namespace Antlr4.StringTemplate
+{
+if (!alreadyLoaded)
+Load();
++
+return base.IsDefined(name);
+}
+
+@@ -81,6 +82,8 @@ namespace Antlr4.StringTemplate
+{
+if (alreadyLoaded)
+return;
++
++            alreadyLoaded = true;
+GroupParser parser = null;
+try
+{
+

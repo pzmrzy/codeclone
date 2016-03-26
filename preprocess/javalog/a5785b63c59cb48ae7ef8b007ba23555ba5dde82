@@ -1,0 +1,34 @@
+commit a5785b63c59cb48ae7ef8b007ba23555ba5dde82
+Author:     parrt <parrt@antlr.org>
+AuthorDate: Mon Jun 20 10:18:11 2011 -0800
+Commit:     parrt <parrt@antlr.org>
+CommitDate: Mon Jun 20 10:18:11 2011 -0800
+
+manually set version
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8680]
+
+diff --git a/tool/src/main/java/org/antlr/Tool.java b/tool/src/main/java/org/antlr/Tool.java
+index 8e791e2..40fd909 100644
+--- a/tool/src/main/java/org/antlr/Tool.java
++++ b/tool/src/main/java/org/antlr/Tool.java
+@@ -41,7 +41,7 @@ import java.util.*;
+public class Tool {
+
+public final Properties antlrSettings = new Properties();
+-    public String VERSION = "!Unknown version!";
++    public String VERSION = "3.4";
+//public static final String VERSION = "${project.version}";
+public static final String UNINITIALIZED_DIR = "<unset-dir>";
+private List<String> grammarFileNames = new ArrayList<String>();
+@@ -118,8 +118,7 @@ public class Tool {
+
+// Set any variables that we need to populate from the resources
+//
+-                VERSION = antlrSettings.getProperty("antlr.version");
+-
++//                VERSION = antlrSettings.getProperty("antlr.version");
+} catch (Exception e) {
+// Do nothing, just leave the defaults in place
+}
+

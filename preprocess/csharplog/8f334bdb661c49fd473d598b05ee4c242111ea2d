@@ -1,0 +1,509 @@
+commit 8f334bdb661c49fd473d598b05ee4c242111ea2d
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sat Jul 30 11:53:23 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sat Jul 30 11:53:23 2011 -0800
+
+(C# 3) Updated bootstrap binaries for build 8959
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8962]
+
+diff --git a/bin/Bootstrap/Antlr3.Runtime.Debug.dll b/bin/Bootstrap/Antlr3.Runtime.Debug.dll
+index 97f1fa4..b10315d 100644
+Binary files a/bin/Bootstrap/Antlr3.Runtime.Debug.dll and b/bin/Bootstrap/Antlr3.Runtime.Debug.dll differ
+diff --git a/bin/Bootstrap/Antlr3.Runtime.JavaExtensions.dll b/bin/Bootstrap/Antlr3.Runtime.JavaExtensions.dll
+index 8847a6c..5f287d3 100644
+Binary files a/bin/Bootstrap/Antlr3.Runtime.JavaExtensions.dll and b/bin/Bootstrap/Antlr3.Runtime.JavaExtensions.dll differ
+diff --git a/bin/Bootstrap/Antlr3.Runtime.dll b/bin/Bootstrap/Antlr3.Runtime.dll
+index abad749..c18161d 100644
+Binary files a/bin/Bootstrap/Antlr3.Runtime.dll and b/bin/Bootstrap/Antlr3.Runtime.dll differ
+diff --git a/bin/Bootstrap/Antlr3.exe b/bin/Bootstrap/Antlr3.exe
+index cfc3653..c2effc3 100755
+Binary files a/bin/Bootstrap/Antlr3.exe and b/bin/Bootstrap/Antlr3.exe differ
+diff --git a/bin/Bootstrap/Antlr4.StringTemplate.Visualizer.dll b/bin/Bootstrap/Antlr4.StringTemplate.Visualizer.dll
+index 31d4d9b..522565e 100644
+Binary files a/bin/Bootstrap/Antlr4.StringTemplate.Visualizer.dll and b/bin/Bootstrap/Antlr4.StringTemplate.Visualizer.dll differ
+diff --git a/bin/Bootstrap/Antlr4.StringTemplate.dll b/bin/Bootstrap/Antlr4.StringTemplate.dll
+index 4136dcd..82f95f8 100644
+Binary files a/bin/Bootstrap/Antlr4.StringTemplate.dll and b/bin/Bootstrap/Antlr4.StringTemplate.dll differ
+diff --git a/bin/Bootstrap/AntlrBuildTask.dll b/bin/Bootstrap/AntlrBuildTask.dll
+index c907436..591bd65 100644
+Binary files a/bin/Bootstrap/AntlrBuildTask.dll and b/bin/Bootstrap/AntlrBuildTask.dll differ
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp2/CSharp2.stg b/bin/Bootstrap/Codegen/Templates/CSharp2/CSharp2.stg
+index 8e5d603..2e82edd 100644
+--- a/bin/Bootstrap/Codegen/Templates/CSharp2/CSharp2.stg
++++ b/bin/Bootstrap/Codegen/Templates/CSharp2/CSharp2.stg
+@@ -501,6 +501,24 @@ ruleBacktrackFailure() ::= <<
+<if(backtracking)>if (state.backtracking>0) {state.failed=true; <returnFromRule()>}<endif>
+>>
+
++ruleWrapperMap ::= [
++	"bottomup":{<ruleWrapperBottomup()>},
++	"topdown":{<ruleWrapperTopdown()>},
++	default:""
++]
++
++ruleWrapperBottomup() ::= <<
++<if(TREE_PARSER && filterMode)>
++public override IAstRuleReturnScope Bottomup() { return bottomup(); }
++<endif>
++>>
++
++ruleWrapperTopdown() ::= <<
++<if(TREE_PARSER && filterMode)>
++public override IAstRuleReturnScope Topdown() { return topdown(); }
++<endif>
++>>
++
+/** How to generate code for a rule.  This includes any return type
+*  data aggregates required for multiple return values.
+*/
+@@ -512,7 +530,7 @@ rule(ruleName,ruleDescriptor,block,emptyRule,description,exceptions,finally,memo
+protected virtual void EnterRule_<ruleName>() {}
+[Conditional("ANTLR_TRACE")]
+protected virtual void LeaveRule_<ruleName>() {}
+-
++<ruleWrapperMap.(ruleName)>
+// $ANTLR start "<ruleName>"
+// <fileName>:<description>
+[GrammarRule("<ruleName>")]
+@@ -1140,7 +1158,7 @@ else
+alt<decisionNumber> = <eotPredictsAlt>;
+<else>
+<ruleBacktrackFailure()>
+-	NoViableAltException nvae = new NoViableAltException("<description>", <decisionNumber>, <stateNumber>, input);
++	NoViableAltException nvae = new NoViableAltException("<description>", <decisionNumber>, <stateNumber>, input, <k>);
+DebugRecognitionException(nvae);
+<@noViableAltException()>
+throw nvae;
+@@ -1209,7 +1227,7 @@ default:
+<else>
+{
+<ruleBacktrackFailure()>
+-		NoViableAltException nvae = new NoViableAltException("<description>", <decisionNumber>, <stateNumber>, input);
++		NoViableAltException nvae = new NoViableAltException("<description>", <decisionNumber>, <stateNumber>, input, <k>);
+DebugRecognitionException(nvae);
+<@noViableAltException()>
+throw nvae;
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/AST.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/AST.stg
+index 705215d..0243429 100644
+--- a/bin/Bootstrap/Codegen/Templates/CSharp3/AST.stg
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/AST.stg
+@@ -88,16 +88,18 @@ ruleDeclarations() ::= <<
+<ASTLabelType> root_0 = default(<ASTLabelType>);<\n>
+>>
+
+-ruleLabelDefs() ::= <<
+-<super.ruleLabelDefs()>
++ruleLabelDefs(ruleDescriptor, labelType, ASTLabelType, rewriteElementType) ::= <%
++<super.ruleLabelDefs(...)>
++<if(!ruleDescriptor.isSynPred)>
+<[ruleDescriptor.tokenLabels,ruleDescriptor.wildcardTreeLabels,ruleDescriptor.wildcardTreeListLabels]
+-	:{it|<ASTLabelType> <it.label.text>_tree = default(<ASTLabelType>);}; separator="\n">
+-<ruleDescriptor.tokenListLabels:{it|<ASTLabelType> <it.label.text>_tree = default(<ASTLabelType>);}; separator="\n">
++	:{it|<\n><ASTLabelType> <it.label.text>_tree = default(<ASTLabelType>);}>
++<ruleDescriptor.tokenListLabels:{it|<\n><ASTLabelType> <it.label.text>_tree = default(<ASTLabelType>);}>
+<ruleDescriptor.allTokenRefsInAltsWithRewrites
+-	:{it|RewriteRule<rewriteElementType>Stream stream_<it>=new RewriteRule<rewriteElementType>Stream(adaptor,"token <it>");}; separator="\n">
++	:{it|<\n>RewriteRule<rewriteElementType>Stream stream_<it>=new RewriteRule<rewriteElementType>Stream(adaptor,"token <it>");}>
+<ruleDescriptor.allRuleRefsInAltsWithRewrites
+-	:{it|RewriteRuleSubtreeStream stream_<it>=new RewriteRuleSubtreeStream(adaptor,"rule <it>");}; separator="\n">
+->>
++	:{it|<\n>RewriteRuleSubtreeStream stream_<it>=new RewriteRuleSubtreeStream(adaptor,"rule <it>");}>
++<endif>
++%>
+
+/** When doing auto AST construction, we must define some variables;
+*  These should be turned off if doing rewrites.  This must be a "mode"
+@@ -105,13 +107,9 @@ ruleLabelDefs() ::= <<
+*  block.
+*/
+@alt.declarations() ::= <<
+-<if(autoAST)>
+-<if(outerAlt)>
+-<if(!rewriteMode)>
++<if(autoAST && outerAlt && !rewriteMode && !ruleDescriptor.isSynPred)>
+root_0 = (<ASTLabelType>)adaptor.Nil();
+<endif>
+-<endif>
+-<endif>
+>>
+
+// T r a c k i n g  R u l e  E l e m e n t s
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/ASTParser.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/ASTParser.stg
+index 51fc23f..8b507c7 100644
+--- a/bin/Bootstrap/Codegen/Templates/CSharp3/ASTParser.stg
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/ASTParser.stg
+@@ -50,25 +50,29 @@ retval.Tree = (<ASTLabelType>)adaptor.ErrorNode(input, retval.Start, input.LT(-1
+// TOKEN AST STUFF
+
+/** ID and output=AST */
+-tokenRef(token,label,elementIndex,terminalOptions) ::= <<
++tokenRef(token,label,elementIndex,terminalOptions) ::= <%
+<super.tokenRef(...)>
+-<if(backtracking)>if (state.backtracking == 0) {<endif>
+-<label>_tree = <createNodeFromToken(...)>;
+-adaptor.AddChild(root_0, <label>_tree);
+-<if(backtracking)>}<endif>
+->>
++<if(!ruleDescriptor.isSynPred)>
++<if(backtracking)><\n>if (state.backtracking == 0) {<endif>
++<\n><label>_tree = <createNodeFromToken(...)>;
++<\n>adaptor.AddChild(root_0, <label>_tree);
++<if(backtracking)><\n>}<endif>
++<endif>
++%>
+
+/** ID! and output=AST (same as plain tokenRef) */
+-tokenRefBang(token,label,elementIndex) ::= "<super.tokenRef(...)>"
++tokenRefBang(token,label,elementIndex,terminalOptions) ::= "<super.tokenRef(...)>"
+
+/** ID^ and output=AST */
+-tokenRefRuleRoot(token,label,elementIndex,terminalOptions) ::= <<
++tokenRefRuleRoot(token,label,elementIndex,terminalOptions) ::= <%
+<super.tokenRef(...)>
+-<if(backtracking)>if (<actions.(actionScope).synpredgate>) {<endif>
+-<label>_tree = <createNodeFromToken(...)>;
+-root_0 = (<ASTLabelType>)adaptor.BecomeRoot(<label>_tree, root_0);
+-<if(backtracking)>}<endif>
+->>
++<if(!ruleDescriptor.isSynPred)>
++<if(backtracking)><\n>if (<actions.(actionScope).synpredgate>) {<endif>
++<\n><label>_tree = <createNodeFromToken(...)>;
++<\n>root_0 = (<ASTLabelType>)adaptor.BecomeRoot(<label>_tree, root_0);
++<if(backtracking)><\n>}<endif>
++<endif>
++%>
+
+/** ids+=ID! and output=AST */
+tokenRefBangAndListLabel(token,label,elementIndex,terminalOptions) ::= <<
+@@ -102,7 +106,7 @@ tokenRefRuleRootAndListLabel(token,label,terminalOptions,elementIndex) ::= <<
+// I have more time.
+
+matchSet(s,label,terminalOptions,elementIndex,postmatchCode) ::= <<
+-<super.matchSet(postmatchCode={<if(backtracking)>if (<actions.(actionScope).synpredgate>) <endif>adaptor.AddChild(root_0, <createNodeFromToken(...)>);}, ...)>
++<super.matchSet(postmatchCode={<if(!ruleDescriptor.isSynPred)><if(backtracking)>if (<actions.(actionScope).synpredgate>) <endif>adaptor.AddChild(root_0, <createNodeFromToken(...)>);<endif>}, ...)>
+>>
+
+matchRuleBlockSet(s,label,terminalOptions,elementIndex,postmatchCode,treeLevel="0") ::= <<
+@@ -118,16 +122,18 @@ matchSetRuleRoot(s,label,terminalOptions,elementIndex,debug) ::= <<
+<if(label)>
+<label>=(<labelType>)input.LT(1);
+<endif>
+-<super.matchSet(postmatchCode={<if(backtracking)>if (<actions.(actionScope).synpredgate>) <endif>root_0 = (<ASTLabelType>)adaptor.BecomeRoot(<createNodeFromToken(...)>, root_0);}, ...)>
++<super.matchSet(postmatchCode={<if(!ruleDescriptor.isSynPred)><if(backtracking)>if (<actions.(actionScope).synpredgate>) <endif>root_0 = (<ASTLabelType>)adaptor.BecomeRoot(<createNodeFromToken(...)>, root_0);<endif>}, ...)>
+>>
+
+// RULE REF AST
+
+/** rule when output=AST */
+-ruleRef(rule,label,elementIndex,args,scope) ::= <<
++ruleRef(rule,label,elementIndex,args,scope) ::= <%
+<super.ruleRef(...)>
+-<if(backtracking)>if (<actions.(actionScope).synpredgate>) <endif>adaptor.AddChild(root_0, <label>.Tree);
+->>
++<if(!ruleDescriptor.isSynPred)>
++<\n><if(backtracking)>if (<actions.(actionScope).synpredgate>) <endif>adaptor.AddChild(root_0, <label>.Tree);
++<endif>
++%>
+
+/** rule! is same as normal rule ref */
+ruleRefBang(rule,label,elementIndex,args,scope) ::= "<super.ruleRef(...)>"
+@@ -160,20 +166,24 @@ ruleRefRuleRootAndListLabel(rule,label,elementIndex,args,scope) ::= <<
+
+wildcard(token,label,elementIndex,terminalOptions) ::= <<
+<super.wildcard(...)>
++<if(!ruleDescriptor.isSynPred)>
+<if(backtracking)>if (<actions.(actionScope).synpredgate>) {<endif>
+<label>_tree = (<ASTLabelType>)adaptor.Create(<label>);
+adaptor.AddChild(root_0, <label>_tree);
+<if(backtracking)>}<endif>
++<endif>
+>>
+
+wildcardBang(label,elementIndex) ::= "<super.wildcard(...)>"
+
+wildcardRuleRoot(token,label,elementIndex,terminalOptions) ::= <<
+<super.wildcard(...)>
++<if(!ruleDescriptor.isSynPred)>
+<if(backtracking)>if (<actions.(actionScope).synpredgate>) {<endif>
+<label>_tree = (<ASTLabelType>)adaptor.Create(<label>);
+root_0 = (<ASTLabelType>)adaptor.BecomeRoot(<label>_tree, root_0);
+<if(backtracking)>}<endif>
++<endif>
+>>
+
+createNodeFromToken(label,terminalOptions) ::= <%
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg
+index bae33a1..63f5e22 100644
+--- a/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg
+@@ -67,6 +67,8 @@ outputFile(	LEXER,PARSER,TREE_PARSER, actionScope, actions,
+#pragma warning disable 162
+// Missing XML comment for publicly visible type or member 'Type_or_Member'
+#pragma warning disable 1591
++// CLS compliance checking will not be performed on 'type' because it is not visible from outside this assembly.
++#pragma warning disable 3019
+
+<actions.(actionScope).header>
+
+@@ -96,7 +98,8 @@ lexerInputStreamType() ::= <<
+>>
+
+lexer(grammar, name, tokens, scopes, rules, numRules, filterMode, labelType="CommonToken",
+-      superClass={<if(actions.(actionScope).superClass)><actions.(actionScope).superClass><else>Antlr.Runtime.Lexer<endif>}) ::= <<
++      superClass={<if(actions.(actionScope).superClass)><actions.(actionScope).superClass><else>Antlr.Runtime.Lexer<endif>},
++	  rewriteElementType={}, ASTLabelType={}) ::= <<
+[System.CodeDom.Compiler.GeneratedCode("ANTLR", "<ANTLRVersion>")]
+[System.CLSCompliant(false)]
+<parserModifier(grammar=grammar, actions=actions)> partial class <grammar.recognizerName> : <@superClassName><superClass><@end>
+@@ -382,7 +385,7 @@ this.state.ruleMemo = new System.Collections.Generic.Dictionary\<int, int>[<leng
+parser(grammar, name, scopes, tokens, tokenNames, rules, numRules, bitsets,
+ASTLabelType="object", superClass={<if(actions.(actionScope).superClass)><actions.(actionScope).superClass><else>Antlr.Runtime.Parser<endif>}, labelType="IToken",
+members={<actions.parser.members>}) ::= <<
+-<genericParser(inputStreamType="ITokenStream", rewriteElementType="IToken", ...)>
++<genericParser(inputStreamType="ITokenStream", rewriteElementType="IToken", filterMode=false, ...)>
+>>
+
+/** How to generate a tree parser; same as parser except the input
+@@ -411,7 +414,7 @@ partial void LeaveRule_<ruleName>_fragment();
+// $ANTLR start <ruleName>
+public <!final !>void <ruleName>_fragment(<ruleDescriptor.parameterScope:parameterScope()>)
+{
+-	<ruleLabelDefs()>
++	<ruleLabelDefs(...)>
+EnterRule_<ruleName>_fragment();
+EnterRule("<ruleName>_fragment", <ruleDescriptor.index>);
+TraceIn("<ruleName>_fragment", <ruleDescriptor.index>);
+@@ -479,6 +482,24 @@ ruleBacktrackFailure() ::= <<
+<if(backtracking)>if (state.backtracking>0) {state.failed=true; <returnFromRule()>}<endif>
+>>
+
++ruleWrapperMap ::= [
++	"bottomup":{<ruleWrapperBottomup()>},
++	"topdown":{<ruleWrapperTopdown()>},
++	default:""
++]
++
++ruleWrapperBottomup() ::= <<
++<if(TREE_PARSER && filterMode)>
++public override IAstRuleReturnScope Bottomup() { return bottomup(); }
++<endif>
++>>
++
++ruleWrapperTopdown() ::= <<
++<if(TREE_PARSER && filterMode)>
++public override IAstRuleReturnScope Topdown() { return topdown(); }
++<endif>
++>>
++
+/** How to generate code for a rule.  This includes any return type
+*  data aggregates required for multiple return values.
+*/
+@@ -487,7 +508,7 @@ rule(ruleName,ruleDescriptor,block,emptyRule,description,exceptions,finally,memo
+<returnScope(ruleDescriptor.returnScope)>
+partial void EnterRule_<ruleName>();
+partial void LeaveRule_<ruleName>();
+-
++<ruleWrapperMap.(ruleName)>
+// $ANTLR start "<ruleName>"
+// <fileName>:<description>
+[GrammarRule("<ruleName>")]
+@@ -498,7 +519,7 @@ partial void LeaveRule_<ruleName>();
+TraceIn("<ruleName>", <ruleDescriptor.index>);
+<ruleScopeSetUp()>
+<ruleDeclarations()>
+-	<ruleLabelDefs()>
++	<ruleLabelDefs(...)>
+<ruleDescriptor.actions.init>
+try { DebugEnterRule(GrammarFileName, "<ruleName>");
+DebugLocation(<ruleDescriptor.tree.line>, <ruleDescriptor.EORNode.charPositionInLine>);
+@@ -584,7 +605,7 @@ ruleScopeCleanUp() ::= <<
+<ruleDescriptor.ruleScope:{it|<it.name>_scopeAfter(<it.name>_stack.Peek());<it.name>_stack.Pop();}; separator="\n">
+>>
+
+-ruleLabelDefs() ::= <<
++ruleLabelDefs(ruleDescriptor, labelType, ASTLabelType, rewriteElementType) ::= <<
+<[ruleDescriptor.tokenLabels,ruleDescriptor.tokenListLabels,ruleDescriptor.wildcardTreeLabels,ruleDescriptor.wildcardTreeListLabels]
+:{it|<labelType> <it.label.text> = default(<labelType>);}; separator="\n"
+>
+@@ -1116,7 +1137,7 @@ else
+alt<decisionNumber> = <eotPredictsAlt>;
+<else>
+<ruleBacktrackFailure()>
+-	NoViableAltException nvae = new NoViableAltException("<description>", <decisionNumber>, <stateNumber>, input);
++	NoViableAltException nvae = new NoViableAltException("<description>", <decisionNumber>, <stateNumber>, input, <k>);
+DebugRecognitionException(nvae);
+<@noViableAltException()>
+throw nvae;
+@@ -1185,7 +1206,7 @@ default:
+<else>
+{
+<ruleBacktrackFailure()>
+-		NoViableAltException nvae = new NoViableAltException("<description>", <decisionNumber>, <stateNumber>, input);
++		NoViableAltException nvae = new NoViableAltException("<description>", <decisionNumber>, <stateNumber>, input, <k>);
+DebugRecognitionException(nvae);
+<@noViableAltException()>
+throw nvae;
+@@ -1485,7 +1506,7 @@ default(<typeName>)
+
+/** Define a rule label including default value */
+ruleLabelDef(label) ::= <%
+-<ruleLabelType(referencedRule=label.referencedRule)> <label.label.text> = <initValue(typeName=ruleLabelType(referencedRule=label.referencedRule))>;
++<ruleLabelType(label.referencedRule)> <label.label.text> = <initValue(ruleLabelType(label.referencedRule))>;
+%>
+
+/** Define a return struct for a rule if the code needs to access its
+diff --git a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp2.dll b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp2.dll
+index b066b60..83b7b20 100644
+Binary files a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp2.dll and b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp2.dll differ
+diff --git a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll
+index 2689779..5ea30fc 100644
+Binary files a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll and b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll differ
+diff --git a/bin/Bootstrap/Tool/Templates/dot/action-edge.st b/bin/Bootstrap/Tool/Templates/dot/action-edge.st
+deleted file mode 100644
+index 1bb8e96..0000000
+--- a/bin/Bootstrap/Tool/Templates/dot/action-edge.st
++++ /dev/null
+@@ -1 +0,0 @@
+-<src> -> <target> [fontsize=11, fontname="Courier", arrowsize=.7, label = "<label>"<if(arrowhead)>, arrowhead = <arrowhead><endif>];
+diff --git a/bin/Bootstrap/Tool/Templates/dot/decision-rank.st b/bin/Bootstrap/Tool/Templates/dot/decision-rank.st
+deleted file mode 100644
+index d5142f6..0000000
+--- a/bin/Bootstrap/Tool/Templates/dot/decision-rank.st
++++ /dev/null
+@@ -1 +0,0 @@
+-{rank=same; rankdir=TB; <states; separator="; ">}
+diff --git a/bin/Bootstrap/Tool/Templates/dot/dfa.st b/bin/Bootstrap/Tool/Templates/dot/dfa.st
+deleted file mode 100644
+index 5b81e70..0000000
+--- a/bin/Bootstrap/Tool/Templates/dot/dfa.st
++++ /dev/null
+@@ -1,7 +0,0 @@
+-digraph NFA {
+-<if(rankdir)>rankdir=<rankdir>;<endif>
+-<decisionRanks; separator="\n">
+-<states; separator="\n">
+-<edges; separator="\n">
+-}
+-
+diff --git a/bin/Bootstrap/Tool/Templates/dot/dot.stg b/bin/Bootstrap/Tool/Templates/dot/dot.stg
+new file mode 100644
+index 0000000..96981dc
+--- /dev/null
++++ b/bin/Bootstrap/Tool/Templates/dot/dot.stg
+@@ -0,0 +1,73 @@
++/*
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2011 Sam Harwell, Tunnel Vision Laboratories, LLC.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++dfa(decisionRanks,states,edges,rankdir,startState,useBox) ::= <<
++digraph NFA {
++<if(rankdir)>rankdir=<rankdir>;<endif>
++<decisionRanks; separator="\n">
++<states; separator="\n">
++<edges; separator="\n">
++}
++>>
++
++nfa(decisionRanks,states,edges,rankdir,startState) ::= <<
++digraph NFA {
++rankdir=LR;
++<decisionRanks; separator="\n">
++<states; separator="\n">
++<edges; separator="\n">
++}
++>>
++
++decision_rank(states) ::= <<
++{rank=same; rankdir=TB; <states; separator="; ">}
++>>
++
++edge(src,target,label,arrowhead) ::= <<
++<src> -> <target> [fontsize=11, fontname="Courier", arrowsize=.7, label = "<label>"<if(arrowhead)>, arrowhead = <arrowhead><endif>];
++>>
++
++action_edge(src,target,label,arrowhead) ::= <<
++<src> -> <target> [fontsize=11, fontname="Courier", arrowsize=.7, label = "<label>"<if(arrowhead)>, arrowhead = <arrowhead><endif>];
++>>
++
++epsilon_edge(src,target,label,arrowhead) ::= <<
++<src> -> <target> [fontname="Times-Italic", label = "e"];
++>>
++
++state(name,useBox) ::= <<
++node [fontsize=11, shape = <if(useBox)>box<else>circle, fixedsize=true, width=.4<endif>]; <name>
++>>
++
++stopstate(name,useBox) ::= <<
++node [fontsize=11, shape = <if(useBox)>polygon,sides=4,peripheries=2<else>doublecircle, fixedsize=true, width=.6<endif>]; <name>
++>>
+diff --git a/bin/Bootstrap/Tool/Templates/dot/edge.st b/bin/Bootstrap/Tool/Templates/dot/edge.st
+deleted file mode 100644
+index 1bb8e96..0000000
+--- a/bin/Bootstrap/Tool/Templates/dot/edge.st
++++ /dev/null
+@@ -1 +0,0 @@
+-<src> -> <target> [fontsize=11, fontname="Courier", arrowsize=.7, label = "<label>"<if(arrowhead)>, arrowhead = <arrowhead><endif>];
+diff --git a/bin/Bootstrap/Tool/Templates/dot/epsilon-edge.st b/bin/Bootstrap/Tool/Templates/dot/epsilon-edge.st
+deleted file mode 100644
+index 2a49b2b..0000000
+--- a/bin/Bootstrap/Tool/Templates/dot/epsilon-edge.st
++++ /dev/null
+@@ -1 +0,0 @@
+-<src> -> <target> [fontname="Times-Italic", label = "e"];
+diff --git a/bin/Bootstrap/Tool/Templates/dot/nfa.st b/bin/Bootstrap/Tool/Templates/dot/nfa.st
+deleted file mode 100644
+index 280ced2..0000000
+--- a/bin/Bootstrap/Tool/Templates/dot/nfa.st
++++ /dev/null
+@@ -1,6 +0,0 @@
+-digraph NFA {
+-rankdir=LR;
+-<decisionRanks; separator="\n">
+-<states; separator="\n">
+-<edges; separator="\n">
+-}
+diff --git a/bin/Bootstrap/Tool/Templates/dot/state.st b/bin/Bootstrap/Tool/Templates/dot/state.st
+deleted file mode 100644
+index f68e3a8..0000000
+--- a/bin/Bootstrap/Tool/Templates/dot/state.st
++++ /dev/null
+@@ -1 +0,0 @@
+-node [fontsize=11, shape = <if(useBox)>box<else>circle, fixedsize=true, width=.4<endif>]; <name>
+diff --git a/bin/Bootstrap/Tool/Templates/dot/stopstate.st b/bin/Bootstrap/Tool/Templates/dot/stopstate.st
+deleted file mode 100644
+index 572d460..0000000
+--- a/bin/Bootstrap/Tool/Templates/dot/stopstate.st
++++ /dev/null
+@@ -1 +0,0 @@
+-node [fontsize=11, shape = <if(useBox)>polygon,sides=4,peripheries=2<else>doublecircle, fixedsize=true, width=.6<endif>]; <name>
+

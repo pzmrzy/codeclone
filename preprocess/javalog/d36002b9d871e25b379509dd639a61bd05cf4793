@@ -1,0 +1,22 @@
+commit d36002b9d871e25b379509dd639a61bd05cf4793
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Sun Jan 6 16:22:40 2013 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Sun Jan 6 16:22:40 2013 -0600
+
+Fix download path in readme.txt
+
+diff --git a/README.txt b/README.txt
+index 3dec1ca..c2fa6c4 100644
+--- a/README.txt
++++ b/README.txt
+@@ -110,7 +110,7 @@ How do I install this damn thing?
+
+You will have grabbed either of these:
+
+-	http://antlr.org/download/antlr-3.5-complete-no-antlrv2.jar
++	http://antlr.org/download/antlr-3.5-complete-no-st3.jar
+http://antlr.org/download/antlr-3.5-complete.jar
+
+It has all of the jars you need combined into one. Then you need to
+

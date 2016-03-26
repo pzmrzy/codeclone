@@ -1,0 +1,24 @@
+commit f68f84f147b893e978e135c1d8be3eb74419b793
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sat Feb 5 16:42:47 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sat Feb 5 16:42:47 2011 -0800
+
+(C# 3) Merge CL 7635 (originally suggested by me =) )
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7638]
+
+diff --git a/Antlr4.StringTemplate/Compiler/TemplateParser.g3 b/Antlr4.StringTemplate/Compiler/TemplateParser.g3
+index c98829f..69e693e 100644
+--- a/Antlr4.StringTemplate/Compiler/TemplateParser.g3
++++ b/Antlr4.StringTemplate/Compiler/TemplateParser.g3
+@@ -90,7 +90,7 @@ region
+subtemplate
+:	lc='{' (ids+= ID ( ',' ids+= ID )* '|' )? template INDENT? '}'
+// ignore final INDENT before } as it's not part of outer indent
+-		-> ^(SUBTEMPLATE[$lc,"SUBTEMPLATE"] ^(ARGS $ids)* template)
++		-> ^(SUBTEMPLATE[$lc,"SUBTEMPLATE"] ^(ARGS $ids)* template?)
+;
+
+ifstat // ignore INDENTs in front of elseif ...
+

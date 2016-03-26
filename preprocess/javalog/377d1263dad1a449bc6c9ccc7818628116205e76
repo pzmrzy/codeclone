@@ -1,0 +1,33 @@
+commit 377d1263dad1a449bc6c9ccc7818628116205e76
+Author:     acondit <acondit@parrt.spork>
+AuthorDate: Mon May 9 05:44:23 2011 -0800
+Commit:     acondit <acondit@parrt.spork>
+CommitDate: Mon May 9 05:44:23 2011 -0800
+
+Fixed key leaf walk numkeys now that I don't have a preloaded hiKey.
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8443]
+
+diff --git a/runtime/ObjC/Framework/ACBTree.m b/runtime/ObjC/Framework/ACBTree.m
+index 4aded19..97a0d66 100644
+--- a/runtime/ObjC/Framework/ACBTree.m
++++ b/runtime/ObjC/Framework/ACBTree.m
+@@ -690,7 +690,7 @@ ACBTree *t;
+t = t.btNodes[0];
+}
+do {
+-        keycnt = ((t.rnode != nil) ? t.numkeys : t.numkeys-1);
++        keycnt = t.numkeys;
+for ( i = 0; i < keycnt; i++ ) {
+if ( t.btNodes[i] != nil ) {
+dict.ptrBuffer[idx++] = (id) t.keys[i].key;
+@@ -717,7 +717,7 @@ ACBTree *t;
+t = t.btNodes[0];
+}
+do {
+-        keycnt = ((t.rnode != nil) ? t.numkeys : t.numkeys-1);
++        keycnt = t.numkeys;
+for ( i = 0; i < keycnt; i++ ) {
+if ( t.btNodes[i] != nil ) {
+dict.ptrBuffer[idx++] = (id) t.btNodes[i];
+

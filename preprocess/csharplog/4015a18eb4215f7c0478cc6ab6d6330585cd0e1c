@@ -1,0 +1,117 @@
+commit 4015a18eb4215f7c0478cc6ab6d6330585cd0e1c
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Jun 29 19:35:19 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Jun 29 19:35:19 2011 -0800
+
+(C# 3) Fix tool hanging on certain left recursive rules (handles some but not all cases)
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8806]
+
+diff --git a/Antlr3/Analysis/DFA.cs b/Antlr3/Analysis/DFA.cs
+index 1736173..616a529 100644
+--- a/Antlr3/Analysis/DFA.cs
++++ b/Antlr3/Analysis/DFA.cs
+@@ -158,8 +158,6 @@ namespace Antlr3.Analysis
+/** Which NFA are we converting (well, which piece of the NFA)? */
+private readonly NFA _nfa;
+
+-        private readonly NFAToDFAConverter _nfaConverter;
+-
+/** This probe tells you a lot about a decision and is useful even
+*  when there is no error such as when a syntactic nondeterminism
+*  is solved via semantic predicates.  Perhaps a GUI would want
+@@ -222,48 +220,55 @@ namespace Antlr3.Analysis
+/** Which generator to use if we're building state tables */
+private CodeGenerator _generator;
+
+-        public DFA( int decisionNumber, NFAState decisionStartState )
++        protected DFA( int decisionNumber, NFAState decisionStartState )
+{
+-            _probe = new DecisionProbe(this);
++            this._probe = new DecisionProbe(this);
+this._decisionNumber = decisionNumber;
+this._decisionNFAStartState = decisionStartState;
+-            _nfa = decisionStartState.nfa;
+-            _numberOfAlts = Nfa.Grammar.GetNumberOfAltsForDecisionNFA( decisionStartState );
++            this._nfa = decisionStartState.nfa;
++            this._numberOfAlts = Nfa.Grammar.GetNumberOfAltsForDecisionNFA( decisionStartState );
+//setOptions( nfa.grammar.getDecisionOptions(getDecisionNumber()) );
+-            _altToAcceptState = new DFAState[NumberOfAlts + 1];
+-            _unreachableAlts = new List<int>(Enumerable.Range(1, NumberOfAlts));
++            this._altToAcceptState = new DFAState[NumberOfAlts + 1];
++            this._unreachableAlts = new List<int>(Enumerable.Range(1, NumberOfAlts));
++        }
++
++        public static DFA CreateFromNfa(int decisionNumber, NFAState decisionStartState)
++        {
++            DFA dfa = new DFA(decisionNumber, decisionStartState);
+
+//long start = JSystem.currentTimeMillis();
+-            _nfaConverter = new NFAToDFAConverter( this );
++            NFAToDFAConverter nfaConverter = new NFAToDFAConverter( dfa );
+try
+{
+-                _nfaConverter.Convert();
++                nfaConverter.Convert();
+
+// figure out if there are problems with decision
+-                Verify();
++                dfa.Verify();
+
+-                if ( !Probe.IsDeterministic || Probe.AnalysisOverflowed )
++                if ( !dfa.Probe.IsDeterministic || dfa.Probe.AnalysisOverflowed )
+{
+-                    Probe.IssueWarnings();
++                    dfa.Probe.IssueWarnings();
+}
+
+// must be after verify as it computes cyclic, needed by this routine
+// should be after warnings because early termination or something
+// will not allow the reset to operate properly in some cases.
+-                ResetStateNumbersToBeContiguous();
++                dfa.ResetStateNumbersToBeContiguous();
+
+//long stop = JSystem.currentTimeMillis();
+//JSystem.@out.println("verify cost: "+(int)(stop-start)+" ms");
+}
+catch ( NonLLStarDecisionException /*nonLL*/ )
+{
+-                Probe.ReportNonLLStarDecision( this );
++                dfa.Probe.ReportNonLLStarDecision( dfa );
+// >1 alt recurses, k=* and no auto backtrack nor manual sem/syn
+-                if ( !OkToRetryWithK1 )
++                if ( !dfa.OkToRetryWithK1 )
+{
+-                    Probe.IssueWarnings();
++                    dfa.Probe.IssueWarnings();
+}
+}
++
++            return dfa;
+}
+
+#region Properties
+diff --git a/Antlr3/Tool/Grammar.cs b/Antlr3/Tool/Grammar.cs
+index 3c362d6..48d06aa 100644
+--- a/Antlr3/Tool/Grammar.cs
++++ b/Antlr3/Tool/Grammar.cs
+@@ -1855,7 +1855,7 @@ namespace Antlr3.Tool
+startDFA = DateTime.Now;
+}
+
+-            DFA lookaheadDFA = new DFA( decision, decisionStartState );
++            DFA lookaheadDFA = DFA.CreateFromNfa( decision, decisionStartState );
+// Retry to create a simpler DFA if analysis failed (non-LL(*),
+// recursion overflow, or time out).
+bool failed =
+@@ -1875,7 +1875,7 @@ namespace Antlr3.Tool
+lookaheadDFA.ReasonForFailure );
+}
+lookaheadDFA = null; // make sure other memory is "free" before redoing
+-                lookaheadDFA = new DFA( decision, decisionStartState );
++                lookaheadDFA = DFA.CreateFromNfa( decision, decisionStartState );
+}
+
+SetLookaheadDFA( decision, lookaheadDFA );
+

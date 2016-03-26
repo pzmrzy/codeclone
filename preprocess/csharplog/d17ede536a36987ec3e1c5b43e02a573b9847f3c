@@ -1,0 +1,128 @@
+commit d17ede536a36987ec3e1c5b43e02a573b9847f3c
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Tue Jul 5 11:39:08 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Tue Jul 5 11:39:08 2011 -0800
+
+(C# 3, ST4) Merge CL8830: store/access renderers from native groups
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8833]
+
+diff --git a/Antlr4.StringTemplate/Interpreter.cs b/Antlr4.StringTemplate/Interpreter.cs
+index fab55f7..cda6fac 100644
+--- a/Antlr4.StringTemplate/Interpreter.cs
++++ b/Antlr4.StringTemplate/Interpreter.cs
+@@ -827,7 +827,7 @@ namespace Antlr4.StringTemplate
+if (o is IEnumerator)
+n = WriteIterator(@out, frame, o, options);
+else
+-                        n = WritePlainObject(@out, o, options);
++                        n = WritePlainObject(@out, frame, o, options);
+}
+catch (IOException ioe)
+{
+@@ -867,12 +867,12 @@ namespace Antlr4.StringTemplate
+return n;
+}
+
+-        protected virtual int WritePlainObject(ITemplateWriter @out, object o, string[] options)
++        protected virtual int WritePlainObject(ITemplateWriter @out, TemplateFrame frame, object o, string[] options)
+{
+string formatString = null;
+if (options != null)
+formatString = options[(int)RenderOption.Format];
+-            IAttributeRenderer r = group.GetAttributeRenderer(o.GetType());
++            IAttributeRenderer r = frame.Template.impl.NativeGroup.GetAttributeRenderer(o.GetType());
+
+string v;
+if (r != null)
+diff --git a/Antlr4.StringTemplate/TemplateGroup.cs b/Antlr4.StringTemplate/TemplateGroup.cs
+index 5fe758a..93ecfce 100644
+--- a/Antlr4.StringTemplate/TemplateGroup.cs
++++ b/Antlr4.StringTemplate/TemplateGroup.cs
+@@ -33,6 +33,7 @@
+namespace Antlr4.StringTemplate
+{
+using System.Collections.Generic;
++    using System.Collections.ObjectModel;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text;
+@@ -270,6 +271,14 @@ namespace Antlr4.StringTemplate
+}
+}
+
++        public ReadOnlyCollection<TemplateGroup> ImportedGroups
++        {
++            get
++            {
++                return _imports.AsReadOnly();
++            }
++        }
++
+/** The primary means of getting an instance of a template from this
+*  group. Names must be absolute, fully-qualified names like a/b
+*/
+@@ -942,10 +951,25 @@ namespace Antlr4.StringTemplate
+*  templates evaluated relative to this group.  Use r to Render if
+*  object in question is instanceof(attributeType).
+*/
+-        public virtual void RegisterRenderer(Type attributeType, IAttributeRenderer r)
++        public void RegisterRenderer(Type attributeType, IAttributeRenderer renderer)
++        {
++            RegisterRenderer(attributeType, renderer, true);
++        }
++
++        /** Register a renderer for all objects of a particular "kind" for all
++         *  templates evaluated relative to this group.  Use r to Render if
++         *  object in question is instanceof(attributeType).
++         */
++        public virtual void RegisterRenderer(Type attributeType, IAttributeRenderer renderer, bool recursive)
+{
+renderers = renderers ?? new TypeRegistry<IAttributeRenderer>();
+-            renderers[attributeType] = r;
++            renderers[attributeType] = renderer;
++            if (recursive)
++            {
++                Load();
++                foreach (var group in ImportedGroups)
++                    group.RegisterRenderer(attributeType, renderer, recursive);
++            }
+}
+
+public virtual IAttributeRenderer GetAttributeRenderer(Type attributeType)
+diff --git a/Antlr4.Test.StringTemplate/TestRenderers.cs b/Antlr4.Test.StringTemplate/TestRenderers.cs
+index 39052bc..f4d236a 100644
+--- a/Antlr4.Test.StringTemplate/TestRenderers.cs
++++ b/Antlr4.Test.StringTemplate/TestRenderers.cs
+@@ -158,8 +158,7 @@ namespace Antlr4.Test.StringTemplate
+"The names: <names; format=\"upper\">";
+TemplateGroup group = new TemplateGroup();
+group.RegisterRenderer(typeof(string), new StringRenderer());
+-            Template st = new Template(template);
+-            st.Group = group;
++            Template st = new Template(group, template);
+st.Add("names", "ter");
+st.Add("names", "tom");
+st.Add("names", "sriram");
+@@ -175,8 +174,7 @@ namespace Antlr4.Test.StringTemplate
+"The names: <names; separator=\" and \", format=\"upper\">";
+TemplateGroup group = new TemplateGroup();
+group.RegisterRenderer(typeof(string), new StringRenderer());
+-            Template st = new Template(template);
+-            st.Group = group;
++            Template st = new Template(group, template);
+st.Add("names", "ter");
+st.Add("names", "tom");
+st.Add("names", "sriram");
+@@ -192,8 +190,7 @@ namespace Antlr4.Test.StringTemplate
+"The names: <names; separator=\" and \", null=\"n/a\", format=\"upper\">";
+TemplateGroup group = new TemplateGroup();
+group.RegisterRenderer(typeof(string), new StringRenderer());
+-            Template st = new Template(template);
+-            st.Group = group;
++            Template st = new Template(group, template);
+List<string> names = new List<string>();
+names.Add("ter");
+names.Add(null);
+

@@ -1,0 +1,3990 @@
+commit 5705a67cae8228abefb8a2551e9d06b92d3b9500
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sun Mar 15 14:13:09 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sun Mar 15 14:13:09 2009 -0800
+
+C# Port:
+Early minimal bootstrap build, required for building grammars used in StringTemplate and the Tool itself
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 5867]
+
+diff --git a/bin/Bootstrap/Antlr3.Runtime.Debug.dll b/bin/Bootstrap/Antlr3.Runtime.Debug.dll
+new file mode 100644
+index 0000000..efac74f
+Binary files /dev/null and b/bin/Bootstrap/Antlr3.Runtime.Debug.dll differ
+diff --git a/bin/Bootstrap/Antlr3.Runtime.Debug.pdb b/bin/Bootstrap/Antlr3.Runtime.Debug.pdb
+new file mode 100644
+index 0000000..adcdc3b
+Binary files /dev/null and b/bin/Bootstrap/Antlr3.Runtime.Debug.pdb differ
+diff --git a/bin/Bootstrap/Antlr3.Runtime.dll b/bin/Bootstrap/Antlr3.Runtime.dll
+new file mode 100644
+index 0000000..143a0a3
+Binary files /dev/null and b/bin/Bootstrap/Antlr3.Runtime.dll differ
+diff --git a/bin/Bootstrap/Antlr3.Runtime.pdb b/bin/Bootstrap/Antlr3.Runtime.pdb
+new file mode 100644
+index 0000000..a79e6cd
+Binary files /dev/null and b/bin/Bootstrap/Antlr3.Runtime.pdb differ
+diff --git a/bin/Bootstrap/Antlr3.StringTemplate.dll b/bin/Bootstrap/Antlr3.StringTemplate.dll
+new file mode 100644
+index 0000000..b6c939d
+Binary files /dev/null and b/bin/Bootstrap/Antlr3.StringTemplate.dll differ
+diff --git a/bin/Bootstrap/Antlr3.StringTemplate.pdb b/bin/Bootstrap/Antlr3.StringTemplate.pdb
+new file mode 100644
+index 0000000..636afee
+Binary files /dev/null and b/bin/Bootstrap/Antlr3.StringTemplate.pdb differ
+diff --git a/bin/Bootstrap/Antlr3.exe b/bin/Bootstrap/Antlr3.exe
+new file mode 100755
+index 0000000..cc062ed
+Binary files /dev/null and b/bin/Bootstrap/Antlr3.exe differ
+diff --git a/bin/Bootstrap/Antlr3.pdb b/bin/Bootstrap/Antlr3.pdb
+new file mode 100644
+index 0000000..6cf82b3
+Binary files /dev/null and b/bin/Bootstrap/Antlr3.pdb differ
+diff --git a/bin/Bootstrap/Codegen/Templates/ANTLRCore.sti b/bin/Bootstrap/Codegen/Templates/ANTLRCore.sti
+new file mode 100644
+index 0000000..e4e5a15
+--- /dev/null
++++ b/bin/Bootstrap/Codegen/Templates/ANTLRCore.sti
+@@ -0,0 +1,375 @@
++/*
++ [The "BSD licence"]
++ Copyright (c) 2005-2006 Terence Parr
++ All rights reserved.
++
++ Redistribution and use in source and binary forms, with or without
++ modification, are permitted provided that the following conditions
++ are met:
++ 1. Redistributions of source code must retain the above copyright
++    notice, this list of conditions and the following disclaimer.
++ 2. Redistributions in binary form must reproduce the above copyright
++    notice, this list of conditions and the following disclaimer in the
++    documentation and/or other materials provided with the distribution.
++ 3. The name of the author may not be used to endorse or promote products
++    derived from this software without specific prior written permission.
++
++ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++*/
++
++interface ANTLRCore;
++
++/** The overall file structure of a recognizer; stores methods for rules
++ *  and cyclic DFAs plus support code.
++ */
++outputFile(LEXER,PARSER,TREE_PARSER, actionScope, actions,
++           docComment, recognizer,
++           name, tokens, tokenNames, rules, cyclicDFAs,
++	   bitsets, buildTemplate, buildAST, rewriteMode, profile,
++	   backtracking, synpreds, memoize, numRules,
++	   fileName, ANTLRVersion, generatedTimestamp, trace,
++	   scopes, superClass, literals);
++
++/** The header file; make sure to define headerFileExtension() below */
++optional
++headerFile(LEXER,PARSER,TREE_PARSER, actionScope, actions,
++           docComment, recognizer,
++           name, tokens, tokenNames, rules, cyclicDFAs,
++	   bitsets, buildTemplate, buildAST, rewriteMode, profile,
++	   backtracking, synpreds, memoize, numRules,
++	   fileName, ANTLRVersion, generatedTimestamp, trace,
++	   scopes, superClass, literals);
++
++lexer(grammar, name, tokens, scopes, rules, numRules, labelType,
++      filterMode, superClass);
++
++parser(grammar, name, scopes, tokens, tokenNames, rules, numRules,
++       bitsets, ASTLabelType, superClass,
++       labelType, members);
++
++/** How to generate a tree parser; same as parser except the input
++ *  stream is a different type.
++ */
++treeParser(grammar, name, scopes, tokens, tokenNames, globalAction, rules,
++           numRules, bitsets, labelType, ASTLabelType,
++           superClass, members, filterMode);
++
++/** A simpler version of a rule template that is specific to the imaginary
++ *  rules created for syntactic predicates.  As they never have return values
++ *  nor parameters etc..., just give simplest possible method.  Don't do
++ *  any of the normal memoization stuff in here either; it's a waste.
++ *  As predicates cannot be inlined into the invoking rule, they need to
++ *  be in a rule by themselves.
++ */
++synpredRule(ruleName, ruleDescriptor, block, description, nakedBlock);
++
++/** How to generate code for a rule.  This includes any return type
++ *  data aggregates required for multiple return values.
++ */
++rule(ruleName,ruleDescriptor,block,emptyRule,description,exceptions,finally,memoize);
++
++/** How to generate a rule in the lexer; naked blocks are used for
++ *  fragment rules.
++ */
++lexerRule(ruleName,nakedBlock,ruleDescriptor,block,memoize);
++
++/** How to generate code for the implicitly-defined lexer grammar rule
++ *  that chooses between lexer rules.
++ */
++tokensRule(ruleName,nakedBlock,args,block,ruleDescriptor);
++
++filteringNextToken();
++
++filteringActionGate();
++
++// S U B R U L E S
++
++/** A (...) subrule with multiple alternatives */
++block(alts,decls,decision,enclosingBlockLevel,blockLevel,decisionNumber,maxK,maxAlt,description);
++
++/** A rule block with multiple alternatives */
++ruleBlock(alts,decls,decision,enclosingBlockLevel,blockLevel,decisionNumber,maxK,maxAlt,description);
++
++ruleBlockSingleAlt(alts,decls,decision,enclosingBlockLevel,blockLevel,decisionNumber,description);
++
++/** A special case of a (...) subrule with a single alternative */
++blockSingleAlt(alts,decls,decision,enclosingBlockLevel,blockLevel,decisionNumber,description);
++
++/** A (..)+ block with 0 or more alternatives */
++positiveClosureBlock(alts,decls,decision,enclosingBlockLevel,blockLevel,decisionNumber,maxK,maxAlt,description);
++
++positiveClosureBlockSingleAlt(alts,decls,decision,enclosingBlockLevel,blockLevel,decisionNumber,maxK,maxAlt,description);
++
++/** A (..)* block with 0 or more alternatives */
++closureBlock(alts,decls,decision,enclosingBlockLevel,blockLevel,decisionNumber,maxK,maxAlt,description);
++
++closureBlockSingleAlt(alts,decls,decision,enclosingBlockLevel,blockLevel,decisionNumber,maxK,maxAlt,description);
++
++/** Optional blocks (x)? are translated to (x|) by before code generation
++ *  so we can just use the normal block template
++ */
++optionalBlock(alts,decls,decision,enclosingBlockLevel,blockLevel,decisionNumber,maxK,maxAlt,description);
++
++optionalBlockSingleAlt(alts,decls,decision,enclosingBlockLevel,blockLevel,decisionNumber,maxK,maxAlt,description);
++
++/** An alternative is just a list of elements; at outermost level */
++alt(elements,altNum,description,autoAST,outerAlt,treeLevel,rew);
++
++// E L E M E N T S
++
++/** match a token optionally with a label in front */
++tokenRef(token,label,elementIndex,hetero);
++
++/** ids+=ID */
++tokenRefAndListLabel(token,label,elementIndex,hetero);
++
++listLabel(label,elem);
++
++/** match a character */
++charRef(char,label);
++
++/** match a character range */
++charRangeRef(a,b,label);
++
++/** For now, sets are interval tests and must be tested inline */
++matchSet(s,label,elementIndex,postmatchCode);
++
++matchSetAndListLabel(s,label,elementIndex,postmatchCode);
++
++/** Match a string literal */
++lexerStringRef(string,label);
++
++wildcard(label,elementIndex);
++
++wildcardAndListLabel(label,elementIndex);
++
++/** Match . wildcard in lexer */
++wildcardChar(label, elementIndex);
++
++wildcardCharListLabel(label, elementIndex);
++
++/** Match a rule reference by invoking it possibly with arguments
++ *  and a return value or values.
++ */
++ruleRef(rule,label,elementIndex,args,scope);
++
++/** ids+=ID */
++ruleRefAndListLabel(rule,label,elementIndex,args,scope);
++
++/** A lexer rule reference */
++lexerRuleRef(rule,label,args,elementIndex,scope);
++
++/** i+=INT in lexer */
++lexerRuleRefAndListLabel(rule,label,args,elementIndex,scope);
++
++/** EOF in the lexer */
++lexerMatchEOF(label,elementIndex);
++
++/** match ^(root children) in tree parser */
++tree(root, actionsAfterRoot, children, nullableChildList,
++     enclosingTreeLevel, treeLevel);
++
++/** Every predicate is used as a validating predicate (even when it is
++ *  also hoisted into a prediction expression).
++ */
++validateSemanticPredicate(pred,description);
++
++// F i x e d  D F A  (if-then-else)
++
++dfaState(k,edges,eotPredictsAlt,description,stateNumber,semPredState);
++
++/** Same as a normal DFA state except that we don't examine lookahead
++ *  for the bypass alternative.  It delays error detection but this
++ *  is faster, smaller, and more what people expect.  For (X)? people
++ *  expect "if ( LA(1)==X ) match(X);" and that's it.
++ *
++ *  If a semPredState, don't force lookahead lookup; preds might not
++ *  need.
++ */
++dfaOptionalBlockState(k,edges,eotPredictsAlt,description,stateNumber,semPredState);
++
++/** A DFA state that is actually the loopback decision of a closure
++ *  loop.  If end-of-token (EOT) predicts any of the targets then it
++ *  should act like a default clause (i.e., no error can be generated).
++ *  This is used only in the lexer so that for ('a')* on the end of a
++ *  rule anything other than 'a' predicts exiting.
++ *
++ *  If a semPredState, don't force lookahead lookup; preds might not
++ *  need.
++ */
++dfaLoopbackState(k,edges,eotPredictsAlt,description,stateNumber,semPredState);
++
++/** An accept state indicates a unique alternative has been predicted */
++dfaAcceptState(alt);
++
++/** A simple edge with an expression.  If the expression is satisfied,
++ *  enter to the target state.  To handle gated productions, we may
++ *  have to evaluate some predicates for this edge.
++ */
++dfaEdge(labelExpr, targetState, predicates);
++
++// F i x e d  D F A  (switch case)
++
++/** A DFA state where a SWITCH may be generated.  The code generator
++ *  decides if this is possible: CodeGenerator.canGenerateSwitch().
++ */
++dfaStateSwitch(k,edges,eotPredictsAlt,description,stateNumber,semPredState);
++
++dfaOptionalBlockStateSwitch(k,edges,eotPredictsAlt,description,stateNumber,semPredState);
++
++dfaLoopbackStateSwitch(k, edges,eotPredictsAlt,description,stateNumber,semPredState);
++
++dfaEdgeSwitch(labels, targetState);
++
++// C y c l i c  D F A
++
++/** The code to initiate execution of a cyclic DFA; this is used
++ *  in the rule to predict an alt just like the fixed DFA case.
++ *  The <name> attribute is inherited via the parser, lexer, ...
++ */
++dfaDecision(decisionNumber,description);
++
++/** Generate the tables and support code needed for the DFAState object
++ *  argument.  Unless there is a semantic predicate (or syn pred, which
++ *  become sem preds), all states should be encoded in the state tables.
++ *  Consequently, cyclicDFAState/cyclicDFAEdge,eotDFAEdge templates are
++ *  not used except for special DFA states that cannot be encoded as
++ *  a transition table.
++ */
++cyclicDFA(dfa);
++
++/** A special state in a cyclic DFA; special means has a semantic predicate
++ *  or it's a huge set of symbols to check.
++ */
++cyclicDFAState(decisionNumber,stateNumber,edges,needErrorClause,semPredState);
++
++/** Just like a fixed DFA edge, test the lookahead and indicate what
++ *  state to jump to next if successful.  Again, this is for special
++ *  states.
++ */
++cyclicDFAEdge(labelExpr, targetStateNumber, edgeNumber, predicates);
++
++/** An edge pointing at end-of-token; essentially matches any char;
++ *  always jump to the target.
++ */
++eotDFAEdge(targetStateNumber,edgeNumber, predicates);
++
++// D F A  E X P R E S S I O N S
++
++andPredicates(left,right);
++
++orPredicates(operands);
++
++notPredicate(pred);
++
++evalPredicate(pred,description);
++
++evalSynPredicate(pred,description);
++
++lookaheadTest(atom,k,atomAsInt);
++
++/** Sometimes a lookahead test cannot assume that LA(k) is in a temp variable
++ *  somewhere.  Must ask for the lookahead directly.
++ */
++isolatedLookaheadTest(atom,k,atomAsInt);
++
++lookaheadRangeTest(lower,upper,k,rangeNumber,lowerAsInt,upperAsInt);
++
++isolatedLookaheadRangeTest(lower,upper,k,rangeNumber,lowerAsInt,upperAsInt);
++
++setTest(ranges);
++
++// A T T R I B U T E S
++
++parameterAttributeRef(attr);
++parameterSetAttributeRef(attr,expr);
++
++scopeAttributeRef(scope,attr,index,negIndex);
++scopeSetAttributeRef(scope,attr,expr,index,negIndex);
++
++/** $x is either global scope or x is rule with dynamic scope; refers
++ *  to stack itself not top of stack.  This is useful for predicates
++ *  like {$function.size()>0 && $function::name.equals("foo")}?
++ */
++isolatedDynamicScopeRef(scope);
++
++/** reference an attribute of rule; might only have single return value */
++ruleLabelRef(referencedRule,scope,attr);
++
++returnAttributeRef(ruleDescriptor,attr);
++returnSetAttributeRef(ruleDescriptor,attr,expr);
++
++/** How to translate $tokenLabel */
++tokenLabelRef(label);
++
++/** ids+=ID {$ids} or e+=expr {$e} */
++listLabelRef(label);
++
++// not sure the next are the right approach; and they are evaluated early;
++// they cannot see TREE_PARSER or PARSER attributes for example. :(
++
++tokenLabelPropertyRef_text(scope,attr);
++tokenLabelPropertyRef_type(scope,attr);
++tokenLabelPropertyRef_line(scope,attr);
++tokenLabelPropertyRef_pos(scope,attr);
++tokenLabelPropertyRef_channel(scope,attr);
++tokenLabelPropertyRef_index(scope,attr);
++tokenLabelPropertyRef_tree(scope,attr);
++
++ruleLabelPropertyRef_start(scope,attr);
++ruleLabelPropertyRef_stop(scope,attr);
++ruleLabelPropertyRef_tree(scope,attr);
++ruleLabelPropertyRef_text(scope,attr);
++ruleLabelPropertyRef_st(scope,attr);
++
++/** Isolated $RULE ref ok in lexer as it's a Token */
++lexerRuleLabel(label);
++
++lexerRuleLabelPropertyRef_type(scope,attr);
++lexerRuleLabelPropertyRef_line(scope,attr);
++lexerRuleLabelPropertyRef_pos(scope,attr);
++lexerRuleLabelPropertyRef_channel(scope,attr);
++lexerRuleLabelPropertyRef_index(scope,attr);
++lexerRuleLabelPropertyRef_text(scope,attr);
++
++// Somebody may ref $template or $tree or $stop within a rule:
++rulePropertyRef_start(scope,attr);
++rulePropertyRef_stop(scope,attr);
++rulePropertyRef_tree(scope,attr);
++rulePropertyRef_text(scope,attr);
++rulePropertyRef_st(scope,attr);
++
++lexerRulePropertyRef_text(scope,attr);
++lexerRulePropertyRef_type(scope,attr);
++lexerRulePropertyRef_line(scope,attr);
++lexerRulePropertyRef_pos(scope,attr);
++/** Undefined, but present for consistency with Token attributes; set to -1 */
++lexerRulePropertyRef_index(scope,attr);
++lexerRulePropertyRef_channel(scope,attr);
++lexerRulePropertyRef_start(scope,attr);
++lexerRulePropertyRef_stop(scope,attr);
++
++ruleSetPropertyRef_tree(scope,attr,expr);
++ruleSetPropertyRef_st(scope,attr,expr);
++
++/** How to execute an action */
++execAction(action);
++
++// M I S C (properties, etc...)
++
++codeFileExtension();
++
++/** Your language needs a header file; e.g., ".h" */
++optional headerFileExtension();
++
++true();
++false();
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/AST.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/AST.stg
+new file mode 100644
+index 0000000..a677445
+--- /dev/null
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/AST.stg
+@@ -0,0 +1,424 @@
++/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell, Pixel Mine, Inc.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++group AST;
++
++@outputFile.imports() ::= <<
++<@super.imports()>
++<if(!TREE_PARSER)><! tree parser would already have imported !>
++using Antlr.Runtime.Tree;
++using RewriteRuleITokenStream = Antlr.Runtime.Tree.RewriteRuleTokenStream;<\n>
++<endif>
++>>
++
++@genericParser.members() ::= <<
++<@super.members()>
++<parserMembers()>
++>>
++
++/** Add an adaptor property that knows how to build trees */
++parserMembers() ::= <<
++protected ITreeAdaptor adaptor = new CommonTreeAdaptor();<\n>
++public ITreeAdaptor TreeAdaptor
++{
++	get
++	{
++		return adaptor;
++	}
++	set
++	{
++		this.adaptor = value;
++		<grammar.directDelegates:{g|<g:delegateName()>.TreeAdaptor = this.adaptor;}>
++	}
++}
++>>
++
++@returnScope.ruleReturnMembers() ::= <<
++public <ASTLabelType> tree;
++public override object Tree { get { return tree; } }
++>>
++
++/** Add a variable to track rule's return AST */
++ruleDeclarations() ::= <<
++<super.ruleDeclarations()>
++<ASTLabelType> root_0 = null;<\n>
++>>
++
++ruleLabelDefs() ::= <<
++<super.ruleLabelDefs()>
++<[ruleDescriptor.tokenLabels,ruleDescriptor.wildcardTreeLabels,ruleDescriptor.wildcardTreeListLabels]
++	:{<ASTLabelType> <it.label.text>_tree=null;}; separator="\n">
++<ruleDescriptor.tokenListLabels:{<ASTLabelType> <it.label.text>_tree=null;}; separator="\n">
++<ruleDescriptor.allTokenRefsInAltsWithRewrites
++	:{RewriteRule<rewriteElementType>Stream stream_<it>=new RewriteRule<rewriteElementType>Stream(adaptor,"token <it>");}; separator="\n">
++<ruleDescriptor.allRuleRefsInAltsWithRewrites
++	:{RewriteRuleSubtreeStream stream_<it>=new RewriteRuleSubtreeStream(adaptor,"rule <it>");}; separator="\n">
++>>
++
++/** When doing auto AST construction, we must define some variables;
++ *  These should be turned off if doing rewrites.  This must be a "mode"
++ *  as a rule could have both rewrite and AST within the same alternative
++ *  block.
++ */
++@alt.declarations() ::= <<
++<if(autoAST)>
++<if(outerAlt)>
++<if(!rewriteMode)>
++root_0 = (<ASTLabelType>)adaptor.Nil();<\n>
++<endif>
++<endif>
++<endif>
++>>
++
++// T r a c k i n g  R u l e  E l e m e n t s
++
++/** ID and track it for use in a rewrite rule */
++tokenRefTrack(token,label,elementIndex,hetero) ::= <<
++<tokenRefBang(...)> <! Track implies no auto AST construction!>
++<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) <endif>stream_<token>.Add(<label>);<\n>
++>>
++
++/** ids+=ID and track it for use in a rewrite rule; adds to ids *and*
++ *  to the tracking list stream_ID for use in the rewrite.
++ */
++tokenRefTrackAndListLabel(token,label,elementIndex,hetero) ::= <<
++<tokenRefTrack(...)>
++<listLabel(elem=label,...)>
++>>
++
++/** ^(ID ...) track for rewrite */
++tokenRefRuleRootTrack(token,label,elementIndex,hetero) ::= <<
++<tokenRefBang(...)>
++<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) <endif>stream_<token>.Add(<label>);<\n>
++>>
++
++/** Match ^(label+=TOKEN ...) track for rewrite */
++tokenRefRuleRootTrackAndListLabel(token,label,elementIndex,hetero) ::= <<
++<tokenRefRuleRootTrack(...)>
++<listLabel(elem=label,...)>
++>>
++
++/** rule when output=AST and tracking for rewrite */
++ruleRefTrack(rule,label,elementIndex,args,scope) ::= <<
++<super.ruleRef(...)>
++<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) <endif>stream_<rule.name>.Add(<label>.Tree);
++>>
++
++/** x+=rule when output=AST and tracking for rewrite */
++ruleRefTrackAndListLabel(rule,label,elementIndex,args,scope) ::= <<
++<ruleRefTrack(...)>
++<listLabel(elem=label+".Tree",...)>
++>>
++
++/** ^(rule ...) rewrite */
++ruleRefRuleRootTrack(rule,label,elementIndex,args,scope) ::= <<
++<ruleRefRuleRoot(...)>
++<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) <endif>stream_<rule>.Add(<label>.Tree);
++>>
++
++/** ^(x+=rule ...) rewrite */
++ruleRefRuleRootTrackAndListLabel(rule,label,elementIndex,args,scope) ::= <<
++<ruleRefRuleRootTrack(...)>
++<listLabel(elem=label+".Tree",...)>
++>>
++
++// R e w r i t e
++
++rewriteCode(
++	alts, description,
++	referencedElementsDeep, // ALL referenced elements to right of ->
++	referencedTokenLabels,
++	referencedTokenListLabels,
++	referencedRuleLabels,
++	referencedRuleListLabels,
++	referencedWildcardLabels,
++	referencedWildcardListLabels,
++	rewriteBlockLevel, enclosingTreeLevel, treeLevel) ::=
++<<
++
++{
++// AST REWRITE
++// elements: <referencedElementsDeep; separator=", ">
++// token labels: <referencedTokenLabels; separator=", ">
++// rule labels: <referencedRuleLabels; separator=", ">
++// token list labels: <referencedTokenListLabels; separator=", ">
++// rule list labels: <referencedRuleListLabels; separator=", ">
++// wildcard labels: <[referencedWildcardLabels,referencedWildcardListLabels]; separator=", ">
++<if(backtracking)>
++if ( <actions.(actionScope).synpredgate> ) {<\n>
++<endif>
++<prevRuleRootRef()>.tree = root_0;
++<rewriteCodeLabels()>
++root_0 = (<ASTLabelType>)adaptor.Nil();
++<alts:rewriteAlt(); separator="else ">
++<! if tree parser and rewrite=true !>
++<if(TREE_PARSER)>
++<if(rewriteMode)>
++<prevRuleRootRef()>.tree = (<ASTLabelType>)adaptor.RulePostProcessing(root_0);
++input.ReplaceChildren(adaptor.GetParent(retval.start),
++                      adaptor.GetChildIndex(retval.start),
++                      adaptor.GetChildIndex(_last),
++                      retval.tree);
++<endif>
++<endif>
++<! if parser or tree-parser && rewrite!=true, we need to set result !>
++<if(!TREE_PARSER)>
++<prevRuleRootRef()>.tree = root_0;<\n>
++<else>
++<if(!rewriteMode)>
++<prevRuleRootRef()>.tree = root_0;
++<endif>
++<endif>
++<if(backtracking)>
++}<\n>
++<endif>
++}
++
++>>
++
++rewriteCodeLabels() ::= <<
++<referencedTokenLabels
++    :{RewriteRule<rewriteElementType>Stream stream_<it>=new RewriteRule<rewriteElementType>Stream(adaptor,"token <it>",<it>);};
++    separator="\n"
++>
++<referencedTokenListLabels
++    :{RewriteRule<rewriteElementType>Stream stream_<it>=new RewriteRule<rewriteElementType>Stream(adaptor,"token <it>", list_<it>);};
++    separator="\n"
++>
++<referencedWildcardLabels
++	:{RewriteRuleSubtreeStream stream_<it>=new RewriteRuleSubtreeStream(adaptor,"wildcard <it>",<it>);};
++	separator="\n"
++>
++<referencedWildcardListLabels
++	:{RewriteRuleSubtreeStream stream_<it>=new RewriteRuleSubtreeStream(adaptor,"wildcard <it>",list_<it>);};
++	separator="\n"
++>
++<referencedRuleLabels
++    :{RewriteRuleSubtreeStream stream_<it>=new RewriteRuleSubtreeStream(adaptor,"rule <it>",<it>!=null?<it>.tree:null);};
++    separator="\n"
++>
++<referencedRuleListLabels
++    :{RewriteRuleSubtreeStream stream_<it>=new RewriteRuleSubtreeStream(adaptor,"token <it>",list_<it>);};
++    separator="\n"
++>
++>>
++
++/** Generate code for an optional rewrite block; note it uses the deep ref'd element
++  *  list rather shallow like other blocks.
++  */
++rewriteOptionalBlock(
++	alt,rewriteBlockLevel,
++	referencedElementsDeep, // all nested refs
++	referencedElements, // elements in immediately block; no nested blocks
++	description) ::=
++<<
++// <fileName>:<description>
++if ( <referencedElementsDeep:{el | stream_<el>.HasNext}; separator="||"> )
++{
++	<alt>
++}
++<referencedElementsDeep:{el | stream_<el>.Reset();<\n>}>
++>>
++
++rewriteClosureBlock(
++	alt,rewriteBlockLevel,
++	referencedElementsDeep, // all nested refs
++	referencedElements, // elements in immediately block; no nested blocks
++	description) ::=
++<<
++// <fileName>:<description>
++while ( <referencedElements:{el | stream_<el>.HasNext}; separator="||"> )
++{
++	<alt>
++}
++<referencedElements:{el | stream_<el>.Reset();<\n>}>
++>>
++
++rewritePositiveClosureBlock(
++	alt,rewriteBlockLevel,
++	referencedElementsDeep, // all nested refs
++	referencedElements, // elements in immediately block; no nested blocks
++	description) ::=
++<<
++if ( !(<referencedElements:{el | stream_<el>.HasNext}; separator="||">) )
++{
++	throw new RewriteEarlyExitException();
++}
++while ( <referencedElements:{el | stream_<el>.HasNext}; separator="||"> )
++{
++	<alt>
++}
++<referencedElements:{el | stream_<el>.Reset();<\n>}>
++>>
++
++rewriteAlt(a) ::= <<
++// <a.description>
++<if(a.pred)>
++if (<a.pred>)
++{
++	<a.alt>
++}<\n>
++<else>
++{
++	<a.alt>
++}<\n>
++<endif>
++>>
++
++/** For empty rewrites: "r : ... -> ;" */
++rewriteEmptyAlt() ::= "root_0 = null;"
++
++rewriteTree(root,children,description,enclosingTreeLevel,treeLevel) ::= <<
++// <fileName>:<description>
++{
++<ASTLabelType> root_<treeLevel> = (<ASTLabelType>)adaptor.Nil();
++<root:rewriteElement()>
++<children:rewriteElement()>
++adaptor.AddChild(root_<enclosingTreeLevel>, root_<treeLevel>);
++}<\n>
++>>
++
++rewriteElementList(elements) ::= "<elements:rewriteElement()>"
++
++rewriteElement(e) ::= <<
++<@pregen()>
++<e.el>
++>>
++
++/** Gen ID or ID[args] */
++rewriteTokenRef(token,elementIndex,hetero,args) ::= <<
++adaptor.AddChild(root_<treeLevel>, <createRewriteNodeFromElement(...)>);<\n>
++>>
++
++/** Gen $label ... where defined via label=ID */
++rewriteTokenLabelRef(label,elementIndex) ::= <<
++adaptor.AddChild(root_<treeLevel>, stream_<label>.NextNode());<\n>
++>>
++
++/** Gen $label ... where defined via label+=ID */
++rewriteTokenListLabelRef(label,elementIndex) ::= <<
++adaptor.AddChild(root_<treeLevel>, stream_<label>.NextNode());<\n>
++>>
++
++/** Gen ^($label ...) */
++rewriteTokenLabelRefRoot(label,elementIndex) ::= <<
++root_<treeLevel> = (<ASTLabelType>)adaptor.BecomeRoot(stream_<label>.NextNode(), root_<treeLevel>);<\n>
++>>
++
++/** Gen ^($label ...) where label+=... */
++rewriteTokenListLabelRefRoot ::= rewriteTokenLabelRefRoot
++
++/** Gen ^(ID ...) or ^(ID[args] ...) */
++rewriteTokenRefRoot(token,elementIndex,hetero,args) ::= <<
++root_<treeLevel> = (<ASTLabelType>)adaptor.BecomeRoot(<createRewriteNodeFromElement(...)>, root_<treeLevel>);<\n>
++>>
++
++rewriteImaginaryTokenRef(args,token,hetero,elementIndex) ::= <<
++adaptor.AddChild(root_<treeLevel>, <createImaginaryNode(tokenType=token, ...)>);<\n>
++>>
++
++rewriteImaginaryTokenRefRoot(args,token,hetero,elementIndex) ::= <<
++root_<treeLevel> = (<ASTLabelType>)adaptor.BecomeRoot(<createImaginaryNode(tokenType=token, ...)>, root_<treeLevel>);<\n>
++>>
++
++/** plain -> {foo} action */
++rewriteAction(action) ::= <<
++root_0 = <action>;<\n>
++>>
++
++/** What is the name of the previous value of this rule's root tree?  This
++ *  let's us refer to $rule to mean previous value.  I am reusing the
++ *  variable 'tree' sitting in retval struct to hold the value of root_0 right
++ *  before I set it during rewrites.  The assign will be to retval.tree.
++ */
++prevRuleRootRef() ::= "retval"
++
++rewriteRuleRef(rule) ::= <<
++adaptor.AddChild(root_<treeLevel>, stream_<rule>.NextTree());<\n>
++>>
++
++rewriteRuleRefRoot(rule) ::= <<
++root_<treeLevel> = (<ASTLabelType>)adaptor.BecomeRoot(stream_<rule>.NextNode(), root_<treeLevel>);<\n>
++>>
++
++rewriteNodeAction(action) ::= <<
++adaptor.AddChild(root_<treeLevel>, <action>);<\n>
++>>
++
++rewriteNodeActionRoot(action) ::= <<
++root_<treeLevel> = (<ASTLabelType>)adaptor.BecomeRoot(<action>, root_<treeLevel>);<\n>
++>>
++
++/** Gen $ruleLabel ... where defined via ruleLabel=rule */
++rewriteRuleLabelRef(label) ::= <<
++adaptor.AddChild(root_<treeLevel>, stream_<label>.NextTree());<\n>
++>>
++
++/** Gen $ruleLabel ... where defined via ruleLabel+=rule */
++rewriteRuleListLabelRef(label) ::= <<
++adaptor.AddChild(root_<treeLevel>, stream_<label>.NextTree());<\n>
++>>
++
++/** Gen ^($ruleLabel ...) where ruleLabel=rule */
++rewriteRuleLabelRefRoot(label) ::= <<
++root_<treeLevel> = (<ASTLabelType>)adaptor.BecomeRoot(stream_<label>.NextNode(), root_<treeLevel>);<\n>
++>>
++
++/** Gen ^($ruleLabel ...) where ruleLabel+=rule */
++rewriteRuleListLabelRefRoot(label) ::= <<
++root_<treeLevel> = (<ASTLabelType>)adaptor.BecomeRoot(stream_<label>.NextNode(), root_<treeLevel>);<\n>
++>>
++
++rewriteWildcardLabelRef(label) ::= <<
++adaptor.AddChild(root_<treeLevel>, stream_<label>.NextTree());<\n>
++>>
++
++createImaginaryNode(tokenType,hetero,args) ::= <<
++<if(hetero)>
++<! new MethodNode(IDLabel, args) !>
++new <hetero>(<tokenType><if(args)>, <args; separator=", "><endif>)
++<else>
++(<ASTLabelType>)adaptor.Create(<tokenType>, <args; separator=", "><if(!args)>"<tokenType>"<endif>)
++<endif>
++>>
++
++createRewriteNodeFromElement(token,hetero,args) ::= <<
++<if(hetero)>
++new <hetero>(stream_<token>.NextToken()<if(args)>, <args; separator=", "><endif>)
++<else>
++<if(args)> <! must create new node from old !>
++adaptor.Create(<token>, <args; separator=", ">)
++<else>
++stream_<token>.NextNode()
++<endif>
++<endif>
++>>
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/ASTDbg.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/ASTDbg.stg
+new file mode 100644
+index 0000000..fb623f7
+--- /dev/null
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/ASTDbg.stg
+@@ -0,0 +1,98 @@
++/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell, Pixel Mine, Inc.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++/** Template overrides to add debugging to AST stuff.  Dynamic inheritance
++ *  hierarchy is set up as ASTDbg : AST : Dbg : Java by code generator.
++ */
++group ASTDbg;
++
++parserMembers() ::= <<
++protected ITreeAdaptor adaptor;
++public ITreeAdaptor TreeAdaptor
++{
++	get
++	{
++		return adaptor;
++	}
++	set
++	{
++<!<if(grammar.grammarIsRoot)>
++		this.adaptor = new DebugTreeAdaptor( dbg, value );
++<else>
++		this.adaptor = (DebugTreeAdaptor)value; // delegator sends dbg adaptor
++<endif><\n>!>
++		this.adaptor = value;
++		<grammar.directDelegates:{g|<g:delegateName()>.TreeAdaptor = this.adaptor;}>
++	}
++}<\n>
++>>
++
++parserCtorBody() ::= <<
++<super.parserCtorBody()>
++>>
++
++createListenerAndHandshake() ::= <<
++DebugEventSocketProxy proxy = new DebugEventSocketProxy( this, port, <if(TREE_PARSER)>input.TreeAdaptor<else>adaptor<endif> );
++DebugListener = proxy;
++set<inputStreamType>( new Debug<inputStreamType>( input, proxy ) );
++try
++{
++	proxy.handshake();
++}
++catch ( IOException ioe )
++{
++	ReportError( ioe );
++}
++>>
++
++@ctorForRootGrammar.finally() ::= <<
++if ( TreeAdaptor == null )
++	TreeAdaptor = new CommonTreeAdaptor();
++<!proxy.TreeAdaptor = adap;!>
++>>
++
++@ctorForProfilingRootGrammar.finally() ::=<<
++if ( TreeAdaptor == null )
++	TreeAdaptor = new CommonTreeAdaptor();
++<!proxy.TreeAdaptor = adap;!>
++>>
++
++@ctorForPredefinedListener.superClassRef() ::= ": base( input, dbg )"
++
++@ctorForPredefinedListener.finally() ::=<<
++<if(grammar.grammarIsRoot)><! don't create new adaptor for delegates !>
++if ( TreeAdaptor == null )
++	TreeAdaptor = new CommonTreeAdaptor();<\n>
++<endif>
++>>
++
++@rewriteElement.pregen() ::= "dbg.Location( <e.line>, <e.pos> );"
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/ASTParser.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/ASTParser.stg
+new file mode 100644
+index 0000000..ffd0bd0
+--- /dev/null
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/ASTParser.stg
+@@ -0,0 +1,194 @@
++/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell, Pixel Mine, Inc.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++/** Templates for building ASTs during normal parsing.
++ *
++ *  Deal with many combinations.  Dimensions are:
++ *  Auto build or rewrite
++ *    no label, label, list label  (label/no-label handled together)
++ *    child, root
++ *    token, set, rule, wildcard
++ *
++ *  The situation is not too bad as rewrite (->) usage makes ^ and !
++ *  invalid. There is no huge explosion of combinations.
++ */
++group ASTParser;
++
++@rule.setErrorReturnValue() ::= <<
++retval.tree = (<ASTLabelType>)adaptor.ErrorNode(input, retval.start, input.LT(-1), re);
++<! System.out.WriteLine("<ruleName> returns "+((CommonTree)retval.tree).toStringTree()); !>
++>>
++
++// TOKEN AST STUFF
++
++/** ID and output=AST */
++tokenRef(token,label,elementIndex,hetero) ::= <<
++<super.tokenRef(...)>
++<if(backtracking)>if ( state.backtracking==0 ) {<endif>
++<label>_tree = <createNodeFromToken(...)>;
++adaptor.AddChild(root_0, <label>_tree);
++<if(backtracking)>}<endif>
++>>
++
++/** ID! and output=AST (same as plain tokenRef) */
++tokenRefBang(token,label,elementIndex) ::= "<super.tokenRef(...)>"
++
++/** ID^ and output=AST */
++tokenRefRuleRoot(token,label,elementIndex,hetero) ::= <<
++<super.tokenRef(...)>
++<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) {<endif>
++<label>_tree = <createNodeFromToken(...)>;
++root_0 = (<ASTLabelType>)adaptor.BecomeRoot(<label>_tree, root_0);
++<if(backtracking)>}<endif>
++>>
++
++/** ids+=ID! and output=AST */
++tokenRefBangAndListLabel(token,label,elementIndex,hetero) ::= <<
++<tokenRefBang(...)>
++<listLabel(elem=label,...)>
++>>
++
++/** label+=TOKEN when output=AST but not rewrite alt */
++tokenRefAndListLabel(token,label,elementIndex,hetero) ::= <<
++<tokenRef(...)>
++<listLabel(elem=label,...)>
++>>
++
++/** Match label+=TOKEN^ when output=AST but not rewrite alt */
++tokenRefRuleRootAndListLabel(token,label,hetero,elementIndex) ::= <<
++<tokenRefRuleRoot(...)>
++<listLabel(elem=label,...)>
++>>
++
++// SET AST
++
++// the match set stuff is interesting in that it uses an argument list
++// to pass code to the default matchSet; another possible way to alter
++// inherited code.  I don't use the region stuff because I need to pass
++// different chunks depending on the operator.  I don't like making
++// the template name have the operator as the number of templates gets
++// large but this is the most flexible--this is as opposed to having
++// the code generator call matchSet then add root code or ruleroot code
++// plus list label plus ...  The combinations might require complicated
++// rather than just added on code.  Investigate that refactoring when
++// I have more time.
++
++matchSet(s,label,hetero,elementIndex,postmatchCode) ::= <<
++<super.matchSet(..., postmatchCode={<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) <endif>adaptor.AddChild(root_0, <createNodeFromToken(...)>);})>
++>>
++
++matchRuleBlockSet(s,label,hetero,elementIndex,postmatchCode,treeLevel="0") ::= <<
++<matchSet(...)>
++>>
++
++matchSetBang(s,label,elementIndex,postmatchCode) ::= "<super.matchSet(...)>"
++
++// note there is no matchSetTrack because -> rewrites force sets to be
++// plain old blocks of alts: (A|B|...|C)
++
++matchSetRuleRoot(s,label,hetero,elementIndex,debug) ::= <<
++<if(label)>
++<label>=(<labelType>)input.LT(1);<\n>
++<endif>
++<super.matchSet(..., postmatchCode={<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) <endif>root_0 = (<ASTLabelType>)adaptor.BecomeRoot(<createNodeFromToken(...)>, root_0);})>
++>>
++
++// RULE REF AST
++
++/** rule when output=AST */
++ruleRef(rule,label,elementIndex,args,scope) ::= <<
++<super.ruleRef(...)>
++<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) <endif>adaptor.AddChild(root_0, <label>.Tree);
++>>
++
++/** rule! is same as normal rule ref */
++ruleRefBang(rule,label,elementIndex,args,scope) ::= "<super.ruleRef(...)>"
++
++/** rule^ */
++ruleRefRuleRoot(rule,label,elementIndex,args,scope) ::= <<
++<super.ruleRef(...)>
++<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) <endif>root_0 = (<ASTLabelType>)adaptor.BecomeRoot(<label>.Tree, root_0);
++>>
++
++/** x+=rule when output=AST */
++ruleRefAndListLabel(rule,label,elementIndex,args,scope) ::= <<
++<ruleRef(...)>
++<listLabel(elem=label+".Tree",...)>
++>>
++
++/** x+=rule! when output=AST is a rule ref with list addition */
++ruleRefBangAndListLabel(rule,label,elementIndex,args,scope) ::= <<
++<ruleRefBang(...)>
++<listLabel(elem=label+".Tree",...)>
++>>
++
++/** x+=rule^ */
++ruleRefRuleRootAndListLabel(rule,label,elementIndex,args,scope) ::= <<
++<ruleRefRuleRoot(...)>
++<listLabel(elem=label+".Tree",...)>
++>>
++
++// WILDCARD AST
++
++wildcard(label,elementIndex) ::= <<
++<super.wildcard(...)>
++<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) {<endif>
++<label>_tree = (<ASTLabelType>)adaptor.Create(<label>);
++adaptor.AddChild(root_0, <label>_tree);
++<if(backtracking)>}<endif>
++>>
++
++wildcardBang(label,elementIndex) ::= "<super.wildcard(...)>"
++
++wildcardRuleRoot(label,elementIndex) ::= <<
++<super.wildcard(...)>
++<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) {<endif>
++<label>_tree = (<ASTLabelType>)adaptor.Create(<label>);
++root_0 = (<ASTLabelType>)adaptor.BecomeRoot(<label>_tree, root_0);
++<if(backtracking)>}<endif>
++>>
++
++createNodeFromToken(label,hetero) ::= <<
++<if(hetero)>
++new <hetero>(<label>) <! new MethodNode(IDLabel) !>
++<else>
++(<ASTLabelType>)adaptor.Create(<label>)
++<endif>
++>>
++
++ruleCleanUp() ::= <<
++<super.ruleCleanUp()>
++<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) {<\n><endif>
++retval.tree = (<ASTLabelType>)adaptor.RulePostProcessing(root_0);
++adaptor.SetTokenBoundaries(retval.tree, retval.start, retval.stop);
++<if(backtracking)>}<endif>
++>>
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/ASTTreeParser.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/ASTTreeParser.stg
+new file mode 100644
+index 0000000..cceba1c
+--- /dev/null
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/ASTTreeParser.stg
+@@ -0,0 +1,300 @@
++/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell, Pixel Mine, Inc.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++/** Templates for building ASTs during tree parsing.
++ *
++ *  Deal with many combinations.  Dimensions are:
++ *  Auto build or rewrite
++ *    no label, label, list label  (label/no-label handled together)
++ *    child, root
++ *    token, set, rule, wildcard
++ *
++ *  Each combination has its own template except that label/no label
++ *  is combined into tokenRef, ruleRef, ...
++ */
++group ASTTreeParser;
++
++/** Add a variable to track last element matched */
++ruleDeclarations() ::= <<
++<super.ruleDeclarations()>
++<ASTLabelType> _first_0 = null;
++<ASTLabelType> _last = null;<\n>
++>>
++
++/** What to emit when there is no rewrite rule.  For auto build
++ *  mode, does nothing.
++ */
++noRewrite(rewriteBlockLevel, treeLevel) ::= <<
++<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) {<endif>
++<if(rewriteMode)>
++retval.tree = (<ASTLabelType>)_first_0;
++if ( adaptor.GetParent(retval.tree)!=null && adaptor.IsNil( adaptor.getParent(retval.tree) ) )
++    retval.tree = (<ASTLabelType>)adaptor.GetParent(retval.tree);
++<endif>
++<if(backtracking)>}<endif>
++>>
++
++/** match ^(root children) in tree parser; override here to
++ *  add tree construction actions.
++ */
++tree(root, actionsAfterRoot, children, nullableChildList,
++     enclosingTreeLevel, treeLevel) ::= <<
++_last = (<ASTLabelType>)input.LT(1);
++{
++<ASTLabelType> _save_last_<treeLevel> = _last;
++<ASTLabelType> _first_<treeLevel> = null;
++<if(!rewriteMode)>
++<ASTLabelType> root_<treeLevel> = (<ASTLabelType>)adaptor.Nil();
++<endif>
++<root:element()>
++<if(rewriteMode)>
++<if(backtracking)>if ( <actions.(actionScope).synpredgate> )<endif>
++<if(root.el.rule)>
++if ( _first_<enclosingTreeLevel>==null ) _first_<enclosingTreeLevel> = <root.el.label>.tree;
++<else>
++if ( _first_<enclosingTreeLevel>==null ) _first_<enclosingTreeLevel> = <root.el.label>;
++<endif>
++<endif>
++<actionsAfterRoot:element()>
++<if(nullableChildList)>
++if ( input.LA(1)==TokenConstants.DOWN ) {
++    Match(input, TokenConstants.DOWN, null); <checkRuleBacktrackFailure()>
++    <children:element()>
++    Match(input, TokenConstants.UP, null); <checkRuleBacktrackFailure()>
++}
++<else>
++Match(input, TokenConstants.DOWN, null); <checkRuleBacktrackFailure()>
++<children:element()>
++Match(input, TokenConstants.UP, null); <checkRuleBacktrackFailure()>
++<endif>
++<if(!rewriteMode)>
++adaptor.AddChild(root_<enclosingTreeLevel>, root_<treeLevel>);
++<endif>
++_last = _save_last_<treeLevel>;
++}<\n>
++>>
++
++// TOKEN AST STUFF
++
++/** ID! and output=AST (same as plain tokenRef) 'cept add
++ *  setting of _last
++ */
++tokenRefBang(token,label,elementIndex) ::= <<
++_last = (<ASTLabelType>)input.LT(1);
++<super.tokenRef(...)>
++>>
++
++/** ID auto construct */
++tokenRef(token,label,elementIndex,hetero) ::= <<
++_last = (<ASTLabelType>)input.LT(1);
++<super.tokenRef(...)>
++<if(!rewriteMode)>
++<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) {<endif>
++<if(hetero)>
++<label>_tree = new <hetero>(<label>);
++<else>
++<label>_tree = (<ASTLabelType>)adaptor.DupNode(<label>);
++<endif><\n>
++adaptor.AddChild(root_<treeLevel>, <label>_tree);
++<if(backtracking)>}<endif>
++<else> <! rewrite mode !>
++<if(backtracking)>if ( <actions.(actionScope).synpredgate> )<endif>
++if ( _first_<treeLevel>==null ) _first_<treeLevel> = <label>;
++<endif>
++>>
++
++/** label+=TOKEN auto construct */
++tokenRefAndListLabel(token,label,elementIndex,hetero) ::= <<
++<tokenRef(...)>
++<listLabel(elem=label,...)>
++>>
++
++/** ^(ID ...) auto construct */
++tokenRefRuleRoot(token,label,elementIndex,hetero) ::= <<
++_last = (<ASTLabelType>)input.LT(1);
++<super.tokenRef(...)>
++<if(!rewriteMode)>
++<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) {<endif>
++<if(hetero)>
++<label>_tree = new <hetero>(<label>);
++<else>
++<label>_tree = (<ASTLabelType>)adaptor.DupNode(<label>);
++<endif><\n>
++root_<treeLevel> = (<ASTLabelType>)adaptor.BecomeRoot(<label>_tree, root_<treeLevel>);
++<if(backtracking)>}<endif>
++<endif>
++>>
++
++/** Match ^(label+=TOKEN ...) auto construct */
++tokenRefRuleRootAndListLabel(token,label,elementIndex,hetero) ::= <<
++<tokenRefRuleRoot(...)>
++<listLabel(elem=label,...)>
++>>
++
++/** Match . wildcard and auto dup the node/subtree */
++wildcard(token,label,elementIndex,hetero) ::= <<
++_last = (<ASTLabelType>)input.LT(1);
++<super.wildcard(...)>
++<if(!rewriteMode)>
++<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) {<endif>
++<label>_tree = (<ASTLabelType>)adaptor.DupTree(<label>);
++adaptor.AddChild(root_<treeLevel>, <label>_tree);
++<if(backtracking)>}<endif>
++<else> <! rewrite mode !>
++<if(backtracking)>if ( <actions.(actionScope).synpredgate> )<endif>
++if ( _first_<treeLevel>==null ) _first_<treeLevel> = <label>;
++<endif>
++>>
++
++// SET AST
++
++matchSet(s,label,hetero,elementIndex,postmatchCode) ::= <<
++_last = (<ASTLabelType>)input.LT(1);
++<super.matchSet(..., postmatchCode={
++<if(!rewriteMode)>
++<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) {<endif>
++<if(hetero)>
++<label>_tree = new <hetero>(<label>);
++<else>
++<label>_tree = (<ASTLabelType>)adaptor.DupNode(<label>);
++<endif><\n>
++adaptor.AddChild(root_<treeLevel>, <label>_tree);
++<if(backtracking)>}<endif>
++<endif>
++}
++)>
++>>
++
++matchRuleBlockSet(s,label,hetero,elementIndex,postmatchCode,treeLevel="0") ::= <<
++<matchSet(...)>
++<noRewrite()> <! set return tree !>
++>>
++
++matchSetBang(s,label,elementIndex,postmatchCode) ::= <<
++_last = (<ASTLabelType>)input.LT(1);
++<super.matchSet(...)>
++>>
++
++matchSetRuleRoot(s,label,hetero,elementIndex,debug) ::= <<
++<super.matchSet(..., postmatchCode={
++<if(!rewriteMode)>
++<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) {<endif>
++<if(hetero)>
++<label>_tree = new <hetero>(<label>);
++<else>
++<label>_tree = (<ASTLabelType>)adaptor.DupNode(<label>);
++<endif><\n>
++root_<treeLevel> = (<ASTLabelType>)adaptor.BecomeRoot(<label>_tree, root_<treeLevel>);
++<if(backtracking)>}<endif>
++<endif>
++}
++)>
++>>
++
++// RULE REF AST
++
++/** rule auto construct */
++ruleRef(rule,label,elementIndex,args,scope) ::= <<
++_last = (<ASTLabelType>)input.LT(1);
++<super.ruleRef(...)>
++<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) <endif>
++<if(!rewriteMode)>
++adaptor.AddChild(root_<treeLevel>, <label>.Tree);
++<else> <! rewrite mode !>
++if ( _first_<treeLevel>==null ) _first_<treeLevel> = <label>.tree;
++<endif>
++>>
++
++/** x+=rule auto construct */
++ruleRefAndListLabel(rule,label,elementIndex,args,scope) ::= <<
++<ruleRef(...)>
++<listLabel(elem=label+".Tree",...)>
++>>
++
++/** ^(rule ...) auto construct */
++ruleRefRuleRoot(rule,label,elementIndex,args,scope) ::= <<
++_last = (<ASTLabelType>)input.LT(1);
++<super.ruleRef(...)>
++<if(!rewriteMode)>
++<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) <endif>root_<treeLevel> = (<ASTLabelType>)adaptor.BecomeRoot(<label>.Tree, root_<treeLevel>);
++<endif>
++>>
++
++/** ^(x+=rule ...) auto construct */
++ruleRefRuleRootAndListLabel(rule,label,elementIndex,args,scope) ::= <<
++<ruleRefRuleRoot(...)>
++<listLabel(elem=label+".Tree",...)>
++>>
++
++/** rule when output=AST and tracking for rewrite */
++ruleRefTrack(rule,label,elementIndex,args,scope) ::= <<
++_last = (<ASTLabelType>)input.LT(1);
++<super.ruleRefTrack(...)>
++>>
++
++/** x+=rule when output=AST and tracking for rewrite */
++ruleRefTrackAndListLabel(rule,label,elementIndex,args,scope) ::= <<
++_last = (<ASTLabelType>)input.LT(1);
++<super.ruleRefTrackAndListLabel(...)>
++>>
++
++/** ^(rule ...) rewrite */
++ruleRefRuleRootTrack(rule,label,elementIndex,args,scope) ::= <<
++_last = (<ASTLabelType>)input.LT(1);
++<super.ruleRefRootTrack(...)>
++>>
++
++/** ^(x+=rule ...) rewrite */
++ruleRefRuleRootTrackAndListLabel(rule,label,elementIndex,args,scope) ::= <<
++_last = (<ASTLabelType>)input.LT(1);
++<super.ruleRefRuleRootTrackAndListLabel(...)>
++>>
++
++/** Streams for token refs are tree nodes now; override to
++ *  change NextToken to NextNode.
++ */
++createRewriteNodeFromElement(token,hetero,scope) ::= <<
++<if(hetero)>
++new <hetero>(stream_<token>.NextNode())
++<else>
++stream_<token>.NextNode()
++<endif>
++>>
++
++ruleCleanUp() ::= <<
++<super.ruleCleanUp()>
++<if(!rewriteMode)>
++<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) {<\n><endif>
++retval.tree = (<ASTLabelType>)adaptor.RulePostProcessing(root_0);
++<if(backtracking)>}<endif>
++<endif>
++>>
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg
+new file mode 100644
+index 0000000..0583488
+--- /dev/null
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg
+@@ -0,0 +1,1502 @@
++/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell, Pixel Mine, Inc.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++group CSharp3 implements ANTLRCore;
++
++csharpVisibilityMap ::= [
++	"private":"private",
++	"protected":"protected",
++	"public":"public",
++	"fragment":"private",
++	default:"private"
++]
++
++/** The overall file structure of a recognizer; stores methods for rules
++ *  and cyclic DFAs plus support code.
++ */
++outputFile(	LEXER,PARSER,TREE_PARSER, actionScope, actions,
++			docComment, recognizer,
++			name, tokens, tokenNames, rules, cyclicDFAs,
++			bitsets, buildTemplate, buildAST, rewriteMode, profile,
++			backtracking, synpreds, memoize, numRules,
++			fileName, ANTLRVersion, generatedTimestamp, trace,
++			scopes, superClass, literals) ::=
++<<
++// $ANTLR <ANTLRVersion> <fileName> <generatedTimestamp>
++
++// The variable 'variable' is assigned but its value is never used.
++#pragma warning disable 219
++// Unreachable code detected.
++#pragma warning disable 162
++
++<actions.(actionScope).header>
++
++<@imports>
++using System.Collections.Generic;
++using Antlr.Runtime;
++<if(TREE_PARSER)>
++using Antlr.Runtime.Tree;
++using RewriteRuleITokenStream = Antlr.Runtime.Tree.RewriteRuleTokenStream;
++<endif>
++using Stack = System.Collections.Generic.Stack\<object>;
++using List = System.Collections.IList;
++using ArrayList = System.Collections.Generic.List\<object>;
++<if(backtracking)>
++using Map = System.Collections.IDictionary;
++using HashMap = System.Collections.Generic.Dictionary\<object, object>;
++<endif>
++<@end>
++
++<if(actions.(actionScope).namespace)>
++namespace <actions.(actionScope).namespace>
++{
++<endif>
++
++<docComment>
++<recognizer>
++<if(actions.(actionScope).namespace)>
++
++} // namespace <actions.(actionScope).namespace>
++
++<endif>
++>>
++
++lexer(grammar, name, tokens, scopes, rules, numRules, labelType="IToken",
++      filterMode, superClass="Lexer") ::= <<
++public partial class <grammar.recognizerName> : <@superClassName><superClass><@end>
++{
++	<tokens:{public const int <it.name>=<it.type>;}; separator="\n">
++	<scopes:{<if(it.isDynamicGlobalScope)><globalAttributeScope(scope=it)><endif>}>
++	<actions.lexer.members>
++
++    // delegates
++    <grammar.delegates:
++         {g|public <g.recognizerName> <g:delegateName()>;}; separator="\n">
++    // delegators
++    <grammar.delegators:
++         {g|public <g.recognizerName> <g:delegateName()>;}; separator="\n">
++    <last(grammar.delegators):{g|public <g.recognizerName> gParent;}>
++
++	public <grammar.recognizerName>() {}<! needed by subclasses !>
++	public <grammar.recognizerName>( ICharStream input<grammar.delegators:{g|, <g.recognizerName> <g:delegateName()>}> )
++		: this( input, new RecognizerSharedState()<grammar.delegators:{g|, <g:delegateName()>}> )
++	{
++	}
++	public <grammar.recognizerName>( ICharStream input, RecognizerSharedState state<grammar.delegators:{g|, <g.recognizerName> <g:delegateName()>}> )
++		: base( input, state )
++	{
++<if(memoize)>
++<if(grammar.grammarIsRoot)>
++		state.ruleMemo = new System.Collections.Generic.Dictionary\<int, int>[<numRules>+1];<\n><! index from 1..n !>
++<endif>
++<endif>
++		<grammar.directDelegates:
++		 {g|<g:delegateName()> = new <g.recognizerName>(input, state<trunc(g.delegators):{p|, <p:delegateName()>}>, this);}; separator="\n">
++		<grammar.delegators:
++		 {g|this.<g:delegateName()> = <g:delegateName()>;}; separator="\n">
++		<last(grammar.delegators):{g|gParent = <g:delegateName()>;}>
++	}
++	public override string GrammarFileName { get { return "<fileName>"; } }
++
++<if(filterMode)>
++	<filteringNextToken()>
++<endif>
++	<rules; separator="\n\n">
++
++	<synpreds:{p | <lexerSynpred(p)>}>
++
++	#region DFA
++	<cyclicDFAs:{dfa | DFA<dfa.decisionNumber> dfa<dfa.decisionNumber>;}; separator="\n">
++
++	protected override void InitDFAs()
++	{
++		base.InitDFAs();
++		<cyclicDFAs:{dfa | dfa<dfa.decisionNumber> = new DFA<dfa.decisionNumber>( this<if(dfa.specialStateSTs)>, new SpecialStateTransitionHandler( specialStateTransition<dfa.decisionNumber> )<endif> );}; separator="\n">
++	}
++
++	<cyclicDFAs:cyclicDFA()> <! dump tables for all DFA !>
++	#endregion
++
++}
++>>
++
++/** A override of Lexer.nextToken() that backtracks over mTokens() looking
++ *  for matches.  No error can be generated upon error; just rewind, consume
++ *  a token and then try again.  backtracking needs to be set as well.
++ *  Make rule memoization happen only at levels above 1 as we start mTokens
++ *  at backtracking==1.
++ */
++filteringNextToken() ::= <<
++public override IToken NextToken()
++{
++	for ( ; ;)
++	{
++		if ( input.LA(1)==CharStreamConstants.EOF )
++		{
++			return TokenConstants.EOF_TOKEN;
++		}
++		state.token = null;
++		state.channel = TokenConstants.DEFAULT_CHANNEL;
++		state.tokenStartCharIndex = input.Index;
++		state.tokenStartCharPositionInLine = input.CharPositionInLine;
++		state.tokenStartLine = input.Line;
++		state.text = null;
++		try
++		{
++			int m = input.Mark();
++			state.backtracking=1;<! means we won't throw slow exception !>
++			state.failed=false;
++			mTokens();
++			state.backtracking=0;
++			<! mTokens backtracks with synpred at backtracking==2
++			   and we set the synpredgate to allow actions at level 1. !>
++			if ( state.failed )
++			{
++				input.Rewind(m);
++				input.Consume(); <! advance one char and try again !>
++			}
++			else
++			{
++				Emit();
++				return state.token;
++			}
++		}
++		catch ( RecognitionException re )
++		{
++			// shouldn't happen in backtracking mode, but...
++			ReportError(re);
++			Recover(re);
++		}
++	}
++}
++
++public override void Memoize( IIntStream input, int ruleIndex, int ruleStartIndex )
++{
++	if ( state.backtracking > 1 )
++		base.Memoize( input, ruleIndex, ruleStartIndex );
++}
++
++public override bool AlreadyParsedRule(IIntStream input, int ruleIndex)
++{
++	if ( state.backtracking > 1 )
++		return base.AlreadyParsedRule(input, ruleIndex);
++
++	return false;
++}
++>>
++
++actionGate() ::= "state.backtracking == 0"
++
++filteringActionGate() ::= "state.backtracking==1"
++
++/** How to generate a parser */
++genericParser(grammar, name, scopes, tokens, tokenNames, rules, numRules,
++              bitsets, inputStreamType, superClass,
++              ASTLabelType="object", labelType, members, rewriteElementType,
++              filterMode) ::= <<
++public partial class <grammar.recognizerName> : <@superClassName><superClass><@end>
++{
++<if(grammar.grammarIsRoot)>
++	public static readonly string[] tokenNames = new string[] {
++		"\<invalid>", "\<EOR>", "\<DOWN>", "\<UP>", <tokenNames; separator=", ">
++	};<\n>
++<endif>
++	<tokens:{public const int <it.name>=<it.type>;}; separator="\n">
++
++	// delegates
++	<grammar.delegates:
++		 {g|public <g.recognizerName> <g:delegateName()>;}; separator="\n">
++	// delegators
++	<grammar.delegators:
++		 {g|public <g.recognizerName> <g:delegateName()>;}; separator="\n">
++	<last(grammar.delegators):{g|public <g.recognizerName> gParent;}>
++
++	<scopes:{<if(it.isDynamicGlobalScope)><globalAttributeScope(scope=it)><endif>}>
++	<@members>
++<! WARNING. bug in ST: this is cut-n-paste into Dbg.stg !>
++public <grammar.recognizerName>( <inputStreamType> input<grammar.delegators:{g|, <g.recognizerName> <g:delegateName()>}> )
++	: this( input, new RecognizerSharedState()<grammar.delegators:{g|, <g:delegateName()>}> )
++{
++}
++public <grammar.recognizerName>( <inputStreamType> input, RecognizerSharedState state<grammar.delegators:{g|, <g.recognizerName> <g:delegateName()>}> )
++	: base( input, state )
++{
++	<parserCtorBody()>
++	<grammar.directDelegates:
++	 {g|<g:delegateName()> = new <g.recognizerName>(input, state<trunc(g.delegators):{p|, <p:delegateName()>}>, this);}; separator="\n">
++	<grammar.indirectDelegates:{g | <g:delegateName()> = <g.delegator:delegateName()>.<g:delegateName()>;}; separator="\n">
++	<last(grammar.delegators):{g|gParent = <g:delegateName()>;}>
++}
++	<@end>
++
++	public override string[] GetTokenNames() { return <grammar.composite.rootGrammar.recognizerName>.tokenNames; }
++	public override string GrammarFileName { get { return "<fileName>"; } }
++
++	<members>
++
++	#region Rules
++	<rules; separator="\n\n">
++	#endregion
++
++<! generate rule/method definitions for imported rules so they
++   appear to be defined in this recognizer. !>
++	// Delegated rules
++<grammar.delegatedRules:{ruleDescriptor|
++	public <returnType()> <ruleDescriptor.name>(<ruleDescriptor.parameterScope:parameterScope(scope=it)>) <!throws RecognitionException !>\{ <if(ruleDescriptor.hasReturnValue)>return <endif><ruleDescriptor.grammar:delegateName()>.<ruleDescriptor.name>(<ruleDescriptor.parameterScope.attributes:{a|<a.name>}; separator=", ">); \}}; separator="\n">
++
++	#region Synpreds
++	<synpreds:{p | <synpred(p)>}>
++	#endregion
++
++	#region DFA
++	<cyclicDFAs:{dfa | DFA<dfa.decisionNumber> dfa<dfa.decisionNumber>;}; separator="\n">
++
++	protected override void InitDFAs()
++	{
++		base.InitDFAs();
++		<cyclicDFAs:{dfa | dfa<dfa.decisionNumber> = new DFA<dfa.decisionNumber>( this<if(dfa.specialStateSTs)>, new SpecialStateTransitionHandler( specialStateTransition<dfa.decisionNumber> )<endif> );}; separator="\n">
++	}
++
++	<cyclicDFAs:cyclicDFA()><! dump tables for all DFA !>
++	#endregion
++
++	#region Follow Sets
++	public static class Follow
++	{
++		<bitsets:bitset(name={_<it.name>_in_<it.inName><it.tokenIndex>},
++							words64=it.bits)>
++	}
++	#endregion
++}
++>>
++
++parserCtorBody() ::= <<
++<if(memoize)>
++<if(grammar.grammarIsRoot)>
++this.state.ruleMemo = new System.Collections.Generic.Dictionary\<int, int>[<length(grammar.allImportedRules)>+1];<\n><! index from 1..n !>
++<endif>
++<endif>
++<grammar.delegators:
++ {g|this.<g:delegateName()> = <g:delegateName()>;}; separator="\n">
++>>
++
++parser(grammar, name, scopes, tokens, tokenNames, rules, numRules, bitsets,
++       ASTLabelType="object", superClass="Parser", labelType="IToken",
++       members={<actions.parser.members>}) ::= <<
++<genericParser(inputStreamType="ITokenStream", rewriteElementType="IToken", ...)>
++>>
++
++/** How to generate a tree parser; same as parser except the input
++ *  stream is a different type.
++ */
++treeParser(grammar, name, scopes, tokens, tokenNames, globalAction, rules,
++           numRules, bitsets, labelType={<ASTLabelType>}, ASTLabelType="object",
++           superClass={<if(filterMode)><if(buildAST)>TreeRewriter<else>TreeFilter<endif><else>TreeParser<endif>},
++           members={<actions.treeparser.members>},
++           filterMode) ::= <<
++<genericParser(inputStreamType="ITreeNodeStream", rewriteElementType="Node", ...)>
++>>
++
++/** A simpler version of a rule template that is specific to the imaginary
++ *  rules created for syntactic predicates.  As they never have return values
++ *  nor parameters etc..., just give simplest possible method.  Don't do
++ *  any of the normal memoization stuff in here either; it's a waste.
++ *  As predicates cannot be inlined into the invoking rule, they need to
++ *  be in a rule by themselves.
++ */
++synpredRule(ruleName, ruleDescriptor, block, description, nakedBlock) ::=
++<<
++// $ANTLR start <ruleName>
++public <!final !>void <ruleName>_fragment(<ruleDescriptor.parameterScope:parameterScope(scope=it)>)<! throws RecognitionException!>
++{
++	<ruleLabelDefs()>
++<if(trace)>
++	traceIn("<ruleName>_fragment", <ruleDescriptor.index>);
++	try
++	{
++		<block>
++	}
++	finally
++	{
++		traceOut("<ruleName>_fragment", <ruleDescriptor.index>);
++	}
++<else>
++	<block>
++<endif>
++}
++// $ANTLR end <ruleName>
++>>
++
++synpred(name) ::= <<
++public <!final !>bool <name>()
++{
++	state.backtracking++;
++	<@start()>
++	int start = input.Mark();
++	try
++	{
++		<name>_fragment(); // can never throw exception
++	}
++	catch ( RecognitionException re )
++	{
++		System.Console.Error.WriteLine("impossible: "+re);
++	}
++	bool success = !state.failed;
++	input.Rewind(start);
++	<@stop()>
++	state.backtracking--;
++	state.failed=false;
++	return success;
++}<\n>
++>>
++
++lexerSynpred(name) ::= <<
++<synpred(name)>
++>>
++
++ruleMemoization(name) ::= <<
++<if(memoize)>
++if ( state.backtracking>0 && AlreadyParsedRule(input, <ruleDescriptor.index>) ) { return <ruleReturnValue()>; }
++<endif>
++>>
++
++/** How to test for failure and return from rule */
++checkRuleBacktrackFailure() ::= <<
++<if(backtracking)>if (state.failed) return <ruleReturnValue()>;<endif>
++>>
++
++/** This rule has failed, exit indicating failure during backtrack */
++ruleBacktrackFailure() ::= <<
++<if(backtracking)>if (state.backtracking>0) {state.failed=true; return <ruleReturnValue()>;}<endif>
++>>
++
++/** How to generate code for a rule.  This includes any return type
++ *  data aggregates required for multiple return values.
++ */
++rule(ruleName,ruleDescriptor,block,emptyRule,description,exceptions,finally,memoize) ::= <<
++<ruleAttributeScope(scope=ruleDescriptor.ruleScope)>
++<returnScope(scope=ruleDescriptor.returnScope)>
++
++// $ANTLR start "<ruleName>"
++// <fileName>:<description>
++<csharpVisibilityMap.(ruleDescriptor.modifier)> <returnType()> <ruleName>( <ruleDescriptor.parameterScope:parameterScope(scope=it)> )<! throws RecognitionException!>
++{
++	<if(trace)>traceIn("<ruleName>", <ruleDescriptor.index>);<endif>
++	<ruleScopeSetUp()>
++	<ruleDeclarations()>
++	<ruleLabelDefs()>
++	<ruleDescriptor.actions.init>
++	<@preamble()>
++	try
++	{
++		<ruleMemoization(name=ruleName)>
++		<block>
++		<ruleCleanUp()>
++		<(ruleDescriptor.actions.after):execAction()>
++	}
++<if(exceptions)>
++	<exceptions:{e|<catch(decl=e.decl,action=e.action)><\n>}>
++<else>
++<if(!emptyRule)>
++<if(actions.(actionScope).rulecatch)>
++	<actions.(actionScope).rulecatch>
++<else>
++	catch ( RecognitionException re )
++	{
++		ReportError(re);
++		Recover(input,re);
++	<@setErrorReturnValue()>
++	}<\n>
++<endif>
++<endif>
++<endif>
++	finally
++	{
++		<if(trace)>traceOut("<ruleName>", <ruleDescriptor.index>);<endif>
++		<memoize()>
++		<ruleScopeCleanUp()>
++		<finally>
++	}
++	<@postamble()>
++	return <ruleReturnValue()>;
++}
++// $ANTLR end "<ruleName>"
++>>
++
++catch(decl,action) ::= <<
++catch ( <e.decl> )
++{
++	<e.action>
++}
++>>
++
++ruleDeclarations() ::= <<
++<if(ruleDescriptor.hasMultipleReturnValues)>
++<returnType()> retval = new <returnType()>();
++retval.start = input.LT(1);<\n>
++<else>
++<ruleDescriptor.returnScope.attributes:{ a |
++<a.type> <a.name> = <if(a.initValue)><a.initValue><else><initValue(a.type)><endif>;
++}>
++<endif>
++<if(memoize)>
++int <ruleDescriptor.name>_StartIndex = input.Index;
++<endif>
++>>
++
++ruleScopeSetUp() ::= <<
++<ruleDescriptor.useScopes:{<it>_scope.PushScope(this);}; separator="\n">
++<ruleDescriptor.ruleScope:{<it.name>_scope.PushScope(this);}; separator="\n">
++>>
++
++ruleScopeCleanUp() ::= <<
++<ruleDescriptor.useScopes:{<it>_scope.PopScope(this);}; separator="\n">
++<ruleDescriptor.ruleScope:{<it.name>_scope.PopScope(this);}; separator="\n">
++>>
++
++ruleLabelDefs() ::= <<
++<[ruleDescriptor.tokenLabels,ruleDescriptor.tokenListLabels,ruleDescriptor.wildcardTreeLabels,ruleDescriptor.wildcardTreeListLabels]
++    :{<labelType> <it.label.text>=null;}; separator="\n"
++>
++<[ruleDescriptor.tokenListLabels,ruleDescriptor.ruleListLabels,ruleDescriptor.wildcardTreeListLabels]
++    :{List list_<it.label.text>=null;}; separator="\n"
++>
++<ruleDescriptor.ruleLabels:ruleLabelDef(label=it); separator="\n">
++<ruleDescriptor.ruleListLabels:ruleLabelDef(label=it); separator="\n">
++>>
++
++lexerRuleLabelDefs() ::= <<
++<[ruleDescriptor.tokenLabels,
++  ruleDescriptor.tokenListLabels,
++  ruleDescriptor.ruleLabels]
++    :{<labelType> <it.label.text>=null;}; separator="\n"
++>
++<ruleDescriptor.charLabels:{int <it.label.text>;}; separator="\n">
++<[ruleDescriptor.tokenListLabels,
++  ruleDescriptor.ruleListLabels]
++    :{List list_<it.label.text>=null;}; separator="\n"
++>
++>>
++
++ruleReturnValue() ::= <<
++<if(!ruleDescriptor.isSynPred)>
++<if(ruleDescriptor.hasReturnValue)>
++<if(ruleDescriptor.hasSingleReturnValue)>
++<ruleDescriptor.singleValueReturnName>
++<else>
++retval
++<endif>
++<endif>
++<endif>
++>>
++
++ruleCleanUp() ::= <<
++<if(ruleDescriptor.hasMultipleReturnValues)>
++<if(!TREE_PARSER)>
++retval.stop = input.LT(-1);<\n>
++<endif>
++<endif>
++>>
++
++memoize() ::= <<
++<if(memoize)>
++<if(backtracking)>
++if ( state.backtracking>0 ) { Memoize(input, <ruleDescriptor.index>, <ruleDescriptor.name>_StartIndex); }
++<endif>
++<endif>
++>>
++
++/** How to generate a rule in the lexer; naked blocks are used for
++ *  fragment rules.
++ */
++lexerRule(ruleName,nakedBlock,ruleDescriptor,block,memoize) ::= <<
++// $ANTLR start "<ruleName>"
++<csharpVisibilityMap.(ruleDescriptor.modifier)> void m<ruleName>(<ruleDescriptor.parameterScope:parameterScope(scope=it)>)
++{
++	<if(trace)>traceIn("<ruleName>", <ruleDescriptor.index>);<endif>
++	<ruleScopeSetUp()>
++	<ruleDeclarations()>
++	try
++	{
++<if(nakedBlock)>
++		<ruleMemoization(name=ruleName)>
++		<lexerRuleLabelDefs()>
++		<ruleDescriptor.actions.init>
++		<block><\n>
++<else>
++		int _type = <ruleName>;
++		int _channel = DEFAULT_TOKEN_CHANNEL;
++		<ruleMemoization(name=ruleName)>
++		<lexerRuleLabelDefs()>
++		<ruleDescriptor.actions.init>
++		<block>
++		<ruleCleanUp()>
++		state.type = _type;
++		state.channel = _channel;
++		<(ruleDescriptor.actions.after):execAction()>
++<endif>
++	}
++	finally
++	{
++		<if(trace)>traceOut("<ruleName>", <ruleDescriptor.index>);<endif>
++		<ruleScopeCleanUp()>
++		<memoize()>
++	}
++}
++// $ANTLR end "<ruleName>"
++>>
++
++/** How to generate code for the implicitly-defined lexer grammar rule
++ *  that chooses between lexer rules.
++ */
++tokensRule(ruleName,nakedBlock,args,block,ruleDescriptor) ::= <<
++public override void mTokens()<! throws RecognitionException!>
++{
++	<block><\n>
++}
++>>
++
++// S U B R U L E S
++
++/** A (...) subrule with multiple alternatives */
++block(alts,decls,decision,enclosingBlockLevel,blockLevel,decisionNumber,maxK,maxAlt,description) ::= <<
++// <fileName>:<description>
++int alt<decisionNumber>=<maxAlt>;
++<decls>
++<@predecision()>
++<decision>
++<@postdecision()>
++<@prebranch()>
++switch ( alt<decisionNumber> )
++{
++<alts:altSwitchCase()>
++}
++<@postbranch()>
++>>
++
++/** A rule block with multiple alternatives */
++ruleBlock(alts,decls,decision,enclosingBlockLevel,blockLevel,decisionNumber,maxK,maxAlt,description) ::= <<
++// <fileName>:<description>
++int alt<decisionNumber>=<maxAlt>;
++<decls>
++<@predecision()>
++<decision>
++<@postdecision()>
++switch ( alt<decisionNumber> )
++{
++<alts:altSwitchCase()>
++}
++>>
++
++ruleBlockSingleAlt(alts,decls,decision,enclosingBlockLevel,blockLevel,decisionNumber,description) ::= <<
++// <fileName>:<description>
++<decls>
++<@prealt()>
++<alts>
++<@postalt()>
++>>
++
++/** A special case of a (...) subrule with a single alternative */
++blockSingleAlt(alts,decls,decision,enclosingBlockLevel,blockLevel,decisionNumber,description) ::= <<
++// <fileName>:<description>
++<decls>
++<@prealt()>
++<alts>
++<@postalt()>
++>>
++
++/** A (..)+ block with 1 or more alternatives */
++positiveClosureBlock(alts,decls,decision,enclosingBlockLevel,blockLevel,decisionNumber,maxK,maxAlt,description) ::= <<
++// <fileName>:<description>
++int cnt<decisionNumber>=0;
++<decls>
++<@preloop()>
++for ( ; ; )
++{
++	int alt<decisionNumber>=<maxAlt>;
++	<@predecision()>
++	<decision>
++	<@postdecision()>
++	switch ( alt<decisionNumber> )
++	{
++	<alts:altSwitchCase()>
++	default:
++		if ( cnt<decisionNumber> >= 1 )
++			goto loop<decisionNumber>;
++
++		<ruleBacktrackFailure()>
++		EarlyExitException eee<decisionNumber> = new EarlyExitException( <decisionNumber>, input );
++		<@earlyExitException()>
++		throw eee<decisionNumber>;
++	}
++	cnt<decisionNumber>++;
++}
++loop<decisionNumber>:
++	;
++
++<@postloop()>
++>>
++
++positiveClosureBlockSingleAlt ::= positiveClosureBlock
++
++/** A (..)* block with 1 or more alternatives */
++closureBlock(alts,decls,decision,enclosingBlockLevel,blockLevel,decisionNumber,maxK,maxAlt,description) ::= <<
++// <fileName>:<description>
++<decls>
++<@preloop()>
++for ( ; ; )
++{
++	int alt<decisionNumber>=<maxAlt>;
++	<@predecision()>
++	<decision>
++	<@postdecision()>
++	switch ( alt<decisionNumber> )
++	{
++	<alts:altSwitchCase()>
++	default:
++		goto loop<decisionNumber>;
++	}
++}
++
++loop<decisionNumber>:
++	;
++
++<@postloop()>
++>>
++
++closureBlockSingleAlt ::= closureBlock
++
++/** Optional blocks (x)? are translated to (x|) by before code generation
++ *  so we can just use the normal block template
++ */
++optionalBlock ::= block
++
++optionalBlockSingleAlt ::= block
++
++/** A case in a switch that jumps to an alternative given the alternative
++ *  number.  A DFA predicts the alternative and then a simple switch
++ *  does the jump to the code that actually matches that alternative.
++ */
++altSwitchCase() ::= <<
++case <i>:
++	<@prealt()>
++	<it>
++	break;<\n>
++>>
++
++/** An alternative is just a list of elements; at outermost level */
++alt(elements,altNum,description,autoAST,outerAlt,treeLevel,rew) ::= <<
++// <fileName>:<description>
++{
++<@declarations()>
++<elements:element()>
++<rew>
++<@cleanup()>
++}
++>>
++
++/** What to emit when there is no rewrite.  For auto build
++ *  mode, does nothing.
++ */
++noRewrite(rewriteBlockLevel, treeLevel) ::= ""
++
++// E L E M E N T S
++
++/** Dump the elements one per line */
++element() ::= <<
++<@prematch()>
++<it.el><\n>
++>>
++
++/** match a token optionally with a label in front */
++tokenRef(token,label,elementIndex,hetero) ::= <<
++<if(label)><label>=(<labelType>)<endif>Match(input,<token>,Follow._<token>_in_<ruleName><elementIndex>); <checkRuleBacktrackFailure()>
++>>
++
++/** ids+=ID */
++tokenRefAndListLabel(token,label,elementIndex,hetero) ::= <<
++<tokenRef(...)>
++<listLabel(elem=label,...)>
++>>
++
++listLabel(label,elem) ::= <<
++if (list_<label>==null) list_<label>=new ArrayList();
++list_<label>.Add(<elem>);<\n>
++>>
++
++/** match a character */
++charRef(char,label) ::= <<
++<if(label)>
++<label> = input.LA(1);<\n>
++<endif>
++Match(<char>); <checkRuleBacktrackFailure()>
++>>
++
++/** match a character range */
++charRangeRef(a,b,label) ::= <<
++<if(label)>
++<label> = input.LA(1);<\n>
++<endif>
++MatchRange(<a>,<b>); <checkRuleBacktrackFailure()>
++>>
++
++/** For now, sets are interval tests and must be tested inline */
++matchSet(s,label,elementIndex,postmatchCode="") ::= <<
++<if(label)>
++<if(LEXER)>
++<label>= input.LA(1);<\n>
++<else>
++<label>=(<labelType>)input.LT(1);<\n>
++<endif>
++<endif>
++if ( <s> )
++{
++	input.Consume();
++	<postmatchCode>
++<if(!LEXER)>
++	state.errorRecovery=false;
++<endif>
++	<if(backtracking)>state.failed=false;<endif>
++}
++else
++{
++	<ruleBacktrackFailure()>
++	MismatchedSetException mse = new MismatchedSetException(null,input);
++	<@mismatchedSetException()>
++<if(LEXER)>
++	Recover(mse);
++	throw mse;
++<else>
++	throw mse;
++	<! use following code to make it recover inline; remove throw mse;
++	recoverFromMismatchedSet(input,mse,Follow._set_in_<ruleName><elementIndex>);
++	!>
++<endif>
++}<\n>
++>>
++
++matchSetUnchecked(s,label,elementIndex,postmatchCode="") ::= <<
++<if(label)>
++<if(LEXER)>
++<label>= input.LA(1);<\n>
++<else>
++<label>=(<labelType>)input.LT(1);<\n>
++<endif>
++<endif>
++input.Consume();
++<postmatchCode>
++<if(!LEXER)>
++	state.errorRecovery=false;
++<endif>
++	<if(backtracking)>state.failed=false;<endif>
++>>
++
++matchRuleBlockSet ::= matchSet
++
++matchSetAndListLabel(s,label,elementIndex,postmatchCode) ::= <<
++<matchSet(...)>
++<listLabel(elem=label,...)>
++>>
++
++/** Match a string literal */
++lexerStringRef(string,label) ::= <<
++<if(label)>
++int <label>Start = GetCharIndex();
++Match(<string>); <checkRuleBacktrackFailure()>
++<label> = new CommonToken(input, TokenConstants.INVALID_TOKEN_TYPE, TokenConstants.DEFAULT_CHANNEL, <label>Start, GetCharIndex()-1);
++<else>
++Match(<string>); <checkRuleBacktrackFailure()><\n>
++<endif>
++>>
++
++wildcard(label,elementIndex) ::= <<
++<if(label)>
++<label>=(<labelType>)input.LT(1);<\n>
++<endif>
++MatchAny(input); <checkRuleBacktrackFailure()>
++>>
++
++wildcardAndListLabel(label,elementIndex) ::= <<
++<wildcard(...)>
++<listLabel(elem=label,...)>
++>>
++
++/** Match . wildcard in lexer */
++wildcardChar(label, elementIndex) ::= <<
++<if(label)>
++<label> = input.LA(1);<\n>
++<endif>
++MatchAny(); <checkRuleBacktrackFailure()>
++>>
++
++wildcardCharListLabel(label, elementIndex) ::= <<
++<wildcardChar(...)>
++<listLabel(elem=label,...)>
++>>
++
++/** Match a rule reference by invoking it possibly with arguments
++ *  and a return value or values.  The 'rule' argument was the
++ *  target rule name, but now is type Rule, whose toString is
++ *  same: the rule name.  Now though you can access full rule
++ *  descriptor stuff.
++ */
++ruleRef(rule,label,elementIndex,args,scope) ::= <<
++PushFollow(Follow._<rule.name>_in_<ruleName><elementIndex>);
++<if(label)><label>=<endif><if(scope)><scope:delegateName()>.<endif><rule.name>(<args; separator=", ">);<\n>
++state._fsp--;
++<checkRuleBacktrackFailure()>
++>>
++
++/** ids+=r */
++ruleRefAndListLabel(rule,label,elementIndex,args,scope) ::= <<
++<ruleRef(...)>
++<listLabel(elem=label,...)>
++>>
++
++/** A lexer rule reference.
++ *
++ *  The 'rule' argument was the target rule name, but now
++ *  is type Rule, whose toString is same: the rule name.
++ *  Now though you can access full rule descriptor stuff.
++ */
++lexerRuleRef(rule,label,args,elementIndex,scope) ::= <<
++<if(label)>
++int <label>Start<elementIndex> = GetCharIndex();
++<if(scope)><scope:delegateName()>.<endif>m<rule.name>(<args; separator=", ">); <checkRuleBacktrackFailure()>
++<label> = new CommonToken(input, TokenConstants.INVALID_TOKEN_TYPE, TokenConstants.DEFAULT_CHANNEL, <label>Start<elementIndex>, GetCharIndex()-1);
++<else>
++<if(scope)><scope:delegateName()>.<endif>m<rule.name>(<args; separator=", ">); <checkRuleBacktrackFailure()>
++<endif>
++>>
++
++/** i+=INT in lexer */
++lexerRuleRefAndListLabel(rule,label,args,elementIndex,scope) ::= <<
++<lexerRuleRef(...)>
++<listLabel(elem=label,...)>
++>>
++
++/** EOF in the lexer */
++lexerMatchEOF(label,elementIndex) ::= <<
++<if(label)>
++int <label>Start<elementIndex> = GetCharIndex();
++Match(EOF); <checkRuleBacktrackFailure()>
++<labelType> <label> = new CommonToken(input, EOF, TokenConstants.DEFAULT_CHANNEL, <label>Start<elementIndex>, GetCharIndex()-1);
++<else>
++Match(EOF); <checkRuleBacktrackFailure()>
++<endif>
++>>
++
++/** match ^(root children) in tree parser */
++tree(root, actionsAfterRoot, children, nullableChildList,
++     enclosingTreeLevel, treeLevel) ::= <<
++<root:element()>
++<actionsAfterRoot:element()>
++<if(nullableChildList)>
++if ( input.LA(1)==TokenConstants.DOWN )
++{
++	Match(input, TokenConstants.DOWN, null); <checkRuleBacktrackFailure()>
++	<children:element()>
++	Match(input, TokenConstants.UP, null); <checkRuleBacktrackFailure()>
++}
++<else>
++Match(input, TokenConstants.DOWN, null); <checkRuleBacktrackFailure()>
++<children:element()>
++Match(input, TokenConstants.UP, null); <checkRuleBacktrackFailure()>
++<endif>
++>>
++
++/** Every predicate is used as a validating predicate (even when it is
++ *  also hoisted into a prediction expression).
++ */
++validateSemanticPredicate(pred,description) ::= <<
++if ( !(<evalPredicate(...)>) )
++{
++	<ruleBacktrackFailure()>
++	throw new FailedPredicateException(input, "<ruleName>", "<description>");
++}
++>>
++
++// F i x e d  D F A  (if-then-else)
++
++dfaState(k,edges,eotPredictsAlt,description,stateNumber,semPredState) ::= <<
++int LA<decisionNumber>_<stateNumber> = input.LA(<k>);<\n>
++<edges; separator="\nelse ">
++else
++{
++<if(eotPredictsAlt)>
++	alt<decisionNumber>=<eotPredictsAlt>;
++<else>
++	<ruleBacktrackFailure()>
++	NoViableAltException nvae = new NoViableAltException("<description>", <decisionNumber>, <stateNumber>, input);<\n>
++	<@noViableAltException()>
++	throw nvae;<\n>
++<endif>
++}
++>>
++
++/** Same as a normal DFA state except that we don't examine lookahead
++ *  for the bypass alternative.  It delays error detection but this
++ *  is faster, smaller, and more what people expect.  For (X)? people
++ *  expect "if ( LA(1)==X ) match(X);" and that's it.
++ */
++dfaOptionalBlockState(k,edges,eotPredictsAlt,description,stateNumber,semPredState) ::= <<
++int LA<decisionNumber>_<stateNumber> = input.LA(<k>);<\n>
++<edges; separator="\nelse ">
++>>
++
++/** A DFA state that is actually the loopback decision of a closure
++ *  loop.  If end-of-token (EOT) predicts any of the targets then it
++ *  should act like a default clause (i.e., no error can be generated).
++ *  This is used only in the lexer so that for ('a')* on the end of a rule
++ *  anything other than 'a' predicts exiting.
++ */
++dfaLoopbackState(k,edges,eotPredictsAlt,description,stateNumber,semPredState) ::= <<
++int LA<decisionNumber>_<stateNumber> = input.LA(<k>);<\n>
++<edges; separator="\nelse "><\n>
++<if(eotPredictsAlt)>
++<if(!edges)>
++alt<decisionNumber>=<eotPredictsAlt>; <! if no edges, don't gen ELSE !>
++<else>
++else
++{
++	alt<decisionNumber>=<eotPredictsAlt>;
++}<\n>
++<endif>
++<endif>
++>>
++
++/** An accept state indicates a unique alternative has been predicted */
++dfaAcceptState(alt) ::= "alt<decisionNumber>=<alt>;"
++
++/** A simple edge with an expression.  If the expression is satisfied,
++ *  enter to the target state.  To handle gated productions, we may
++ *  have to evaluate some predicates for this edge.
++ */
++dfaEdge(labelExpr, targetState, predicates) ::= <<
++if ( (<labelExpr>) <if(predicates)>&& (<predicates>)<endif>)
++{
++	<targetState>
++}
++>>
++
++// F i x e d  D F A  (switch case)
++
++/** A DFA state where a SWITCH may be generated.  The code generator
++ *  decides if this is possible: CodeGenerator.canGenerateSwitch().
++ */
++dfaStateSwitch(k,edges,eotPredictsAlt,description,stateNumber,semPredState) ::= <<
++switch ( input.LA(<k>) )
++{
++<edges; separator="\n">
++default:
++<if(eotPredictsAlt)>
++	alt<decisionNumber>=<eotPredictsAlt>;
++	break;<\n>
++<else>
++	{
++		<ruleBacktrackFailure()>
++		NoViableAltException nvae = new NoViableAltException("<description>", <decisionNumber>, <stateNumber>, input);<\n>
++		<@noViableAltException()>
++		throw nvae;
++	}<\n>
++<endif>
++}<\n>
++>>
++
++dfaOptionalBlockStateSwitch(k,edges,eotPredictsAlt,description,stateNumber,semPredState) ::= <<
++switch ( input.LA(<k>) )
++{
++<edges; separator="\n">
++}<\n>
++>>
++
++dfaLoopbackStateSwitch(k, edges,eotPredictsAlt,description,stateNumber,semPredState) ::= <<
++switch ( input.LA(<k>) )
++{
++<edges; separator="\n"><\n>
++<if(eotPredictsAlt)>
++default:
++	alt<decisionNumber>=<eotPredictsAlt>;
++	break;<\n>
++<endif>
++}<\n>
++>>
++
++dfaEdgeSwitch(labels, targetState) ::= <<
++<labels:{case <it>:}; separator="\n">
++	{
++	<targetState>
++	}
++	break;
++>>
++
++// C y c l i c  D F A
++
++/** The code to initiate execution of a cyclic DFA; this is used
++ *  in the rule to predict an alt just like the fixed DFA case.
++ *  The <name> attribute is inherited via the parser, lexer, ...
++ */
++dfaDecision(decisionNumber,description) ::= <<
++alt<decisionNumber> = dfa<decisionNumber>.Predict(input);
++>>
++
++/* Dump DFA tables as run-length-encoded Strings of octal values.
++ * Can't use hex as compiler translates them before compilation.
++ * These strings are split into multiple, concatenated strings.
++ * Java puts them back together at compile time thankfully.
++ * Java cannot handle large static arrays, so we're stuck with this
++ * encode/decode approach.  See analysis and runtime DFA for
++ * the encoding methods.
++ */
++cyclicDFA(dfa) ::= <<
++class DFA<dfa.decisionNumber> : DFA
++{
++
++	const string DFA<dfa.decisionNumber>_eotS =
++		"<dfa.javaCompressedEOT; wrap="\"+\n\t\t\"">";
++	const string DFA<dfa.decisionNumber>_eofS =
++		"<dfa.javaCompressedEOF; wrap="\"+\n\t\t\"">";
++	const string DFA<dfa.decisionNumber>_minS =
++		"<dfa.javaCompressedMin; wrap="\"+\n\t\t\"">";
++	const string DFA<dfa.decisionNumber>_maxS =
++		"<dfa.javaCompressedMax; wrap="\"+\n\t\t\"">";
++	const string DFA<dfa.decisionNumber>_acceptS =
++		"<dfa.javaCompressedAccept; wrap="\"+\n\t\t\"">";
++	const string DFA<dfa.decisionNumber>_specialS =
++		"<dfa.javaCompressedSpecial; wrap="\"+\n\t\t\"">}>";
++	static readonly string[] DFA<dfa.decisionNumber>_transitionS =
++		{
++			<dfa.javaCompressedTransition:{s|"<s; wrap="\"+\n\"">"}; separator=",\n">
++		};
++
++	static readonly short[] DFA<dfa.decisionNumber>_eot = DFA.UnpackEncodedString(DFA<dfa.decisionNumber>_eotS);
++	static readonly short[] DFA<dfa.decisionNumber>_eof = DFA.UnpackEncodedString(DFA<dfa.decisionNumber>_eofS);
++	static readonly char[] DFA<dfa.decisionNumber>_min = DFA.UnpackEncodedStringToUnsignedChars(DFA<dfa.decisionNumber>_minS);
++	static readonly char[] DFA<dfa.decisionNumber>_max = DFA.UnpackEncodedStringToUnsignedChars(DFA<dfa.decisionNumber>_maxS);
++	static readonly short[] DFA<dfa.decisionNumber>_accept = DFA.UnpackEncodedString(DFA<dfa.decisionNumber>_acceptS);
++	static readonly short[] DFA<dfa.decisionNumber>_special = DFA.UnpackEncodedString(DFA<dfa.decisionNumber>_specialS);
++	static readonly short[][] DFA<dfa.decisionNumber>_transition;
++
++	static DFA<dfa.decisionNumber>()
++	{
++		int numStates = DFA<dfa.decisionNumber>_transitionS.Length;
++		DFA<dfa.decisionNumber>_transition = new short[numStates][];
++		for ( int i=0; i \< numStates; i++ )
++		{
++			DFA<dfa.decisionNumber>_transition[i] = DFA.UnpackEncodedString(DFA<dfa.decisionNumber>_transitionS[i]);
++		}
++	}
++
++	public DFA<dfa.decisionNumber>( BaseRecognizer recognizer<if(dfa.specialStateSTs)>, SpecialStateTransitionHandler specialStateTransition<endif> )
++<if(dfa.specialStateSTs)>
++		: base( specialStateTransition )
++<endif>
++	{
++		this.recognizer = recognizer;
++		this.decisionNumber = <dfa.decisionNumber>;
++		this.eot = DFA<dfa.decisionNumber>_eot;
++		this.eof = DFA<dfa.decisionNumber>_eof;
++		this.min = DFA<dfa.decisionNumber>_min;
++		this.max = DFA<dfa.decisionNumber>_max;
++		this.accept = DFA<dfa.decisionNumber>_accept;
++		this.special = DFA<dfa.decisionNumber>_special;
++		this.transition = DFA<dfa.decisionNumber>_transition;
++	}
++	public override string GetDescription()
++	{
++		return "<dfa.description>";
++	}
++	<@errorMethod()>
++}<\n>
++<if(dfa.specialStateSTs)>
++int specialStateTransition<dfa.decisionNumber>( DFA dfa, int s, IIntStream _input )<! throws NoViableAltException!>
++{
++	<if(LEXER)>
++	IIntStream input = _input;
++	<endif>
++	<if(PARSER)>
++	ITokenStream input = (ITokenStream)_input;
++	<endif>
++	<if(TREE_PARSER)>
++	ITreeNodeStream input = (ITreeNodeStream)_input;
++	<endif>
++	int _s = s;
++	switch ( s )
++	{
++	<dfa.specialStateSTs:{state |
++	case <i0>:<! compressed special state numbers 0..n-1 !>
++		<state>}; separator="\n">
++	}
++<if(backtracking)>
++	if (state.backtracking>0) {state.failed=true; return -1;}<\n>
++<endif>
++	NoViableAltException nvae = new NoViableAltException(dfa.GetDescription(), <dfa.decisionNumber>, _s, input);
++	dfa.Error(nvae);
++	throw nvae;
++}<\n>
++<endif>
++>>
++
++/** A state in a cyclic DFA; it's a special state and part of a big switch on
++ *  state.
++ */
++cyclicDFAState(decisionNumber,stateNumber,edges,needErrorClause,semPredState) ::= <<
++int LA<decisionNumber>_<stateNumber> = input.LA(1);<\n>
++<if(semPredState)><! get next lookahead symbol to test edges, then rewind !>
++int index<decisionNumber>_<stateNumber> = input.Index;
++input.Rewind();<\n>
++<endif>
++s = -1;
++<edges; separator="\nelse ">
++<if(semPredState)><! return input cursor to state before we rewound !>
++input.Seek(index<decisionNumber>_<stateNumber>);<\n>
++<endif>
++if ( s>=0 ) return s;
++break;
++>>
++
++/** Just like a fixed DFA edge, test the lookahead and indicate what
++ *  state to jump to next if successful.
++ */
++cyclicDFAEdge(labelExpr, targetStateNumber, edgeNumber, predicates) ::= <<
++if ( (<labelExpr>) <if(predicates)>&& (<predicates>)<endif>) {s = <targetStateNumber>;}<\n>
++>>
++
++/** An edge pointing at end-of-token; essentially matches any char;
++ *  always jump to the target.
++ */
++eotDFAEdge(targetStateNumber,edgeNumber, predicates) ::= <<
++s = <targetStateNumber>;<\n>
++>>
++
++
++// D F A  E X P R E S S I O N S
++
++andPredicates(left,right) ::= "(<left>&&<right>)"
++
++orPredicates(operands) ::= "(<first(operands)><rest(operands):{o | ||<o>}>)"
++
++notPredicate(pred) ::= "!(<evalPredicate(...)>)"
++
++evalPredicate(pred,description) ::= "(<pred>)"
++
++evalSynPredicate(pred,description) ::= "<pred>()"
++
++lookaheadTest(atom,k,atomAsInt) ::= "LA<decisionNumber>_<stateNumber>==<atom>"
++
++/** Sometimes a lookahead test cannot assume that LA(k) is in a temp variable
++ *  somewhere.  Must ask for the lookahead directly.
++ */
++isolatedLookaheadTest(atom,k,atomAsInt) ::= "input.LA(<k>)==<atom>"
++
++lookaheadRangeTest(lower,upper,k,rangeNumber,lowerAsInt,upperAsInt) ::= <<
++(LA<decisionNumber>_<stateNumber>\>=<lower> && LA<decisionNumber>_<stateNumber>\<=<upper>)
++>>
++
++isolatedLookaheadRangeTest(lower,upper,k,rangeNumber,lowerAsInt,upperAsInt) ::= "(input.LA(<k>)\>=<lower> && input.LA(<k>)\<=<upper>)"
++
++setTest(ranges) ::= "<ranges; separator=\"||\">"
++
++// A T T R I B U T E S
++
++attributeScope(scope) ::= <<
++<if(scope.attributes)>
++protected class <scope.name>_scope
++{
++<if(scope.actions.scopeinit)>
++	public <scope.name>_scope()
++	{
++		<scope.actions.scopeinit>
++	}<\n>
++<endif>
++<if(scope.actions.scopeafter)>
++	void CleanUpScope()
++	{
++		<scope.actions.scopeafter>
++	}<\n>
++<endif>
++	public static void PushScope( <scope.grammar.recognizerName> grammar )
++	{
++		grammar.<scope.name>_stack.Push( new <scope.name>_scope() );
++	}
++	public static void PopScope( <scope.grammar.recognizerName> grammar )
++	{
++		grammar.<scope.name>_stack.Pop()<if(scope.actions.scopeafter)>.CleanUpScope()<endif>;
++	}
++
++	<scope.attributes:{public <it.decl>;}; separator="\n">
++}
++protected Stack\<<scope.name>_scope\> <scope.name>_stack = new Stack\<<scope.name>_scope\>();<\n>
++<endif>
++>>
++
++globalAttributeScope(scope) ::= <<
++<attributeScope(...)>
++>>
++
++ruleAttributeScope(scope) ::= <<
++<attributeScope(...)>
++>>
++
++returnStructName() ::= "<it.name>_return"
++
++returnType() ::= <<
++<if(ruleDescriptor.hasMultipleReturnValues)>
++<ruleDescriptor.grammar.recognizerName>.<ruleDescriptor:returnStructName()>
++<else>
++<if(ruleDescriptor.hasSingleReturnValue)>
++<ruleDescriptor.singleValueReturnType>
++<else>
++void
++<endif>
++<endif>
++>>
++
++/** Generate the C# type associated with a single or multiple return
++ *  values.
++ */
++ruleLabelType(referencedRule) ::= <<
++<if(referencedRule.hasMultipleReturnValues)>
++<referencedRule.grammar.recognizerName>.<referencedRule.name>_return
++<else>
++<if(referencedRule.hasSingleReturnValue)>
++<referencedRule.singleValueReturnType>
++<else>
++void
++<endif>
++<endif>
++>>
++
++delegateName() ::= <<
++<if(it.label)><it.label><else>g<it.name><endif>
++>>
++
++/** Using a type to init value map, try to init a type; if not in table
++ *  must be an object, default value is "null".
++ */
++initValue(typeName) ::= <<
++default(<typeName>)
++>>
++
++/** Define a rule label including default value */
++ruleLabelDef(label) ::= <<
++<ruleLabelType(referencedRule=label.referencedRule)> <label.label.text> = <initValue(typeName=ruleLabelType(referencedRule=label.referencedRule))>;
++>>
++
++/** Define a return struct for a rule if the code needs to access its
++ *  start/stop tokens, tree stuff, attributes, ...  Leave a hole for
++ *  subgroups to stick in members.
++ */
++returnScope(scope) ::= <<
++<if(ruleDescriptor.hasMultipleReturnValues)>
++public <!static !>class <ruleDescriptor:returnStructName()> : <if(TREE_PARSER)>Tree<else>Parser<endif>RuleReturnScope
++{
++	<scope.attributes:{public <it.decl>;}; separator="\n">
++	<@ruleReturnMembers()>
++}
++<endif>
++>>
++
++parameterScope(scope) ::= <<
++<scope.attributes:{<it.decl>}; separator=", ">
++>>
++
++parameterAttributeRef(attr) ::= "<attr.name>"
++parameterSetAttributeRef(attr,expr) ::= "<attr.name> =<expr>;"
++
++scopeAttributeRef(scope,attr,index,negIndex) ::= <<
++<if(negIndex)>
++((<scope>_scope)<scope>_stack.elementAt(<scope>_stack.size()-<negIndex>-1)).<attr.name>
++<else>
++<if(index)>
++((<scope>_scope)<scope>_stack.elementAt(<index>)).<attr.name>
++<else>
++((<scope>_scope)<scope>_stack.Peek()).<attr.name>
++<endif>
++<endif>
++>>
++
++scopeSetAttributeRef(scope,attr,expr,index,negIndex) ::= <<
++<if(negIndex)>
++((<scope>_scope)<scope>_stack.elementAt(<scope>_stack.size()-<negIndex>-1)).<attr.name> =<expr>;
++<else>
++<if(index)>
++((<scope>_scope)<scope>_stack.elementAt(<index>)).<attr.name> =<expr>;
++<else>
++((<scope>_scope)<scope>_stack.Peek()).<attr.name> =<expr>;
++<endif>
++<endif>
++>>
++
++/** $x is either global scope or x is rule with dynamic scope; refers
++ *  to stack itself not top of stack.  This is useful for predicates
++ *  like {$function.size()>0 && $function::name.equals("foo")}?
++ */
++isolatedDynamicScopeRef(scope) ::= "<scope>_stack"
++
++/** reference an attribute of rule; might only have single return value */
++ruleLabelRef(referencedRule,scope,attr) ::= <<
++<if(referencedRule.hasMultipleReturnValues)>
++(<scope>!=null?<scope>.<attr.name>:<initValue(attr.type)>)
++<else>
++<scope>
++<endif>
++>>
++
++returnAttributeRef(ruleDescriptor,attr) ::= <<
++<if(ruleDescriptor.hasMultipleReturnValues)>
++retval.<attr.name>
++<else>
++<attr.name>
++<endif>
++>>
++
++returnSetAttributeRef(ruleDescriptor,attr,expr) ::= <<
++<if(ruleDescriptor.hasMultipleReturnValues)>
++retval.<attr.name> =<expr>;
++<else>
++<attr.name> =<expr>;
++<endif>
++>>
++
++/** How to translate $tokenLabel */
++tokenLabelRef(label) ::= "<label>"
++
++/** ids+=ID {$ids} or e+=expr {$e} */
++listLabelRef(label) ::= "list_<label>"
++
++
++// not sure the next are the right approach
++
++tokenLabelPropertyRef_text(scope,attr) ::= "(<scope>!=null?<scope>.Text:null)"
++tokenLabelPropertyRef_type(scope,attr) ::= "(<scope>!=null?<scope>.Type:0)"
++tokenLabelPropertyRef_line(scope,attr) ::= "(<scope>!=null?<scope>.Line:0)"
++tokenLabelPropertyRef_pos(scope,attr) ::= "(<scope>!=null?<scope>.CharPositionInLine:0)"
++tokenLabelPropertyRef_channel(scope,attr) ::= "(<scope>!=null?<scope>.Channel:0)"
++tokenLabelPropertyRef_index(scope,attr) ::= "(<scope>!=null?<scope>.TokenIndex:0)"
++tokenLabelPropertyRef_tree(scope,attr) ::= "<scope>_tree"
++tokenLabelPropertyRef_int(scope,attr) ::= "(<scope>!=null?Integer.valueOf(<scope>.Text):0)"
++
++ruleLabelPropertyRef_start(scope,attr) ::= "(<scope>!=null?((<labelType>)<scope>.start):null)"
++ruleLabelPropertyRef_stop(scope,attr) ::= "(<scope>!=null?((<labelType>)<scope>.stop):null)"
++ruleLabelPropertyRef_tree(scope,attr) ::= "(<scope>!=null?((<ASTLabelType>)<scope>.tree):null)"
++ruleLabelPropertyRef_text(scope,attr) ::= <<
++<if(TREE_PARSER)>
++(<scope>!=null?(input.TokenStream.ToString(
++  input.TreeAdaptor.GetTokenStartIndex(<scope>.start),
++  input.TreeAdaptor.GetTokenStopIndex(<scope>.start))):null)
++<else>
++(<scope>!=null?input.ToString(<scope>.start,<scope>.stop):null)
++<endif>
++>>
++
++ruleLabelPropertyRef_st(scope,attr) ::= "(<scope>!=null?<scope>.st:null)"
++
++/** Isolated $RULE ref ok in lexer as it's a Token */
++lexerRuleLabel(label) ::= "<label>"
++
++lexerRuleLabelPropertyRef_type(scope,attr) ::=
++    "(<scope>!=null?<scope>.Type:0)"
++
++lexerRuleLabelPropertyRef_line(scope,attr) ::=
++    "(<scope>!=null?<scope>.Line:0)"
++
++lexerRuleLabelPropertyRef_pos(scope,attr) ::=
++    "(<scope>!=null?<scope>.CharPositionInLine:-1)"
++
++lexerRuleLabelPropertyRef_channel(scope,attr) ::=
++    "(<scope>!=null?<scope>.Channel:0)"
++
++lexerRuleLabelPropertyRef_index(scope,attr) ::=
++    "(<scope>!=null?<scope>.TokenIndex:0)"
++
++lexerRuleLabelPropertyRef_text(scope,attr) ::=
++    "(<scope>!=null?<scope>.Text:null)"
++
++lexerRuleLabelPropertyRef_int(scope,attr) ::=
++    "(<scope>!=null?Integer.valueOf(<scope>.Text):0)"
++
++// Somebody may ref $template or $tree or $stop within a rule:
++rulePropertyRef_start(scope,attr) ::= "((<labelType>)retval.start)"
++rulePropertyRef_stop(scope,attr) ::= "((<labelType>)retval.stop)"
++rulePropertyRef_tree(scope,attr) ::= "((<ASTLabelType>)retval.tree)"
++rulePropertyRef_text(scope,attr) ::= <<
++<if(TREE_PARSER)>
++input.TokenStream.ToString(
++  input.TreeAdaptor.GetTokenStartIndex(retval.start),
++  input.TreeAdaptor.GetTokenStopIndex(retval.start))
++<else>
++input.ToString(retval.start,input.LT(-1))
++<endif>
++>>
++rulePropertyRef_st(scope,attr) ::= "retval.st"
++
++lexerRulePropertyRef_text(scope,attr) ::= "Text"
++lexerRulePropertyRef_type(scope,attr) ::= "_type"
++lexerRulePropertyRef_line(scope,attr) ::= "state.tokenStartLine"
++lexerRulePropertyRef_pos(scope,attr) ::= "state.tokenStartCharPositionInLine"
++lexerRulePropertyRef_index(scope,attr) ::= "-1" // undefined token index in lexer
++lexerRulePropertyRef_channel(scope,attr) ::= "_channel"
++lexerRulePropertyRef_start(scope,attr) ::= "state.tokenStartCharIndex"
++lexerRulePropertyRef_stop(scope,attr) ::= "(GetCharIndex()-1)"
++lexerRulePropertyRef_int(scope,attr) ::= "int.Parse(<scope>.Text)"
++
++// setting $st and $tree is allowed in local rule. everything else
++// is flagged as error
++ruleSetPropertyRef_tree(scope,attr,expr) ::= "retval.tree =<expr>;"
++ruleSetPropertyRef_st(scope,attr,expr) ::= "retval.st =<expr>;"
++
++/** How to execute an action (only when not backtracking) */
++execAction(action) ::= <<
++<if(backtracking)>
++if ( <actions.(actionScope).synpredgate> )
++{
++	<action>
++}
++<else>
++<action>
++<endif>
++>>
++
++/** How to always execute an action even when backtracking */
++execForcedAction(action) ::= "<action>"
++
++// M I S C (properties, etc...)
++
++bitset(name, words64) ::= <<
++public static readonly BitSet <name> = new BitSet(new ulong[]{<words64:{<it>UL};separator=",">});<\n>
++>>
++
++codeFileExtension() ::= ".cs"
++
++true() ::= "true"
++false() ::= "false"
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/Dbg.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/Dbg.stg
+new file mode 100644
+index 0000000..663b2fd
+--- /dev/null
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/Dbg.stg
+@@ -0,0 +1,334 @@
++/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell, Pixel Mine, Inc.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++/** Template overrides to add debugging to normal Java output;
++ *  If ASTs are built, then you'll also get ASTDbg.stg loaded.
++ */
++group Dbg;
++
++@outputFile.imports() ::= <<
++<@super.imports()>
++using Antlr.Runtime.Debug;<!import org.antlr.runtime.debug.*;!>
++using IOException = System.IO.IOException;<!import java.io.IOException;!>
++>>
++
++@genericParser.members() ::= <<
++<if(grammar.grammarIsRoot)>
++public static readonly string[] ruleNames =
++	new string[]
++	{
++		"invalidRule", <grammar.allImportedRules:{rST | "<rST.name>"}; wrap="\n	", separator=", ">
++	};<\n>
++<endif>
++<if(grammar.grammarIsRoot)><! grammar imports other grammar(s) !>
++<!
++public int ruleLevel = 0;
++public virtual int getRuleLevel() { return ruleLevel; }
++public virtual void incRuleLevel() { ruleLevel++; }
++public virtual void decRuleLevel() { ruleLevel--; }
++!>
++<if(profile)>
++<ctorForProfilingRootGrammar()>
++<else>
++<ctorForRootGrammar()>
++<endif>
++<!<ctorForPredefinedListener()>!>
++<else><! imported grammar !>
++public virtual int getRuleLevel() { return <grammar.delegators:{g| <g:delegateName()>}>.getRuleLevel(); }
++public virtual void incRuleLevel() { <grammar.delegators:{g| <g:delegateName()>}>.incRuleLevel(); }
++public virtual void decRuleLevel() { <grammar.delegators:{g| <g:delegateName()>}>.decRuleLevel(); }
++<ctorForDelegateGrammar()>
++<endif>
++<if(profile)>
++public virtual bool alreadyParsedRule( IIntStream input, int ruleIndex )
++{
++	((Profiler)dbg).examineRuleMemoization(input, ruleIndex, <grammar.composite.rootGrammar.recognizerName>.ruleNames[ruleIndex]);
++	return super.alreadyParsedRule(input, ruleIndex);
++}<\n>
++public virtual void memoize( IIntStream input, int ruleIndex, int ruleStartIndex )
++{
++	((Profiler)dbg).memoize(input, ruleIndex, ruleStartIndex, <grammar.composite.rootGrammar.recognizerName>.ruleNames[ruleIndex]);
++	super.memoize(input, ruleIndex, ruleStartIndex);
++}<\n>
++<endif>
++public override IDebugEventListener DebugListener
++{
++	get;
++	set;
++}
++static bool EvalPredicate( bool result, string predicate )
++{
++	DebugSemanticPredicate( dbg, result, predicate );
++	return result;
++}<\n>
++>>
++
++ctorForRootGrammar() ::= <<
++<! bug: can't use <@super.members()> cut-n-paste instead !>
++<! Same except we add port number and profile stuff if root grammar !>
++public <name>( <inputStreamType> input )
++	: this( input, <!DebugEventSocketProxy.DEFAULT_DEBUGGER_PORT, !>new RecognizerSharedState() )
++{
++}
++public <name>( <inputStreamType> input, <!int port, !>RecognizerSharedState state )
++	: base( input, state )
++{
++	<parserCtorBody()>
++<!	<createListenerAndHandshake()>!>
++	<grammar.directDelegates:{g|<g:delegateName()> = new <g.recognizerName>( input, <!dbg, !>this.state, this<grammar.delegators:{g|, <g:delegateName()>}> );}; separator="\n">
++	<@finally()>
++}<\n>
++>>
++
++ctorForProfilingRootGrammar() ::= <<
++<! bug: can't use <@super.members()> cut-n-paste instead !>
++public <name>( <inputStreamType> input )
++	: this( input, new Profiler(null), new RecognizerSharedState() )
++{
++}
++public <name>( <inputStreamType> input, IDebugEventListener dbg, RecognizerSharedState state )
++	: base( input, dbg, state )
++{
++	Profiler p = (Profiler)dbg;
++	p.setParser(this);
++	<parserCtorBody()>
++	<grammar.directDelegates:
++	 {g|<g:delegateName()> = new <g.recognizerName>( input, dbg, this.state, this<grammar.delegators:{g|, <g:delegateName()>}> );}; separator="\n">
++	<@finally()>
++}
++<\n>
++>>
++
++/** Basically we don't want to set any dbg listeners are root will have it. */
++ctorForDelegateGrammar() ::= <<
++public <name>( <inputStreamType> input, IDebugEventListener dbg, RecognizerSharedState state<grammar.delegators:{g|, <g.recognizerName> <g:delegateName()>}> )
++	: base( input, dbg, state )
++{
++	<parserCtorBody()>
++	<grammar.directDelegates:
++	 {g|<g:delegateName()> = new <g.recognizerName>( input, this, this.state<grammar.delegators:{g|, <g:delegateName()>}> );}; separator="\n">
++}<\n>
++>>
++
++ctorForPredefinedListener() ::= <<
++public <name>( <inputStreamType> input, IDebugEventListener dbg )
++	<@superClassRef>: base( input, dbg, new RecognizerSharedState() )<@end>
++{
++<if(profile)>
++	Profiler p = (Profiler)dbg;
++	p.setParser(this);
++<endif>
++	<parserCtorBody()>
++	<grammar.directDelegates:{g|<g:delegateName()> = new <g.recognizerName>(input, dbg, this.state, this<grammar.delegators:{g|, <g:delegateName()>}>);}; separator="\n">
++	<@finally()>
++}<\n>
++>>
++
++createListenerAndHandshake() ::= <<
++<if(TREE_PARSER)>
++DebugEventSocketProxy proxy = new DebugEventSocketProxy( this, port, input.TreeAdaptor );<\n>
++<else>
++DebugEventSocketProxy proxy = new DebugEventSocketProxy( this, port, null );<\n>
++<endif>
++setDebugListener( proxy );
++try
++{
++	proxy.handshake();
++}
++catch ( IOException ioe )
++{
++	ReportError( ioe );
++}
++>>
++
++//@genericParser.superClassName() ::= "Debug<@super.superClassName()>"
++
++@rule.preamble() ::= <<
++<!
++try
++{
++	dbg.EnterRule( GrammarFileName, "<ruleName>" );
++	if ( getRuleLevel() == 0 )
++		dbg.Commence();
++	incRuleLevel();
++	dbg.Location( <ruleDescriptor.tree.line>, <ruleDescriptor.tree.charPositionInLine> );
++!>
++DebugEnterRule( DebugListener, GrammarFileName, "<ruleName>" );
++DebugLocation( DebugListener, <ruleDescriptor.tree.line>, <ruleDescriptor.tree.charPositionInLine> );<\n>
++>>
++
++@rule.postamble() ::= <<
++<!
++	dbg.Location( <ruleDescriptor.EORNode.line>, <ruleDescriptor.EORNode.charPositionInLine> );
++}
++finally
++{
++	dbg.ExitRule( GrammarFileName, "<ruleName>" );
++	decRuleLevel();
++	if ( getRuleLevel() == 0 )
++		dbg.Terminate();
++}
++!>
++DebugLocation( DebugListener, <ruleDescriptor.EORNode.line>, <ruleDescriptor.EORNode.charPositionInLine> );
++DebugExitRule( DebugListener, GrammarFileName, "<ruleName>" );<\n>
++>>
++
++@synpred.start() ::= "DebugBeginBacktrack( DebugListener, state.backtracking );"
++//@synpred.start() ::= "dbg.beginBacktrack( state.backtracking );"
++
++@synpred.stop() ::= "DebugEndBacktrack( DebugListener, state.backtracking, success );"
++//@synpred.stop() ::= "dbg.endBacktrack( state.backtracking, success );"
++
++// Common debug event triggers used by region overrides below
++
++enterSubRule() ::= <<
++<!
++try
++{
++	dbg.EnterSubRule( <decisionNumber> );
++!>
++DebugEnterSubRule( DebugListener, <decisionNumber> );<\n>
++>>
++
++exitSubRule() ::= <<
++<!
++}
++finally
++{
++	dbg.ExitSubRule( <decisionNumber> );
++}
++!>
++DebugExitSubRule( DebugListener, <decisionNumber> );<\n>
++>>
++
++enterDecision() ::= <<
++<!
++try
++{
++	dbg.EnterDecision( <decisionNumber> );
++!>
++DebugEnterDecision( DebugListener, <decisionNumber> );<\n>
++>>
++
++exitDecision() ::= <<
++<!
++}
++finally
++{
++	dbg.ExitDecision( <decisionNumber> );
++}
++!>
++DebugExitDecision( DebugListener, <decisionNumber> );<\n>
++>>
++
++enterAlt(n) ::= "DebugEnterAlt( DebugListener, <n> );<\n>"
++//enterAlt(n) ::= "dbg.enterAlt(<n>);<\n>"
++
++// Region overrides that tell various constructs to add debugging triggers
++
++@block.predecision() ::= "<enterSubRule()><enterDecision()>"
++
++@block.postdecision() ::= "<exitDecision()>"
++
++@block.postbranch() ::= "<exitSubRule()>"
++
++@ruleBlock.predecision() ::= "<enterDecision()>"
++
++@ruleBlock.postdecision() ::= "<exitDecision()>"
++
++@ruleBlockSingleAlt.prealt() ::= "<enterAlt(n=\"1\")>"
++
++@blockSingleAlt.prealt() ::= "<enterAlt(n=\"1\")>"
++
++@positiveClosureBlock.preloop() ::= "<enterSubRule()>"
++
++@positiveClosureBlock.postloop() ::= "<exitSubRule()>"
++
++@positiveClosureBlock.predecision() ::= "<enterDecision()>"
++
++@positiveClosureBlock.postdecision() ::= "<exitDecision()>"
++
++@positiveClosureBlock.earlyExitException() ::=
++    "DebugRecognitionException( DebugListener, eee<decisionNumber> );<\n>"
++//@positiveClosureBlock.earlyExitException() ::=
++//    "dbg.recognitionException( eee );<\n>"
++
++@closureBlock.preloop() ::= "<enterSubRule()>"
++
++@closureBlock.postloop() ::= "<exitSubRule()>"
++
++@closureBlock.predecision() ::= "<enterDecision()>"
++
++@closureBlock.postdecision() ::= "<exitDecision()>"
++
++@altSwitchCase.prealt() ::= "<enterAlt(n=i)>"
++
++@element.prematch() ::=
++    "DebugLocation( DebugListener, <it.line>,<it.pos> );"
++//@element.prematch() ::=
++//    "dbg.location( <it.line>,<it.pos> );"
++
++@matchSet.mismatchedSetException() ::=
++    "DebugRecognitionException( DebugListener, mse );"
++//@matchSet.mismatchedSetException() ::=
++//    "dbg.recognitionException( mse );"
++
++@dfaState.noViableAltException() ::= "DebugRecognitionException( DebugListener, nvae );"
++//@dfaState.noViableAltException() ::= "dbg.recognitionException( nvae );"
++
++@dfaStateSwitch.noViableAltException() ::= "DebugRecognitionException( DebugListener, nvae );"
++//@dfaStateSwitch.noViableAltException() ::= "dbg.recognitionException( nvae );"
++
++dfaDecision(decisionNumber,description) ::= <<
++try
++{
++	isCyclicDecision = true;
++	<super.dfaDecision(...)>
++}
++catch ( NoViableAltException nvae )
++{
++	DebugRecognitionException( DebugListener, nvae );
++	throw nvae;
++}
++>>
++
++@cyclicDFA.errorMethod() ::= <<
++public virtual void Error( NoViableAltException nvae )
++{
++	DebugRecognitionException( DebugListener, nvae );
++}
++>>
++
++/** Force predicate validation to trigger an event */
++evalPredicate(pred,description) ::= <<
++evalPredicate( <pred>, "<description>" )
++>>
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/ST.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/ST.stg
+new file mode 100644
+index 0000000..6dad49f
+--- /dev/null
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/ST.stg
+@@ -0,0 +1,168 @@
++/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell, Pixel Mine, Inc.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++/** Template subgroup to add template rewrite output
++ *  If debugging, then you'll also get STDbg.stg loaded.
++ */
++group ST;
++
++@outputFile.imports() ::= <<
++<@super.imports()>
++using Antlr3.ST;
++using Antlr3.ST.Language;
++>>
++
++/** Add this to each rule's return value struct */
++@returnScope.ruleReturnMembers() ::= <<
++public StringTemplate st;
++public object getTemplate() { return st; }
++public override string ToString() { return (st==null) ? null : st.ToString(); }
++>>
++
++@genericParser.members() ::= <<
++<@super.members()>
++protected StringTemplateGroup templateLib = new StringTemplateGroup("<name>Templates", typeof(AngleBracketTemplateLexer) );
++
++public StringTemplateGroup TemplateLib
++{
++	get { return templateLib; }
++	set { templateLib = value; }
++}
++
++///** allows convenient multi-value initialization:
++// *  "new STAttrMap().put(...).put(...)"
++// */
++//public static class STAttrMap extends HashMap {
++//  public STAttrMap put(String attrName, object value) {
++//    super.put(attrName, value);
++//    return this;
++//  }
++//  public STAttrMap put(String attrName, int value) {
++//    super.put(attrName, new Integer(value));
++//    return this;
++//  }
++//}
++>>
++
++/** x+=rule when output=template */
++ruleRefAndListLabel(rule,label,elementIndex,args,scope) ::= <<
++<ruleRef(...)>
++<listLabel(elem=label+".getTemplate()",...)>
++>>
++
++rewriteTemplate(alts) ::= <<
++
++// TEMPLATE REWRITE
++<if(backtracking)>
++if ( <actions.(actionScope).synpredgate> )
++{
++	<alts:rewriteTemplateAlt(); separator="else ">
++	<if(rewriteMode)><replaceTextInLine()><endif>
++}
++<else>
++<alts:rewriteTemplateAlt(); separator="else ">
++<if(rewriteMode)><replaceTextInLine()><endif>
++<endif>
++>>
++
++replaceTextInLine() ::= <<
++<if(TREE_PARSER)>
++((TokenRewriteStream)input.TokenStream).replace(
++	input.TreeAdaptor.GetTokenStartIndex(retval.start),
++	input.TreeAdaptor.GetTokenStopIndex(retval.start),
++	retval.st );
++<else>
++((TokenRewriteStream)input).replace(
++	((IToken)retval.start).TokenIndex,
++	input.LT(-1).TokenIndex,
++	retval.st );
++<endif>
++>>
++
++rewriteTemplateAlt() ::= <<
++// <it.description>
++<if(it.pred)>
++if (<it.pred>)
++{
++	retval.st = <it.alt>;
++}<\n>
++<else>
++{
++	retval.st = <it.alt>;
++}<\n>
++<endif>
++>>
++
++rewriteEmptyTemplate(alts) ::= <<
++null;
++>>
++
++/** Invoke a template with a set of attribute name/value pairs.
++ *  Set the value of the rule's template *after* having set
++ *  the attributes because the rule's template might be used as
++ *  an attribute to build a bigger template; you get a self-embedded
++ *  template.
++ */
++rewriteExternalTemplate(name,args) ::= <<
++templateLib.getInstanceOf("<name>"<if(args)>,
++	new STAttrMap()<args:{a | .put("<a.name>", <a.value>)}>
++	<endif>)
++>>
++
++/** expr is a string expression that says what template to load */
++rewriteIndirectTemplate(expr,args) ::= <<
++templateLib.getInstanceOf(<expr><if(args)>,
++	new STAttrMap()<args:{a | .put("<a.name>", <a.value>)}>
++	<endif>)
++>>
++
++/** Invoke an inline template with a set of attribute name/value pairs */
++rewriteInlineTemplate(args, template) ::= <<
++new StringTemplate(templateLib, "<template>"<if(args)>,
++	new STAttrMap()<args:{a | .put("<a.name>", <a.value>)}>
++	<endif>)
++>>
++
++/** plain -> {foo} action */
++rewriteAction(action) ::= <<
++<action>
++>>
++
++/** An action has %st.attrName=expr; or %{st}.attrName=expr; */
++actionSetAttribute(st,attrName,expr) ::= <<
++(<st>).setAttribute("<attrName>",<expr>);
++>>
++
++/** Translate %{stringExpr} */
++actionStringConstructor(stringExpr) ::= <<
++new StringTemplate(templateLib,<stringExpr>)
++>>
+diff --git a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll
+new file mode 100644
+index 0000000..8919f04
+Binary files /dev/null and b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll differ
+diff --git a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll.config b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll.config
+new file mode 100644
+index 0000000..df20690
+--- /dev/null
++++ b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll.config
+@@ -0,0 +1,3 @@
++﻿<?xml version="1.0"?>
++<configuration>
++<startup><supportedRuntime version="v2.0.50727"/></startup></configuration>
+diff --git a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.pdb b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.pdb
+new file mode 100644
+index 0000000..5ede909
+Binary files /dev/null and b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.pdb differ
+diff --git a/bin/Bootstrap/Tool/Templates/depend.stg b/bin/Bootstrap/Tool/Templates/depend.stg
+new file mode 100644
+index 0000000..c093054
+--- /dev/null
++++ b/bin/Bootstrap/Tool/Templates/depend.stg
+@@ -0,0 +1,12 @@
++/** templates used to generate make-compatible dependencies */
++group depend;
++
++/** Generate "f : x, y, z" dependencies for input
++ *  dependencies and generated files. in and out
++ *  are File objects.  For example, you can say
++ *  <f.canonicalPath>
++ */
++dependencies(grammarFileName,in,out) ::= <<
++<if(in)><grammarFileName>: <in; separator=", "><endif>
++<out:{f | <f> : <grammarFileName>}; separator="\n">
++>>
+diff --git a/bin/Bootstrap/Tool/Templates/dot/action-edge.st b/bin/Bootstrap/Tool/Templates/dot/action-edge.st
+new file mode 100644
+index 0000000..1bb8e96
+--- /dev/null
++++ b/bin/Bootstrap/Tool/Templates/dot/action-edge.st
+@@ -0,0 +1 @@
++<src> -> <target> [fontsize=11, fontname="Courier", arrowsize=.7, label = "<label>"<if(arrowhead)>, arrowhead = <arrowhead><endif>];
+diff --git a/bin/Bootstrap/Tool/Templates/dot/decision-rank.st b/bin/Bootstrap/Tool/Templates/dot/decision-rank.st
+new file mode 100644
+index 0000000..d5142f6
+--- /dev/null
++++ b/bin/Bootstrap/Tool/Templates/dot/decision-rank.st
+@@ -0,0 +1 @@
++{rank=same; rankdir=TB; <states; separator="; ">}
+diff --git a/bin/Bootstrap/Tool/Templates/dot/dfa.st b/bin/Bootstrap/Tool/Templates/dot/dfa.st
+new file mode 100644
+index 0000000..5b81e70
+--- /dev/null
++++ b/bin/Bootstrap/Tool/Templates/dot/dfa.st
+@@ -0,0 +1,7 @@
++digraph NFA {
++<if(rankdir)>rankdir=<rankdir>;<endif>
++<decisionRanks; separator="\n">
++<states; separator="\n">
++<edges; separator="\n">
++}
++
+diff --git a/bin/Bootstrap/Tool/Templates/dot/edge.st b/bin/Bootstrap/Tool/Templates/dot/edge.st
+new file mode 100644
+index 0000000..1bb8e96
+--- /dev/null
++++ b/bin/Bootstrap/Tool/Templates/dot/edge.st
+@@ -0,0 +1 @@
++<src> -> <target> [fontsize=11, fontname="Courier", arrowsize=.7, label = "<label>"<if(arrowhead)>, arrowhead = <arrowhead><endif>];
+diff --git a/bin/Bootstrap/Tool/Templates/dot/epsilon-edge.st b/bin/Bootstrap/Tool/Templates/dot/epsilon-edge.st
+new file mode 100644
+index 0000000..2a49b2b
+--- /dev/null
++++ b/bin/Bootstrap/Tool/Templates/dot/epsilon-edge.st
+@@ -0,0 +1 @@
++<src> -> <target> [fontname="Times-Italic", label = "e"];
+diff --git a/bin/Bootstrap/Tool/Templates/dot/nfa.st b/bin/Bootstrap/Tool/Templates/dot/nfa.st
+new file mode 100644
+index 0000000..280ced2
+--- /dev/null
++++ b/bin/Bootstrap/Tool/Templates/dot/nfa.st
+@@ -0,0 +1,6 @@
++digraph NFA {
++rankdir=LR;
++<decisionRanks; separator="\n">
++<states; separator="\n">
++<edges; separator="\n">
++}
+diff --git a/bin/Bootstrap/Tool/Templates/dot/state.st b/bin/Bootstrap/Tool/Templates/dot/state.st
+new file mode 100644
+index 0000000..f68e3a8
+--- /dev/null
++++ b/bin/Bootstrap/Tool/Templates/dot/state.st
+@@ -0,0 +1 @@
++node [fontsize=11, shape = <if(useBox)>box<else>circle, fixedsize=true, width=.4<endif>]; <name>
+diff --git a/bin/Bootstrap/Tool/Templates/dot/stopstate.st b/bin/Bootstrap/Tool/Templates/dot/stopstate.st
+new file mode 100644
+index 0000000..572d460
+--- /dev/null
++++ b/bin/Bootstrap/Tool/Templates/dot/stopstate.st
+@@ -0,0 +1 @@
++node [fontsize=11, shape = <if(useBox)>polygon,sides=4,peripheries=2<else>doublecircle, fixedsize=true, width=.6<endif>]; <name>
+diff --git a/bin/Bootstrap/Tool/Templates/messages/formats/antlr.stg b/bin/Bootstrap/Tool/Templates/messages/formats/antlr.stg
+new file mode 100644
+index 0000000..cf9cbc9
+--- /dev/null
++++ b/bin/Bootstrap/Tool/Templates/messages/formats/antlr.stg
+@@ -0,0 +1,42 @@
++/*
++ [The "BSD licence"]
++ Copyright (c) 2006 Kay Roepke
++ All rights reserved.
++
++ Redistribution and use in source and binary forms, with or without
++ modification, are permitted provided that the following conditions
++ are met:
++ 1. Redistributions of source code must retain the above copyright
++    notice, this list of conditions and the following disclaimer.
++ 2. Redistributions in binary form must reproduce the above copyright
++    notice, this list of conditions and the following disclaimer in the
++    documentation and/or other materials provided with the distribution.
++ 3. The name of the author may not be used to endorse or promote products
++    derived from this software without specific prior written permission.
++
++ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++*/
++/*
++ New style messages. This file contains the actual layout of the messages emitted by ANTLR.
++ The text itself is coming out of the languages/*stg files, according to the chosen locale.
++ This file contains the default format ANTLR uses.
++*/
++
++group antlr;
++
++location(file, line, column) ::= "<file>:<line>:<column>:"
++
++message(id, text) ::= "(<id>) <text>"
++
++report(location, message, type) ::= "<type>(<message.id>): <location> <message.text>"
++
++wantsSingleLineMessage() ::= "false"
+\ No newline at end of file
+diff --git a/bin/Bootstrap/Tool/Templates/messages/formats/vs2005.stg b/bin/Bootstrap/Tool/Templates/messages/formats/vs2005.stg
+new file mode 100644
+index 0000000..34c88e4
+--- /dev/null
++++ b/bin/Bootstrap/Tool/Templates/messages/formats/vs2005.stg
+@@ -0,0 +1,42 @@
++/*
++ [The "BSD licence"]
++ Copyright (c) 2006 Kay Roepke
++ All rights reserved.
++
++ Redistribution and use in source and binary forms, with or without
++ modification, are permitted provided that the following conditions
++ are met:
++ 1. Redistributions of source code must retain the above copyright
++    notice, this list of conditions and the following disclaimer.
++ 2. Redistributions in binary form must reproduce the above copyright
++    notice, this list of conditions and the following disclaimer in the
++    documentation and/or other materials provided with the distribution.
++ 3. The name of the author may not be used to endorse or promote products
++    derived from this software without specific prior written permission.
++
++ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++*/
++/*
++ New style messages. This file contains the actual layout of the messages emitted by ANTLR.
++ The text itself is coming out of the languages/*stg files, according to the chosen locale.
++ This file contains the default format ANTLR uses.
++*/
++
++group antlr;
++
++location(file, line, column) ::= "<file>(<line>,<column>)"
++
++message(id, text) ::= "error <id> : <text>"
++
++report(location, message, type) ::= "<location> : <type> <message.id> : <message.text>"
++
++wantsSingleLineMessage() ::= "true"
+diff --git a/bin/Bootstrap/Tool/Templates/messages/languages/en.stg b/bin/Bootstrap/Tool/Templates/messages/languages/en.stg
+new file mode 100644
+index 0000000..ced9a0c
+--- /dev/null
++++ b/bin/Bootstrap/Tool/Templates/messages/languages/en.stg
+@@ -0,0 +1,298 @@
++/*
++ [The "BSD licence"]
++ Copyright (c) 2005-2006 Terence Parr
++ All rights reserved.
++
++ Redistribution and use in source and binary forms, with or without
++ modification, are permitted provided that the following conditions
++ are met:
++ 1. Redistributions of source code must retain the above copyright
++    notice, this list of conditions and the following disclaimer.
++ 2. Redistributions in binary form must reproduce the above copyright
++    notice, this list of conditions and the following disclaimer in the
++    documentation and/or other materials provided with the distribution.
++ 3. The name of the author may not be used to endorse or promote products
++    derived from this software without specific prior written permission.
++
++ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++*/
++/*
++ New style messages. This file only contains the messages in English, but no
++ information about which file, line, or column it occurred in.
++ The location and message ids are taken out of the formats directory.
++														Kay Roepke
++*/
++group en_US;
++
++// TOOL ERRORS
++// file errors
++CANNOT_WRITE_FILE(arg,exception,stackTrace) ::= <<
++cannot write file <arg>: <exception>
++<stackTrace; separator="\n">
++>>
++CANNOT_CLOSE_FILE(arg,exception,stackTrace) ::= "cannot close file <arg>: <exception>"
++CANNOT_FIND_TOKENS_FILE(arg) ::= "cannot find tokens file <arg>"
++ERROR_READING_TOKENS_FILE(arg,exception,stackTrace) ::= <<
++problem reading token vocabulary file <arg>: <exception>
++<stackTrace; separator="\n">
++>>
++DIR_NOT_FOUND(arg,exception,stackTrace) ::= "directory not found: <arg>"
++OUTPUT_DIR_IS_FILE(arg,exception,stackTrace) ::= "output directory is a file: <arg>"
++CANNOT_OPEN_FILE(arg,exception,stackTrace) ::= "cannot find or open file: <arg><if(exception)>; reason: <exception><endif>"
++
++INTERNAL_ERROR(arg,arg2,exception,stackTrace) ::= <<
++internal error: <arg> <arg2><if(exception)>: <exception><endif>
++<stackTrace; separator="\n">
++>>
++INTERNAL_WARNING(arg) ::= "internal warning: <arg>"
++ERROR_CREATING_ARTIFICIAL_RULE(arg,exception,stackTrace) ::= <<
++problems creating lexer rule listing all tokens: <exception>
++<stackTrace; separator="\n">
++>>
++TOKENS_FILE_SYNTAX_ERROR(arg,arg2) ::=
++	"problems parsing token vocabulary file <arg> on line <arg2>"
++CANNOT_GEN_DOT_FILE(arg,exception,stackTrace) ::=
++	"cannot write DFA DOT file <arg>: <exception>"
++BAD_ACTION_AST_STRUCTURE(exception,stackTrace) ::=
++	"bad internal tree structure for action '<arg>': <exception>"
++BAD_AST_STRUCTURE(arg,exception,stackTrace) ::= <<
++bad internal tree structure '<arg>': <exception>
++<stackTrace; separator="\n">
++>>
++FILE_AND_GRAMMAR_NAME_DIFFER(arg,arg2) ::=
++  "file <arg2> contains grammar <arg>; names must be identical"
++FILENAME_EXTENSION_ERROR(arg) ::=
++  "file <arg> must end in a file extension, normally .g"
++
++// code gen errors
++MISSING_CODE_GEN_TEMPLATES(arg) ::=
++	"cannot find code generation templates <arg>.stg"
++MISSING_CYCLIC_DFA_CODE_GEN_TEMPLATES() ::=
++	"cannot find code generation cyclic DFA templates for language <arg>"
++CODE_GEN_TEMPLATES_INCOMPLETE(arg) ::=
++	"at least one code generation template missing for language <arg>"
++CANNOT_CREATE_TARGET_GENERATOR(arg,exception,stackTrace) ::=
++	"cannot create target <arg> code generator: <exception>"
++CANNOT_COMPUTE_SAMPLE_INPUT_SEQ() ::=
++	"cannot generate a sample input sequence from lookahead DFA"
++
++// grammar interpretation errors
++/*
++NO_VIABLE_DFA_ALT(arg,arg2) ::=
++	"no viable transition from state <arg> on <arg2> while interpreting DFA"
++*/
++
++// GRAMMAR ERRORS
++SYNTAX_ERROR(arg) ::= "syntax error: <arg>"
++RULE_REDEFINITION(arg) ::=
++	"rule <arg> redefinition"
++LEXER_RULES_NOT_ALLOWED(arg) ::=
++	"lexer rule <arg> not allowed in parser"
++PARSER_RULES_NOT_ALLOWED(arg) ::=
++	"parser rule <arg> not allowed in lexer"
++CANNOT_FIND_ATTRIBUTE_NAME_IN_DECL(arg) ::=
++	"cannot find an attribute name in attribute declaration"
++NO_TOKEN_DEFINITION(arg) ::=
++	"no lexer rule corresponding to token: <arg>"
++UNDEFINED_RULE_REF(arg) ::=
++	"reference to undefined rule: <arg>"
++LITERAL_NOT_ASSOCIATED_WITH_LEXER_RULE(arg) ::=
++	"literal has no associated lexer rule: <arg>"
++CANNOT_ALIAS_TOKENS_IN_LEXER(arg) ::=
++	"literals are illegal in lexer tokens{} section: <arg>"
++ATTRIBUTE_REF_NOT_IN_RULE(arg,arg2) ::=
++	"reference to attribute outside of a rule: <arg><if(arg2)>.<arg2><endif>"
++UNKNOWN_ATTRIBUTE_IN_SCOPE(arg,arg2) ::=
++	"unknown attribute for <arg>: <arg2>"
++UNKNOWN_RULE_ATTRIBUTE(arg,arg2) ::=
++	"unknown attribute for rule <arg>: <arg2>"
++UNKNOWN_SIMPLE_ATTRIBUTE(arg,args2) ::=
++	"attribute is not a token, parameter, or return value: <arg>"
++ISOLATED_RULE_SCOPE(arg) ::=
++	"missing attribute access on rule scope: <arg>"
++INVALID_RULE_PARAMETER_REF(arg,arg2) ::=
++	"cannot access rule <arg>'s parameter: <arg2>"
++INVALID_RULE_SCOPE_ATTRIBUTE_REF(arg,arg2) ::=
++	"cannot access rule <arg>'s dynamically-scoped attribute: <arg2>"
++SYMBOL_CONFLICTS_WITH_GLOBAL_SCOPE(arg) ::=
++	"symbol <arg> conflicts with global dynamic scope with same name"
++WRITE_TO_READONLY_ATTR(arg,arg2,arg3) ::=
++	"cannot write to read only attribute: $<arg><if(arg2)>.<arg2><endif>"
++LABEL_CONFLICTS_WITH_RULE(arg) ::=
++	"label <arg> conflicts with rule with same name"
++LABEL_CONFLICTS_WITH_TOKEN(arg) ::=
++	"label <arg> conflicts with token with same name"
++LABEL_CONFLICTS_WITH_RULE_SCOPE_ATTRIBUTE(arg,arg2) ::=
++	"label <arg> conflicts with rule <arg2>'s dynamically-scoped attribute with same name"
++LABEL_CONFLICTS_WITH_RULE_ARG_RETVAL(arg,arg2) ::=
++	"label <arg> conflicts with rule <arg2>'s return value or parameter with same name"
++ATTRIBUTE_CONFLICTS_WITH_RULE(arg,arg2) ::=
++	"rule <arg2>'s dynamically-scoped attribute <arg> conflicts with the rule name"
++ATTRIBUTE_CONFLICTS_WITH_RULE_ARG_RETVAL(arg,arg2) ::=
++	"rule <arg2>'s dynamically-scoped attribute <arg> conflicts with<arg2>'s return value or parameter with same name"
++LABEL_TYPE_CONFLICT(arg,arg2) ::=
++	"label <arg> type mismatch with previous definition: <arg2>"
++ARG_RETVAL_CONFLICT(arg,arg2) ::=
++	"rule <arg2>'s argument <arg> conflicts a return value with same name"
++NONUNIQUE_REF(arg) ::=
++	"<arg> is a non-unique reference"
++FORWARD_ELEMENT_REF(arg) ::=
++	"illegal forward reference: <arg>"
++MISSING_RULE_ARGS(arg) ::=
++	"missing parameter(s) on rule reference: <arg>"
++RULE_HAS_NO_ARGS(arg) ::=
++	"rule <arg> has no defined parameters"
++ARGS_ON_TOKEN_REF(arg) ::=
++	"token reference <arg> may not have parameters"
++/*
++NONCHAR_RANGE() ::=
++	"range operator can only be used in the lexer"
++*/
++ILLEGAL_OPTION(arg) ::=
++	"illegal option <arg>"
++LIST_LABEL_INVALID_UNLESS_RETVAL_STRUCT(arg) ::=
++	"rule '+=' list labels are not allowed w/o output option: <arg>"
++UNDEFINED_TOKEN_REF_IN_REWRITE(arg) ::=
++  "reference to undefined token in rewrite rule: <arg>"
++REWRITE_ELEMENT_NOT_PRESENT_ON_LHS(arg) ::=
++  "reference to rewrite element <arg> without reference on left of ->"
++UNDEFINED_LABEL_REF_IN_REWRITE(arg) ::=
++  "reference to undefined label in rewrite rule: $<arg>"
++NO_GRAMMAR_START_RULE (arg) ::=
++  "grammar <arg>: no start rule (no rule can obviously be followed by EOF)"
++EMPTY_COMPLEMENT(arg) ::= <<
++<if(arg)>
++set complement ~<arg> is empty
++<else>
++set complement is empty
++<endif>
++>>
++UNKNOWN_DYNAMIC_SCOPE(arg) ::=
++  "unknown dynamic scope: <arg>"
++UNKNOWN_DYNAMIC_SCOPE_ATTRIBUTE(arg,arg2) ::=
++  "unknown dynamically-scoped attribute for scope <arg>: <arg2>"
++RULE_REF_AMBIG_WITH_RULE_IN_ALT(arg) ::=
++  "reference $<arg> is ambiguous; rule <arg> is enclosing rule and referenced in the production (assuming enclosing rule)"
++ISOLATED_RULE_ATTRIBUTE(arg) ::=
++  "reference to locally-defined rule scope attribute without rule name: <arg>"
++INVALID_ACTION_SCOPE(arg,arg2) ::=
++  "unknown or invalid action scope for <arg2> grammar: <arg>"
++ACTION_REDEFINITION(arg) ::=
++  "redefinition of <arg> action"
++DOUBLE_QUOTES_ILLEGAL(arg) ::=
++  "string literals must use single quotes (such as \'begin\'): <arg>"
++INVALID_TEMPLATE_ACTION(arg) ::=
++  "invalid StringTemplate % shorthand syntax: '<arg>'"
++MISSING_ATTRIBUTE_NAME() ::=
++  "missing attribute name on $ reference"
++ARG_INIT_VALUES_ILLEGAL(arg) ::=
++  "rule parameters may not have init values: <arg>"
++REWRITE_OR_OP_WITH_NO_OUTPUT_OPTION(arg) ::=
++  "<if(arg)>rule <arg> uses <endif>rewrite syntax or operator with no output option; setting output=AST"
++AST_OP_WITH_NON_AST_OUTPUT_OPTION(arg) ::=
++  "AST operator with non-AST output option: <arg>"
++NO_RULES(arg) ::= "grammar file <arg> has no rules"
++MISSING_AST_TYPE_IN_TREE_GRAMMAR(arg) ::=
++  "tree grammar <arg> has no ASTLabelType option"
++REWRITE_FOR_MULTI_ELEMENT_ALT(arg) ::=
++  "with rewrite=true, alt <arg> not simple node or obvious tree element; text attribute for rule not guaranteed to be correct"
++RULE_INVALID_SET(arg) ::=
++  "Cannot complement rule <arg>; not a simple set or element"
++HETERO_ILLEGAL_IN_REWRITE_ALT(arg) ::=
++  "alts with rewrites can't use heterogeneous types left of ->"
++NO_SUCH_GRAMMAR_SCOPE(arg,arg2) ::=
++  "reference to undefined grammar in rule reference: <arg>.<arg2>"
++NO_SUCH_RULE_IN_SCOPE(arg,arg2) ::=
++  "rule <arg2> is not defined in grammar <arg>"
++TOKEN_ALIAS_CONFLICT(arg,arg2) ::=
++  "cannot alias <arg>; string already assigned to <arg2>"
++TOKEN_ALIAS_REASSIGNMENT(arg,arg2) ::=
++  "cannot alias <arg>; token name already assigned to <arg2>"
++TOKEN_VOCAB_IN_DELEGATE(arg,arg2) ::=
++  "tokenVocab option ignored in imported grammar <arg>"
++INVALID_IMPORT(arg,arg2) ::=
++  "<arg.grammarTypeString> grammar <arg.name> cannot import <arg2.grammarTypeString> grammar <arg2.name>"
++IMPORTED_TOKENS_RULE_EMPTY(arg,arg2) ::=
++  "no lexer rules contributed to <arg> from imported grammar <arg2>"
++IMPORT_NAME_CLASH(arg,arg2) ::=
++  "combined grammar <arg.name> and imported <arg2.grammarTypeString> grammar <arg2.name> both generate <arg2.recognizerName>; import ignored"
++AST_OP_IN_ALT_WITH_REWRITE(arg,arg2) ::=
++  "rule <arg> alt <arg2> uses rewrite syntax and also an AST operator"
++WILDCARD_AS_ROOT(arg) ::= "Wildcard invalid as root; wildcard can itself be a tree"
++CONFLICTING_OPTION_IN_TREE_FILTER(arg,arg2) ::= "option <arg>=<arg2> conflicts with tree grammar filter mode"
++
++// GRAMMAR WARNINGS
++
++GRAMMAR_NONDETERMINISM(input,conflictingAlts,paths,disabled,hasPredicateBlockedByAction) ::=
++<<
++<if(paths)>
++Decision can match input such as "<input>" using multiple alternatives:
++<paths:{  alt <it.alt> via NFA path <it.states; separator=","><\n>}>
++<else>
++Decision can match input such as "<input>" using multiple alternatives: <conflictingAlts; separator=", ">
++<endif>
++<if(disabled)><\n>As a result, alternative(s) <disabled; separator=","> were disabled for that input<endif><if(hasPredicateBlockedByAction)><\n>Semantic predicates were present but were hidden by actions.<endif>
++>>
++
++DANGLING_STATE(danglingAlts,input) ::= <<
++the decision cannot distinguish between alternative(s) <danglingAlts; separator=","> for input such as "<input>"
++>>
++
++UNREACHABLE_ALTS(alts) ::= <<
++The following alternatives can never be matched: <alts; separator=","><\n>
++>>
++
++INSUFFICIENT_PREDICATES(upon,altToLocations,hasPredicateBlockedByAction) ::= <<
++Input such as "<upon>" is insufficiently covered with predicates at locations: <altToLocations.keys:{alt|alt <alt>: <altToLocations.(alt):{loc| line <loc.line>:<loc.column> at <loc.text>}; separator=", ">}; separator=", "><if(hasPredicateBlockedByAction)><\n>Semantic predicates were present but were hidden by actions.<endif>
++>>
++
++DUPLICATE_SET_ENTRY(arg) ::=
++	"duplicate token type <arg> when collapsing subrule into set"
++
++ANALYSIS_ABORTED(enclosingRule) ::= <<
++ANTLR could not analyze this decision in rule <enclosingRule>; often this is because of recursive rule references visible from the left edge of alternatives.  ANTLR will re-analyze the decision with a fixed lookahead of k=1.  Consider using "options {k=1;}" for that decision and possibly adding a syntactic predicate.
++>>
++
++RECURSION_OVERLOW(alt,input,targetRules,callSiteStates) ::= <<
++Alternative <alt>: after matching input such as <input> decision cannot predict what comes next due to recursion overflow <targetRules,callSiteStates:{t,c|to <t> from <c:{s|<s.enclosingRule.name>};separator=", ">}; separator=" and ">
++>>
++
++LEFT_RECURSION(targetRules,alt,callSiteStates) ::= <<
++Alternative <alt> discovers infinite left-recursion <targetRules,callSiteStates:{t,c|to <t> from <c:{s|<s.enclosingRule>};separator=", ">}; separator=" and ">
++>>
++
++UNREACHABLE_TOKENS(tokens) ::= <<
++The following token definitions can never be matched because prior tokens match the same input: <tokens; separator=",">
++>>
++
++TOKEN_NONDETERMINISM(input,conflictingTokens,paths,disabled,hasPredicateBlockedByAction) ::=
++<<
++<if(paths)>
++Decision can match input such as "<input>" using multiple alternatives:
++<paths:{  alt <it.alt> via NFA path <it.states; separator=","><\n>}>
++<else>
++Multiple token rules can match input such as "<input>": <conflictingTokens; separator=", "><\n>
++<endif>
++<if(disabled)><\n>As a result, token(s) <disabled; separator=","> were disabled for that input<endif><if(hasPredicateBlockedByAction)><\n>Semantic predicates were present but were hidden by actions.<endif>
++>>
++
++LEFT_RECURSION_CYCLES(listOfCycles) ::= <<
++The following sets of rules are mutually left-recursive <listOfCycles:{c| [<c:{r|<r.name>}; separator=", ">]}; separator=" and ">
++>>
++
++NONREGULAR_DECISION(ruleName,alts) ::= <<
++[fatal] rule <ruleName> has non-LL(*) decision due to recursive rule invocations reachable from alts <alts; separator=",">.  Resolve by left-factoring or using syntactic predicates or using backtrack=true option.
++>>
++
++/* l10n for message levels */
++warning() ::= "warning"
++error() ::= "error"
+

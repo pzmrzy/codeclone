@@ -1,0 +1,27 @@
+commit 4c751f82cbb0e289fe640602fa532f06c85c5dda
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Tue Oct 25 14:33:03 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Tue Oct 25 14:33:03 2011 -0800
+
+C#: Fix comment
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 9197]
+
+diff --git a/Antlr3.Runtime/Tree/RewriteRuleElementStream.cs b/Antlr3.Runtime/Tree/RewriteRuleElementStream.cs
+index 8e3d5b0..cb76ace 100644
+--- a/Antlr3.Runtime/Tree/RewriteRuleElementStream.cs
++++ b/Antlr3.Runtime/Tree/RewriteRuleElementStream.cs
+@@ -71,10 +71,7 @@ namespace Antlr.Runtime.Tree
+/** <summary>Once a node / subtree has been used in a stream, it must be dup'd
+*  from then on.  Streams are reset after subrules so that the streams
+*  can be reused in future subrules.  So, reset must set a dirty bit.
+-         *  If dirty, then next() always returns a dup.
+-         *
+-         *  I wanted to use "naughty bit" here, but couldn't think of a way
+-         *  to use "naughty".
++         *  If dirty, then next() always returns a dup.</summary>
+*/
+protected bool dirty = false;
+
+

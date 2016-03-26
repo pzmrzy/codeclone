@@ -1,0 +1,12 @@
+commit 4c25af3f838f38fe61d6b053ed81b260b66ebe02
+Author:     Alan Condit <acondit@ipns.com>
+AuthorDate: Mon Apr 23 08:29:26 2012 -0700
+Commit:     Alan Condit <acondit@ipns.com>
+CommitDate: Mon Apr 23 08:29:26 2012 -0700
+
+Latest binary compressed ANTLR.framework with changes to help support iOS.
+
+diff --git a/runtime/ObjC/ANTLR.framework.zip b/runtime/ObjC/ANTLR.framework.zip
+index f370653..fae9dbf 100644
+Binary files a/runtime/ObjC/ANTLR.framework.zip and b/runtime/ObjC/ANTLR.framework.zip differ
+

@@ -1,0 +1,145 @@
+commit 0122483a8dd7bdf4db462393bd0a0f2eb0246b86
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Apr 6 16:32:58 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Apr 6 16:32:58 2011 -0800
+
+(C# 3) Split partial class to its own file
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8091]
+
+diff --git a/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj b/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj
+index 4402ea8..38597a6 100644
+--- a/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj
++++ b/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj
+@@ -44,6 +44,7 @@
+<Reference Include="System.Xml" />
+</ItemGroup>
+<ItemGroup>
++    <Compile Include="Compiler\TemplateCompiler.TemplateLexerNoNewlines.cs" />
+<Compile Include="Debug\IndentEvent.cs" />
+<Compile Include="Extensions\ExceptionExtensions.cs" />
+<Compile Include="IAttributeRenderer.cs" />
+diff --git a/Antlr4.StringTemplate/Compiler/TemplateCompiler.TemplateLexerNoNewlines.cs b/Antlr4.StringTemplate/Compiler/TemplateCompiler.TemplateLexerNoNewlines.cs
+new file mode 100644
+index 0000000..ff10918
+--- /dev/null
++++ b/Antlr4.StringTemplate/Compiler/TemplateCompiler.TemplateLexerNoNewlines.cs
+@@ -0,0 +1,63 @@
++﻿/*
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2011 Sam Harwell, Tunnel Vision Laboratories, LLC
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace Antlr4.StringTemplate.Compiler
++{
++    using Antlr.Runtime;
++    using Antlr4.StringTemplate.Misc;
++
++    partial class TemplateCompiler
++    {
++        private class TemplateLexerNoNewlines : TemplateLexer
++        {
++            public TemplateLexerNoNewlines(ErrorManager errMgr, ICharStream input, IToken templateToken, char delimiterStartChar, char delimiterStopChar)
++                : base(errMgr, input, templateToken, delimiterStartChar, delimiterStopChar)
++            {
++            }
++
++            /// <summary>
++            /// Throw out \n and leading whitespace tokens inside BIGSTRING_NO_NL.
++            /// </summary>
++            /// <returns></returns>
++            public override IToken NextToken()
++            {
++                IToken t = base.NextToken();
++                while (t.Type == TemplateLexer.NEWLINE || t.Type == TemplateLexer.INDENT)
++                {
++                    t = base.NextToken();
++                }
++
++                return t;
++            }
++        }
++    }
++}
+diff --git a/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs b/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs
+index 7148aa5..7ef4836 100644
+--- a/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs
++++ b/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs
+@@ -33,13 +33,13 @@
+namespace Antlr4.StringTemplate.Compiler
+{
+using System.Collections.Generic;
+-    using Antlr4.StringTemplate.Misc;
+using Antlr.Runtime;
+using Antlr.Runtime.Tree;
++    using Antlr4.StringTemplate.Misc;
+using ArgumentNullException = System.ArgumentNullException;
+
+/** A compiler for a single template. */
+-    public class TemplateCompiler
++    public partial class TemplateCompiler
+{
+public static readonly string SubtemplatePrefix = "_sub";
+
+@@ -253,32 +253,5 @@ namespace Antlr4.StringTemplate.Compiler
+// we have reported the error, so just blast out
+throw new TemplateException();
+}
+-
+-        private class TemplateLexerNoNewlines : TemplateLexer
+-        {
+-            public TemplateLexerNoNewlines(ErrorManager errMgr, ICharStream input, IToken templateToken, char delimiterStartChar, char delimiterStopChar)
+-                : base(errMgr, input, templateToken, delimiterStartChar, delimiterStopChar)
+-            {
+-            }
+-
+-            /** Throw out \n tokens inside BIGSTRING_NO_NL */
+-            public override IToken NextToken()
+-            {
+-                IToken t = base.NextToken();
+-                while (t.Type == TemplateLexer.NEWLINE)
+-                {
+-                    t = base.NextToken();
+-                }
+-
+-                if (t.Type == TemplateLexer.INDENT)
+-                {
+-                    // flip to TEXT so it prints; indent only prints
+-                    // when we're at start of line
+-                    t.Type = TEXT;
+-                }
+-
+-                return t;
+-            }
+-        }
+}
+}
+

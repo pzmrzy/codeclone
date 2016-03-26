@@ -1,0 +1,118 @@
+commit 117e7b38da96ec4da731d321f3394143609da8c5
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Apr 6 06:34:05 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Apr 6 06:34:05 2011 -0800
+
+(C# 3) Added the 'modifier' and 'ctorModifier' options for grammar classes and constructors respectively
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8086]
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg
+index 64641b7..129e617 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg
+@@ -112,7 +112,7 @@ lexer(grammar, name, tokens, scopes, rules, numRules, labelType="CommonToken",
+filterMode, superClass={<if(actions.(actionScope).superClass)><actions.(actionScope).superClass><else>Antlr.Runtime.Lexer<endif>}) ::= <<
+[System.CodeDom.Compiler.GeneratedCode("ANTLR", "<ANTLRVersion>")]
+[System.CLSCompliant(false)]
+-public partial class <grammar.recognizerName> : <@superClassName><superClass><@end>
++<actions.(actionScope).modifier; null="public"> partial class <grammar.recognizerName> : <@superClassName><superClass><@end>
+{
+<tokens:{public const int <it.name; format="id">=<it.type>;}; separator="\n">
+<scopes:{<if(it.isDynamicGlobalScope)><globalAttributeScope(scope=it)><endif>}>
+@@ -126,17 +126,17 @@ public partial class <grammar.recognizerName> : <@superClassName><superClass><@e
+{g|public <g.recognizerName> <g:delegateName()>;}; separator="\n">
+<last(grammar.delegators):{g|public <g.recognizerName> gParent;}>
+
+-	public <grammar.recognizerName>()<! needed by subclasses !>
++	<actions.(actionScope).ctorModifier; null="public"> <grammar.recognizerName>()<! needed by subclasses !>
+{
+OnCreated();
+}
+
+-	public <grammar.recognizerName>(<lexerInputStreamType()> input<grammar.delegators:{g|, <g.recognizerName> <g:delegateName()>}> )
++	<actions.(actionScope).ctorModifier; null="public"> <grammar.recognizerName>(<lexerInputStreamType()> input<grammar.delegators:{g|, <g.recognizerName> <g:delegateName()>}> )
+: this(input, new RecognizerSharedState()<grammar.delegators:{g|, <g:delegateName()>}>)
+{
+}
+
+-	public <grammar.recognizerName>(<lexerInputStreamType()> input, RecognizerSharedState state<grammar.delegators:{g|, <g.recognizerName> <g:delegateName()>}>)
++	<actions.(actionScope).ctorModifier; null="public"> <grammar.recognizerName>(<lexerInputStreamType()> input, RecognizerSharedState state<grammar.delegators:{g|, <g.recognizerName> <g:delegateName()>}>)
+: base(input, state)
+{
+<if(memoize)>
+@@ -279,7 +279,7 @@ genericParser(grammar, name, scopes, tokens, tokenNames, rules, numRules,
+filterMode) ::= <<
+[System.CodeDom.Compiler.GeneratedCode("ANTLR", "<ANTLRVersion>")]
+[System.CLSCompliant(false)]
+-public partial class <grammar.recognizerName> : <@superClassName><superClass><@end>
++<actions.(actionScope).modifier; null="public"> partial class <grammar.recognizerName> : <@superClassName><superClass><@end>
+{
+<if(grammar.grammarIsRoot)>
+internal static readonly string[] tokenNames = new string[] {
+@@ -299,11 +299,11 @@ public partial class <grammar.recognizerName> : <@superClassName><superClass><@e
+<scopes:{<if(it.isDynamicGlobalScope)><globalAttributeScope(scope=it)><endif>}>
+<@members>
+<! WARNING. bug in ST: this is cut-n-paste into Dbg.stg !>
+-public <grammar.recognizerName>( <inputStreamType> input<grammar.delegators:{g|, <g.recognizerName> <g:delegateName()>}> )
++<actions.(actionScope).ctorModifier; null="public"> <grammar.recognizerName>( <inputStreamType> input<grammar.delegators:{g|, <g.recognizerName> <g:delegateName()>}> )
+: this( input, new RecognizerSharedState()<grammar.delegators:{g|, <g:delegateName()>}> )
+{
+}
+-public <grammar.recognizerName>(<inputStreamType> input, RecognizerSharedState state<grammar.delegators:{g|, <g.recognizerName> <g:delegateName()>}>)
++<actions.(actionScope).ctorModifier; null="public"> <grammar.recognizerName>(<inputStreamType> input, RecognizerSharedState state<grammar.delegators:{g|, <g.recognizerName> <g:delegateName()>}>)
+: base(input, state)
+{
+<parserCtorBody()>
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/Dbg.stg b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/Dbg.stg
+index c3a9058..68a8889 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/Dbg.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/Dbg.stg
+@@ -88,11 +88,11 @@ protected virtual bool EvalPredicate( bool result, string predicate )
+ctorForRootGrammar() ::= <<
+<! bug: can't use <@super.members()> cut-n-paste instead !>
+<! Same except we add port number and profile stuff if root grammar !>
+-public <name>( <inputStreamType> input )
++<actions.(actionScope).ctorModifier; null="public"> <name>( <inputStreamType> input )
+: this( input, DebugEventSocketProxy.DefaultDebuggerPort, new RecognizerSharedState() )
+{
+}
+-public <name>( <inputStreamType> input, int port, RecognizerSharedState state )
++<actions.(actionScope).ctorModifier; null="public"> <name>( <inputStreamType> input, int port, RecognizerSharedState state )
+: base( input, state )
+{
+<parserCtorBody()>
+@@ -104,11 +104,11 @@ public <name>( <inputStreamType> input, int port, RecognizerSharedState state )
+
+ctorForProfilingRootGrammar() ::= <<
+<! bug: can't use <@super.members()> cut-n-paste instead !>
+-public <name>( <inputStreamType> input )
++<actions.(actionScope).ctorModifier; null="public"> <name>( <inputStreamType> input )
+: this( input, new Profiler(null), new RecognizerSharedState() )
+{
+}
+-public <name>( <inputStreamType> input, IDebugEventListener dbg, RecognizerSharedState state )
++<actions.(actionScope).ctorModifier; null="public"> <name>( <inputStreamType> input, IDebugEventListener dbg, RecognizerSharedState state )
+: base( input, dbg, state )
+{
+Profiler p = (Profiler)dbg;
+@@ -123,7 +123,7 @@ public <name>( <inputStreamType> input, IDebugEventListener dbg, RecognizerShare
+
+/** Basically we don't want to set any dbg listeners are root will have it. */
+ctorForDelegateGrammar() ::= <<
+-public <name>( <inputStreamType> input, IDebugEventListener dbg, RecognizerSharedState state<grammar.delegators:{g|, <g.recognizerName> <g:delegateName()>}> )
++<actions.(actionScope).ctorModifier; null="public"> <name>( <inputStreamType> input, IDebugEventListener dbg, RecognizerSharedState state<grammar.delegators:{g|, <g.recognizerName> <g:delegateName()>}> )
+: base( input, dbg, state )
+{
+<parserCtorBody()>
+@@ -133,7 +133,7 @@ public <name>( <inputStreamType> input, IDebugEventListener dbg, RecognizerShare
+>>
+
+ctorForPredefinedListener() ::= <<
+-public <name>( <inputStreamType> input, IDebugEventListener dbg )
++<actions.(actionScope).ctorModifier; null="public"> <name>( <inputStreamType> input, IDebugEventListener dbg )
+<@superClassRef>: base( input, dbg, new RecognizerSharedState() )<@end>
+{
+<if(profile)>
+

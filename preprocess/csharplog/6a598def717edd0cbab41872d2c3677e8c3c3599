@@ -1,0 +1,198 @@
+commit 6a598def717edd0cbab41872d2c3677e8c3c3599
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sun Apr 10 12:51:47 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sun Apr 10 12:51:47 2011 -0800
+
+(C# 3) Merge CL8116 (clean up Template.locals creation)
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8141]
+
+diff --git a/Antlr4.StringTemplate/Interpreter.cs b/Antlr4.StringTemplate/Interpreter.cs
+index 174b09e..1aad017 100644
+--- a/Antlr4.StringTemplate/Interpreter.cs
++++ b/Antlr4.StringTemplate/Interpreter.cs
+@@ -567,16 +567,13 @@ namespace Antlr4.StringTemplate
+if (imported == null)
+{
+_errorManager.RuntimeError(frame, current_ip, ErrorType.NO_IMPORTED_TEMPLATE, name);
+-                st = self.Group.CreateStringTemplateInternally();
+-                st.impl = new CompiledTemplate();
+-                sp -= nargs;
+-                operands[++sp] = st;
+-                return;
++                st = self.Group.CreateStringTemplateInternally(new CompiledTemplate());
++            }
++            else
++            {
++                st = imported.NativeGroup.GetEmbeddedInstanceOf(frame, current_ip, name);
++                st.Group = group;
+}
+-
+-            st = imported.NativeGroup.CreateStringTemplateInternally();
+-            st.Group = group;
+-            st.impl = imported;
+
+// get n args and store into st's attr list
+StoreArguments(frame, nargs, st);
+@@ -592,15 +589,13 @@ namespace Antlr4.StringTemplate
+if (imported == null)
+{
+_errorManager.RuntimeError(frame, current_ip, ErrorType.NO_IMPORTED_TEMPLATE, name);
+-                st = self.Group.CreateStringTemplateInternally();
+-                st.impl = new CompiledTemplate();
+-                operands[++sp] = st;
+-                return;
++                st = self.Group.CreateStringTemplateInternally(new CompiledTemplate());
++            }
++            else
++            {
++                st = imported.NativeGroup.CreateStringTemplateInternally(imported);
++                st.Group = group;
+}
+-
+-            st = imported.NativeGroup.CreateStringTemplateInternally();
+-            st.Group = group;
+-            st.impl = imported;
+
+// get n args and store into st's attr list
+StoreArguments(frame, attrs, st);
+@@ -879,7 +874,7 @@ namespace Antlr4.StringTemplate
+RotateMap(frame, attr, new List<Template>() { st });
+}
+
+-        // <names:a> or <names:a,b>
++        // <names:a()> or <names:a(),b()>
+protected virtual void RotateMap(TemplateFrame frame, object attr, List<Template> prototypes)
+{
+if (attr == null)
+@@ -1421,11 +1416,10 @@ namespace Antlr4.StringTemplate
+
+if (arg.DefaultValueToken.Type == GroupParser.ANONYMOUS_TEMPLATE)
+{
+-                    Template defaultArgST = group.CreateStringTemplateInternally();
++                    Template defaultArgST = group.CreateStringTemplateInternally(arg.CompiledDefaultValue);
+// default arg template must see other args so it's enclosing
+// instance is the template we are invoking.
+defaultArgST.Group = group;
+-                    defaultArgST.impl = arg.CompiledDefaultValue;
+// If default arg is template with single expression
+// wrapped in parens, x={<(...)>}, then eval to string
+// rather than setting x to the template for later
+diff --git a/Antlr4.StringTemplate/Misc/MapModelAdaptor.cs b/Antlr4.StringTemplate/Misc/MapModelAdaptor.cs
+index 4ca05b3..ca73081 100644
+--- a/Antlr4.StringTemplate/Misc/MapModelAdaptor.cs
++++ b/Antlr4.StringTemplate/Misc/MapModelAdaptor.cs
+@@ -60,14 +60,6 @@ namespace Antlr4.StringTemplate.Misc
+value = property;
+}
+
+-            Template template = value as Template;
+-            if (template != null)
+-            {
+-                // dup, don't alter existing template; it's a prototype
+-                template = template.Group.CreateStringTemplateInternally(template);
+-                value = template;
+-            }
+-
+return value;
+}
+}
+diff --git a/Antlr4.StringTemplate/TemplateGroup.cs b/Antlr4.StringTemplate/TemplateGroup.cs
+index d45388c..76c000c 100644
+--- a/Antlr4.StringTemplate/TemplateGroup.cs
++++ b/Antlr4.StringTemplate/TemplateGroup.cs
+@@ -251,18 +251,8 @@ namespace Antlr4.StringTemplate
+//System.out.println("GetInstanceOf("+name+")");
+CompiledTemplate c = LookupTemplate(name);
+if (c != null)
+-            {
+-                Template instanceST = CreateStringTemplate();
+-                instanceST.Group = this;
+-                instanceST.impl = c;
+-                if (instanceST.impl.FormalArguments != null)
+-                {
+-                    instanceST.locals = new object[instanceST.impl.FormalArguments.Count];
+-                    for (int i = 0; i < instanceST.locals.Length; i++)
+-                        instanceST.locals[i] = Template.EmptyAttribute;
+-                }
+-                return instanceST;
+-            }
++                return CreateStringTemplate(c);
++
+return null;
+}
+
+@@ -277,9 +267,7 @@ namespace Antlr4.StringTemplate
+if (st == null)
+{
+ErrorManager.RuntimeError(frame, ip, ErrorType.NO_SUCH_TEMPLATE, name);
+-                st = CreateStringTemplate();
+-                st.impl = new CompiledTemplate();
+-                return st;
++                return CreateStringTemplateInternally(new CompiledTemplate());
+}
+
+// this is only called internally. wack any debug ST create events
+@@ -304,9 +292,10 @@ namespace Antlr4.StringTemplate
+{
+template = Utility.Strip(templateToken.Text, 1);
+}
+-            Template st = CreateStringTemplateInternally();
++
++            CompiledTemplate impl = Compile(FileName, null, null, template, templateToken);
++            Template st = CreateStringTemplateInternally(impl);
+st.Group = this;
+-            st.impl = Compile(FileName, null, null, template, templateToken);
+st.impl.hasFormalArgs = false;
+st.impl.name = Template.UnknownName;
+st.impl.DefineImplicitlyDefinedTemplates(this);
+@@ -711,17 +700,26 @@ namespace Antlr4.StringTemplate
+return new Template(this);
+}
+
+-        public virtual Template CreateStringTemplate(Template prototype)
++        public virtual Template CreateStringTemplate(CompiledTemplate impl)
+{
+-            return new Template(prototype);
++            Template st = new Template(this);
++            st.impl = impl;
++            if (impl.FormalArguments != null)
++            {
++                st.locals = new object[impl.FormalArguments.Count];
++                for (int i = 0; i < st.locals.Length; i++)
++                    st.locals[i] = Template.EmptyAttribute;
++            }
++
++            return st;
+}
+
+/** differentiate so we can avoid having creation events for regions,
+*  map operations, and other "new ST" events used during interp.
+*/
+-        public Template CreateStringTemplateInternally()
++        public Template CreateStringTemplateInternally(CompiledTemplate impl)
+{
+-            Template template = CreateStringTemplate();
++            Template template = CreateStringTemplate(impl);
+if (TrackCreationEvents && template.DebugState != null)
+{
+// toss it out
+@@ -733,14 +731,8 @@ namespace Antlr4.StringTemplate
+
+public Template CreateStringTemplateInternally(Template prototype)
+{
+-            Template template = CreateStringTemplate(prototype);
+-            if (TrackCreationEvents && template.DebugState != null)
+-            {
+-                // toss it out
+-                template.DebugState.NewTemplateEvent = null;
+-            }
+-
+-            return template;
++            // no need to wack debugState; not set in ST(proto).
++            return new Template(prototype);
+}
+
+public virtual string Name
+

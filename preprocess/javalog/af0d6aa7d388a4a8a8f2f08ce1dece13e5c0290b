@@ -1,0 +1,29 @@
+commit af0d6aa7d388a4a8a8f2f08ce1dece13e5c0290b
+Author:     parrt <parrt@antlr.org>
+AuthorDate: Tue Jun 28 17:30:10 2011 -0800
+Commit:     parrt <parrt@antlr.org>
+CommitDate: Tue Jun 28 17:30:10 2011 -0800
+
+non-english locales weren't defaulting to US
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8792]
+
+diff --git a/tool/src/main/java/org/antlr/tool/ErrorManager.java b/tool/src/main/java/org/antlr/tool/ErrorManager.java
+index 2d82393..7baaf68 100644
+--- a/tool/src/main/java/org/antlr/tool/ErrorManager.java
++++ b/tool/src/main/java/org/antlr/tool/ErrorManager.java
+@@ -407,9 +407,10 @@ public class ErrorManager {
+ErrorManager.locale = locale;
+String language = locale.getLanguage();
+String fileName = "org/antlr/tool/templates/messages/languages/"+language+".stg";
+-		messages = new STGroupFile(fileName);
+-		messages.setListener(initSTListener);
+-		if ( !messages.isDefined("INTERNAL_ERROR") ) { // pick random msg to load
++		try {
++			messages = new STGroupFile(fileName);
++		}
++		catch (IllegalArgumentException iae) {
+if ( language.equals(Locale.US.getLanguage()) ) {
+rawError("ANTLR installation corrupted; cannot find English messages file "+fileName);
+panic();
+

@@ -1,0 +1,94 @@
+commit 3cd400a1000d2952bcecbda2d745ffeb715d8ff4
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Fri Feb 25 19:36:14 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Fri Feb 25 19:36:14 2011 -0800
+
+(C# 3) Merge CL7729, 7734
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7775]
+
+diff --git a/Antlr3.Test/TestSyntaxErrors.cs b/Antlr3.Test/TestSyntaxErrors.cs
+index 269f68e..25d3e7b 100644
+--- a/Antlr3.Test/TestSyntaxErrors.cs
++++ b/Antlr3.Test/TestSyntaxErrors.cs
+@@ -100,9 +100,32 @@ namespace AntlrUnitTests
+"  ;\n";
+Console.WriteLine(grammar);
+string found = execParser("T.g", grammar, "TParser", "TLexer", "a", "((i))z", false);
+-            string expecting = "input line 1:5 no viable alternative at input 'z'" + NewLine;
++            string expecting = "input line 1:0 no viable alternative at input '('" + NewLine;
+string result = Regex.Replace(stderrDuringParse, ".*?/input ", "input ");
+Assert.AreEqual(expecting, result);
+}
++
++        [TestMethod]
++        public void TestLL1ErrorInfo()
++        {
++            string grammar =
++                "grammar T;\n" +
++                "start : animal (AND acClass)? service EOF;\n" +
++                "animal : (DOG | CAT );\n" +
++                "service : (HARDWARE | SOFTWARE) ;\n" +
++                "AND : 'and';\n" +
++                "DOG : 'dog';\n" +
++                "CAT : 'cat';\n" +
++                "HARDWARE: 'hardware';\n" +
++                "SOFTWARE: 'software';\n" +
++                "WS : ' ' {skip();} ;" +
++                "acClass\n" +
++                "@init\n" +
++                "{ System.out.println(computeContextSensitiveRuleFOLLOW().toString(tokenNames)); }\n" +
++                "  : ;\n";
++            string result = execParser("T.g", grammar, "TParser", "TLexer", "start", "dog and software", false);
++            string expecting = "{HARDWARE,SOFTWARE}" + NewLine;
++            Assert.AreEqual(expecting, result);
++        }
+}
+}
+diff --git a/Antlr3/Analysis/LL1Analyzer.cs b/Antlr3/Analysis/LL1Analyzer.cs
+index f331d4c..5832c40 100644
+--- a/Antlr3/Analysis/LL1Analyzer.cs
++++ b/Antlr3/Analysis/LL1Analyzer.cs
+@@ -260,11 +260,7 @@ namespace Antlr3.Analysis
+// if transition 0 is a rule call and we don't want FOLLOW, check cache
+if ( !chaseFollowTransitions && transition0 is RuleClosureTransition )
+{
+-                LookaheadSet prev = _firstCache.get( (NFAState)transition0.target );
+-                if ( prev != null )
+-                {
+-                    tset = new LookaheadSet( prev );
+-                }
++                tset = _firstCache.get( (NFAState)transition0.target );
+}
+
+// if not in cache, must compute
+@@ -278,6 +274,8 @@ namespace Antlr3.Analysis
+}
+}
+
++            LookaheadSet tsetCached = tset; // tset is stored in cache. We can't return the same instance
++
+// did we fall off the end?
+if ( _grammar.type != GrammarType.Lexer && tset.Member( Label.EOR_TOKEN_TYPE ) )
+{
+@@ -294,7 +292,7 @@ namespace Antlr3.Analysis
+//tset.remove(Label.EOR_TOKEN_TYPE);
+NFAState following = (NFAState)ruleInvocationTrans.followState;
+LookaheadSet fset = FirstCore( following, chaseFollowTransitions );
+-                    fset.OrInPlace( tset ); // tset cached; or into new set
++                    fset.OrInPlace( tset );
+fset.Remove( Label.EOR_TOKEN_TYPE );
+tset = fset;
+}
+@@ -309,7 +307,8 @@ namespace Antlr3.Analysis
+tset = tset1;
+}
+
+-            return tset;
++            // never return a cached set; clone
++            return tset == tsetCached ? new LookaheadSet(tset) : tset;
+}
+
+/** Is there a non-syn-pred predicate visible from s that is not in
+

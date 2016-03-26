@@ -1,0 +1,33 @@
+commit deca4fb3805ace742dda0219e1fbf0c47415e023
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Fri Mar 20 11:30:37 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Fri Mar 20 11:30:37 2009 -0800
+
+C# Port:
+* Failing to create the Target instance should cancel analysis
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 5956]
+
+diff --git a/Antlr3/Tool/ErrorManager.cs b/Antlr3/Tool/ErrorManager.cs
+index 7597853..3ea7157 100644
+--- a/Antlr3/Tool/ErrorManager.cs
++++ b/Antlr3/Tool/ErrorManager.cs
+@@ -4,7 +4,7 @@
+* All rights reserved.
+*
+* Conversion to C#:
+- * Copyright (c) 2008 Sam Harwell, Pixel Mine, Inc.
++ * Copyright (c) 2008-2009 Sam Harwell, Pixel Mine, Inc.
+* All rights reserved.
+*
+* Redistribution and use in source and binary forms, with or without
+@@ -438,6 +438,7 @@ namespace Antlr3.Tool
+static ErrorManager()
+{
+ERRORS_FORCING_NO_ANALYSIS = new BitSet();
++            ERRORS_FORCING_NO_ANALYSIS.add( MSG_CANNOT_CREATE_TARGET_GENERATOR );
+ERRORS_FORCING_NO_ANALYSIS.add( MSG_RULE_REDEFINITION );
+ERRORS_FORCING_NO_ANALYSIS.add( MSG_UNDEFINED_RULE_REF );
+ERRORS_FORCING_NO_ANALYSIS.add( MSG_LEFT_RECURSION_CYCLES );
+

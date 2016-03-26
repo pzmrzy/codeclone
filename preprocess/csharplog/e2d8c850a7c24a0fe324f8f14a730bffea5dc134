@@ -1,0 +1,315 @@
+commit e2d8c850a7c24a0fe324f8f14a730bffea5dc134
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Fri Apr 17 23:53:05 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Fri Apr 17 23:53:05 2009 -0800
+
+C# Port:
+* Working through the CSharp3 runtime to make sure property getters and calls to ToString() do not alter the instances and guarantee good performance for debugger watch evaluation
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6046]
+
+diff --git a/Antlr3.StringTemplate/Language/ActionEvaluator.cs b/Antlr3.StringTemplate/Language/ActionEvaluator.cs
+index 807daad..abbfa86 100644
+--- a/Antlr3.StringTemplate/Language/ActionEvaluator.cs
++++ b/Antlr3.StringTemplate/Language/ActionEvaluator.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Language\\ActionEvaluator.g3 2009-04-17 13:33:35
++// $ANTLR 3.1.2 Language\\ActionEvaluator.g3 2009-04-18 02:24:06
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -117,7 +117,7 @@ public partial class ActionEvaluator : TreeParser
+}
+
+
+-	public override string[] GetTokenNames() { return ActionEvaluator.tokenNames; }
++	public override string[] TokenNames { get { return ActionEvaluator.tokenNames; } }
+public override string GrammarFileName { get { return "Language\\ActionEvaluator.g3"; } }
+
+
+diff --git a/Antlr3.StringTemplate/Language/ActionParser.cs b/Antlr3.StringTemplate/Language/ActionParser.cs
+index 460b239..dc52cd1 100644
+--- a/Antlr3.StringTemplate/Language/ActionParser.cs
++++ b/Antlr3.StringTemplate/Language/ActionParser.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Language\\Action.g3 2009-04-11 17:03:15
++// $ANTLR 3.1.2 Language\\Action.g3 2009-04-18 02:24:05
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -131,7 +131,7 @@ public partial class ActionParser : Parser
+}
+}
+
+-	public override string[] GetTokenNames() { return ActionParser.tokenNames; }
++	public override string[] TokenNames { get { return ActionParser.tokenNames; } }
+public override string GrammarFileName { get { return "Language\\Action.g3"; } }
+
+
+diff --git a/Antlr3.StringTemplate/Language/AngleBracketTemplateLexerHelper.cs b/Antlr3.StringTemplate/Language/AngleBracketTemplateLexerHelper.cs
+index 48ba262..fc19654 100644
+--- a/Antlr3.StringTemplate/Language/AngleBracketTemplateLexerHelper.cs
++++ b/Antlr3.StringTemplate/Language/AngleBracketTemplateLexerHelper.cs
+@@ -52,9 +52,12 @@ namespace Antlr3.ST.Language
+self.Error( "<...> chunk lexer error", e );
+}
+
+-        public override string[] GetTokenNames()
++        public override string[] TokenNames
+{
+-            return TemplateParser.tokenNames;
++            get
++            {
++                return TemplateParser.tokenNames;
++            }
+}
+
+bool UpcomingAtEND( int i )
+diff --git a/Antlr3.StringTemplate/Language/GroupParser.cs b/Antlr3.StringTemplate/Language/GroupParser.cs
+index e5f963e..cf8c125 100644
+--- a/Antlr3.StringTemplate/Language/GroupParser.cs
++++ b/Antlr3.StringTemplate/Language/GroupParser.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Language\\Group.g3 2009-03-23 20:35:09
++// $ANTLR 3.1.2 Language\\Group.g3 2009-04-18 02:24:03
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -94,7 +94,7 @@ public partial class GroupParser : Parser
+}
+
+
+-	public override string[] GetTokenNames() { return GroupParser.tokenNames; }
++	public override string[] TokenNames { get { return GroupParser.tokenNames; } }
+public override string GrammarFileName { get { return "Language\\Group.g3"; } }
+
+
+@@ -1095,6 +1095,7 @@ public partial class GroupParser : Parser
+// $ANTLR end "keyValue"
+#endregion Rules
+
++
+#region Follow sets
+public static class Follow
+{
+diff --git a/Antlr3.StringTemplate/Language/InterfaceParser.cs b/Antlr3.StringTemplate/Language/InterfaceParser.cs
+index 90f3622..d6dee2a 100644
+--- a/Antlr3.StringTemplate/Language/InterfaceParser.cs
++++ b/Antlr3.StringTemplate/Language/InterfaceParser.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Language\\Interface.g3 2009-03-20 14:32:35
++// $ANTLR 3.1.2 Language\\Interface.g3 2009-04-18 02:24:02
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -78,7 +78,7 @@ public partial class InterfaceParser : Parser
+}
+
+
+-	public override string[] GetTokenNames() { return InterfaceParser.tokenNames; }
++	public override string[] TokenNames { get { return InterfaceParser.tokenNames; } }
+public override string GrammarFileName { get { return "Language\\Interface.g3"; } }
+
+
+@@ -315,6 +315,7 @@ public partial class InterfaceParser : Parser
+// $ANTLR end "args"
+#endregion Rules
+
++
+#region Follow sets
+public static class Follow
+{
+diff --git a/Antlr3.StringTemplate/Language/TemplateParser.cs b/Antlr3.StringTemplate/Language/TemplateParser.cs
+index 60b0853..60a8fd0 100644
+--- a/Antlr3.StringTemplate/Language/TemplateParser.cs
++++ b/Antlr3.StringTemplate/Language/TemplateParser.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Language\\Template.g3 2009-03-23 20:35:08
++// $ANTLR 3.1.2 Language\\Template.g3 2009-04-18 02:24:00
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -87,7 +87,7 @@ public partial class TemplateParser : Parser
+}
+
+
+-	public override string[] GetTokenNames() { return TemplateParser.tokenNames; }
++	public override string[] TokenNames { get { return TemplateParser.tokenNames; } }
+public override string GrammarFileName { get { return "Language\\Template.g3"; } }
+
+
+@@ -469,6 +469,7 @@ public partial class TemplateParser : Parser
+// $ANTLR end "action"
+#endregion Rules
+
++
+#region Follow sets
+public static class Follow
+{
+diff --git a/Antlr3.Test/TestInterpretedLexing.cs b/Antlr3.Test/TestInterpretedLexing.cs
+index 90b2b25..b427808 100644
+--- a/Antlr3.Test/TestInterpretedLexing.cs
++++ b/Antlr3.Test/TestInterpretedLexing.cs
+@@ -182,6 +182,7 @@ namespace AntlrUnitTests
+Interpreter lexEngine = new Interpreter( g, input );
+
+CommonTokenStream tokens = new CommonTokenStream( lexEngine );
++            tokens.FillBuffer();
+string result = tokens.ToString();
+//System.out.println(result);
+string expecting = "123 139.52";
+diff --git a/Antlr3/Grammars/ANTLRParser.cs b/Antlr3/Grammars/ANTLRParser.cs
+index 48d65bc..4edaf10 100644
+--- a/Antlr3/Grammars/ANTLRParser.cs
++++ b/Antlr3/Grammars/ANTLRParser.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Grammars\\ANTLR.g3 2009-04-17 13:46:20
++// $ANTLR 3.1.2 Grammars\\ANTLR.g3 2009-04-18 02:22:01
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -209,7 +209,7 @@ public partial class ANTLRParser : Parser
+}
+}
+
+-	public override string[] GetTokenNames() { return ANTLRParser.tokenNames; }
++	public override string[] TokenNames { get { return ANTLRParser.tokenNames; } }
+public override string GrammarFileName { get { return "Grammars\\ANTLR.g3"; } }
+
+
+diff --git a/Antlr3/Grammars/ANTLRParserHelper.cs b/Antlr3/Grammars/ANTLRParserHelper.cs
+index 2877e0f..0b434f7 100644
+--- a/Antlr3/Grammars/ANTLRParserHelper.cs
++++ b/Antlr3/Grammars/ANTLRParserHelper.cs
+@@ -96,7 +96,7 @@ namespace Antlr3.Grammars
+int j = ( (IToken)stop ).TokenIndex;
+if ( ( (IToken)stop ).Type == TokenTypes.EndOfFile )
+{
+-                            j = ( (ITokenStream)input ).Size();
++                            j = ( (ITokenStream)input ).Count;
+}
+badText = ( (ITokenStream)input ).ToString( i, j );
+}
+diff --git a/Antlr3/Grammars/ANTLRTreePrinter.cs b/Antlr3/Grammars/ANTLRTreePrinter.cs
+index d9af458..964cadc 100644
+--- a/Antlr3/Grammars/ANTLRTreePrinter.cs
++++ b/Antlr3/Grammars/ANTLRTreePrinter.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Grammars\\ANTLRTreePrinter.g3 2009-04-17 13:33:44
++// $ANTLR 3.1.2 Grammars\\ANTLRTreePrinter.g3 2009-04-18 02:22:43
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -172,7 +172,7 @@ public partial class ANTLRTreePrinter : TreeParser
+}
+
+
+-	public override string[] GetTokenNames() { return ANTLRTreePrinter.tokenNames; }
++	public override string[] TokenNames { get { return ANTLRTreePrinter.tokenNames; } }
+public override string GrammarFileName { get { return "Grammars\\ANTLRTreePrinter.g3"; } }
+
+
+diff --git a/Antlr3/Grammars/AssignTokenTypesWalker.cs b/Antlr3/Grammars/AssignTokenTypesWalker.cs
+index 5ef6700..f12afc1 100644
+--- a/Antlr3/Grammars/AssignTokenTypesWalker.cs
++++ b/Antlr3/Grammars/AssignTokenTypesWalker.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Grammars\\AssignTokenTypesWalker.g3 2009-04-17 13:33:46
++// $ANTLR 3.1.2 Grammars\\AssignTokenTypesWalker.g3 2009-04-18 02:22:45
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -224,7 +224,7 @@ public partial class AssignTokenTypesWalker : TreeParser
+}
+
+
+-	public override string[] GetTokenNames() { return AssignTokenTypesWalker.tokenNames; }
++	public override string[] TokenNames { get { return AssignTokenTypesWalker.tokenNames; } }
+public override string GrammarFileName { get { return "Grammars\\AssignTokenTypesWalker.g3"; } }
+
+
+diff --git a/Antlr3/Grammars/CodeGenTreeWalker.cs b/Antlr3/Grammars/CodeGenTreeWalker.cs
+index 2927d0d..697acef 100644
+--- a/Antlr3/Grammars/CodeGenTreeWalker.cs
++++ b/Antlr3/Grammars/CodeGenTreeWalker.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Grammars\\CodeGenTreeWalker.g3 2009-04-17 13:33:39
++// $ANTLR 3.1.2 Grammars\\CodeGenTreeWalker.g3 2009-04-18 02:21:59
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -182,7 +182,7 @@ public partial class CodeGenTreeWalker : TreeParser
+}
+
+
+-	public override string[] GetTokenNames() { return CodeGenTreeWalker.tokenNames; }
++	public override string[] TokenNames { get { return CodeGenTreeWalker.tokenNames; } }
+public override string GrammarFileName { get { return "Grammars\\CodeGenTreeWalker.g3"; } }
+
+
+diff --git a/Antlr3/Grammars/DefineGrammarItemsWalker.cs b/Antlr3/Grammars/DefineGrammarItemsWalker.cs
+index c49117b..e2ee3f6 100644
+--- a/Antlr3/Grammars/DefineGrammarItemsWalker.cs
++++ b/Antlr3/Grammars/DefineGrammarItemsWalker.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Grammars\\DefineGrammarItemsWalker.g3 2009-04-17 13:36:45
++// $ANTLR 3.1.2 Grammars\\DefineGrammarItemsWalker.g3 2009-04-18 02:22:46
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -180,7 +180,7 @@ public partial class DefineGrammarItemsWalker : TreeParser
+}
+
+
+-	public override string[] GetTokenNames() { return DefineGrammarItemsWalker.tokenNames; }
++	public override string[] TokenNames { get { return DefineGrammarItemsWalker.tokenNames; } }
+public override string GrammarFileName { get { return "Grammars\\DefineGrammarItemsWalker.g3"; } }
+
+
+diff --git a/Antlr3/Grammars/TreeToNFAConverter.cs b/Antlr3/Grammars/TreeToNFAConverter.cs
+index 0375919..9867d6a 100644
+--- a/Antlr3/Grammars/TreeToNFAConverter.cs
++++ b/Antlr3/Grammars/TreeToNFAConverter.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Grammars\\TreeToNFAConverter.g3 2009-04-17 13:33:49
++// $ANTLR 3.1.2 Grammars\\TreeToNFAConverter.g3 2009-04-18 02:22:48
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -173,7 +173,7 @@ public partial class TreeToNFAConverter : TreeParser
+}
+
+
+-	public override string[] GetTokenNames() { return TreeToNFAConverter.tokenNames; }
++	public override string[] TokenNames { get { return TreeToNFAConverter.tokenNames; } }
+public override string GrammarFileName { get { return "Grammars\\TreeToNFAConverter.g3"; } }
+
+
+diff --git a/Antlr3/Tool/Grammar.cs b/Antlr3/Tool/Grammar.cs
+index d45df0b..1946acc 100644
+--- a/Antlr3/Tool/Grammar.cs
++++ b/Antlr3/Tool/Grammar.cs
+@@ -2057,7 +2057,7 @@ namespace Antlr3.Tool
+buf.Append( ruleAST.Line );
+buf.Append( "\n" );
+for ( int i = ruleAST.TokenStartIndex;
+-                 i <= ruleAST.TokenStopIndex && i < tokenBuffer.Size();
++                 i <= ruleAST.TokenStopIndex && i < tokenBuffer.Count;
+i++ )
+{
+CommonToken t = (CommonToken)tokenBuffer.Get( i );
+diff --git a/Antlr3/Tool/Strip.cs b/Antlr3/Tool/Strip.cs
+index 3e8a70f..5799e63 100644
+--- a/Antlr3/Tool/Strip.cs
++++ b/Antlr3/Tool/Strip.cs
+@@ -95,7 +95,7 @@ namespace Antlr3.Tool
+CommonTree t = (CommonTree)r.Tree;
+if ( tree_option )
+Console.Out.WriteLine( t.ToStringTree() );
+-            Rewrite( g.TreeAdaptor, t, g.GetTokenNames() );
++            Rewrite( g.TreeAdaptor, t, g.TokenNames );
+}
+
+public virtual void Rewrite( ITreeAdaptor adaptor, CommonTree t, string[] tokenNames )
+

@@ -1,0 +1,2675 @@
+commit d74d85dbbcdb154031fa440b18ccf89399ec5e7e
+Author:     acondit <acondit@parrt.spork>
+AuthorDate: Wed May 11 10:59:33 2011 -0800
+Commit:     acondit <acondit@parrt.spork>
+CommitDate: Wed May 11 10:59:33 2011 -0800
+
+Work on support of both GarbageCollection and retain/release support.
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8460]
+
+diff --git a/runtime/ObjC/Framework/ACBTree.m b/runtime/ObjC/Framework/ACBTree.m
+index 97a0d66..5827bec 100644
+--- a/runtime/ObjC/Framework/ACBTree.m
++++ b/runtime/ObjC/Framework/ACBTree.m
+@@ -118,21 +118,25 @@ static NSInteger RECNUM = 0;
+
+- (ACBTree *)deletekey:(NSString *)dkey
+{
+-    ACBKey *del, *dkp;
++    ACBKey /* *del, */ *dkp;
+ACBTree *told, *sNode;
++    BOOL mustRelease = NO;
+
+-    if ( [dkey isKindOfClass:[NSString class]] )
++    if ( [dkey isKindOfClass:[NSString class]] ) {
+dkp = [ACBKey newKeyWithKStr:dkey];
++        mustRelease = YES;
++    }
+else if ( [dkey isKindOfClass:[ACBKey class]] )
+dkp = (ACBKey *)dkey;
+else
+@throw [ANTLRIllegalArgumentException newException:[NSString stringWithFormat:@"Don't understand this key:\"%@\"", dkey]];
+sNode = [self search:dkp.key];
+if ( sNode == nil || [sNode searchnode:dkp.key match:YES] == FAILURE ) {
++        if ( mustRelease ) [dkp release];
+return(self);
+}
+told = dict.root;
+-    del = [self internaldelete:dkp];
++    /* del = */[self internaldelete:dkp];
+
+/*  check for shrink at the root  */
+if ( numkeys == 1 && nodeType != LEAF ) {
+@@ -140,10 +144,11 @@ static NSInteger RECNUM = 0;
+told.nodeid = 1;
+told.updtd = YES;
+dict.root = told;
+-   }
++    }
+#ifdef DONTUSENOMO
+if (debug == 'd') [self printtree];
+#endif
++    if ( mustRelease ) [dkp release];
+return(told);
+}
+
+@@ -226,26 +231,6 @@ static NSInteger RECNUM = 0;
+- (NSInteger)searchnode:(NSString *)kstr match:(BOOL)match
+{
+NSInteger i, ret;
+-#ifdef DONTUSEYET
+-    /** binary search routine */
+-    NSInteger lo = 0;
+-    NSInteger hi = t.numkeys;
+-
+-    lo = 0;
+-    hi = t.numkeys; /* binary array search */
+-    do {
+-        i = (lo + hi) / 2;
+-        ret = [t.keys[i].key compare:kstr];
+-        if (ret <= 0) hi = i-1;
+-        if (ret >= 0) lo = i+1;
+-    } while (hi >= lo);
+-    hi = i;
+-    if ( ret == 0 ) { /* found */
+-        *h = NO;
+-        return i;
+-    }
+-#endif
+-    ret = 1;
+for ( i = 0; i < numkeys; i++ ) {
+ret = [keys[i].key compare:kstr];
+if ( ret >= 0 ) {         /* key node found */
+@@ -267,12 +252,12 @@ static NSInteger RECNUM = 0;
+- (ACBKey *)internaldelete:(ACBKey *)dkp
+{
+NSInteger i, nkey;
+-    ACBKey *del;
++    __strong ACBKey *del = nil;
+ACBTree *tsb;
+NSInteger srchlvl = 0;
+
+/* find deletion branch */
+-    if ( nodeType != LEAF ) {
++    if ( self.nodeType != LEAF ) {
+srchlvl++;
+/* search for end of tree */
+i = [self searchnode:dkp.key match:NO];
+@@ -382,7 +367,6 @@ static NSInteger RECNUM = 0;
+- (ACBTree *) insert:(ACBKey *)kp value:(id)value index:(NSInteger)hi split:(NSInteger *)h
+{
+ACBTree *b;
+-    ACBKey *newitem;
+
+if ( numkeys < BTNODESIZE ) {
+*h = NO;
+@@ -403,7 +387,6 @@ static NSInteger RECNUM = 0;
+btNodes[hi] = value;
+numrecs++;
+numkeys++;
+-            newitem = keys[numkeys-1];
+}
+else {                                  /* insert key in right page */
+hi -= BTHNODESIZE;
+@@ -413,7 +396,6 @@ static NSInteger RECNUM = 0;
+b.btNodes[hi] = value;
+b.numrecs++;
+b.numkeys++;
+-            newitem = keys[b.numkeys-1];
+}
+numkeys = b.numkeys = BTHNODESIZE+1;
+b.updtd = updtd = YES;
+@@ -684,7 +666,7 @@ ACBTree *t;
+return 0; // maybe I need to throw an exception here
+}
+t = self;
+-    self.dict.data = [NSMutableData dataWithLength:(numkeys * sizeof(id))];
++    self.dict.data = [[NSMutableData dataWithLength:(numkeys * sizeof(id))] retain];
+self.dict.ptrBuffer = [self.dict.data mutableBytes];
+while ( t != nil && t.nodeType != LEAF ) {
+t = t.btNodes[0];
+@@ -711,7 +693,7 @@ ACBTree *t;
+return 0; // maybe I need to throw an exception here
+}
+t = self;
+-    self.dict.data = [NSMutableData dataWithLength:(numrecs * sizeof(id))];
++    self.dict.data = [[NSMutableData dataWithLength:(numrecs * sizeof(id))] retain];
+self.dict.ptrBuffer = [self.dict.data mutableBytes];
+while ( t != nil && t.nodeType != LEAF ) {
+t = t.btNodes[0];
+diff --git a/runtime/ObjC/Framework/AMutableArray.m b/runtime/ObjC/Framework/AMutableArray.m
+index 7f49c71..557e2f6 100644
+--- a/runtime/ObjC/Framework/AMutableArray.m
++++ b/runtime/ObjC/Framework/AMutableArray.m
+@@ -33,7 +33,7 @@
+self=[super init];
+if ( self != nil ) {
+BuffSize  = BUFFSIZE;
+-        buffer = [NSMutableData dataWithLength:(NSUInteger)BuffSize * sizeof(id)];
++        buffer = [[NSMutableData dataWithLength:(NSUInteger)BuffSize * sizeof(id)] retain];
+ptrBuffer = (id *)[buffer mutableBytes];
+for( int idx = 0; idx < BuffSize; idx++ ) {
+ptrBuffer[idx] = nil;
+@@ -47,7 +47,7 @@
+self=[super init];
+if ( self != nil ) {
+BuffSize  = ((len>=25)?len:25);
+-        buffer = [NSMutableData dataWithLength:(NSUInteger)BuffSize * sizeof(id)];
++        buffer = [[NSMutableData dataWithLength:(NSUInteger)BuffSize * sizeof(id)] retain];
+ptrBuffer = (id *)[buffer mutableBytes];
+for( int idx = 0; idx < BuffSize; idx++ ) {
+ptrBuffer[idx] = nil;
+@@ -100,7 +100,10 @@
+}
+ptrBuffer = [buffer mutableBytes];
+obj = ptrBuffer[anIdx];
+-    if ( obj == [NSNull null] ) obj = nil;
++    if ( obj == [NSNull null] ) {
++        [obj release];
++        obj = nil;
++    }
+return obj;
+}
+
+@@ -173,7 +176,9 @@
+- (void) replaceObjectAtIndex:(NSInteger)idx withObject:(id)obj
+{
+id tmp;
+-    if ( obj == nil ) obj = [NSNull null];
++    if ( obj == nil ) {
++        obj = [NSNull null];
++    }
+if ( idx < 0 || idx >= count ) {
+@throw [NSException exceptionWithName:NSRangeException reason:@"Attempt to replace object past end" userInfo:nil];
+}
+diff --git a/runtime/ObjC/Framework/AMutableDictionary.m b/runtime/ObjC/Framework/AMutableDictionary.m
+index c349994..952264e 100644
+--- a/runtime/ObjC/Framework/AMutableDictionary.m
++++ b/runtime/ObjC/Framework/AMutableDictionary.m
+@@ -109,8 +109,10 @@
+ret = [node searchnode:kp.key match:YES];
+if ( ret >= 0 && ret < node.numkeys ) {
+obj = node.btNodes[ret];
+-            if ( obj == [NSNull null] )
++            if ( obj == [NSNull null] ) {
++                [obj release];
+obj = nil;
++            }
+}
+}
+if ( mustRelease ) [kp release];
+@@ -134,16 +136,18 @@
+userInfo:nil];
+}
+if ( [root search:kp.key] == nil ) {
+-        if ( obj == nil ) obj = [NSNull null];
++        if ( obj == nil ) {
++            obj = [NSNull null];
++        }
+root = [root insertkey:kp value:obj];
+[kp retain];
+[obj retain];
+kp.recnum = count++;
+}
+else {
++        if ( mustRelease ) [kp release];
+@throw [NSException exceptionWithName:NSInvalidArgumentException reason:@"key alreadyExists" userInfo:nil];
+}
+-    if ( mustRelease ) [kp release];
+return;
+}
+
+diff --git a/runtime/ObjC/Framework/ANTLR.h b/runtime/ObjC/Framework/ANTLR.h
+index 3dbc9e2..3c81fc2 100644
+--- a/runtime/ObjC/Framework/ANTLR.h
++++ b/runtime/ObjC/Framework/ANTLR.h
+@@ -84,6 +84,7 @@
+#import <ANTLR/ANTLRRecognitionException.h>
+#import <ANTLR/ANTLRRecognizerSharedState.h>
+#import <ANTLR/ANTLRRewriteRuleElementStream.h>
++#import <ANTLR/ANTLRRewriteRuleNodeStream.h>
+#import <ANTLR/ANTLRRewriteRuleSubtreeStream.h>
+#import <ANTLR/ANTLRRewriteRuleTokenStream.h>
+#import <ANTLR/ANTLRRuleMemo.h>
+diff --git a/runtime/ObjC/Framework/ANTLRBaseMapElement.h b/runtime/ObjC/Framework/ANTLRBaseMapElement.h
+index 0815165..b1031f1 100644
+--- a/runtime/ObjC/Framework/ANTLRBaseMapElement.h
++++ b/runtime/ObjC/Framework/ANTLRBaseMapElement.h
+@@ -33,7 +33,7 @@
+#import "ANTLRLinkBase.h"
+
+@interface ANTLRBaseMapElement : ANTLRLinkBase {
+-    NSNumber *index;
++    __strong NSNumber *index;
+}
+
+@property (retain) NSNumber *index;
+diff --git a/runtime/ObjC/Framework/ANTLRBaseRecognizer.h b/runtime/ObjC/Framework/ANTLRBaseRecognizer.h
+index 19d5dd7..9bd69f2 100644
+--- a/runtime/ObjC/Framework/ANTLRBaseRecognizer.h
++++ b/runtime/ObjC/Framework/ANTLRBaseRecognizer.h
+@@ -53,10 +53,10 @@
+#import "ANTLRFailedPredicateException.h"
+
+@interface ANTLRBaseRecognizer : NSObject {
+-    ANTLRRecognizerSharedState *state;  // the state of this recognizer. Might be shared with other recognizers, e.g. in grammar import scenarios.
+-    NSString *grammarFileName;          // where did the grammar come from. filled in by codegeneration
+-    NSString *sourceName;
+-    AMutableArray *tokenNames;
++    __strong ANTLRRecognizerSharedState *state;  // the state of this recognizer. Might be shared with other recognizers, e.g. in grammar import scenarios.
++    __strong NSString *grammarFileName;          // where did the grammar come from. filled in by codegeneration
++    __strong NSString *sourceName;
++    __strong AMutableArray *tokenNames;
+}
+
++ (void) initialize;
+diff --git a/runtime/ObjC/Framework/ANTLRBaseRecognizer.m b/runtime/ObjC/Framework/ANTLRBaseRecognizer.m
+index 09a1528..d88f297 100644
+--- a/runtime/ObjC/Framework/ANTLRBaseRecognizer.m
++++ b/runtime/ObjC/Framework/ANTLRBaseRecognizer.m
+@@ -331,7 +331,8 @@ static NSString *NEXT_TOKEN_RULE_NAME;
+*/
+- (NSString *)getErrorMessage:(ANTLRRecognitionException *)e TokenNames:(AMutableArray *)theTokNams
+{
+-    NSString *msg = [e getMessage];
++    // NSString *msg = [e getMessage];
++    NSString *msg;
+if ( [e isKindOfClass:[ANTLRUnwantedTokenException class]] ) {
+ANTLRUnwantedTokenException *ute = (ANTLRUnwantedTokenException *)e;
+NSString *tokenName=@"<unknown>";
+@@ -844,7 +845,6 @@ static NSString *NEXT_TOKEN_RULE_NAME;
+if ( state._fsp >= 0 && [state.following count] > 0 ) {
+fset = [state.following objectAtIndex:state._fsp--];
+[state.following removeLastObject];
+-        [fset release];
+return fset;
+}
+else {
+@@ -959,11 +959,11 @@ static NSString *NEXT_TOKEN_RULE_NAME;
+{
+if ( tokens == nil )
+return nil;
+-    AMutableArray *strings = [[AMutableArray arrayWithCapacity:[tokens count]] retain];
++    AMutableArray *strings = [AMutableArray arrayWithCapacity:[tokens count]];
+id object;
+NSInteger i = 0;
+for (object in tokens) {
+-        [strings addObject:[[object text] retain]];
++        [strings addObject:[object text]];
+i++;
+}
+return strings;
+@@ -984,7 +984,7 @@ static NSString *NEXT_TOKEN_RULE_NAME;
+NSNumber *stopIndexI;
+ANTLRHashRule *aHashRule;
+if ( (aHashRule = [state.ruleMemo objectAtIndex:ruleIndex]) == nil ) {
+-        aHashRule = [[ANTLRHashRule newANTLRHashRuleWithLen:17] retain];
++        aHashRule = [ANTLRHashRule newANTLRHashRuleWithLen:17];
+[state.ruleMemo insertObject:aHashRule atIndex:ruleIndex];
+}
+stopIndexI = [aHashRule getRuleMemoStopIndex:ruleStartIndex];
+diff --git a/runtime/ObjC/Framework/ANTLRBaseStack.m b/runtime/ObjC/Framework/ANTLRBaseStack.m
+index ba11bb7..cd8b545 100644
+--- a/runtime/ObjC/Framework/ANTLRBaseStack.m
++++ b/runtime/ObjC/Framework/ANTLRBaseStack.m
+@@ -44,24 +44,26 @@
+
++(ANTLRBaseStack *)newANTLRBaseStack
+{
+-    return [[[ANTLRBaseStack alloc] init] retain];
++    return [[ANTLRBaseStack alloc] init];
+}
+
++(ANTLRBaseStack *)newANTLRBaseStackWithLen:(NSInteger)cnt
+{
+-    return [[[ANTLRBaseStack alloc] initWithLen:cnt] retain];
++    return [[ANTLRBaseStack alloc] initWithLen:cnt];
+}
+
+-(id)init
+{
+-	if ((self = [super initWithLen:HASHSIZE]) != nil) {
++	self = [super initWithLen:HASHSIZE];
++	if ( self != nil ) {
+}
+return( self );
+}
+
+-(id)initWithLen:(NSInteger)cnt
+{
+-	if ((self = [super initWithLen:cnt]) != nil) {
++	self = [super initWithLen:cnt];
++    if ( self != nil ) {
+}
+return( self );
+}
+diff --git a/runtime/ObjC/Framework/ANTLRBaseTree.h b/runtime/ObjC/Framework/ANTLRBaseTree.h
+index 1cc3f5f..57fa400 100755
+--- a/runtime/ObjC/Framework/ANTLRBaseTree.h
++++ b/runtime/ObjC/Framework/ANTLRBaseTree.h
+@@ -39,7 +39,7 @@
+- (id<ANTLRBaseTree>) initWith:(id<ANTLRBaseTree>)node;
+
+- (id<ANTLRBaseTree>) getChild:(NSUInteger)i;
+-- (AMutableArray *)getChildren;
++- (AMutableArray *)children;
+- (void) setChildren:(AMutableArray *)anArray;
+- (id<ANTLRBaseTree>)getFirstChildWithType:(NSInteger)type;
+- (NSUInteger) getChildCount;
+@@ -102,8 +102,8 @@
+
+@interface ANTLRBaseTree : NSObject <ANTLRTree>
+{
+-	AMutableArray *children;
+-    NSException *anException;
++	__strong AMutableArray *children;
++    __strong NSException *anException;
+}
+
++ (id<ANTLRBaseTree>) INVALID_NODE;
+@@ -114,7 +114,7 @@
+- (id<ANTLRBaseTree>) initWith:(id<ANTLRBaseTree>)node;
+
+- (id<ANTLRBaseTree>) getChild:(NSUInteger)i;
+-- (AMutableArray *)getChildren;
++- (AMutableArray *)children;
+- (void) setChildren:(AMutableArray *)anArray;
+- (id<ANTLRBaseTree>)getFirstChildWithType:(NSInteger)type;
+- (NSUInteger) getChildCount;
+diff --git a/runtime/ObjC/Framework/ANTLRBaseTree.m b/runtime/ObjC/Framework/ANTLRBaseTree.m
+index ae10e76..da44202 100755
+--- a/runtime/ObjC/Framework/ANTLRBaseTree.m
++++ b/runtime/ObjC/Framework/ANTLRBaseTree.m
+@@ -28,6 +28,7 @@
+#import "ANTLRBaseTreeAdaptor.h"
+#import "ANTLRToken.h"
+// TODO: this shouldn't be here...but needed for invalidNode
++#import "AMutableArray.h"
+#import "ANTLRCommonTree.h"
+#import "ANTLRRuntimeException.h"
+#import "ANTLRError.h"
+@@ -88,7 +89,7 @@ static id<ANTLRBaseTree> invalidNode = nil;
+{
+self = [super init];
+if ( self != nil ) {
+-        children = nil;
++        children = [[AMutableArray arrayWithCapacity:5] retain];
+[children addObject:node];
+return self;
+}
+@@ -113,7 +114,7 @@ static id<ANTLRBaseTree> invalidNode = nil;
+/** Get the children internal List; note that if you directly mess with
+*  the list, do so at your own risk.
+*/
+-- (AMutableArray *) getChildren
++- (AMutableArray *) children
+{
+return children; // [[children retain] autorelease];
+}
+@@ -184,7 +185,7 @@ static id<ANTLRBaseTree> invalidNode = nil;
+}
+else { // child is not nil (don't care about children)
+if ( children == nil ) {
+-            children = [AMutableArray arrayWithCapacity:5]; // create children list on demand
++            children = [[AMutableArray arrayWithCapacity:5] retain]; // create children list on demand
+}
+[children addObject:t];
+[childTree setParent:(id<ANTLRBaseTree>)self];
+@@ -211,7 +212,7 @@ static id<ANTLRBaseTree> invalidNode = nil;
+@throw [ANTLRIllegalArgumentException newException:@"ANTLRBaseTree Can't set single child to a list"];
+}
+if ( children == nil ) {
+-        children = [AMutableArray arrayWithCapacity:5];
++        children = [[AMutableArray arrayWithCapacity:5] retain];
+}
+if ([children count] > i ) {
+[children replaceObjectAtIndex:i withObject:t];
+@@ -432,7 +433,6 @@ static id<ANTLRBaseTree> invalidNode = nil;
+[ancestors insertObject:t atIndex:0]; // insert at start
+t = (id<ANTLRBaseTree>)[t getParent];
+}
+-    [ancestors retain];
+return ancestors;
+}
+
+diff --git a/runtime/ObjC/Framework/ANTLRBaseTreeAdaptor.h b/runtime/ObjC/Framework/ANTLRBaseTreeAdaptor.h
+index 562e16d..40788af 100644
+--- a/runtime/ObjC/Framework/ANTLRBaseTreeAdaptor.h
++++ b/runtime/ObjC/Framework/ANTLRBaseTreeAdaptor.h
+@@ -137,6 +137,15 @@
+
+- (void) setParent:(id<ANTLRBaseTree>)t With:(id<ANTLRBaseTree>) parent;
+
++/** What index is this node in the child list? Range: 0..n-1
++ *  If your node type doesn't handle this, it's ok but the tree rewrites
++ *  in tree parsers need this functionality.
++ */
++- (NSInteger) getChildIndex:(id)t;
++- (void) setChildIndex:(id)t With:(NSInteger)index;
++
++- (void) replaceChildren:(id)parent From:(NSInteger)startChildIndex To:(NSInteger)stopChildIndex With:(id)t;
++
+- (NSInteger) getUniqueID:(id<ANTLRBaseTree>)node;
+
+#ifdef DONTUSENOMO
+diff --git a/runtime/ObjC/Framework/ANTLRBaseTreeAdaptor.m b/runtime/ObjC/Framework/ANTLRBaseTreeAdaptor.m
+index 1701d1f..df64481 100644
+--- a/runtime/ObjC/Framework/ANTLRBaseTreeAdaptor.m
++++ b/runtime/ObjC/Framework/ANTLRBaseTreeAdaptor.m
+@@ -314,6 +314,25 @@
+[(id<ANTLRBaseTree>) t setParent:(id<ANTLRBaseTree>)parent];
+}
+
++/** What index is this node in the child list? Range: 0..n-1
++ *  If your node type doesn't handle this, it's ok but the tree rewrites
++ *  in tree parsers need this functionality.
++ */
++- (NSInteger) getChildIndex:(id)t
++{
++    return ((ANTLRCommonTree *)t).childIndex;
++}
++
++- (void) setChildIndex:(id)t With:(NSInteger)index
++{
++    ((ANTLRCommonTree *)t).childIndex = index;
++}
++
++- (void) replaceChildren:(id)parent From:(NSInteger)startChildIndex To:(NSInteger)stopChildIndex With:(id)t
++{
++    return;
++}
++
+- (NSInteger) getUniqueID:(id)node
+{
+if ( treeToUniqueIDMap == nil ) {
+diff --git a/runtime/ObjC/Framework/ANTLRBufferedTokenStream.h b/runtime/ObjC/Framework/ANTLRBufferedTokenStream.h
+index bd1caeb..28d1418 100644
+--- a/runtime/ObjC/Framework/ANTLRBufferedTokenStream.h
++++ b/runtime/ObjC/Framework/ANTLRBufferedTokenStream.h
+@@ -28,18 +28,19 @@
+#import "ANTLRTokenStream.h"
+#import "ANTLRTokenSource.h"
+#import "ANTLRBitSet.h"
++#import "ANTLRCommonToken.h"
+#import "AMutableArray.h"
+
+@interface ANTLRBufferedTokenStream : NSObject <ANTLRTokenStream>
+{
+-id<ANTLRTokenSource> tokenSource;
++__strong id<ANTLRTokenSource> tokenSource;
+
+/** Record every single token pulled from the source so we can reproduce
+*  chunks of it later.  The buffer in LookaheadStream overlaps sometimes
+*  as its moving window moves through the input.  This list captures
+*  everything so we can access complete input text.
+*/
+-AMutableArray *tokens;
++__strong AMutableArray *tokens;
+
+/** Track the last mark() call result value for use in rewind(). */
+NSInteger lastMarker;
+@@ -63,7 +64,10 @@ NSInteger range; // how deep have we gone?
++ (ANTLRBufferedTokenStream *) newANTLRBufferedTokenStream;
++ (ANTLRBufferedTokenStream *) newANTLRBufferedTokenStreamWith:(id<ANTLRTokenSource>)aSource;
+- (id) initWithTokenSource:(id<ANTLRTokenSource>)aSource;
++- (void)dealloc;
+- (id) copyWithZone:(NSZone *)aZone;
++- (NSUInteger)charPositionInLine;
++- (NSUInteger)line;
+- (NSInteger) getRange;
+- (void) setRange:(NSInteger)anInt;
+- (NSInteger) mark;
+diff --git a/runtime/ObjC/Framework/ANTLRBufferedTokenStream.m b/runtime/ObjC/Framework/ANTLRBufferedTokenStream.m
+index edc4e57..4b71f91 100644
+--- a/runtime/ObjC/Framework/ANTLRBufferedTokenStream.m
++++ b/runtime/ObjC/Framework/ANTLRBufferedTokenStream.m
+@@ -65,7 +65,7 @@ extern NSInteger debug;
+{
+if ((self = [super init]) != nil)
+{
+-        tokenSource = aSource;
++        tokenSource = [aSource retain];
+tokens = [[AMutableArray arrayWithCapacity:1000] retain];
+index = -1;
+range = -1;
+@@ -87,6 +87,21 @@ extern NSInteger debug;
+return copy;
+}
+
++- (void)dealloc
++{
++    if ( tokens ) [tokens release];
++}
++
++- (NSUInteger)line
++{
++    return ((ANTLRCommonToken *)[tokens objectAtIndex:index]).line;
++}
++
++- (NSUInteger)charPositionInLine
++{
++    return ((ANTLRCommonToken *)[tokens objectAtIndex:index]).charPositionInLine;
++}
++
+- (id<ANTLRTokenSource>) getTokenSource
+{
+return tokenSource;
+@@ -178,7 +193,6 @@ extern NSInteger debug;
+[t setTokenIndex:[tokens count]];
+if (debug > 1) NSLog(@"adding %@ at index %d\n", [t text], [tokens count]);
+[tokens addObject:t];
+-        [t retain];
+if ( [t getType] == ANTLRTokenTypeEOF )
+break;
+}
+@@ -295,7 +309,6 @@ extern NSInteger debug;
+id<ANTLRToken>t = [tokens objectAtIndex:i];
+if ( types == nil || [types member:[t getType]] ) {
+[filteredTokens addObject:t];
+-            [t retain];
+}
+}
+if ( [filteredTokens count] == 0 ) {
+diff --git a/runtime/ObjC/Framework/ANTLRBufferedTreeNodeStream.h b/runtime/ObjC/Framework/ANTLRBufferedTreeNodeStream.h
+index 507feb2..d475c04 100644
+--- a/runtime/ObjC/Framework/ANTLRBufferedTreeNodeStream.h
++++ b/runtime/ObjC/Framework/ANTLRBufferedTreeNodeStream.h
+@@ -45,8 +45,8 @@
+@interface ANTLRStreamIterator : ANTLRTreeIterator
+{
+NSInteger idx;
+-    ANTLRBufferedTreeNodeStream *input;
+-    AMutableArray *nodes;
++    __strong ANTLRBufferedTreeNodeStream *input;
++    __strong AMutableArray *nodes;
+}
+
++ (id) newANTLRStreamIterator:(ANTLRBufferedTreeNodeStream *) theStream;
+diff --git a/runtime/ObjC/Framework/ANTLRBufferedTreeNodeStream.m b/runtime/ObjC/Framework/ANTLRBufferedTreeNodeStream.m
+index c3b6e17..dfbee3b 100644
+--- a/runtime/ObjC/Framework/ANTLRBufferedTreeNodeStream.m
++++ b/runtime/ObjC/Framework/ANTLRBufferedTreeNodeStream.m
+@@ -112,11 +112,11 @@ extern NSInteger debug;
+uniqueNavigationNodes = NO;
+root = [[ANTLRCommonTree alloc] init];
+//		tokens = tree;
+-        adaptor = [[ANTLRCommonTreeAdaptor alloc] init];
+-        nodes = [AMutableArray arrayWithCapacity:DEFAULT_INITIAL_BUFFER_SIZE];
+-        down = [adaptor createTree:ANTLRTokenTypeDOWN Text:@"DOWN"];
+-        up = [adaptor createTree:ANTLRTokenTypeUP Text:@"UP"];
+-        eof = [adaptor createTree:ANTLRTokenTypeEOF Text:@"EOF"];
++        adaptor = [[[ANTLRCommonTreeAdaptor alloc] init] retain];
++        nodes = [[AMutableArray arrayWithCapacity:DEFAULT_INITIAL_BUFFER_SIZE] retain];
++        down = [[adaptor createTree:ANTLRTokenTypeDOWN Text:@"DOWN"] retain];
++        up = [[adaptor createTree:ANTLRTokenTypeUP Text:@"UP"] retain];
++        eof = [[adaptor createTree:ANTLRTokenTypeEOF Text:@"EOF"] retain];
+}
+return self;
+}
+@@ -129,11 +129,11 @@ extern NSInteger debug;
+uniqueNavigationNodes = NO;
+root = aTree;
+//		tokens = aTree;
+-        adaptor = [[ANTLRCommonTreeAdaptor alloc] init];
+-        nodes = [AMutableArray arrayWithCapacity:DEFAULT_INITIAL_BUFFER_SIZE];
+-        down = [adaptor createTree:ANTLRTokenTypeDOWN Text:@"DOWN"];
+-        up = [adaptor createTree:ANTLRTokenTypeUP Text:@"UP"];
+-        eof = [adaptor createTree:ANTLRTokenTypeEOF Text:@"EOF"];
++        adaptor = [[[ANTLRCommonTreeAdaptor alloc] init] retain];
++        nodes = [[AMutableArray arrayWithCapacity:DEFAULT_INITIAL_BUFFER_SIZE] retain];
++        down = [[adaptor createTree:ANTLRTokenTypeDOWN Text:@"DOWN"] retain];
++        up = [[adaptor createTree:ANTLRTokenTypeUP Text:@"UP"] retain];
++        eof = [[adaptor createTree:ANTLRTokenTypeEOF Text:@"EOF"] retain];
+}
+return self;
+}
+@@ -146,11 +146,11 @@ extern NSInteger debug;
+uniqueNavigationNodes = NO;
+root = aTree;
+//		tokens = aTree;
+-        adaptor = anAdaptor;
+-        nodes = [AMutableArray arrayWithCapacity:DEFAULT_INITIAL_BUFFER_SIZE];
+-        down = [adaptor createTree:ANTLRTokenTypeDOWN Text:@"DOWN"];
+-        up = [adaptor createTree:ANTLRTokenTypeUP Text:@"UP"];
+-        eof = [adaptor createTree:ANTLRTokenTypeEOF Text:@"EOF"];
++        adaptor = [anAdaptor retain];
++        nodes = [[AMutableArray arrayWithCapacity:DEFAULT_INITIAL_BUFFER_SIZE] retain];
++        down = [[adaptor createTree:ANTLRTokenTypeDOWN Text:@"DOWN"] retain];
++        up = [[adaptor createTree:ANTLRTokenTypeUP Text:@"UP"] retain];
++        eof = [[adaptor createTree:ANTLRTokenTypeEOF Text:@"EOF"] retain];
+}
+return self;
+}
+@@ -166,11 +166,11 @@ extern NSInteger debug;
+uniqueNavigationNodes = NO;
+root = aTree;
+//		tokens = aTree;
+-        adaptor = anAdaptor;
+-        nodes = [AMutableArray arrayWithCapacity:bufferSize];
+-        down = [adaptor createTree:ANTLRTokenTypeDOWN Text:@"DOWN"];
+-        up = [adaptor createTree:ANTLRTokenTypeUP Text:@"UP"];
+-        eof = [adaptor createTree:ANTLRTokenTypeEOF Text:@"EOF"];
++        adaptor = [anAdaptor retain];
++        nodes = [[AMutableArray arrayWithCapacity:bufferSize] retain];
++        down = [[adaptor createTree:ANTLRTokenTypeDOWN Text:@"DOWN"] retain];
++        up = [[adaptor createTree:ANTLRTokenTypeUP Text:@"UP"] retain];
++        eof = [[adaptor createTree:ANTLRTokenTypeEOF Text:@"EOF"] retain];
+}
+return self;
+}
+diff --git a/runtime/ObjC/Framework/ANTLRCommonToken.h b/runtime/ObjC/Framework/ANTLRCommonToken.h
+index 946e570..b37b26d 100644
+--- a/runtime/ObjC/Framework/ANTLRCommonToken.h
++++ b/runtime/ObjC/Framework/ANTLRCommonToken.h
+@@ -30,7 +30,7 @@
+#import "ANTLRCharStream.h"
+
+@interface ANTLRCommonToken : NSObject < ANTLRToken > {
+-	NSString *text;
++	__strong NSString *text;
+NSInteger type;
+// information about the Token's position in the input stream
+NSUInteger line;
+@@ -44,7 +44,7 @@
+NSInteger startIndex;
+NSInteger stopIndex;
+// the actual input stream this token was found in
+-	id<ANTLRCharStream> input;
++	__strong id<ANTLRCharStream> input;
+}
+
++ (void) initialize;
+diff --git a/runtime/ObjC/Framework/ANTLRCommonTokenStream.h b/runtime/ObjC/Framework/ANTLRCommonTokenStream.h
+index 0f19221..3cffe13 100644
+--- a/runtime/ObjC/Framework/ANTLRCommonTokenStream.h
++++ b/runtime/ObjC/Framework/ANTLRCommonTokenStream.h
+@@ -31,14 +31,15 @@
+#import "ANTLRTokenSource.h"
+#import "ANTLRBitSet.h"
+#import "ANTLRBufferedTokenStream.h"
++#import "AMutableDictionary.h"
+
+@interface ANTLRCommonTokenStream : ANTLRBufferedTokenStream < ANTLRTokenStream >
+{
+-	NSMutableDictionary *channelOverride;
++	__strong AMutableDictionary *channelOverride;
+NSUInteger channel;
+}
+
+-@property (retain, getter=getChannelOverride,setter=setChannelOverride:) NSMutableDictionary *channelOverride;
++@property (retain, getter=getChannelOverride,setter=setChannelOverride:) AMutableDictionary *channelOverride;
+@property (assign, getter=getChannel,setter=setChannel:) NSUInteger channel;
+
++ (ANTLRCommonTokenStream *)newANTLRCommonTokenStream;
+@@ -67,8 +68,8 @@
+- (NSUInteger)getChannel;
+- (void)setChannel:(NSUInteger)aChannel;
+
+-- (NSMutableDictionary *)getChannelOverride;
+-- (void)setChannelOverride:(NSMutableDictionary *)anOverride;
++- (AMutableDictionary *)getChannelOverride;
++- (void)setChannelOverride:(AMutableDictionary *)anOverride;
+
+- (id) copyWithZone:(NSZone *)aZone;
+
+diff --git a/runtime/ObjC/Framework/ANTLRCommonTokenStream.m b/runtime/ObjC/Framework/ANTLRCommonTokenStream.m
+index ce391db..4e80fde 100644
+--- a/runtime/ObjC/Framework/ANTLRCommonTokenStream.m
++++ b/runtime/ObjC/Framework/ANTLRCommonTokenStream.m
+@@ -53,7 +53,7 @@
+- (id) init
+{
+if ((self = [super init]) != nil) {
+-		channelOverride = [[NSMutableDictionary dictionaryWithCapacity:100] retain];
++		channelOverride = [[AMutableDictionary dictionaryWithCapacity:100] retain];
+channel = ANTLRTokenChannelDefault;
+}
+return self;
+@@ -62,7 +62,7 @@
+- (id) initWithTokenSource:(id<ANTLRTokenSource>)theTokenSource
+{
+if ((self = [super initWithTokenSource:theTokenSource]) != nil) {
+-		channelOverride = [[NSMutableDictionary dictionaryWithCapacity:100] retain];
++		channelOverride = [[AMutableDictionary dictionaryWithCapacity:100] retain];
+channel = ANTLRTokenChannelDefault;
+}
+return self;
+@@ -71,7 +71,7 @@
+- (id) initWithTokenSource:(id<ANTLRTokenSource>)theTokenSource Channel:(NSUInteger)aChannel
+{
+if ((self = [super initWithTokenSource:theTokenSource]) != nil) {
+-		channelOverride = [[NSMutableDictionary dictionaryWithCapacity:100] retain];
++		channelOverride = [[AMutableDictionary dictionaryWithCapacity:100] retain];
+channel = aChannel;
+}
+return self;
+@@ -211,12 +211,12 @@
+channel = aChannel;
+}
+
+-- (NSMutableDictionary *)getChannelOverride
++- (AMutableDictionary *)getChannelOverride
+{
+return channelOverride;
+}
+
+-- (void)setChannelOverride:(NSMutableDictionary *)anOverride
++- (void)setChannelOverride:(AMutableDictionary *)anOverride
+{
+channelOverride = anOverride;
+}
+diff --git a/runtime/ObjC/Framework/ANTLRCommonTree.h b/runtime/ObjC/Framework/ANTLRCommonTree.h
+index d5e382a..a4d1309 100644
+--- a/runtime/ObjC/Framework/ANTLRCommonTree.h
++++ b/runtime/ObjC/Framework/ANTLRCommonTree.h
+@@ -29,10 +29,10 @@
+#import "ANTLRBaseTree.h"
+
+@interface ANTLRCommonTree : ANTLRBaseTree <ANTLRTree> {
+-	ANTLRCommonToken *token;
++	__strong ANTLRCommonToken *token;
+NSInteger startIndex;
+NSInteger stopIndex;
+-    ANTLRCommonTree *parent;
++    __strong ANTLRCommonTree *parent;
+NSInteger childIndex;
+}
+
+@@ -59,7 +59,9 @@
+- (NSInteger) getType;
+- (NSString *) text;
+- (NSUInteger) line;
++- (void) setLine:(NSUInteger)aLine;
+- (NSUInteger) charPositionInLine;
++- (void) setCharPositionInLine:(NSUInteger)pos;
+- (ANTLRCommonTree *) getParent;
+- (void) setParent:(ANTLRCommonTree *) t;
+
+diff --git a/runtime/ObjC/Framework/ANTLRCommonTree.m b/runtime/ObjC/Framework/ANTLRCommonTree.m
+index 352c7f7..78ba090 100644
+--- a/runtime/ObjC/Framework/ANTLRCommonTree.m
++++ b/runtime/ObjC/Framework/ANTLRCommonTree.m
+@@ -95,7 +95,7 @@
+{
+self = (ANTLRCommonTree *)[super init];
+if ( self != nil ) {
+-		token = aToken;
++		token = [aToken retain];
+startIndex = -1;
+stopIndex = -1;
+parent = nil;
+@@ -108,7 +108,7 @@
+{
+self = (ANTLRCommonTree *)[super init];
+if ( self != nil ) {
+-		token = [ANTLRCommonToken newToken:aTokenType];
++		token = [[ANTLRCommonToken newToken:aTokenType] retain];
+//		startIndex = token.startIndex;
+startIndex = -1;
+//		stopIndex = token.stopIndex;
+@@ -123,7 +123,7 @@
+{
+self = (ANTLRCommonTree *)[super init];
+if ( self != nil ) {
+-		token = [ANTLRCommonToken newToken:aTokenType Text:theText];
++		token = [[ANTLRCommonToken newToken:aTokenType Text:theText] retain];
+//		startIndex = token.startIndex;
+startIndex = -1;
+//		stopIndex = token.stopIndex;
+@@ -136,7 +136,10 @@
+
+- (void) dealloc
+{
+-	[self setToken:nil];
++    if ( token ) {
++        [token release];
++        token = nil;
++    }
+[super dealloc];
+}
+
+@@ -150,7 +153,7 @@
+copy.token = [self.token copyWithZone:aZone];
+copy.startIndex = startIndex;
+copy.stopIndex = stopIndex;
+-    copy.parent = [self.parent copyWithZone:aZone];
++    copy.parent = (ANTLRCommonTree *)[self.parent copyWithZone:aZone];
+copy.childIndex = childIndex;
+return copy;
+}
+@@ -167,10 +170,9 @@
+
+- (void) setToken:(ANTLRCommonToken *) aToken
+{
+-	if (token != aToken) {
++	if ( token != aToken ) {
+[token release];
+-		token = aToken;
+-		[token retain];
++		token = [aToken retain];
+}
+}
+
+@@ -200,6 +202,12 @@
+return 0;
+}
+
++- (void) setLine:(NSUInteger)aLine
++{
++    if (token)
++        token.line = aLine;
++}
++
+- (NSUInteger) charPositionInLine
+{
+if (token)
+@@ -207,7 +215,7 @@
+return 0;
+}
+
+-- (void) setCharPositionInLine:(int)pos
++- (void) setCharPositionInLine:(NSUInteger)pos
+{
+if (token)
+token.charPositionInLine = pos;
+diff --git a/runtime/ObjC/Framework/ANTLRCommonTreeNodeStream.h b/runtime/ObjC/Framework/ANTLRCommonTreeNodeStream.h
+index e43f97d..1e57633 100644
+--- a/runtime/ObjC/Framework/ANTLRCommonTreeNodeStream.h
++++ b/runtime/ObjC/Framework/ANTLRCommonTreeNodeStream.h
+@@ -37,19 +37,19 @@
+#define INITIAL_CALL_STACK_SIZE 10
+
+/** Pull nodes from which tree? */
+-id root;
++__strong id root;
+
+/** If this tree (root) was created from a token stream, track it. */
+-id <ANTLRTokenStream> tokens;
++__strong id <ANTLRTokenStream> tokens;
+
+/** What tree adaptor was used to build these trees */
+-ANTLRCommonTreeAdaptor *adaptor;
++__strong ANTLRCommonTreeAdaptor *adaptor;
+
+/** The tree iterator we using */
+-ANTLRTreeIterator *it;
++__strong ANTLRTreeIterator *it;
+
+/** Stack of indexes used for push/pop calls */
+-ANTLRIntArray *calls;
++__strong ANTLRIntArray *calls;
+
+/** Tree (nil A B C) trees like flat A B C streams */
+BOOL hasNilRoot;
+diff --git a/runtime/ObjC/Framework/ANTLRCommonTreeNodeStream.m b/runtime/ObjC/Framework/ANTLRCommonTreeNodeStream.m
+index ccb8dde..d75d0ab 100644
+--- a/runtime/ObjC/Framework/ANTLRCommonTreeNodeStream.m
++++ b/runtime/ObjC/Framework/ANTLRCommonTreeNodeStream.m
+@@ -51,9 +51,9 @@
+{
+if ((self = [super init]) != nil ) {
+root = theTree;
+-        adaptor = [ANTLRCommonTreeAdaptor newTreeAdaptor];
+-        it = [ANTLRTreeIterator newANTRLTreeIteratorWithAdaptor:adaptor andTree:root];
+-        calls = [ANTLRIntArray newArrayWithLen:INITIAL_CALL_STACK_SIZE];
++        adaptor = [[ANTLRCommonTreeAdaptor newTreeAdaptor] retain];
++        it = [[ANTLRTreeIterator newANTRLTreeIteratorWithAdaptor:adaptor andTree:root] retain];
++        calls = [[ANTLRIntArray newArrayWithLen:INITIAL_CALL_STACK_SIZE] retain];
+/** Tree (nil A B C) trees like flat A B C streams */
+hasNilRoot = NO;
+level = 0;
+@@ -66,10 +66,10 @@
+if ((self = [super init]) != nil ) {
+[adaptor createTree:ANTLRTokenTypeEOF Text:@"EOF"]; // set EOF
+root = theTree;
+-        adaptor = anAdaptor;
++        adaptor = [anAdaptor retain];
+//    it = [root objectEnumerator];
+-        it = [ANTLRTreeIterator newANTRLTreeIteratorWithAdaptor:adaptor andTree:root];
+-        calls = [ANTLRIntArray newArrayWithLen:INITIAL_CALL_STACK_SIZE];
++        it = [[ANTLRTreeIterator newANTRLTreeIteratorWithAdaptor:adaptor andTree:root] retain];
++        calls = [[ANTLRIntArray newArrayWithLen:INITIAL_CALL_STACK_SIZE] retain];
+/** Tree (nil A B C) trees like flat A B C streams */
+hasNilRoot = NO;
+level = 0;
+@@ -112,7 +112,7 @@
+
+- (BOOL) isEOF:(id<ANTLRBaseTree>) aTree
+{
+-    return [adaptor getType:aTree] == ANTLRTokenTypeEOF;
++    return [adaptor getType:(ANTLRCommonTree *)aTree] == ANTLRTokenTypeEOF;
+}
+
+- (void) setUniqueNavigationNodes:(BOOL) uniqueNavigationNodes
+@@ -166,7 +166,7 @@
+- (void) push:(NSInteger) anIndex
+{
+if ( calls == nil ) {
+-        calls = [ANTLRIntArray newArrayWithLen:INITIAL_CALL_STACK_SIZE];
++        calls = [[ANTLRIntArray newArrayWithLen:INITIAL_CALL_STACK_SIZE] retain];
+}
+[calls push:p]; // save current anIndex
+[self seek:anIndex];
+diff --git a/runtime/ObjC/Framework/ANTLRDFA.h b/runtime/ObjC/Framework/ANTLRDFA.h
+index b3e7fde..9adedb1 100644
+--- a/runtime/ObjC/Framework/ANTLRDFA.h
++++ b/runtime/ObjC/Framework/ANTLRDFA.h
+@@ -39,7 +39,7 @@
+const int *special;
+const int **transition;
+
+-	ANTLRBaseRecognizer *recognizer;
++	__strong ANTLRBaseRecognizer *recognizer;
+NSInteger decisionNumber;
+NSInteger len;
+}
+diff --git a/runtime/ObjC/Framework/ANTLRDFA.m b/runtime/ObjC/Framework/ANTLRDFA.m
+index bf124c2..b42daf5 100644
+--- a/runtime/ObjC/Framework/ANTLRDFA.m
++++ b/runtime/ObjC/Framework/ANTLRDFA.m
+@@ -189,8 +189,7 @@ NSInteger debug = 0;
+for (int i=0; i < [encodedString length]; i+=2) {
+size += [encodedString characterAtIndex:i];
+}
+-    NSMutableData *dp = [[NSMutableData dataWithLength:size] retain];
+-    short *data = (short *)[dp mutableBytes];
++    __strong short *data = (short *)calloc(size, sizeof(short));
+int di = 0;
+for (int i=0; i < [encodedString length]; i+=2) {
+char n = [encodedString characterAtIndex:i];
+@@ -211,8 +210,7 @@ NSInteger debug = 0;
+for (int i=0; i < [encodedString length]; i+=2) {
+size += [encodedString characterAtIndex:i];
+}
+-    NSMutableData *dp = [[NSMutableData dataWithLength:size] retain];
+-    char *data = (char *)[dp mutableBytes];
++    __strong short *data = (short *)calloc(size, sizeof(short));
+int di = 0;
+for (int i=0; i < [encodedString length]; i+=2) {
+char n = [encodedString characterAtIndex:i];
+@@ -222,7 +220,7 @@ NSInteger debug = 0;
+data[di++] = v;
+}
+}
+-    return data;
++    return (char *)data;
+}
+
+- (NSInteger)getDecision
+diff --git a/runtime/ObjC/Framework/ANTLRDebugEventProxy.m b/runtime/ObjC/Framework/ANTLRDebugEventProxy.m
+index b3623bb..f68059a 100644
+--- a/runtime/ObjC/Framework/ANTLRDebugEventProxy.m
++++ b/runtime/ObjC/Framework/ANTLRDebugEventProxy.m
+@@ -224,17 +224,17 @@ static unsigned lengthOfUTF8Ack = 0;
+
+- (void) consumeToken:(id<ANTLRToken>)t
+{
+-	[self sendToDebugger:[NSString stringWithFormat:@"consumeToken %@", [self escapeNewlines:[t debuggerDescription]]]];
++	[self sendToDebugger:[NSString stringWithFormat:@"consumeToken %@", [self escapeNewlines:[t description]]]];
+}
+
+- (void) consumeHiddenToken:(id<ANTLRToken>)t
+{
+-	[self sendToDebugger:[NSString stringWithFormat:@"consumeHiddenToken %@", [self escapeNewlines:[t debuggerDescription]]]];
++	[self sendToDebugger:[NSString stringWithFormat:@"consumeHiddenToken %@", [self escapeNewlines:[t description]]]];
+}
+
+- (void) LT:(NSInteger)i foundToken:(id<ANTLRToken>)t
+{
+-	[self sendToDebugger:[NSString stringWithFormat:@"LT %d %@", i, [self escapeNewlines:[t debuggerDescription]]]];
++	[self sendToDebugger:[NSString stringWithFormat:@"LT %d %@", i, [self escapeNewlines:[t description]]]];
+}
+
+- (void) mark:(NSInteger)marker
+diff --git a/runtime/ObjC/Framework/ANTLRDebugTokenStream.m b/runtime/ObjC/Framework/ANTLRDebugTokenStream.m
+index b7ece55..ec6b059 100644
+--- a/runtime/ObjC/Framework/ANTLRDebugTokenStream.m
++++ b/runtime/ObjC/Framework/ANTLRDebugTokenStream.m
+@@ -181,6 +181,11 @@
+return [[input getTokenSource] getSourceName];
+}
+
++- (NSString *) description
++{
++    return [input toString];
++}
++
+- (NSString *) toString
+{
+return [input toString];
+diff --git a/runtime/ObjC/Framework/ANTLRDebugTreeAdaptor.h b/runtime/ObjC/Framework/ANTLRDebugTreeAdaptor.h
+index 41965fa..f8dd07e 100644
+--- a/runtime/ObjC/Framework/ANTLRDebugTreeAdaptor.h
++++ b/runtime/ObjC/Framework/ANTLRDebugTreeAdaptor.h
+@@ -26,20 +26,20 @@
+
+#import <Cocoa/Cocoa.h>
+#import "ANTLRParser.h"
+-#import "ANTLRBaseTreeAdaptor.h"
++#import "ANTLRCommonTreeAdaptor.h"
+#import "ANTLRDebugEventListener.h"
+
+@interface ANTLRDebugTreeAdaptor : ANTLRBaseTreeAdaptor {
+id<ANTLRDebugEventListener> debugListener;
+-	id<ANTLRTreeAdaptor> treeAdaptor;
++	ANTLRCommonTreeAdaptor *treeAdaptor;
+}
+
+-- (id) initWithTreeAdaptor:(id<ANTLRTreeAdaptor>)aTreeAdaptor debugListener:(id<ANTLRDebugEventListener>)aDebugListener;
++- (id) initWithTreeAdaptor:(ANTLRCommonTreeAdaptor *)aTreeAdaptor debugListener:(id<ANTLRDebugEventListener>)aDebugListener;
+
+-- (id<ANTLRDebugEventListener>) debugListener;
+-- (void) setDebugListener: (id<ANTLRDebugEventListener>) aDebugListener;
++- (id<ANTLRDebugEventListener>)debugListener;
++- (void) setDebugListener:(id<ANTLRDebugEventListener>)aDebugListener;
+
+-- (id<ANTLRTreeAdaptor>) getTreeAdaptor;
+-- (void) setTreeAdaptor: (id<ANTLRTreeAdaptor>) aTreeAdaptor;
++- (ANTLRCommonTreeAdaptor *) getTreeAdaptor;
++- (void) setTreeAdaptor:(ANTLRCommonTreeAdaptor *)aTreeAdaptor;
+
+@end
+diff --git a/runtime/ObjC/Framework/ANTLRDebugTreeAdaptor.m b/runtime/ObjC/Framework/ANTLRDebugTreeAdaptor.m
+index c076948..7c413c1 100644
+--- a/runtime/ObjC/Framework/ANTLRDebugTreeAdaptor.m
++++ b/runtime/ObjC/Framework/ANTLRDebugTreeAdaptor.m
+@@ -30,7 +30,7 @@
+@implementation ANTLRDebugTreeAdaptor
+
+
+-- (id) initWithTreeAdaptor:(id<ANTLRTreeAdaptor>)aTreeAdaptor debugListener:(id<ANTLRDebugEventListener>)aDebugListener
++- (id) initWithTreeAdaptor:(ANTLRCommonTreeAdaptor *)aTreeAdaptor debugListener:(id<ANTLRDebugEventListener>)aDebugListener
+{
+self = [super init];
+if (self) {
+@@ -61,16 +61,16 @@
+}
+}
+
+-- (id<ANTLRTreeAdaptor>) getTreeAdaptor
++- (ANTLRCommonTreeAdaptor *) getTreeAdaptor
+{
+return treeAdaptor;
+}
+
+-- (void) setTreeAdaptor: (id<ANTLRTreeAdaptor>) aTreeAdaptor
++- (void) setTreeAdaptor: (ANTLRCommonTreeAdaptor *) aTreeAdaptor
+{
+if (treeAdaptor != aTreeAdaptor) {
+-        [(id<ANTLRTreeAdaptor,NSObject>)aTreeAdaptor retain];
+-        [(id<ANTLRTreeAdaptor,NSObject>)treeAdaptor release];
++        [aTreeAdaptor retain];
++        [treeAdaptor release];
+treeAdaptor = aTreeAdaptor;
+}
+}
+diff --git a/runtime/ObjC/Framework/ANTLRDebugTreeParser.m b/runtime/ObjC/Framework/ANTLRDebugTreeParser.m
+index 543c3dd..5692993 100644
+--- a/runtime/ObjC/Framework/ANTLRDebugTreeParser.m
++++ b/runtime/ObjC/Framework/ANTLRDebugTreeParser.m
+@@ -56,8 +56,8 @@
+} else {
+treeNodeStream = theStream;
+}
+-	self = [super initWithTreeNodeStream:treeNodeStream];
+-	if (self) {
++	self = [super initWithStream:treeNodeStream];
++	if ( self ) {
+[self setDebugListener:debugger];
+//[debugger release];
+//[treeNodeStream release];
+diff --git a/runtime/ObjC/Framework/ANTLRDoubleKeyMap.m b/runtime/ObjC/Framework/ANTLRDoubleKeyMap.m
+index f6269f0..7c850b7 100644
+--- a/runtime/ObjC/Framework/ANTLRDoubleKeyMap.m
++++ b/runtime/ObjC/Framework/ANTLRDoubleKeyMap.m
+@@ -6,7 +6,7 @@
+{
+self = [super init];
+if ( self  != nil ) {
+-        data = [AMutableDictionary dictionaryWithCapacity:30];
++        data = [[AMutableDictionary dictionaryWithCapacity:30] retain];
+}
+return self;
+}
+@@ -15,8 +15,8 @@
+{
+AMutableDictionary *data2 = [data objectForKey:k1];
+id prev = nil;
+-    if (data2 == nil) {
+-        data2 = [[AMutableDictionary dictionaryWithCapacity:30] retain];
++    if ( data2 == nil ) {
++        data2 = [AMutableDictionary dictionaryWithCapacity:30];
+[data setObject:data2 forKey:k1];
+}
+else {
+@@ -29,7 +29,7 @@
+- (id) objectForKey1:(id)k1 forKey2:(id)k2
+{
+AMutableDictionary *data2 = [data objectForKey:k1];
+-    if (data2 == nil)
++    if ( data2 == nil )
+return nil;
+return [data2 objectForKey:k2];
+}
+@@ -46,7 +46,7 @@
+- (NSArray *) valuesForKey:(id)k1
+{
+AMutableDictionary *data2 = [data objectForKey:k1];
+-    if (data2 == nil)
++    if ( data2 == nil )
+return nil;
+return [data2 allValues];
+}
+@@ -67,7 +67,7 @@
+- (NSArray *) allKeys2:(id)k1
+{
+AMutableDictionary * data2 = [data objectForKey:k1];
+-    if (data2 == nil)
++    if ( data2 == nil )
+return nil;
+return [data2 allKeys];
+}
+diff --git a/runtime/ObjC/Framework/ANTLRFastQueue.h b/runtime/ObjC/Framework/ANTLRFastQueue.h
+index 1b66938..b11c8c5 100644
+--- a/runtime/ObjC/Framework/ANTLRFastQueue.h
++++ b/runtime/ObjC/Framework/ANTLRFastQueue.h
+@@ -35,7 +35,7 @@
+@interface ANTLRFastQueue : NSObject <NSCopying>
+{
+//	NSAutoreleasePool *pool;
+-	AMutableArray *data;
++	__strong AMutableArray *data;
+NSUInteger p;
+NSUInteger range;
+}
+diff --git a/runtime/ObjC/Framework/ANTLRFastQueue.m b/runtime/ObjC/Framework/ANTLRFastQueue.m
+index 6c5ce79..a04ec36 100644
+--- a/runtime/ObjC/Framework/ANTLRFastQueue.m
++++ b/runtime/ObjC/Framework/ANTLRFastQueue.m
+@@ -49,7 +49,7 @@
+{
+if ((self = [super init]) != nil ) {
+//		pool = [NSAutoreleasePool new];
+-		data = [AMutableArray arrayWithCapacity:100];
++		data = [[AMutableArray arrayWithCapacity:100] retain];
+p = 0;
+range = -1;
+}
+@@ -91,7 +91,7 @@
+id o = [self objectAtIndex:0];
+p++;
+// check to see if we have hit the end of the buffer
+-	if (p == [data count])
++	if ( p == [data count] )
+{
+// if we have, then we need to clear it out
+[self clear];
+@@ -130,10 +130,10 @@
+NSUInteger absIndex;
+
+absIndex = p + i;
+-	if (absIndex >= [data count]) {
++	if ( absIndex >= [data count] ) {
+@throw [ANTLRNoSuchElementException newException:[NSString stringWithFormat:@"queue index %d > last index %d", absIndex, [data count]-1]];
+}
+-	if (absIndex < 0) {
++	if ( absIndex < 0 ) {
+@throw [ANTLRNoSuchElementException newException:[NSString stringWithFormat:@"queue index %d < 0", absIndex]];
+}
+if ( absIndex > range ) range = absIndex;
+@@ -142,6 +142,11 @@
+
+- (NSString *) toString
+{
++    return [self description];
++}
++
++- (NSString *) description
++{
+NSMutableString *buf = [NSMutableString stringWithCapacity:30];
+NSInteger n = [self size];
+for (NSInteger i = 0; i < n; i++) {
+@@ -153,11 +158,6 @@
+return buf;
+}
+
+-- (NSString *) description
+-{
+-    return [self toString];
+-}
+-
+#ifdef DONTUSENOMO
+- (NSAutoreleasePool *)getPool
+{
+diff --git a/runtime/ObjC/Framework/ANTLRFileStream.h b/runtime/ObjC/Framework/ANTLRFileStream.h
+index 329665a..6c9a881 100644
+--- a/runtime/ObjC/Framework/ANTLRFileStream.h
++++ b/runtime/ObjC/Framework/ANTLRFileStream.h
+@@ -34,7 +34,7 @@
+*  of data copying.
+*/
+@interface ANTLRFileStream : ANTLRStringStream {
+-	NSString *fileName;
++	__strong NSString *fileName;
+}
+
+
+diff --git a/runtime/ObjC/Framework/ANTLRHashMap.h b/runtime/ObjC/Framework/ANTLRHashMap.h
+index 5631342..113cb65 100644
+--- a/runtime/ObjC/Framework/ANTLRHashMap.h
++++ b/runtime/ObjC/Framework/ANTLRHashMap.h
+@@ -41,7 +41,10 @@
+NSInteger Scope;
+NSInteger LastHash;
+NSInteger BuffSize;
+-    ANTLRMapElement *ptrBuffer[HASHSIZE];
++    NSUInteger count;
++    NSUInteger ptr;
++    __strong NSMutableData *buffer;
++    __strong ANTLRMapElement **ptrBuffer;
+NSInteger mode;
+}
+
+@@ -98,6 +101,10 @@
+@property (getter=getScope, setter=setScope:) NSInteger Scope;
+@property (getter=getLastHash, setter=setLastHash:) NSInteger LastHash;
+
+-@property NSInteger BuffSize;
+@property (getter=getMode,setter=setMode:) NSInteger mode;
++@property NSInteger BuffSize;
++@property (getter=getCount, setter=setCount:) NSUInteger count;
++@property (assign) NSUInteger ptr;
++@property (retain, getter=getBuffer, setter=setBuffer:) NSMutableData *buffer;
++@property (assign, getter=getPtrBuffer, setter=setPtrBuffer:) ANTLRMapElement **ptrBuffer;
+@end
+diff --git a/runtime/ObjC/Framework/ANTLRHashMap.m b/runtime/ObjC/Framework/ANTLRHashMap.m
+index 489cbfa..707415b 100644
+--- a/runtime/ObjC/Framework/ANTLRHashMap.m
++++ b/runtime/ObjC/Framework/ANTLRHashMap.m
+@@ -44,12 +44,12 @@ static NSInteger itIndex;
+
++(id)newANTLRHashMap
+{
+-    return [[[ANTLRHashMap alloc] init] retain];
++    return [[ANTLRHashMap alloc] init];
+}
+
++(id)newANTLRHashMapWithLen:(NSInteger)aBuffSize
+{
+-    return [[[ANTLRHashMap alloc] initWithLen:aBuffSize] retain];
++    return [[ANTLRHashMap alloc] initWithLen:aBuffSize];
+}
+
+-(id)init
+@@ -58,8 +58,11 @@ static NSInteger itIndex;
+
+if ((self = [super init]) != nil) {
+fNext = nil;
+-        BuffSize = HASHSIZE;
+Scope = 0;
++        ptr = 0;
++        BuffSize = HASHSIZE;
++        buffer = [[NSMutableData dataWithLength:(NSUInteger)BuffSize * sizeof(id)] retain];
++        ptrBuffer = (ANTLRMapElement **) [buffer mutableBytes];
+if ( fNext != nil ) {
+Scope = ((ANTLRHashMap *)fNext)->Scope+1;
+for( idx = 0; idx < BuffSize; idx++ ) {
+@@ -79,6 +82,9 @@ static NSInteger itIndex;
+fNext = nil;
+BuffSize = aBuffSize;
+Scope = 0;
++        ptr = 0;
++        buffer = [[NSMutableData dataWithLength:(NSUInteger)BuffSize * sizeof(id)] retain];
++        ptrBuffer = (ANTLRMapElement **) [buffer mutableBytes];
+if ( fNext != nil ) {
+Scope = ((ANTLRHashMap *)fNext)->Scope+1;
+for( idx = 0; idx < BuffSize; idx++ ) {
+@@ -94,7 +100,7 @@ static NSInteger itIndex;
+{
+ANTLRMapElement *tmp, *rtmp;
+NSInteger idx;
+-
++
+if ( self.fNext != nil ) {
+for( idx = 0; idx < BuffSize; idx++ ) {
+tmp = ptrBuffer[idx];
+@@ -102,20 +108,20 @@ static NSInteger itIndex;
+rtmp = tmp;
+// tmp = [tmp getfNext];
+tmp = (ANTLRMapElement *)tmp.fNext;
+-                [rtmp dealloc];
++                [rtmp release];
+}
+}
+}
++    if ( buffer ) [buffer release];
+[super dealloc];
+}
+
+- (NSInteger)count
+{
+-    id anElement;
+NSInteger aCnt = 0;
+
+for (NSInteger i = 0; i < BuffSize; i++) {
+-        if ((anElement = ptrBuffer[i]) != nil) {
++        if ( ptrBuffer[i] != nil ) {
+aCnt++;
+}
+}
+@@ -124,11 +130,10 @@ static NSInteger itIndex;
+
+- (NSInteger) size
+{
+-    id anElement;
+NSInteger aSize = 0;
+
+for (NSInteger i = 0; i < BuffSize; i++) {
+-        if ((anElement = ptrBuffer[i]) != nil) {
++        if ( ptrBuffer[i] != nil ) {
+aSize += sizeof(id);
+}
+}
+@@ -147,7 +152,7 @@ static NSInteger itIndex;
+while ( tmp && tmp != (ANTLRLinkBase *)[((ANTLRHashMap *)fNext) getptrBufferEntry:idx] ) {
+rtmp = tmp;
+tmp = [tmp getfNext];
+-                [rtmp dealloc];
++                [rtmp release];
+}
+}
+}
+@@ -191,7 +196,7 @@ static NSInteger itIndex;
+* can not forget the debuggers
+*/
+htmp->ptrBuffer[idx] = [tmp getfNext];
+-            [ tmp dealloc];
++            [tmp release];
+}
+*map = (ANTLRHashMap *)htmp->fNext;
+//        gScopeLevel--;
+@@ -319,7 +324,7 @@ static NSInteger itIndex;
+for ( tmp = self->ptrBuffer[idx], np = self->ptrBuffer[idx]; np != nil; np = [np getfNext] ) {
+if ( [s isEqualToString:[np getName]] ) {
+tmp = [np getfNext];             /* get the next link  */
+-            [np dealloc];
++            [np release];
+return( SUCCESS );            /* report SUCCESS     */
+}
+tmp = [np getfNext];              //  BAD!!!!!!
+@@ -392,7 +397,7 @@ static NSInteger itIndex;
+NSInteger aTType;
+
+aTType = ttype % BuffSize;
+-    for( np = self->ptrBuffer[ttype]; np != nil; np = [np getfNext] ) {
++    for( np = self->ptrBuffer[aTType]; np != nil; np = [np getfNext] ) {
+if ( [(NSNumber *)np.node integerValue] == ttype ) {
+return( np );        /*   found it       */
+}
+@@ -490,6 +495,7 @@ static NSInteger itIndex;
+
+- (NSEnumerator *)objectEnumerator
+{
++#pragma mark fix this its broken
+NSEnumerator *anEnumerator;
+
+itIndex = 0;
+@@ -513,4 +519,8 @@ static NSInteger itIndex;
+}
+
+@synthesize BuffSize;
++@synthesize count;
++@synthesize ptr;
++@synthesize ptrBuffer;
++@synthesize buffer;
+@end
+diff --git a/runtime/ObjC/Framework/ANTLRHashRule.m b/runtime/ObjC/Framework/ANTLRHashRule.m
+index 36b6204..f0fd2ef 100644
+--- a/runtime/ObjC/Framework/ANTLRHashRule.m
++++ b/runtime/ObjC/Framework/ANTLRHashRule.m
+@@ -42,24 +42,26 @@
+
++(id)newANTLRHashRule
+{
+-    return [[[ANTLRHashRule alloc] init] retain];
++    return [[ANTLRHashRule alloc] init];
+}
+
++(id)newANTLRHashRuleWithLen:(NSInteger)aBuffSize
+{
+-    return [[[ANTLRHashRule alloc] initWithLen:aBuffSize] retain];
++    return [[ANTLRHashRule alloc] initWithLen:aBuffSize];
+}
+
+-(id)init
+{
+-    if ((self = [super initWithLen:HASHSIZE]) != nil) {
++    self = [super initWithLen:HASHSIZE];
++    if ( self != nil ) {
+}
+return( self );
+}
+
+-(id)initWithLen:(NSInteger)aBuffSize
+{
+-    if ((self = [super initWithLen:aBuffSize]) != nil) {
++    self = [super initWithLen:aBuffSize];
++    if ( self != nil ) {
+mode = 0;
+}
+return( self );
+@@ -88,12 +90,10 @@
+
+- (NSInteger)count
+{
+-    id anElement;
+NSInteger aCnt = 0;
+
+for (int i = 0; i < BuffSize; i++) {
+-        anElement = ptrBuffer[i];
+-        if ( anElement != nil ) {
++        if ( ptrBuffer[i] != nil ) {
+aCnt++;
+}
+}
+@@ -107,11 +107,10 @@
+
+- (NSInteger) size
+{
+-    id anElement;
+NSInteger aSize = 0;
+
+for (int i = 0; i < BuffSize; i++) {
+-        if ((anElement = ptrBuffer[i]) != nil) {
++        if ( ptrBuffer[i] != nil ) {
+aSize += sizeof(id);
+}
+}
+@@ -133,7 +132,7 @@
+tmp = (ANTLRRuleMemo *)tmp.fNext;
+else
+tmp = nil;
+-                [rtmp dealloc];
++                [rtmp release];
+}
+}
+}
+@@ -197,7 +196,8 @@
+NSInteger aMatchIndex;
+
+anIndex = (aStartIndex >= BuffSize) ? aStartIndex %= BuffSize : aStartIndex;
+-    if ((aRule = ptrBuffer[anIndex]) == nil ) {
++    aRule = ptrBuffer[anIndex];
++    if ( aRule == nil ) {
+aRule = [ANTLRRuleMemo newANTLRRuleMemoWithStartIndex:[NSNumber numberWithInteger:aStartIndex]
+StopIndex:[NSNumber numberWithInteger:aStopIndex]];
+[aRule retain];
+diff --git a/runtime/ObjC/Framework/ANTLRIntArray.m b/runtime/ObjC/Framework/ANTLRIntArray.m
+index f338ea7..05a78e8 100644
+--- a/runtime/ObjC/Framework/ANTLRIntArray.m
++++ b/runtime/ObjC/Framework/ANTLRIntArray.m
+@@ -35,17 +35,18 @@
+
++ (ANTLRIntArray *)newArray
+{
+-    return [[[ANTLRIntArray alloc] init] retain];
++    return [[ANTLRIntArray alloc] init];
+}
+
++ (ANTLRIntArray *)newArrayWithLen:(NSUInteger)aLen
+{
+-    return [[[ANTLRIntArray alloc] initWithLen:aLen] retain];
++    return [[ANTLRIntArray alloc] initWithLen:aLen];
+}
+
+-(id) init
+{
+-	if ((self = [super initWithLen:ANTLR_INT_ARRAY_INITIAL_SIZE]) != nil) {
++	self = [super initWithLen:ANTLR_INT_ARRAY_INITIAL_SIZE];
++    if ( self != nil ) {
+ip = (NSUInteger *)ptrBuffer;
+}
+return self;
+@@ -53,7 +54,8 @@
+
+-(id) initWithLen:(NSUInteger)aLen
+{
+-	if ((self = [super initWithLen:aLen]) != nil) {
++	self = [super initWithLen:aLen];
++    if ( self != nil ) {
+ip = (NSUInteger *)ptrBuffer;
+}
+return self;
+diff --git a/runtime/ObjC/Framework/ANTLRLexer.m b/runtime/ObjC/Framework/ANTLRLexer.m
+index 67d9cd0..f6609a3 100644
+--- a/runtime/ObjC/Framework/ANTLRLexer.m
++++ b/runtime/ObjC/Framework/ANTLRLexer.m
+@@ -31,12 +31,12 @@
+
+@synthesize input;
+@synthesize ruleNestingLevel;
+-// init
+#pragma mark Initializer
+
+- (id) initWithCharStream:(id<ANTLRCharStream>)anInput
+{
+-	if ((self = [super initWithState:[[ANTLRRecognizerSharedState alloc] init]]) != nil) {
++	self = [super initWithState:[[ANTLRRecognizerSharedState alloc] init]];
++	if ( self != nil ) {
+input = anInput;
+if (state.token != nil)
+[((ANTLRCommonToken *)state.token) setInput:anInput];
+@@ -47,7 +47,8 @@
+
+- (id) initWithCharStream:(id<ANTLRCharStream>)anInput State:(ANTLRRecognizerSharedState *)aState
+{
+-	if ((self = [super initWithState:aState]) != nil) {
++	self = [super initWithState:aState];
++	if ( self != nil ) {
+input = anInput;
+if (state.token != nil)
+[((ANTLRCommonToken *)state.token) setInput:anInput];
+diff --git a/runtime/ObjC/Framework/ANTLRMap.m b/runtime/ObjC/Framework/ANTLRMap.m
+index c8e4727..0834442 100644
+--- a/runtime/ObjC/Framework/ANTLRMap.m
++++ b/runtime/ObjC/Framework/ANTLRMap.m
+@@ -85,7 +85,7 @@
+while ( tmp ) {
+rtmp = tmp;
+tmp = (ANTLRMapElement *)tmp.fNext;
+-                [rtmp dealloc];
++                [rtmp release];
+}
+}
+}
+@@ -103,7 +103,7 @@
+while ( tmp ) {
+rtmp = tmp;
+tmp = [tmp getfNext];
+-                [rtmp dealloc];
++                [rtmp release];
+}
+}
+}
+@@ -252,7 +252,7 @@
+for ( tmp = self->ptrBuffer[idx], np = self->ptrBuffer[idx]; np != nil; np = [np getfNext] ) {
+if ( [s isEqualToString:[np getName]] ) {
+tmp = [np getfNext];             /* get the next link  */
+-            [np dealloc];
++            [np release];
+return( SUCCESS );            /* report SUCCESS     */
+}
+tmp = [np getfNext];              //  BAD!!!!!!
+diff --git a/runtime/ObjC/Framework/ANTLRMapElement.h b/runtime/ObjC/Framework/ANTLRMapElement.h
+index e20d01c..ee70312 100644
+--- a/runtime/ObjC/Framework/ANTLRMapElement.h
++++ b/runtime/ObjC/Framework/ANTLRMapElement.h
+@@ -33,8 +33,8 @@
+#import "ANTLRBaseMapElement.h"
+
+@interface ANTLRMapElement : ANTLRBaseMapElement {
+-    NSString *name;
+-    id        node;
++    __strong NSString *name;
++    __strong id        node;
+}
+@property (retain, getter=getName, setter=setName:) NSString *name;
+@property (retain, getter=getNode, setter=setNode:) id node;
+diff --git a/runtime/ObjC/Framework/ANTLRMapElement.m b/runtime/ObjC/Framework/ANTLRMapElement.m
+index a6bd10c..1eb9682 100644
+--- a/runtime/ObjC/Framework/ANTLRMapElement.m
++++ b/runtime/ObjC/Framework/ANTLRMapElement.m
+@@ -75,10 +75,8 @@
+- (id) initWithName:(NSString *)aName Type:(NSInteger)aTType
+{
+if ((self = [super init]) != nil) {
+-        index = [NSNumber numberWithInteger: aTType];
+-        [index retain];
+-        name  = [NSString stringWithString:aName];
+-        [name retain];
++        index = [[NSNumber numberWithInteger: aTType] retain];
++        name  = [[NSString stringWithString:aName] retain];
+}
+return self;
+}
+@@ -86,10 +84,8 @@
+- (id) initWithNode:(NSInteger)aTType Node:(id)aNode
+{
+if ((self = [super init]) != nil) {
+-        index = [NSNumber numberWithInteger: aTType];
+-        [index retain];
+-        node  = aNode;
+-        [node retain];
++        index = [[NSNumber numberWithInteger: aTType] retain];
++        node  = [aNode retain];
+}
+return self;
+}
+@@ -97,10 +93,8 @@
+- (id) initWithName:(NSString *)aName Node:(id)aNode
+{
+if ((self = [super init]) != nil) {
+-        name  = [NSString stringWithString:aName];
+-        [name retain];
+-        node = aNode;
+-        [node retain];
++        name  = [[NSString stringWithString:aName] retain];
++        node = [aNode retain];
+}
+return self;
+}
+@@ -108,10 +102,8 @@
+- (id) initWithObj1:(id)anObj1 Obj2:(id)anObj2
+{
+if ((self = [super init]) != nil) {
+-        index  = anObj1;
+-        [index retain];
+-        node = anObj2;
+-        [node retain];
++        index  = [anObj1 retain];
++        node = [anObj2 retain];
+}
+return self;
+}
+@@ -174,14 +166,12 @@
+{
+index = ((ANTLRMapElement *)aNode).index;
+if (((ANTLRMapElement *)aNode).name) {
+-        name = ((ANTLRMapElement *)aNode).name;
+-        [name retain];
++        name = [((ANTLRMapElement *)aNode).name retain];
+node = nil;
+}
+if (((ANTLRMapElement *)aNode).node) {
+name = nil;
+-        node = ((ANTLRMapElement *)aNode).node;
+-        [node retain];
++        node = [((ANTLRMapElement *)aNode).node retain];
+}
+}
+
+@@ -189,14 +179,12 @@
+{
+index = ((ANTLRMapElement *)aNode).index;
+if (((ANTLRMapElement *)aNode).name) {
+-        name = ((ANTLRMapElement *)aNode).name;
+-        [name retain];
++        name = [((ANTLRMapElement *)aNode).name retain];
+node = nil;
+}
+if (((ANTLRMapElement *)aNode).node) {
+name = nil;
+-        node = ((ANTLRMapElement *)aNode).node;
+-        [node retain];
++        node = [((ANTLRMapElement *)aNode).node retain];
+}
+}
+
+diff --git a/runtime/ObjC/Framework/ANTLRParseTree.h b/runtime/ObjC/Framework/ANTLRParseTree.h
+index 7be2738..070a94f 100644
+--- a/runtime/ObjC/Framework/ANTLRParseTree.h
++++ b/runtime/ObjC/Framework/ANTLRParseTree.h
+@@ -35,8 +35,8 @@
+#import "AMutableArray.h"
+
+@interface ANTLRParseTree : ANTLRBaseTree <ANTLRBaseTree> {
+-	id<ANTLRToken> payload;
+-	AMutableArray *hiddenTokens;
++	__strong id<ANTLRToken> payload;
++	__strong AMutableArray *hiddenTokens;
+}
+/** A record of the rules used to match a token sequence.  The tokens
+*  end up as the leaves of this tree and rule nodes are the interior nodes.
+@@ -53,6 +53,7 @@
+- (void)setTokenStartIndex:(NSInteger)index;
+- (NSInteger)getTokenStopIndex;
+- (void)setTokenStopIndex:(NSInteger)index;
++- (NSString *)description;
+- (NSString *)toString;
+- (NSString *)toStringWithHiddenTokens;
+- (NSString *)toInputString;
+diff --git a/runtime/ObjC/Framework/ANTLRParseTree.m b/runtime/ObjC/Framework/ANTLRParseTree.m
+index 14ba209..ee9e578 100644
+--- a/runtime/ObjC/Framework/ANTLRParseTree.m
++++ b/runtime/ObjC/Framework/ANTLRParseTree.m
+@@ -44,8 +44,9 @@
+
+- (id)initWithLabel:(id<ANTLRToken>)label
+{
+-    if ((self = [super init]) != nil) {
+-        payload = label;
++    self = [super init];
++    if ( self != nil) {
++        payload = [label retain];
+}
+return self;
+}
+@@ -82,8 +83,8 @@
+- (void)setTokenStopIndex:(NSInteger)anIndex
+{
+}
+-
+-- (NSString *)toString
++
++- (NSString *)description
+{
+if ( [payload isKindOfClass:[ANTLRCommonToken class]] ) {
+id<ANTLRToken> t = (id<ANTLRToken>)payload;
+@@ -92,7 +93,12 @@
+}
+return [t text];
+}
+-    return [payload toString];
++    return [payload description];
++}
++
++- (NSString *)toString
++{
++    return [self description];
+}
+
+/** Emit a token and all hidden nodes before.  EOF node holds all
+diff --git a/runtime/ObjC/Framework/ANTLRPtrBuffer.h b/runtime/ObjC/Framework/ANTLRPtrBuffer.h
+index 8d2d866..baf929b 100644
+--- a/runtime/ObjC/Framework/ANTLRPtrBuffer.h
++++ b/runtime/ObjC/Framework/ANTLRPtrBuffer.h
+@@ -40,8 +40,8 @@
+NSUInteger BuffSize;
+NSUInteger count;
+NSUInteger ptr;
+-    NSMutableData *buffer;
+-    id *ptrBuffer;
++    __strong NSMutableData *buffer;
++    __strong id *ptrBuffer;
+}
+
+@property (getter=getBuffSize, setter=setBuffSize:) NSUInteger BuffSize;
+diff --git a/runtime/ObjC/Framework/ANTLRPtrBuffer.m b/runtime/ObjC/Framework/ANTLRPtrBuffer.m
+index d86654d..9e1e793 100644
+--- a/runtime/ObjC/Framework/ANTLRPtrBuffer.m
++++ b/runtime/ObjC/Framework/ANTLRPtrBuffer.m
+@@ -48,12 +48,12 @@
+
++(ANTLRPtrBuffer *)newANTLRPtrBuffer
+{
+-    return [[[ANTLRPtrBuffer alloc] init] retain];
++    return [[ANTLRPtrBuffer alloc] init];
+}
+
++(ANTLRPtrBuffer *)newANTLRPtrBufferWithLen:(NSInteger)cnt
+{
+-    return [[[ANTLRPtrBuffer alloc] initWithLen:cnt] retain];
++    return [[ANTLRPtrBuffer alloc] initWithLen:cnt];
+}
+
+-(id)init
+@@ -65,7 +65,7 @@
+BuffSize  = BUFFSIZE;
+ptr = 0;
+buffer = [[NSMutableData dataWithLength:(NSUInteger)BuffSize * sizeof(id)] retain];
+-        ptrBuffer = (id *)[buffer mutableBytes];
++        ptrBuffer = (id *) [buffer mutableBytes];
+for( idx = 0; idx < BuffSize; idx++ ) {
+ptrBuffer[idx] = nil;
+}
+diff --git a/runtime/ObjC/Framework/ANTLRPtrStack.m b/runtime/ObjC/Framework/ANTLRPtrStack.m
+index 9404d08..fc5b007 100644
+--- a/runtime/ObjC/Framework/ANTLRPtrStack.m
++++ b/runtime/ObjC/Framework/ANTLRPtrStack.m
+@@ -28,14 +28,16 @@
+
+-(id)init
+{
+-	if ((self = [super initWithLen:HASHSIZE]) != nil) {
++	self = [super initWithLen:HASHSIZE];
++	if ( self != nil ) {
+}
+return( self );
+}
+
+-(id)initWithLen:(NSInteger)cnt
+{
+-	if ((self = [super initWithLen:cnt]) != nil) {
++	self = [super initWithLen:cnt];
++	if ( self != nil ) {
+}
+return( self );
+}
+@@ -56,7 +58,7 @@
+while ( tmp ) {
+rtmp = tmp;
+tmp = [tmp getfNext];
+-                [rtmp dealloc];
++                [rtmp release];
+}
+}
+}
+@@ -132,7 +134,7 @@
+np = [self lookup:[sym getName]];
+if ( np == nil ) {
+[sym setFNext:ptrBuffer[ LastHash ]];
+-        ptrBuffer[ LastHash ] = sym;
++        ptrBuffer[ LastHash ] = [sym retain];
+return( ptrBuffer[ LastHash ] );
+}
+return( nil );            /*   not found      */
+diff --git a/runtime/ObjC/Framework/ANTLRRecognitionException.m b/runtime/ObjC/Framework/ANTLRRecognitionException.m
+index 326313d..f565560 100644
+--- a/runtime/ObjC/Framework/ANTLRRecognitionException.m
++++ b/runtime/ObjC/Framework/ANTLRRecognitionException.m
+@@ -124,7 +124,8 @@
+
+- (NSString *) description
+{
+-	NSMutableString *desc = [[NSMutableString alloc] initWithString:NSStringFromClass([self class])];
++	//NSMutableString *desc = [[NSMutableString alloc] initWithString:NSStringFromClass([self class])];
++	NSMutableString *desc = [NSMutableString stringWithString:[self className]];
+if (token) {
+[desc appendFormat:@" token:%@", token];
+} else if (node) {
+diff --git a/runtime/ObjC/Framework/ANTLRRecognizerSharedState.h b/runtime/ObjC/Framework/ANTLRRecognizerSharedState.h
+index 1d936b6..59e9398 100755
+--- a/runtime/ObjC/Framework/ANTLRRecognizerSharedState.h
++++ b/runtime/ObjC/Framework/ANTLRRecognizerSharedState.h
+@@ -31,16 +31,16 @@
+#import "AMutableArray.h"
+
+@interface ANTLRRecognizerSharedState : NSObject {
+-	AMutableArray *following;          // a stack of FOLLOW bitsets used for context sensitive prediction and recovery
++	__strong AMutableArray *following;  // a stack of FOLLOW bitsets used for context sensitive prediction and recovery
+NSInteger _fsp;                     // Follow stack pointer
+BOOL errorRecovery;                 // are we recovering?
+NSInteger lastErrorIndex;
+BOOL failed;                        // indicate that some match failed
+NSInteger syntaxErrors;
+NSInteger backtracking;             // the level of backtracking
+-	ANTLRRuleStack *ruleMemo;			// store previous results of matching rules so we don't have to do it again. Hook in incremental stuff here, too.
++	__strong ANTLRRuleStack *ruleMemo;	// store previous results of matching rules so we don't have to do it again. Hook in incremental stuff here, too.
+
+-	id<ANTLRToken> token;
++	__strong id<ANTLRToken> token;
+NSInteger  tokenStartCharIndex;
+NSUInteger tokenStartLine;
+NSUInteger tokenStartCharPositionInLine;
+diff --git a/runtime/ObjC/Framework/ANTLRRecognizerSharedState.m b/runtime/ObjC/Framework/ANTLRRecognizerSharedState.m
+index 2332ad6..9a12379 100755
+--- a/runtime/ObjC/Framework/ANTLRRecognizerSharedState.m
++++ b/runtime/ObjC/Framework/ANTLRRecognizerSharedState.m
+@@ -98,7 +98,7 @@
+{
+ANTLRHashRule *aHashRule;
+if ((self = [super init]) != nil ) {
+-        following = [AMutableArray arrayWithCapacity:10];
++        following = [[AMutableArray arrayWithCapacity:10] retain];
+_fsp = -1;
+errorRecovery = NO;			// are we recovering?
+lastErrorIndex = -1;
+@@ -107,7 +107,7 @@
+backtracking = 0;			// the level of backtracking
+tokenStartCharIndex = -1;
+tokenStartLine = 0;
+-		ruleMemo = [ANTLRRuleStack newANTLRRuleStack:aLen];
++		ruleMemo = [[ANTLRRuleStack newANTLRRuleStack:aLen] retain];
+for (int i = 0; i < aLen; i++ ) {
+aHashRule = [[ANTLRHashRule newANTLRHashRuleWithLen:17] retain];
+[ruleMemo addObject:aHashRule];
+@@ -139,7 +139,7 @@
+backtracking = aState.backtracking;
+if ( aState.ruleMemo == nil ) {
+int cnt = 200;
+-        ruleMemo = [ANTLRRuleStack newANTLRRuleStack:cnt];
++        ruleMemo = [[ANTLRRuleStack newANTLRRuleStack:cnt] retain];
+for (int i = 0; i < cnt; i++ ) {
+aHashRule = [[ANTLRHashRule newANTLRHashRuleWithLen:17] retain];
+[ruleMemo addObject:aHashRule];
+diff --git a/runtime/ObjC/Framework/ANTLRRewriteRuleElementStream.h b/runtime/ObjC/Framework/ANTLRRewriteRuleElementStream.h
+index 69efe70..46e0190 100644
+--- a/runtime/ObjC/Framework/ANTLRRewriteRuleElementStream.h
++++ b/runtime/ObjC/Framework/ANTLRRewriteRuleElementStream.h
+@@ -33,10 +33,10 @@
+BOOL dirty;        ///< indicates whether the stream should return copies of its elements, set to true after a call to -reset
+BOOL isSingleElement;
+id singleElement;
+-    AMutableArray *elements;
++    __strong AMutableArray *elements;
+
+-    NSString *elementDescription;
+-    id<ANTLRTreeAdaptor> treeAdaptor;
++    __strong NSString *elementDescription;
++    __strong id<ANTLRTreeAdaptor> treeAdaptor;
+}
+
+@property (assign) NSInteger cursor;
+diff --git a/runtime/ObjC/Framework/ANTLRTree.h b/runtime/ObjC/Framework/ANTLRTree.h
+index ecb798d..68b9dfd 100644
+--- a/runtime/ObjC/Framework/ANTLRTree.h
++++ b/runtime/ObjC/Framework/ANTLRTree.h
+@@ -75,7 +75,7 @@
+*/
+- (void) replaceChildrenFrom:(NSInteger)startChildIndex To:(NSInteger)stopChildIndex With:(id)t;
+
+-- (NSArray *) getChildren;
++- (NSArray *) children;
+// Add t as a child to this node.  If t is null, do nothing.  If t
+//  is nil, add all children of t to this' children.
+
+diff --git a/runtime/ObjC/Framework/ANTLRTreeIterator.h b/runtime/ObjC/Framework/ANTLRTreeIterator.h
+index 7798418..256f98b 100644
+--- a/runtime/ObjC/Framework/ANTLRTreeIterator.h
++++ b/runtime/ObjC/Framework/ANTLRTreeIterator.h
+@@ -37,15 +37,15 @@
+
+@interface ANTLRTreeIterator : NSObject
+{
+-	id<ANTLRTreeAdaptor> adaptor;
+-	id<ANTLRBaseTree> root;
+-	id<ANTLRBaseTree> tree;
++	__strong id<ANTLRTreeAdaptor> adaptor;
++	__strong id<ANTLRBaseTree> root;
++	__strong id<ANTLRBaseTree> tree;
+BOOL firstTime;
+-	id<ANTLRBaseTree> up;
+-	id<ANTLRBaseTree> down;
+-	id<ANTLRBaseTree> eof;
++	__strong id<ANTLRBaseTree> up;
++	__strong id<ANTLRBaseTree> down;
++	__strong id<ANTLRBaseTree> eof;
+
+-	ANTLRFastQueue *nodes;
++	__strong ANTLRFastQueue *nodes;
+}
+
+@property(retain, readwrite) id<ANTLRBaseTree> up;
+diff --git a/runtime/ObjC/Framework/ANTLRTreeIterator.m b/runtime/ObjC/Framework/ANTLRTreeIterator.m
+index 2a4e1b3..0442002 100644
+--- a/runtime/ObjC/Framework/ANTLRTreeIterator.m
++++ b/runtime/ObjC/Framework/ANTLRTreeIterator.m
+@@ -47,12 +47,13 @@
+
+- (id) init
+{
+-	if ((self = [super init]) != nil) {
++	self = [super init];
++    if ( self != nil ) {
+firstTime = YES;
+-		nodes = [ANTLRFastQueue newANTLRFastQueue];
+-		down = [adaptor createTree:ANTLRTokenTypeDOWN Text:@"DOWN"];
+-		up = [adaptor createTree:ANTLRTokenTypeUP Text:@"UP"];
+-		eof = [adaptor createTree:ANTLRTokenTypeEOF Text:@"EOF"];
++		nodes = [[ANTLRFastQueue newANTLRFastQueue] retain];
++		down = [[adaptor createTree:ANTLRTokenTypeDOWN Text:@"DOWN"] retain];
++		up = [[adaptor createTree:ANTLRTokenTypeUP Text:@"UP"] retain];
++		eof = [[adaptor createTree:ANTLRTokenTypeEOF Text:@"EOF"] retain];
+tree = eof;
+root = eof;
+}
+@@ -66,15 +67,16 @@
+
+-(id) initWithTreeAdaptor:(id<ANTLRTreeAdaptor>)a andTree:(id<ANTLRBaseTree>)t
+{
+-	if ((self = [super init]) != nil) {
++    self = [super init];
++    if ( self != nil ) {
+firstTime = YES;
+-		adaptor = a;
+-		tree = t;
++		adaptor = [a retain];
++		tree = [t retain];
+root = t;
+-		nodes = [ANTLRFastQueue newANTLRFastQueue];
+-		down = [adaptor createTree:ANTLRTokenTypeDOWN Text:@"DOWN"];
+-		up = [adaptor createTree:ANTLRTokenTypeUP Text:@"UP"];
+-		eof = [adaptor createTree:ANTLRTokenTypeEOF Text:@"EOF"];
++		nodes = [[ANTLRFastQueue newANTLRFastQueue] retain];
++		down = [[adaptor createTree:ANTLRTokenTypeDOWN Text:@"DOWN"] retain];
++		up = [[adaptor createTree:ANTLRTokenTypeUP Text:@"UP"] retain];
++		eof = [[adaptor createTree:ANTLRTokenTypeEOF Text:@"EOF"] retain];
+}
+return self;
+}
+@@ -88,16 +90,16 @@
+
+-(BOOL) hasNext
+{
+-	if (firstTime) {
++	if ( firstTime ) {
+return root != nil;
+}
+if ( nodes && [nodes size] > 0) {
+return YES;
+}
+-	if (tree == nil) {
++	if ( tree == nil ) {
+return NO;
+}
+-	if ([adaptor getChildCount:tree] > 0) {
++	if ( [adaptor getChildCount:tree] > 0 ) {
+return YES;
+}
+return [adaptor getParent:tree] != nil;
+@@ -106,7 +108,7 @@
+-(id) nextObject
+{
+// is this the first time we are using this method?
+-	if (firstTime) {
++	if ( firstTime ) {
+firstTime = NO;
+if ([adaptor getChildCount:tree] == 0) {
+[nodes addObject:eof];
+@@ -115,14 +117,14 @@
+return tree;
+}
+// do we have any objects queued up?
+-	if ( nodes && [nodes size] > 0) {
++	if ( nodes && [nodes size] > 0 ) {
+return [nodes remove];
+}
+// no nodes left?
+-	if (tree == nil) {
++	if ( tree == nil ) {
+return eof;
+}
+-	if ([adaptor getChildCount:tree] > 0) {
++	if ( [adaptor getChildCount:tree] > 0 ) {
+tree = [adaptor getChild:tree At:0];
+[nodes addObject:tree]; // real node is next after down
+return self.down;
+@@ -134,7 +136,7 @@
+tree = parent;
+parent = [adaptor getParent:tree];
+}
+-	if (parent == nil) {
++	if ( parent == nil ) {
+tree = nil;
+[nodes addObject:self.eof];
+return [nodes remove];
+@@ -150,7 +152,7 @@
+-(NSArray *) allObjects
+{
+AMutableArray *array = [AMutableArray arrayWithCapacity:10];
+-	while ([self hasNext]) {
++	while ( [self hasNext] ) {
+[array addObject:[self nextObject]];
+}
+return array;
+@@ -160,6 +162,7 @@
+{
+@throw [ANTLRRuntimeException newException:@"ANTLRUnsupportedOperationException"];
+}
++
+@synthesize up;
+@synthesize down;
+@synthesize eof;
+diff --git a/runtime/ObjC/Framework/ANTLRTreeParser.m b/runtime/ObjC/Framework/ANTLRTreeParser.m
+index 81a4db3..4069b12 100644
+--- a/runtime/ObjC/Framework/ANTLRTreeParser.m
++++ b/runtime/ObjC/Framework/ANTLRTreeParser.m
+@@ -165,7 +165,7 @@
+- (NSString *)getErrorMessage:(ANTLRRecognitionException *)e  TokenNames:(AMutableArray *) theTokNams
+{
+if ( [self isKindOfClass:[ANTLRTreeParser class]] ) {
+-        id<ANTLRTreeAdaptor> adaptor = (id<ANTLRTreeAdaptor>)[((id<ANTLRTreeNodeStream>)e.input) getTreeAdaptor];
++        ANTLRCommonTreeAdaptor *adaptor = (ANTLRCommonTreeAdaptor *)[((id<ANTLRTreeNodeStream>)e.input) getTreeAdaptor];
+e.token = [adaptor getToken:((id<ANTLRBaseTree>)e.node)];
+if ( e.token == nil ) { // could be an UP/DOWN node
+e.token = [ANTLRCommonToken newToken:[adaptor getType:e.node]
+diff --git a/runtime/ObjC/Framework/ANTLRTreePatternLexer.m b/runtime/ObjC/Framework/ANTLRTreePatternLexer.m
+index 6932fcd..454dce6 100644
+--- a/runtime/ObjC/Framework/ANTLRTreePatternLexer.m
++++ b/runtime/ObjC/Framework/ANTLRTreePatternLexer.m
+@@ -170,7 +170,7 @@
+
+- (void)setSval:(NSMutableData *)aSval
+{
+-    sval = aSval;
++    sval = [aSval retain];
+}
+
+@end
+diff --git a/runtime/ObjC/Framework/ANTLRTreeRewriter.h b/runtime/ObjC/Framework/ANTLRTreeRewriter.h
+index 7b64250..5ab5700 100644
+--- a/runtime/ObjC/Framework/ANTLRTreeRewriter.h
++++ b/runtime/ObjC/Framework/ANTLRTreeRewriter.h
+@@ -59,17 +59,17 @@
++ (ANTLRTreeRewriter *) newANTLRTreeRewriter:(id<ANTLRTreeNodeStream>)anInput State:(ANTLRRecognizerSharedState *)aState;
+- (id)initWithStream:(id<ANTLRTreeNodeStream>)anInput;
+- (id)initWithStream:(id<ANTLRTreeNodeStream>)anInput State:(ANTLRRecognizerSharedState *)aState;
+-- (ANTLRTreeRewriter *) applyOnce:(id<ANTLRBaseTree>)t Rule:(ANTLRfptr *)whichRule;
+-- (ANTLRTreeRewriter *) applyRepeatedly:(id<ANTLRBaseTree>)t Rule:(ANTLRfptr *)whichRule;
+-- (ANTLRTreeRewriter *) downup:(id<ANTLRBaseTree>)t;
+-- (ANTLRTreeRewriter *) pre:(id<ANTLRBaseTree>)t;
+-- (ANTLRTreeRewriter *) post:(id<ANTLRBaseTree>)t;
+-- (ANTLRTreeRewriter *) downup:(id<ANTLRBaseTree>)t XForm:(BOOL)aShowTransformations;
+-- (void)reportTransformation:(id<ANTLRBaseTree>)oldTree Tree:(id<ANTLRBaseTree>)newTree;
+-- (ANTLRTreeRewriter *) topdown_fptr;
+-- (ANTLRTreeRewriter *) bottomup_ftpr;
+-- (ANTLRTreeRewriter *) topdown;
+-- (ANTLRTreeRewriter *) bottomup;
++- (id) applyOnce:(ANTLRCommonTree *)t Rule:(ANTLRfptr *)whichRule;
++- (id) applyRepeatedly:(ANTLRCommonTree *)t Rule:(ANTLRfptr *)whichRule;
++- (id) downup:(ANTLRCommonTree *)t;
++- (id) pre:(ANTLRCommonTree *)t;
++- (id) post:(ANTLRCommonTree *)t;
++- (id) downup:(ANTLRCommonTree *)t XForm:(BOOL)aShowTransformations;
++- (void)reportTransformation:(ANTLRCommonTree *)oldTree Tree:(ANTLRCommonTree *)newTree;
++- (id) topdown_fptr;
++- (id) bottomup_ftpr;
++- (id) topdown;
++- (id) bottomup;
+
+@property BOOL showTransformations;
+@property (retain) id<ANTLRTokenStream> originalTokenStream;
+diff --git a/runtime/ObjC/Framework/ANTLRTreeRewriter.m b/runtime/ObjC/Framework/ANTLRTreeRewriter.m
+index d965831..058c0b8 100644
+--- a/runtime/ObjC/Framework/ANTLRTreeRewriter.m
++++ b/runtime/ObjC/Framework/ANTLRTreeRewriter.m
+@@ -110,13 +110,13 @@
+return self;
+}
+
+-- (ANTLRTreeRewriter *) applyOnce:(id<ANTLRBaseTree>)t Rule:(ANTLRfptr *)whichRule
++- (id) applyOnce:(ANTLRCommonTree *)t Rule:(ANTLRfptr *)whichRule
+{
+if ( t == nil ) return nil;
+@try {
+// share TreeParser object but not parsing-related state
+state = [ANTLRRecognizerSharedState newANTLRRecognizerSharedState];
+-        input = [ANTLRCommonTreeNodeStream newANTLRCommonTreeNodeStream:(id<ANTLRTreeAdaptor>)originalAdaptor Tree:(id<ANTLRBaseTree>)t];
++        input = [ANTLRCommonTreeNodeStream newANTLRCommonTreeNodeStream:(ANTLRCommonTreeAdaptor *)originalAdaptor Tree:t];
+[(ANTLRCommonTreeNodeStream *)input setTokenStream:originalTokenStream];
+[self setBacktrackingLevel:1];
+ANTLRTreeRuleReturnScope *r = [(ANTLRfptr *)whichRule rule];
+@@ -125,7 +125,7 @@
+return t;
+if ( showTransformations &&
+r != nil && !(t == r.start) && r.start != nil ) {
+-            [self reportTransformation:(id<ANTLRBaseTree>)t Tree:r.start];
++            [self reportTransformation:t Tree:r.start];
+}
+if ( r != nil && r.start != nil )
+return r.start;
+@@ -138,28 +138,28 @@
+return t;
+}
+
+-- (ANTLRTreeRewriter *) applyRepeatedly:(id<ANTLRBaseTree>)t Rule:(ANTLRfptr *)whichRule
++- (id) applyRepeatedly:(ANTLRCommonTree *)t Rule:(ANTLRfptr *)whichRule
+{
+BOOL treeChanged = true;
+while ( treeChanged ) {
+-        ANTLRTreeRewriter *u = [self applyOnce:(id<ANTLRBaseTree>)t Rule:whichRule];
++        ANTLRTreeRewriter *u = [self applyOnce:t Rule:whichRule];
+treeChanged = !(t == u);
+t = u;
+}
+return t;
+}
+
+-- (ANTLRTreeRewriter *) downup:(id<ANTLRBaseTree>)t
++- (id) downup:(ANTLRCommonTree *)t
+{
+return [self downup:t XForm:NO];
+}
+
+-- (ANTLRTreeRewriter *) pre:(id<ANTLRBaseTree>)t
++- (id) pre:(ANTLRCommonTree *)t
+{
+return [self applyOnce:t Rule:topdown_fptr];
+}
+
+-- (ANTLRTreeRewriter *)post:(id<ANTLRBaseTree>)t
++- (id)post:(ANTLRCommonTree *)t
+{
+return [self applyRepeatedly:t Rule:bottomup_ftpr];
+}
+@@ -177,7 +177,7 @@ public Object downup(Object t, boolean showTransformations) {
+}
+#endif
+
+-- (ANTLRTreeRewriter *) downup:(id<ANTLRBaseTree>)t XForm:(BOOL)aShowTransformations
++- (id) downup:(ANTLRCommonTree *)t XForm:(BOOL)aShowTransformations
+{
+showTransformations = aShowTransformations;
+ANTLRTreeVisitor *v = [ANTLRTreeVisitor newANTLRTreeVisitor:[[originalAdaptor class] newTreeAdaptor]];
+@@ -195,17 +195,17 @@ public Object downup(Object t, boolean showTransformations) {
+/** Override this if you need transformation tracing to go somewhere
+*  other than stdout or if you're not using Tree-derived trees.
+*/
+-- (void)reportTransformation:(id<ANTLRBaseTree>)oldTree Tree:(id<ANTLRBaseTree>)newTree
++- (void)reportTransformation:(ANTLRCommonTree *)oldTree Tree:(ANTLRCommonTree *)newTree
+{
+//System.out.println(((Tree)oldTree).toStringTree()+" -> "+ ((Tree)newTree).toStringTree());
+}
+
+-- (ANTLRTreeRewriter *)topdown_fptr
++- (id)topdown_fptr
+{
+return [self topdown];
+}
+
+-- (ANTLRTreeRewriter *)bottomup_ftpr
++- (id)bottomup_ftpr
+{
+return [self bottomup];
+}
+@@ -213,14 +213,14 @@ public Object downup(Object t, boolean showTransformations) {
+// methods the downup strategy uses to do the up and down rules.
+// to override, just define tree grammar rule topdown and turn on
+// filter=true.
+-- (ANTLRTreeRewriter *) topdown
++- (id) topdown
+// @throws RecognitionException
+{
+-    [ANTLRRecognitionException newException:@"TopDown exception"];
++    @throw [ANTLRRecognitionException newException:@"TopDown exception"];
+return nil;
+}
+
+-- (ANTLRTreeRewriter *) bottomup
++- (id) bottomup
+//@throws RecognitionException
+{
+@throw [ANTLRRecognitionException newException:@"BottomUp exception"];
+diff --git a/runtime/ObjC/Framework/ANTLRTreeVisitor.h b/runtime/ObjC/Framework/ANTLRTreeVisitor.h
+index de0d095..e8af0d0 100644
+--- a/runtime/ObjC/Framework/ANTLRTreeVisitor.h
++++ b/runtime/ObjC/Framework/ANTLRTreeVisitor.h
+@@ -40,6 +40,7 @@
++ (ANTLRTreeVisitor *)newANTLRTreeVisitor;
+- (id)init;
+- (id)initWithAdaptor:(id<ANTLRTreeAdaptor>)anAdaptor;
++- (void) dealloc;
+- (ANTLRTreeVisitor *)visit:(id<ANTLRBaseTree>)t Action:(ANTLRTreeVisitorAction *)action;
+
+@property (retain) id<ANTLRTreeAdaptor> adaptor;
+diff --git a/runtime/ObjC/Framework/ANTLRTreeVisitor.m b/runtime/ObjC/Framework/ANTLRTreeVisitor.m
+index 764a490..d710cc5 100644
+--- a/runtime/ObjC/Framework/ANTLRTreeVisitor.m
++++ b/runtime/ObjC/Framework/ANTLRTreeVisitor.m
+@@ -48,7 +48,7 @@
+- (id)init
+{
+if ((self = [super init]) != nil) {
+-        adaptor = [ANTLRCommonTreeAdaptor newTreeAdaptor];
++        adaptor = [[ANTLRCommonTreeAdaptor newTreeAdaptor] retain];
+}
+return self;
+}
+@@ -56,11 +56,17 @@
+- (id)initWithAdaptor:(id<ANTLRTreeAdaptor>)anAdaptor
+{
+if ((self = [super init]) != nil) {
+-        adaptor = anAdaptor;
++        adaptor = [anAdaptor retain];
+}
+return self;
+}
+
++- (void) dealloc
++{
++    if ( adaptor ) [adaptor release];
++    [super dealloc];
++}
++
+/** Visit every node in tree t and trigger an action for each node
+*  before/after having visited all of its children.
+*  Execute both actions even if t has no children.
+@@ -71,7 +77,7 @@
+*
+*  Return result of applying post action to this node.
+*/
+-- (ANTLRTreeVisitor *)visit:(id<ANTLRBaseTree>)t Action:(ANTLRTreeVisitorAction *)action
++- (ANTLRTreeVisitor *)visit:(ANTLRCommonTree *)t Action:(ANTLRTreeVisitorAction *)action
+{
+// System.out.println("visit "+((Tree)t).toStringTree());
+BOOL isNil = [adaptor isNil:t];
+@@ -79,9 +85,9 @@
+t = [action pre:(ANTLRTreeVisitorAction *)t]; // if rewritten, walk children of new t
+}
+for (int i=0; i < [adaptor getChildCount:t]; i++) {
+-        id<ANTLRBaseTree> child = [adaptor getChild:t At:i];
+-        id<ANTLRBaseTree> visitResult = [self visit:child Action:action];
+-        id<ANTLRBaseTree> childAfterVisit = [adaptor getChild:t At:i];
++        ANTLRCommonTree *child = [adaptor getChild:t At:i];
++        ANTLRCommonTree *visitResult = [self visit:child Action:action];
++        ANTLRCommonTree *childAfterVisit = [adaptor getChild:t At:i];
+if ( visitResult !=  childAfterVisit ) { // result & child differ?
+[adaptor setChild:t At:i Child:visitResult];
+}
+diff --git a/runtime/ObjC/Framework/ANTLRTreeWizard.h b/runtime/ObjC/Framework/ANTLRTreeWizard.h
+index 0575bd8..5a818d3 100644
+--- a/runtime/ObjC/Framework/ANTLRTreeWizard.h
++++ b/runtime/ObjC/Framework/ANTLRTreeWizard.h
+@@ -40,7 +40,7 @@
+
+@protocol ANTLRContextVisitor <NSObject>
+// TODO: should this be called visit or something else?
+-- (void) visit:(id<ANTLRBaseTree>)t Parent:(id<ANTLRBaseTree>)parent ChildIndex:(NSInteger)childIndex Map:(ANTLRMap *)labels;
++- (void) visit:(ANTLRCommonTree *)t Parent:(ANTLRCommonTree *)parent ChildIndex:(NSInteger)childIndex Map:(ANTLRMap *)labels;
+
+@end
+
+@@ -53,8 +53,8 @@
++ (ANTLRVisitor *)newANTLRVisitor:(NSInteger)anAction Actor:(id)anActor Object:(id)anObject1 Object:(id)anObject2;
+- (id) initWithAction:(NSInteger)anAction Actor:(id)anActor Object:(id)anObject1 Object:(id)anObject2;
+
+-- (void) visit:(id<ANTLRBaseTree>)t;
+-- (void) visit:(id<ANTLRBaseTree>)t Parent:(id<ANTLRBaseTree>)parent ChildIndex:(NSInteger)childIndex Map:(ANTLRMap *)labels;
++- (void) visit:(ANTLRCommonTree *)t;
++- (void) visit:(ANTLRCommonTree *)t Parent:(ANTLRCommonTree *)parent ChildIndex:(NSInteger)childIndex Map:(ANTLRMap *)labels;
+
+@property NSInteger action;
+@property (retain) id actor;
+@@ -72,7 +72,7 @@
+@property (retain, getter=getLabel, setter=setLabel:) NSString *label;
+@property (assign, getter=getHasTextArg, setter=setHasTextArg:) BOOL hasTextArg;
+
+-+ (id<ANTLRBaseTree>)newANTLRTreePattern:(id<ANTLRToken>)payload;
+++ (ANTLRCommonTree *)newANTLRTreePattern:(id<ANTLRToken>)payload;
+
+- (id) initWithToken:(id<ANTLRToken>)payload;
+- (NSString *)toString;
+@@ -96,7 +96,7 @@
+#ifdef DONTUSENOMO
+- initWithToken:(id<ANTLRToken>)payload;
+#endif
+-- (id<ANTLRBaseTree>)createTreePattern:(id<ANTLRToken>)payload;
++- (ANTLRCommonTree *)createTreePattern:(id<ANTLRToken>)payload;
+
+@end
+
+@@ -115,22 +115,22 @@
+- (id) initWithTokenNames:(id<ANTLRTreeAdaptor>)anAdaptor TokenNames:(NSArray *)theTokNams;
+- (ANTLRMap *)computeTokenTypes:(NSArray *)theTokNams;
+- (NSInteger)getTokenType:(NSString *)tokenName;
+-- (ANTLRMap *)index:(id<ANTLRBaseTree>)t;
+-- (void) _index:(id<ANTLRBaseTree>)t Map:(ANTLRMap *)m;
+-- (AMutableArray *)find:(id<ANTLRBaseTree>) t Pattern:(NSString *)pattern;
+-- (ANTLRTreeWizard *)findFirst:(id<ANTLRBaseTree>) t Type:(NSInteger)ttype;
+-- (ANTLRTreeWizard *)findFirst:(id<ANTLRBaseTree>) t Pattern:(NSString *)pattern;
+-- (void) visit:(id<ANTLRBaseTree>)t Type:(NSInteger)ttype Visitor:(ANTLRVisitor *)visitor;
+-- (void) _visit:(id<ANTLRBaseTree>)t
+-         Parent:(id<ANTLRBaseTree>)parent
++- (ANTLRMap *)index:(ANTLRCommonTree *)t;
++- (void) _index:(ANTLRCommonTree *)t Map:(ANTLRMap *)m;
++- (AMutableArray *)find:(ANTLRCommonTree *) t Pattern:(NSString *)pattern;
++- (ANTLRTreeWizard *)findFirst:(ANTLRCommonTree *) t Type:(NSInteger)ttype;
++- (ANTLRTreeWizard *)findFirst:(ANTLRCommonTree *) t Pattern:(NSString *)pattern;
++- (void) visit:(ANTLRCommonTree *)t Type:(NSInteger)ttype Visitor:(ANTLRVisitor *)visitor;
++- (void) _visit:(ANTLRCommonTree *)t
++         Parent:(ANTLRCommonTree *)parent
+ChildIndex:(NSInteger)childIndex
+Type:(NSInteger)ttype
+Visitor:(ANTLRVisitor *)visitor;
+-- (void)visit:(id<ANTLRBaseTree>)t Pattern:(NSString *)pattern Visitor:(ANTLRVisitor *)visitor;
+-- (BOOL)parse:(id<ANTLRBaseTree>)t Pattern:(NSString *)pattern Map:(ANTLRMap *)labels;
+-- (BOOL) parse:(id<ANTLRBaseTree>) t Pattern:(NSString *)pattern;
+-- (BOOL) _parse:(id<ANTLRBaseTree>)t1 Pattern:(id<ANTLRBaseTree>)tpattern Map:(ANTLRMap *)labels;
+-- (id<ANTLRBaseTree>) createTree:(NSString *)pattern;
++- (void)visit:(ANTLRCommonTree *)t Pattern:(NSString *)pattern Visitor:(ANTLRVisitor *)visitor;
++- (BOOL)parse:(ANTLRCommonTree *)t Pattern:(NSString *)pattern Map:(ANTLRMap *)labels;
++- (BOOL) parse:(ANTLRCommonTree *) t Pattern:(NSString *)pattern;
++- (BOOL) _parse:(ANTLRCommonTree *)t1 Pattern:(ANTLRCommonTree *)tpattern Map:(ANTLRMap *)labels;
++- (ANTLRCommonTree *) createTree:(NSString *)pattern;
+- (BOOL)equals:(id)t1 O2:(id)t2 Adaptor:(id<ANTLRTreeAdaptor>)anAdaptor;
+- (BOOL)equals:(id)t1 O2:(id)t2;
+- (BOOL) _equals:(id)t1 O2:(id)t2 Adaptor:(id<ANTLRTreeAdaptor>)anAdaptor;
+diff --git a/runtime/ObjC/Framework/ANTLRTreeWizard.m b/runtime/ObjC/Framework/ANTLRTreeWizard.m
+index 2e8f1a1..ad7e6eb 100644
+--- a/runtime/ObjC/Framework/ANTLRTreeWizard.m
++++ b/runtime/ObjC/Framework/ANTLRTreeWizard.m
+@@ -52,7 +52,7 @@
+return self;
+}
+
+-- (void) visit:(id<ANTLRBaseTree>)t Parent:(id<ANTLRBaseTree>)parent ChildIndex:(NSInteger)childIndex Map:(ANTLRMap *)labels
++- (void) visit:(ANTLRCommonTree *)t Parent:(ANTLRCommonTree *)parent ChildIndex:(NSInteger)childIndex Map:(ANTLRMap *)labels
+{
+switch (action) {
+case 0:
+@@ -71,7 +71,7 @@
+return;
+}
+
+-- (void) visit:(id<ANTLRBaseTree>)t
++- (void) visit:(ANTLRCommonTree *)t
+{
+[object1 addObject:t];
+return;
+@@ -91,16 +91,16 @@
+@synthesize label;
+@synthesize hasTextArg;
+
+-+ (id<ANTLRBaseTree>)newANTLRTreePattern:(id<ANTLRToken>)payload
+++ (ANTLRCommonTree *)newANTLRTreePattern:(id<ANTLRToken>)payload
+{
+-    return (id<ANTLRBaseTree>)[[ANTLRTreePattern alloc] initWithToken:payload];
++    return (ANTLRCommonTree *)[[ANTLRTreePattern alloc] initWithToken:payload];
+}
+
+- (id) initWithToken:(id<ANTLRToken>)payload
+{
+if ((self = [super initWithToken:payload]) != nil ) {
+}
+-    return (id<ANTLRBaseTree>)self;
++    return (ANTLRCommonTree *)self;
+}
+
+- (NSString *)toString
+@@ -162,9 +162,9 @@
+}
+#endif
+
+-- (id<ANTLRBaseTree>)createTreePattern:(id<ANTLRToken>)payload
++- (ANTLRCommonTree *)createTreePattern:(id<ANTLRToken>)payload
+{
+-    return (id<ANTLRBaseTree>)[super create:payload];
++    return (ANTLRCommonTree *)[super create:payload];
+}
+
+@end
+@@ -293,7 +293,7 @@
+*
+*  TODO: save this index so that find and visit are faster
+*/
+-- (ANTLRMap *)index:(id<ANTLRBaseTree>)t
++- (ANTLRMap *)index:(ANTLRCommonTree *)t
+{
+ANTLRMap *m = [ANTLRMap newANTLRMap];
+[self _index:t Map:m];
+@@ -301,7 +301,7 @@
+}
+
+/** Do the work for index */
+-- (void) _index:(id<ANTLRBaseTree>)t Map:(ANTLRMap *)m
++- (void) _index:(ANTLRCommonTree *)t Map:(ANTLRMap *)m
+{
+if ( t==nil ) {
+return;
+@@ -316,13 +316,13 @@
+[elements addObject:t];
+int n = [adaptor getChildCount:t];
+for (int i=0; i<n; i++) {
+-        id<ANTLRBaseTree> child = [adaptor getChild:t At:i];
++        ANTLRCommonTree * child = [adaptor getChild:t At:i];
+[self _index:child Map:m];
+}
+}
+
+/** Return a List of tree nodes with token type ttype */
+-- (AMutableArray *)find:(id<ANTLRBaseTree>)t Type:(NSInteger)ttype
++- (AMutableArray *)find:(ANTLRCommonTree *)t Type:(NSInteger)ttype
+{
+#ifdef DONTUSENOMO
+final List nodes = new ArrayList();
+@@ -339,7 +339,7 @@
+}
+
+/** Return a List of subtrees matching pattern. */
+-- (AMutableArray *)find:(id<ANTLRBaseTree>)t Pattern:(NSString *)pattern
++- (AMutableArray *)find:(ANTLRCommonTree *)t Pattern:(NSString *)pattern
+{
+AMutableArray *subtrees = [AMutableArray arrayWithCapacity:100];
+// Create a TreePattern from the pattern
+@@ -347,7 +347,7 @@
+ANTLRTreePatternParser *parser = [ANTLRTreePatternParser newANTLRTreePatternParser:tokenizer
+Wizard:self
+Adaptor:[ANTLRTreePatternTreeAdaptor newTreeAdaptor]];
+-    id<ANTLRBaseTree>tpattern = [parser pattern];
++    ANTLRCommonTree *tpattern = (ANTLRCommonTree *)[parser pattern];
+// don't allow invalid patterns
+if ( tpattern == nil ||
+[tpattern isNil] ||
+@@ -370,12 +370,12 @@
+return subtrees;
+}
+
+-- (ANTLRTreeWizard *)findFirst:(id<ANTLRBaseTree>) t Type:(NSInteger)ttype
++- (ANTLRTreeWizard *)findFirst:(ANTLRCommonTree *) t Type:(NSInteger)ttype
+{
+return nil;
+}
+
+-- (ANTLRTreeWizard *)findFirst:(id<ANTLRBaseTree>) t Pattern:(NSString *)pattern
++- (ANTLRTreeWizard *)findFirst:(ANTLRCommonTree *) t Pattern:(NSString *)pattern
+{
+return nil;
+}
+@@ -385,14 +385,14 @@
+*  of the visitor action method is never set (it's nil) since using
+*  a token type rather than a pattern doesn't let us set a label.
+*/
+-- (void) visit:(id<ANTLRBaseTree>)t Type:(NSInteger)ttype Visitor:(ANTLRVisitor *)visitor
++- (void) visit:(ANTLRCommonTree *)t Type:(NSInteger)ttype Visitor:(ANTLRVisitor *)visitor
+{
+[self _visit:t Parent:nil ChildIndex:0 Type:ttype Visitor:visitor];
+}
+
+/** Do the recursive work for visit */
+-- (void) _visit:(id<ANTLRBaseTree>)t
+-         Parent:(id<ANTLRBaseTree>)parent
++- (void) _visit:(ANTLRCommonTree *)t
++         Parent:(ANTLRCommonTree *)parent
+ChildIndex:(NSInteger)childIndex
+Type:(NSInteger)ttype
+Visitor:(ANTLRVisitor *)visitor
+@@ -405,7 +405,7 @@
+}
+int n = [adaptor getChildCount:t];
+for (int i=0; i<n; i++) {
+-        id<ANTLRBaseTree> child = [adaptor getChild:t At:i];
++        ANTLRCommonTree * child = [adaptor getChild:t At:i];
+[self _visit:child Parent:t ChildIndex:i Type:ttype Visitor:visitor];
+}
+}
+@@ -415,13 +415,13 @@
+*  with visit(t, ttype, visitor) so nil-rooted patterns are not allowed.
+*  Patterns with wildcard roots are also not allowed.
+*/
+-- (void)visit:(id<ANTLRBaseTree>)t Pattern:(NSString *)pattern Visitor:(ANTLRVisitor *)visitor
++- (void)visit:(ANTLRCommonTree *)t Pattern:(NSString *)pattern Visitor:(ANTLRVisitor *)visitor
+{
+// Create a TreePattern from the pattern
+ANTLRTreePatternLexer *tokenizer = [ANTLRTreePatternLexer newANTLRTreePatternLexer:pattern];
+ANTLRTreePatternParser *parser =
+[ANTLRTreePatternParser newANTLRTreePatternParser:tokenizer Wizard:self Adaptor:[ANTLRTreePatternTreeAdaptor newTreeAdaptor]];
+-    id<ANTLRBaseTree> tpattern = [parser pattern];
++    ANTLRCommonTree * tpattern = [parser pattern];
+// don't allow invalid patterns
+if ( tpattern == nil ||
+[tpattern isNil] ||
+@@ -458,7 +458,7 @@
+*
+*  TODO: what's a better way to indicate bad pattern? Exceptions are a hassle
+*/
+-- (BOOL)parse:(id<ANTLRBaseTree>)t Pattern:(NSString *)pattern Map:(ANTLRMap *)labels
++- (BOOL)parse:(ANTLRCommonTree *)t Pattern:(NSString *)pattern Map:(ANTLRMap *)labels
+{
+#ifdef DONTUSENOMO
+TreePatternLexer tokenizer = new TreePatternLexer(pattern);
+@@ -476,7 +476,7 @@
+ANTLRTreePatternParser *parser = [ANTLRTreePatternParser newANTLRTreePatternParser:tokenizer
+Wizard:self
+Adaptor:[ANTLRTreePatternTreeAdaptor newTreeAdaptor]];
+-    id<ANTLRBaseTree> tpattern = [parser pattern];
++    ANTLRCommonTree * tpattern = [parser pattern];
+/*
+System.out.println("t="+((Tree)t).toStringTree());
+System.out.println("scant="+tpattern.toStringTree());
+@@ -486,7 +486,7 @@
+return [self _parse:t Pattern:tpattern Map:labels];
+}
+
+-- (BOOL) parse:(id<ANTLRBaseTree>)t Pattern:(NSString *)pattern
++- (BOOL) parse:(ANTLRCommonTree *)t Pattern:(NSString *)pattern
+{
+return [self parse:t Pattern:pattern Map:nil];
+}
+@@ -496,7 +496,7 @@
+*  text arguments on nodes.  Fill labels map with pointers to nodes
+*  in tree matched against nodes in pattern with labels.
+*/
+-- (BOOL) _parse:(id<ANTLRBaseTree>)t1 Pattern:(id<ANTLRBaseTree>)aTPattern Map:(ANTLRMap *)labels
++- (BOOL) _parse:(ANTLRCommonTree *)t1 Pattern:(ANTLRCommonTree *)aTPattern Map:(ANTLRMap *)labels
+{
+ANTLRTreePattern *tpattern;
+// make sure both are non-nil
+@@ -526,8 +526,8 @@
+return NO;
+}
+for (int i=0; i<n1; i++) {
+-        id<ANTLRBaseTree> child1 = [adaptor getChild:t1 At:i];
+-        id<ANTLRBaseTree>child2 = (id<ANTLRBaseTree>)[tpattern getChild:i];
++        ANTLRCommonTree * child1 = [adaptor getChild:t1 At:i];
++        ANTLRCommonTree *child2 = (ANTLRCommonTree *)[tpattern getChild:i];
+if ( ![self _parse:child1 Pattern:child2 Map:labels] ) {
+return NO;
+}
+@@ -548,11 +548,11 @@
+*  nil is a special name meaning "give me a nil node".  Useful for
+*  making lists: (nil A B C) is a list of A B C.
+*/
+-- (id<ANTLRBaseTree>) createTree:(NSString *)pattern
++- (ANTLRCommonTree *) createTree:(NSString *)pattern
+{
+ANTLRTreePatternLexer *tokenizer = [ANTLRTreePatternLexer newANTLRTreePatternLexer:pattern];
+ANTLRTreePatternParser *parser = [ANTLRTreePatternParser newANTLRTreePatternParser:tokenizer Wizard:self Adaptor:adaptor];
+-    id<ANTLRBaseTree> t = [parser pattern];
++    ANTLRCommonTree * t = [parser pattern];
+return t;
+}
+
+@@ -598,8 +598,8 @@
+return NO;
+}
+for (int i=0; i<n1; i++) {
+-        id<ANTLRBaseTree> child1 = [anAdaptor getChild:t1 At:i];
+-        id<ANTLRBaseTree> child2 = [anAdaptor getChild:t2 At:i];
++        ANTLRCommonTree * child1 = [anAdaptor getChild:t1 At:i];
++        ANTLRCommonTree * child2 = [anAdaptor getChild:t2 At:i];
+if ( ![self _equals:child1 O2:child2 Adaptor:anAdaptor] ) {
+return NO;
+}
+@@ -626,7 +626,7 @@
+*
+*  If you change this method, you will likely need to change
+*  getNodeIndex(), which extracts information.
+-- (void)fillReverseIndex:(id<ANTLRBaseTree>)node Index:(NSInteger)streamIndex
++- (void)fillReverseIndex:(ANTLRCommonTree *)node Index:(NSInteger)streamIndex
+{
+//System.out.println("revIndex "+node+"@"+streamIndex);
+if ( tokenTypesToReverseIndex == nil ) {
+diff --git a/runtime/ObjC/Framework/antlr3.h b/runtime/ObjC/Framework/antlr3.h
+index 6fdc5b5..9c941dc 100644
+--- a/runtime/ObjC/Framework/antlr3.h
++++ b/runtime/ObjC/Framework/antlr3.h
+@@ -84,6 +84,7 @@
+#import <ANTLR/ANTLRRecognitionException.h>
+#import <ANTLR/ANTLRRecognizerSharedState.h>
+#import <ANTLR/ANTLRRewriteRuleElementStream.h>
++#import <ANTLR/ANTLRRewriteRuleNodeStream.h>
+#import <ANTLR/ANTLRRewriteRuleSubtreeStream.h>
+#import <ANTLR/ANTLRRewriteRuleTokenStream.h>
+#import <ANTLR/ANTLRRuleMemo.h>
+

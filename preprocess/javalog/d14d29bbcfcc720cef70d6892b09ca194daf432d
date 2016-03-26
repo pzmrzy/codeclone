@@ -1,0 +1,158 @@
+commit d14d29bbcfcc720cef70d6892b09ca194daf432d
+Author:     Alan Condit <acondit@ipns.com>
+AuthorDate: Thu Feb 16 13:37:27 2012 -0800
+Commit:     Alan Condit <acondit@ipns.com>
+CommitDate: Thu Feb 16 13:37:27 2012 -0800
+
+Fixed a problem with DFA transitions.
+
+diff --git a/runtime/ObjC/Framework/DFA.h b/runtime/ObjC/Framework/DFA.h
+index 8f55ef7..5a02893 100644
+--- a/runtime/ObjC/Framework/DFA.h
++++ b/runtime/ObjC/Framework/DFA.h
+@@ -61,6 +61,8 @@
+
++ (void) setIsEmittingDebugInfo:(BOOL) shouldEmitDebugInfo;
+
++- (NSInteger *) unpackEncodedString:(NSString *)encodedString;
++- (short *) unpackEncodedStringToUnsignedChars:(NSString *)encodedString;
+- (NSInteger)getDecision;
+- (void)setDecision:(NSInteger)aDecison;
+
+diff --git a/runtime/ObjC/Framework/DFA.m b/runtime/ObjC/Framework/DFA.m
+index 5b5ae47..b988a3a 100644
+--- a/runtime/ObjC/Framework/DFA.m
++++ b/runtime/ObjC/Framework/DFA.m
+@@ -182,14 +182,14 @@ NSInteger debug = 0;
+*  static short[] which generates so much init code that the class won't
+*  compile. :(
+*/
+-- (short *) unpackEncodedString:(NSString *)encodedString
++- (NSInteger *) unpackEncodedString:(NSString *)encodedString
+{
+// walk first to find how big it is.
+int size = 0;
+for (int i=0; i < [encodedString length]; i+=2) {
+size += [encodedString characterAtIndex:i];
+}
+-    __strong short *data = (short *)calloc(size, sizeof(short));
++    __strong NSInteger *data = (short *)calloc(size, sizeof(NSInteger));
+int di = 0;
+for (int i=0; i < [encodedString length]; i+=2) {
+char n = [encodedString characterAtIndex:i];
+@@ -203,7 +203,7 @@ NSInteger debug = 0;
+}
+
+/** Hideous duplication of code, but I need different typed arrays out :( */
+-- (char *) unpackEncodedStringToUnsignedChars:(NSString *)encodedString
++- (short *) unpackEncodedStringToUnsignedChars:(NSString *)encodedString
+{
+// walk first to find how big it is.
+int size = 0;
+@@ -220,7 +220,7 @@ NSInteger debug = 0;
+data[di++] = v;
+}
+}
+-    return (char *)data;
++    return (short *)data;
+}
+
+- (NSInteger)getDecision
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/ObjC/ObjC.stg b/tool/src/main/resources/org/antlr/codegen/templates/ObjC/ObjC.stg
+index 8262bf9..73fd24a 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/ObjC/ObjC.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/ObjC/ObjC.stg
+@@ -933,20 +933,13 @@ ruleScopeCleanUp() ::= <<
+
+ruleLabelDefs() ::= <%
+/* ruleLabelDefs entry */<"\n">
+-/* ruleDescriptor tokenLabels */<"\n">
+<[ruleDescriptor.tokenLabels, ruleDescriptor.tokenListLabels,
+ruleDescriptor.wildcardTreeLabels,ruleDescriptor.wildcardTreeListLabels]
+-    :{it |<labelType> *<it.label.text> = nil;}; separator="\n">
+-/* ruleDescriptor tokenListLabels */<"\n">
++    :{it |<labelType> *<it.label.text> = nil;}; separator="\n"><"\n">
+<[ruleDescriptor.tokenListLabels,ruleDescriptor.ruleListLabels,ruleDescriptor.wildcardTreeListLabels]
+-    :{it | AMutableArray *list_<it.label.text> = nil;}; separator="\n"
+->
+-/* ruleDescriptor ruleLabels */<"\n">
+-<! <ruleDescriptor.ruleLabels:ruleLabelDef(label=it); separator="\n"> !>
+-<ruleDescriptor.ruleLabels:ruleLabelDef(); separator="\n">
+-/* ruleDescriptor ruleListLabels */<"\n">
+-<ruleDescriptor.ruleListLabels:{ll|RuleReturnScope *<ll.label.text> = nil;}; separator="\n">
+-/* ruleLabelDefs exit */<"\n">
++    :{it | AMutableArray *list_<it.label.text> = nil;}; separator="\n"><"\n">
++<ruleDescriptor.ruleLabels:ruleLabelDef(); separator="\n"><"\n">
++<ruleDescriptor.ruleListLabels:{ll|ParserRuleReturnScope *<ll.label.text> = nil;}; separator="\n"><"\n">
+%>
+
+lexerRuleLabelDefs() ::= <<
+@@ -1503,7 +1496,7 @@ cyclicDFAInterface(dfa) ::= <<
+#pragma mark Cyclic DFA interface start DFA<dfa.decisionNumber>
+@interface DFA<dfa.decisionNumber> : DFA {
+}
+-+ newDFA<dfa.decisionNumber>WithRecognizer:(BaseRecognizer *)theRecognizer;
+++ (DFA<dfa.decisionNumber> *) newDFA<dfa.decisionNumber>WithRecognizer:(BaseRecognizer *)theRecognizer;
+- initWithRecognizer:(BaseRecognizer *)recognizer;
+@end /* end of DFA<dfa.decisionNumber> interface  */<\n>
+#pragma mark Cyclic DFA interface end DFA<dfa.decisionNumber><\n>
+@@ -1520,25 +1513,37 @@ cyclicDFAInterface(dfa) ::= <<
+*/
+cyclicDFA(dfa) ::= <<
+#pragma mark Cyclic DFA implementation start DFA<dfa.decisionNumber>
++
+@implementation DFA<dfa.decisionNumber>
+const static NSInteger dfa<dfa.decisionNumber>_eot[<dfa.numberOfStates>] =
+{<dfa.eot; wrap="\n     ", separator=",", null="-1">};
+const static NSInteger dfa<dfa.decisionNumber>_eof[<dfa.numberOfStates>] =
+{<dfa.eof; wrap="\n     ", separator=",", null="-1">};
+const static unichar dfa<dfa.decisionNumber>_min[<dfa.numberOfStates>] =
+-    {<dfa.min; wrap="\n     ", separator=",", null="0">};
++    {<dfa.min; wrap="\n     ", separator=",", null="-1">};
+const static unichar dfa<dfa.decisionNumber>_max[<dfa.numberOfStates>] =
+-    {<dfa.max; wrap="\n     ", separator=",", null="0">};
++    {<dfa.max; wrap="\n     ", separator=",", null="-1">};
+const static NSInteger dfa<dfa.decisionNumber>_accept[<dfa.numberOfStates>] =
+{<dfa.accept; wrap="\n     ", separator=",", null="-1">};
+const static NSInteger dfa<dfa.decisionNumber>_special[<dfa.numberOfStates>] =
+{<dfa.special; wrap="\n     ", separator=",", null="-1">};
+-const static NSInteger dfa<dfa.decisionNumber>_transition[] = {};
++
++/** Used when there is no transition table entry for a particular state */
++#define dfa<dfa.decisionNumber>_T_empty	    nil
++
+<dfa.edgeTransitionClassMap.keys:{ table |
+-const static NSInteger dfa<dfa.decisionNumber>_transition<i0>[] = {<table; separator=", ", wrap="\n ", null="-1">\};
++const static NSInteger dfa<dfa.decisionNumber>_T<i0>[] =
++{
++     <table; separator=", ", wrap="\n ", null="-1">
++\};
+}; null="">
+
+-+ (id) newDFA<dfa.decisionNumber>WithRecognizer:(BaseRecognizer *)aRecognizer
++const static NSInteger *dfa<dfa.decisionNumber>_transition[] =
++{
++    <dfa.transitionEdgeTables:{whichTable|dfa<dfa.decisionNumber>_T<whichTable>}; separator=", ", wrap="\n", null="nil">
++};
++
+++ (DFA<dfa.decisionNumber> *) newDFA<dfa.decisionNumber>WithRecognizer:(BaseRecognizer *)aRecognizer
+{
+return [[[DFA<dfa.decisionNumber> alloc] initWithRecognizer:aRecognizer] retain];
+}
+@@ -1554,12 +1559,15 @@ const static NSInteger dfa<dfa.decisionNumber>_transition<i0>[] = {<table; separ
+max = dfa<dfa.decisionNumber>_max;
+accept = dfa<dfa.decisionNumber>_accept;
+special = dfa<dfa.decisionNumber>_special;
++        transition = dfa<dfa.decisionNumber>_transition;
++/*
+if (!(transition = calloc(<dfa.numberOfStates>, sizeof(void*)))) {
+[self release];
+return nil;
+}
+len = <dfa.numberOfStates>;
+<dfa.transitionEdgeTables:{whichTable|transition[<i0>] = dfa<dfa.decisionNumber>_transition<whichTable>;}; separator="\n", null="">
++ */
+}
+return self;
+}
+

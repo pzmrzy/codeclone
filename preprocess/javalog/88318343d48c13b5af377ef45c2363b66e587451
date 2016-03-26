@@ -1,0 +1,122 @@
+commit 88318343d48c13b5af377ef45c2363b66e587451
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Tue Mar 25 06:47:54 2014 -0500
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Tue Mar 25 06:47:54 2014 -0500
+
+[maven-release-plugin] prepare release 3.5.2
+
+diff --git a/antlr-complete/pom.xml b/antlr-complete/pom.xml
+index 6bdc642..aad3c68 100644
+--- a/antlr-complete/pom.xml
++++ b/antlr-complete/pom.xml
+@@ -17,7 +17,7 @@
+<parent>
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+-        <version>3.5.2-SNAPSHOT</version>
++        <version>3.5.2</version>
+</parent>
+
+<url>http://antlr.org/</url>
+diff --git a/antlr3-maven-archetype/pom.xml b/antlr3-maven-archetype/pom.xml
+index f8e4e7b..c4b084b 100644
+--- a/antlr3-maven-archetype/pom.xml
++++ b/antlr3-maven-archetype/pom.xml
+@@ -19,7 +19,7 @@
+<parent>
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+-        <version>3.5.2-SNAPSHOT</version>
++        <version>3.5.2</version>
+</parent>
+
+<build>
+diff --git a/antlr3-maven-plugin/pom.xml b/antlr3-maven-plugin/pom.xml
+index 4a8a509..6fc1770 100644
+--- a/antlr3-maven-plugin/pom.xml
++++ b/antlr3-maven-plugin/pom.xml
+@@ -62,7 +62,7 @@
+<parent>
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+-        <version>3.5.2-SNAPSHOT</version>
++        <version>3.5.2</version>
+</parent>
+
+<name>ANTLR 3 Maven plugin</name>
+diff --git a/gunit-maven-plugin/pom.xml b/gunit-maven-plugin/pom.xml
+index a02b6f4..1a50e34 100644
+--- a/gunit-maven-plugin/pom.xml
++++ b/gunit-maven-plugin/pom.xml
+@@ -56,7 +56,7 @@
+<parent>
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+-        <version>3.5.2-SNAPSHOT</version>
++        <version>3.5.2</version>
+</parent>
+
+<properties>
+diff --git a/gunit/pom.xml b/gunit/pom.xml
+index 54cb01b..8a8da9e 100644
+--- a/gunit/pom.xml
++++ b/gunit/pom.xml
+@@ -17,7 +17,7 @@
+<parent>
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+-        <version>3.5.2-SNAPSHOT</version>
++        <version>3.5.2</version>
+</parent>
+
+<url>http://www.antlr.org/wiki/display/ANTLR3/gUnit+-+Grammar+Unit+Testing</url>
+diff --git a/pom.xml b/pom.xml
+index 75fd699..bcec4b5 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -11,7 +11,7 @@
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+<packaging>pom</packaging>
+-    <version>3.5.2-SNAPSHOT</version>
++    <version>3.5.2</version>
+<name>ANTLR 3 Master build control POM</name>
+<description>Master build POM for ANTLR 3</description>
+<url>http://antlr.org</url>
+@@ -84,7 +84,7 @@
+<url>https://github.com/antlr/antlr3/tree/master</url>
+<connection>scm:git:git://github.com/antlr/antlr3.git</connection>
+<developerConnection>scm:git:git@github.com:antlr/antlr3.git</developerConnection>
+-      <tag>HEAD</tag>
++      <tag>3.5.2</tag>
+</scm>
+<!--
+
+diff --git a/runtime/Java/pom.xml b/runtime/Java/pom.xml
+index 57bf311..7d655c0 100644
+--- a/runtime/Java/pom.xml
++++ b/runtime/Java/pom.xml
+@@ -15,7 +15,7 @@
+<parent>
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+-      <version>3.5.2-SNAPSHOT</version>
++      <version>3.5.2</version>
+<relativePath>../..</relativePath>
+</parent>
+
+diff --git a/tool/pom.xml b/tool/pom.xml
+index e55ae6e..cc5134d 100644
+--- a/tool/pom.xml
++++ b/tool/pom.xml
+@@ -16,7 +16,7 @@
+<parent>
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+-        <version>3.5.2-SNAPSHOT</version>
++        <version>3.5.2</version>
+</parent>
+
+<dependencies>
+

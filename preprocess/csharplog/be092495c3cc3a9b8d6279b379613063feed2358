@@ -1,0 +1,66 @@
+commit be092495c3cc3a9b8d6279b379613063feed2358
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sat Feb 5 16:40:55 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sat Feb 5 16:40:55 2011 -0800
+
+(C# 3) Merge CL7628
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7636]
+
+diff --git a/Antlr4.StringTemplate/Compiler/TemplateLexer.cs b/Antlr4.StringTemplate/Compiler/TemplateLexer.cs
+index 477f236..8c74e30 100644
+--- a/Antlr4.StringTemplate/Compiler/TemplateLexer.cs
++++ b/Antlr4.StringTemplate/Compiler/TemplateLexer.cs
+@@ -697,8 +697,21 @@ namespace Antlr4.StringTemplate.Compiler
+private void COMMENT()
+{
+match('!');
++
+while (!(c == '!' && input.LA(2) == delimiterStopChar))
++            {
++                if (c == EOF)
++                {
++                    RecognitionException re = new MismatchedTokenException((int)'!', input);
++                    re.Line = input.Line;
++                    re.CharPositionInLine = input.CharPositionInLine;
++                    string message = string.Format("Nonterminated comment starting at {0}:{1}: '!{2}' missing", startLine, startCharPositionInLine, delimiterStopChar);
++                    errMgr.LexerError(input.SourceName, message, templateToken, re);
++                    break;
++                }
+consume();
++            }
++
+consume();
+consume(); // kill !>
+}
+diff --git a/Antlr4.Test.StringTemplate/TestSyntaxErrors.cs b/Antlr4.Test.StringTemplate/TestSyntaxErrors.cs
+index 763dd49..954d97f 100644
+--- a/Antlr4.Test.StringTemplate/TestSyntaxErrors.cs
++++ b/Antlr4.Test.StringTemplate/TestSyntaxErrors.cs
+@@ -239,6 +239,24 @@ namespace Antlr4.Test.StringTemplate
+}
+
+[TestMethod]
++        public void TestNonterminatedComment()
++        {
++            string templates = "foo() ::= << <!foo> >>";
++            writeFile(tmpdir, "t.stg", templates);
++
++            TemplateGroupFile group = null;
++            ITemplateErrorListener errors = new ErrorBuffer();
++            group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
++            group.Listener = errors;
++            group.Load(); // force load
++            string expected =
++                "t.stg 1:20: Nonterminated comment starting at 1:1: '!>' missing" + newline +
++                "t.stg 1:12: this doesn't look like a template: \" \"" + newline;
++            string result = errors.ToString();
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
+public void TestMissingRPAREN()
+{
+string templates =
+

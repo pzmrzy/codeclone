@@ -1,0 +1,61 @@
+commit 2943dc51f4ea0d569161c314b6a294e13345a253
+Author:     Zannick <jokeserver@gmail.com>
+AuthorDate: Thu Feb 9 21:06:15 2012 -0800
+Commit:     Zannick <jokeserver@gmail.com>
+CommitDate: Thu Feb 9 21:21:24 2012 -0800
+
+Fix errors generating Python parsers.
+
+- Use "self." when referring to an instance variable.
+- Copy references to indirect delegates by copying references to
+direct delegates' delegates.
+- Fix bug when templates use Windows line endings.
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Python/AST.stg b/tool/src/main/resources/org/antlr/codegen/templates/Python/AST.stg
+index a9252e3..eb8537c 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Python/AST.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Python/AST.stg
+@@ -60,7 +60,7 @@ def getTreeAdaptor(self):
+
+def setTreeAdaptor(self, adaptor):
+self._adaptor = adaptor
+-    <grammar.directDelegates:{g|<g:delegateName()>.adaptor = adaptor}; separator="\n">
++    <grammar.directDelegates:{g|self.<g:delegateName()>.adaptor = adaptor}; separator="\n">
+
+adaptor = property(getTreeAdaptor, setTreeAdaptor)
+>>
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Python/Python.stg b/tool/src/main/resources/org/antlr/codegen/templates/Python/Python.stg
+index 71c324c..8f1436c 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Python/Python.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Python/Python.stg
+@@ -128,6 +128,8 @@ class <grammar.recognizerName>(<@superClassName><superClass><@end>):
+
+<grammar.directDelegates:
+{g|self.<g:delegateName()> = <g.recognizerName>(<trunc(g.delegators):{p|<p:delegateName()>, }>self, input, state)}; separator="\n">
++        <grammar.directDelegates:
++         {g|<g.delegates:{h|self.<h:delegateName()> = self.<g:delegateName()>.<h:delegateName()>}; separator="\n">}; separator="\n">
+<grammar.delegators:
+{g|self.<g:delegateName()> = <g:delegateName()>}; separator="\n">
+<last(grammar.delegators):
+@@ -266,8 +268,8 @@ class <grammar.recognizerName>(<@superClassName><superClass><@end>):
+{g|self.<g:delegateName()> = <g:delegateName()>}; separator="\n">
+<grammar.directDelegates:
+{g|self.<g:delegateName()> = <g.recognizerName>(<trunc(g.delegators):{p|<p:delegateName()>, }>self, input, state)}; separator="\n">
+-        <grammar.indirectDelegates:
+-         {g|<g:delegateName()> = <g.delegator:delegateName()>.<g:delegateName()>}; separator="\n">
++        <grammar.directDelegates:
++         {g|<g.delegates:{h|self.<h:delegateName()> = self.<g:delegateName()>.<h:delegateName()>}; separator="\n">}; separator="\n">
+<last(grammar.delegators):
+{g|self.gParent = self.<g:delegateName()>}; separator="\n">
+self.delegates = [<grammar.delegates: {g|self.<g:delegateName()>}; separator = ", ">]
+@@ -1143,8 +1145,7 @@ class DFA<dfa.decisionNumber>(DFA):
+
+_s = s
+
+-        <dfa.specialStateSTs:{state |
+-if s == <i0>: <! compressed special state numbers 0..n-1 !>
++        <dfa.specialStateSTs:{state | if s == <i0>: <! compressed special state numbers 0..n-1 !>
+<state>}; separator="\nel">
+
+<if(backtracking)>
+

@@ -1,0 +1,199 @@
+commit 3fbd0c2de2e0c2b4f0ae7648f7b2569f5f1f2c54
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Fri Jun 17 05:58:22 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Fri Jun 17 05:58:22 2011 -0800
+
+(C# 3) Fix label declarations in generated code for synpred fragments
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8648]
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/AST.stg b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/AST.stg
+index 705215d..0243429 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/AST.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/AST.stg
+@@ -88,16 +88,18 @@ ruleDeclarations() ::= <<
+<ASTLabelType> root_0 = default(<ASTLabelType>);<\n>
+>>
+
+-ruleLabelDefs() ::= <<
+-<super.ruleLabelDefs()>
++ruleLabelDefs(ruleDescriptor, labelType, ASTLabelType, rewriteElementType) ::= <%
++<super.ruleLabelDefs(...)>
++<if(!ruleDescriptor.isSynPred)>
+<[ruleDescriptor.tokenLabels,ruleDescriptor.wildcardTreeLabels,ruleDescriptor.wildcardTreeListLabels]
+-	:{it|<ASTLabelType> <it.label.text>_tree = default(<ASTLabelType>);}; separator="\n">
+-<ruleDescriptor.tokenListLabels:{it|<ASTLabelType> <it.label.text>_tree = default(<ASTLabelType>);}; separator="\n">
++	:{it|<\n><ASTLabelType> <it.label.text>_tree = default(<ASTLabelType>);}>
++<ruleDescriptor.tokenListLabels:{it|<\n><ASTLabelType> <it.label.text>_tree = default(<ASTLabelType>);}>
+<ruleDescriptor.allTokenRefsInAltsWithRewrites
+-	:{it|RewriteRule<rewriteElementType>Stream stream_<it>=new RewriteRule<rewriteElementType>Stream(adaptor,"token <it>");}; separator="\n">
++	:{it|<\n>RewriteRule<rewriteElementType>Stream stream_<it>=new RewriteRule<rewriteElementType>Stream(adaptor,"token <it>");}>
+<ruleDescriptor.allRuleRefsInAltsWithRewrites
+-	:{it|RewriteRuleSubtreeStream stream_<it>=new RewriteRuleSubtreeStream(adaptor,"rule <it>");}; separator="\n">
+->>
++	:{it|<\n>RewriteRuleSubtreeStream stream_<it>=new RewriteRuleSubtreeStream(adaptor,"rule <it>");}>
++<endif>
++%>
+
+/** When doing auto AST construction, we must define some variables;
+*  These should be turned off if doing rewrites.  This must be a "mode"
+@@ -105,13 +107,9 @@ ruleLabelDefs() ::= <<
+*  block.
+*/
+@alt.declarations() ::= <<
+-<if(autoAST)>
+-<if(outerAlt)>
+-<if(!rewriteMode)>
++<if(autoAST && outerAlt && !rewriteMode && !ruleDescriptor.isSynPred)>
+root_0 = (<ASTLabelType>)adaptor.Nil();
+<endif>
+-<endif>
+-<endif>
+>>
+
+// T r a c k i n g  R u l e  E l e m e n t s
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/ASTParser.stg b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/ASTParser.stg
+index 51fc23f..79c1c84 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/ASTParser.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/ASTParser.stg
+@@ -50,25 +50,29 @@ retval.Tree = (<ASTLabelType>)adaptor.ErrorNode(input, retval.Start, input.LT(-1
+// TOKEN AST STUFF
+
+/** ID and output=AST */
+-tokenRef(token,label,elementIndex,terminalOptions) ::= <<
++tokenRef(token,label,elementIndex,terminalOptions) ::= <%
+<super.tokenRef(...)>
+-<if(backtracking)>if (state.backtracking == 0) {<endif>
+-<label>_tree = <createNodeFromToken(...)>;
+-adaptor.AddChild(root_0, <label>_tree);
+-<if(backtracking)>}<endif>
+->>
++<if(!ruleDescriptor.isSynPred)>
++<if(backtracking)><\n>if (state.backtracking == 0) {<endif>
++<\n><label>_tree = <createNodeFromToken(...)>;
++<\n>adaptor.AddChild(root_0, <label>_tree);
++<if(backtracking)><\n>}<endif>
++<endif>
++%>
+
+/** ID! and output=AST (same as plain tokenRef) */
+tokenRefBang(token,label,elementIndex) ::= "<super.tokenRef(...)>"
+
+/** ID^ and output=AST */
+-tokenRefRuleRoot(token,label,elementIndex,terminalOptions) ::= <<
++tokenRefRuleRoot(token,label,elementIndex,terminalOptions) ::= <%
+<super.tokenRef(...)>
+-<if(backtracking)>if (<actions.(actionScope).synpredgate>) {<endif>
+-<label>_tree = <createNodeFromToken(...)>;
+-root_0 = (<ASTLabelType>)adaptor.BecomeRoot(<label>_tree, root_0);
+-<if(backtracking)>}<endif>
+->>
++<if(!ruleDescriptor.isSynPred)>
++<if(backtracking)><\n>if (<actions.(actionScope).synpredgate>) {<endif>
++<\n><label>_tree = <createNodeFromToken(...)>;
++<\n>root_0 = (<ASTLabelType>)adaptor.BecomeRoot(<label>_tree, root_0);
++<if(backtracking)><\n>}<endif>
++<endif>
++%>
+
+/** ids+=ID! and output=AST */
+tokenRefBangAndListLabel(token,label,elementIndex,terminalOptions) ::= <<
+@@ -102,7 +106,7 @@ tokenRefRuleRootAndListLabel(token,label,terminalOptions,elementIndex) ::= <<
+// I have more time.
+
+matchSet(s,label,terminalOptions,elementIndex,postmatchCode) ::= <<
+-<super.matchSet(postmatchCode={<if(backtracking)>if (<actions.(actionScope).synpredgate>) <endif>adaptor.AddChild(root_0, <createNodeFromToken(...)>);}, ...)>
++<super.matchSet(postmatchCode={<if(!ruleDescriptor.isSynPred)><if(backtracking)>if (<actions.(actionScope).synpredgate>) <endif>adaptor.AddChild(root_0, <createNodeFromToken(...)>);<endif>}, ...)>
+>>
+
+matchRuleBlockSet(s,label,terminalOptions,elementIndex,postmatchCode,treeLevel="0") ::= <<
+@@ -118,16 +122,18 @@ matchSetRuleRoot(s,label,terminalOptions,elementIndex,debug) ::= <<
+<if(label)>
+<label>=(<labelType>)input.LT(1);
+<endif>
+-<super.matchSet(postmatchCode={<if(backtracking)>if (<actions.(actionScope).synpredgate>) <endif>root_0 = (<ASTLabelType>)adaptor.BecomeRoot(<createNodeFromToken(...)>, root_0);}, ...)>
++<super.matchSet(postmatchCode={<if(!ruleDescriptor.isSynPred)><if(backtracking)>if (<actions.(actionScope).synpredgate>) <endif>root_0 = (<ASTLabelType>)adaptor.BecomeRoot(<createNodeFromToken(...)>, root_0);<endif>}, ...)>
+>>
+
+// RULE REF AST
+
+/** rule when output=AST */
+-ruleRef(rule,label,elementIndex,args,scope) ::= <<
++ruleRef(rule,label,elementIndex,args,scope) ::= <%
+<super.ruleRef(...)>
+-<if(backtracking)>if (<actions.(actionScope).synpredgate>) <endif>adaptor.AddChild(root_0, <label>.Tree);
+->>
++<if(!ruleDescriptor.isSynPred)>
++<\n><if(backtracking)>if (<actions.(actionScope).synpredgate>) <endif>adaptor.AddChild(root_0, <label>.Tree);
++<endif>
++%>
+
+/** rule! is same as normal rule ref */
+ruleRefBang(rule,label,elementIndex,args,scope) ::= "<super.ruleRef(...)>"
+@@ -160,20 +166,24 @@ ruleRefRuleRootAndListLabel(rule,label,elementIndex,args,scope) ::= <<
+
+wildcard(token,label,elementIndex,terminalOptions) ::= <<
+<super.wildcard(...)>
++<if(!ruleDescriptor.isSynPred)>
+<if(backtracking)>if (<actions.(actionScope).synpredgate>) {<endif>
+<label>_tree = (<ASTLabelType>)adaptor.Create(<label>);
+adaptor.AddChild(root_0, <label>_tree);
+<if(backtracking)>}<endif>
++<endif>
+>>
+
+wildcardBang(label,elementIndex) ::= "<super.wildcard(...)>"
+
+wildcardRuleRoot(token,label,elementIndex,terminalOptions) ::= <<
+<super.wildcard(...)>
++<if(!ruleDescriptor.isSynPred)>
+<if(backtracking)>if (<actions.(actionScope).synpredgate>) {<endif>
+<label>_tree = (<ASTLabelType>)adaptor.Create(<label>);
+root_0 = (<ASTLabelType>)adaptor.BecomeRoot(<label>_tree, root_0);
+<if(backtracking)>}<endif>
++<endif>
+>>
+
+createNodeFromToken(label,terminalOptions) ::= <%
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg
+index bae33a1..37da96f 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg
+@@ -411,7 +411,7 @@ partial void LeaveRule_<ruleName>_fragment();
+// $ANTLR start <ruleName>
+public <!final !>void <ruleName>_fragment(<ruleDescriptor.parameterScope:parameterScope()>)
+{
+-	<ruleLabelDefs()>
++	<ruleLabelDefs(...)>
+EnterRule_<ruleName>_fragment();
+EnterRule("<ruleName>_fragment", <ruleDescriptor.index>);
+TraceIn("<ruleName>_fragment", <ruleDescriptor.index>);
+@@ -498,7 +498,7 @@ partial void LeaveRule_<ruleName>();
+TraceIn("<ruleName>", <ruleDescriptor.index>);
+<ruleScopeSetUp()>
+<ruleDeclarations()>
+-	<ruleLabelDefs()>
++	<ruleLabelDefs(...)>
+<ruleDescriptor.actions.init>
+try { DebugEnterRule(GrammarFileName, "<ruleName>");
+DebugLocation(<ruleDescriptor.tree.line>, <ruleDescriptor.EORNode.charPositionInLine>);
+@@ -584,7 +584,7 @@ ruleScopeCleanUp() ::= <<
+<ruleDescriptor.ruleScope:{it|<it.name>_scopeAfter(<it.name>_stack.Peek());<it.name>_stack.Pop();}; separator="\n">
+>>
+
+-ruleLabelDefs() ::= <<
++ruleLabelDefs(ruleDescriptor, labelType, ASTLabelType, rewriteElementType) ::= <<
+<[ruleDescriptor.tokenLabels,ruleDescriptor.tokenListLabels,ruleDescriptor.wildcardTreeLabels,ruleDescriptor.wildcardTreeListLabels]
+:{it|<labelType> <it.label.text> = default(<labelType>);}; separator="\n"
+>
+@@ -1485,7 +1485,7 @@ default(<typeName>)
+
+/** Define a rule label including default value */
+ruleLabelDef(label) ::= <%
+-<ruleLabelType(referencedRule=label.referencedRule)> <label.label.text> = <initValue(typeName=ruleLabelType(referencedRule=label.referencedRule))>;
++<ruleLabelType(label.referencedRule)> <label.label.text> = <initValue(ruleLabelType(label.referencedRule))>;
+%>
+
+/** Define a return struct for a rule if the code needs to access its
+

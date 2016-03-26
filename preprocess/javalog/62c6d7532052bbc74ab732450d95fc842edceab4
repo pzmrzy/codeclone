@@ -1,0 +1,147 @@
+commit 62c6d7532052bbc74ab732450d95fc842edceab4
+Author:     Zannick <jokeserver@gmail.com>
+AuthorDate: Sat Jun 30 23:00:42 2012 -0700
+Commit:     Zannick <jokeserver@gmail.com>
+CommitDate: Sat Jun 30 23:00:42 2012 -0700
+
+Replace relative import hack with path changes.
+
+(Somewhat more reasonable to do this rather than catching an exception,
+in my opinion.)
+
+Also remove a few more semicolons spotted while testing this.
+
+diff --git a/runtime/Python3/tests/t054main.py b/runtime/Python3/tests/t054main.py
+index 5e2995f..e81d253 100644
+--- a/runtime/Python3/tests/t054main.py
++++ b/runtime/Python3/tests/t054main.py
+@@ -30,7 +30,7 @@ class T(testbase.ANTLRTest):
+}
+
+ID: ('a'..'z' | '\u00c0'..'\u00ff')+;
+-            WS: ' '+ { $channel = HIDDEN; };
++            WS: ' '+ { $channel = HIDDEN };
+""")
+
+
+@@ -51,7 +51,7 @@ class T(testbase.ANTLRTest):
+}
+
+ID: 'a'..'z'+;
+-            WS: ' '+ { $channel = HIDDEN; };
++            WS: ' '+ { $channel = HIDDEN };
+""")
+
+
+@@ -76,7 +76,7 @@ class T(testbase.ANTLRTest):
+}
+
+ID: 'a'..'z'+;
+-            WS: ' '+ { $channel = HIDDEN; };
++            WS: ' '+ { $channel = HIDDEN };
+""")
+
+
+@@ -102,7 +102,7 @@ class T(testbase.ANTLRTest):
+}
+
+ID: ('a'..'z' | '\u00c0'..'\u00ff')+;
+-            WS: ' '+ { $channel = HIDDEN; };
++            WS: ' '+ { $channel = HIDDEN };
+""")
+
+
+@@ -127,10 +127,10 @@ class T(testbase.ANTLRTest):
+language = Python3;
+}
+
+-            r returns [res]: (ID)+ EOF { $res = $text; };
++            r returns [res]: (ID)+ EOF { $res = $text };
+
+ID: 'a'..'z'+;
+-            WS: ' '+ { $channel = HIDDEN; };
++            WS: ' '+ { $channel = HIDDEN };
+""")
+
+
+@@ -161,7 +161,7 @@ class T(testbase.ANTLRTest):
+
+ID: 'a'..'z'+;
+OP: '+';
+-            WS: ' '+ { $channel = HIDDEN; };
++            WS: ' '+ { $channel = HIDDEN };
+""")
+
+
+@@ -190,7 +190,7 @@ class T(testbase.ANTLRTest):
+
+ID: 'a'..'z'+;
+OP: '+';
+-            WS: ' '+ { $channel = HIDDEN; };
++            WS: ' '+ { $channel = HIDDEN };
+''')
+
+treeGrammar = textwrap.dedent(
+@@ -201,7 +201,7 @@ class T(testbase.ANTLRTest):
+tokenVocab=T6;
+}
+r returns [res]: ^(OP a=ID b=ID)
+-              { $res = "\%s \%s \%s" \% ($a.text, $OP.text, $b.text) }
++              { $res = "{} {} {}".format($a.text, $OP.text, $b.text) }
+;
+''')
+
+@@ -231,7 +231,7 @@ class T(testbase.ANTLRTest):
+
+ID: 'a'..'z'+;
+OP: '+';
+-            WS: ' '+ { $channel = HIDDEN; };
++            WS: ' '+ { $channel = HIDDEN };
+''')
+
+treeGrammar = textwrap.dedent(
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Python3/Python3.stg b/tool/src/main/resources/org/antlr/codegen/templates/Python3/Python3.stg
+index 1649a05..0b868c3 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Python3/Python3.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Python3/Python3.stg
+@@ -103,12 +103,13 @@ if __name__ == '__main__':
+lexer(grammar, name, tokens, scopes, rules, numRules, filterMode,
+labelType="CommonToken", superClass="Lexer") ::= <<
+<if(grammar.directDelegates)>
+-try:
+-    <grammar.directDelegates:
+-     {g|from .<g.recognizerName> import <g.recognizerName>}; separator="\n">
+-except ValueError:
+-    <grammar.directDelegates:
+-     {g|from <g.recognizerName> import <g.recognizerName>}; separator="\n">
++# path hack to allow absolute import of related grammars.
++from os.path import dirname
++__path__ = [dirname(__file__)]
++del dirname
++
++<grammar.directDelegates:
++ {g|from .<g.recognizerName> import <g.recognizerName>}; separator="\n">
+<endif>
+
+class <grammar.recognizerName>(<@superClassName><superClass><@end>):
+@@ -234,12 +235,13 @@ tokenNames = [
+<scopes:{it|<if(it.isDynamicGlobalScope)><globalAttributeScopeClass(scope=it)><endif>}>
+
+<if(grammar.directDelegates)>
+-try:
+-    <grammar.directDelegates:
+-     {g|from .<g.recognizerName> import <g.recognizerName>}; separator="\n">
+-except ValueError:
+-    <grammar.directDelegates:
+-     {g|from <g.recognizerName> import <g.recognizerName>}; separator="\n">
++# path hack to allow absolute import of related grammars.
++from os.path import dirname
++__path__ = [dirname(__file__)]
++del dirname
++
++<grammar.directDelegates:
++ {g|from .<g.recognizerName> import <g.recognizerName>}; separator="\n">
+<endif>
+
+<rules:{it|<ruleAttributeScopeClass(scope=it.ruleDescriptor.ruleScope)>}>
+

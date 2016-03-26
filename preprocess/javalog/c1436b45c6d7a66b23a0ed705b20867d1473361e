@@ -1,0 +1,92 @@
+commit c1436b45c6d7a66b23a0ed705b20867d1473361e
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sat Jul 30 11:53:37 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sat Jul 30 11:53:37 2011 -0800
+
+(C# 3) Updated assembly info for build 8959
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8963]
+
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime.Debug/Properties/AssemblyInfo.cs b/runtime/CSharp3/Sources/Antlr3.Runtime.Debug/Properties/AssemblyInfo.cs
+index b8c988f..3afeb2f 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime.Debug/Properties/AssemblyInfo.cs
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime.Debug/Properties/AssemblyInfo.cs
+@@ -40,9 +40,9 @@ using System.Runtime.InteropServices;
+[assembly: AssemblyTitle( "Antlr3.Runtime.Debug" )]
+[assembly: AssemblyDescription( "" )]
+[assembly: AssemblyConfiguration( "" )]
+-[assembly: AssemblyCompany( "Pixel Mine, Inc." )]
++[assembly: AssemblyCompany( "Tunnel Vision Laboratories, LLC" )]
+[assembly: AssemblyProduct( "Antlr3.Runtime.Debug" )]
+-[assembly: AssemblyCopyright( "Copyright © Pixel Mine 2010" )]
++[assembly: AssemblyCopyright( "Copyright © Sam Harwell 2011" )]
+[assembly: AssemblyTrademark( "" )]
+[assembly: AssemblyCulture( "" )]
+[assembly: CLSCompliant( true )]
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.3.4.8517")]
+-[assembly: AssemblyFileVersion("3.3.4.8517")]
++[assembly: AssemblyVersion("3.4.0.8959")]
++[assembly: AssemblyFileVersion("3.4.0.8959")]
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime.JavaExtensions/Properties/AssemblyInfo.cs b/runtime/CSharp3/Sources/Antlr3.Runtime.JavaExtensions/Properties/AssemblyInfo.cs
+index 8aa2671..8e5fde5 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime.JavaExtensions/Properties/AssemblyInfo.cs
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime.JavaExtensions/Properties/AssemblyInfo.cs
+@@ -40,9 +40,9 @@ using System.Runtime.InteropServices;
+[assembly: AssemblyTitle( "Antlr3.Runtime.JavaExtensions" )]
+[assembly: AssemblyDescription( "" )]
+[assembly: AssemblyConfiguration( "" )]
+-[assembly: AssemblyCompany( "Pixel Mine, Inc." )]
++[assembly: AssemblyCompany( "Tunnel Vision Laboratories, LLC" )]
+[assembly: AssemblyProduct( "Antlr3.Runtime.JavaExtensions" )]
+-[assembly: AssemblyCopyright( "Copyright © Pixel Mine 2010" )]
++[assembly: AssemblyCopyright( "Copyright © Sam Harwell 2011" )]
+[assembly: AssemblyTrademark( "" )]
+[assembly: AssemblyCulture( "" )]
+[assembly: CLSCompliant( true )]
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.3.4.8517")]
+-[assembly: AssemblyFileVersion("3.3.4.8517")]
++[assembly: AssemblyVersion("3.4.0.8959")]
++[assembly: AssemblyFileVersion("3.4.0.8959")]
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/Properties/AssemblyInfo.cs b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/Properties/AssemblyInfo.cs
+index fd2190d..5102038 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/Properties/AssemblyInfo.cs
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/Properties/AssemblyInfo.cs
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.3.2.8098")]
+-[assembly: AssemblyFileVersion("3.3.2.8098")]
++[assembly: AssemblyVersion("3.4.0.8959")]
++[assembly: AssemblyFileVersion("3.4.0.8959")]
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime/Properties/AssemblyInfo.cs b/runtime/CSharp3/Sources/Antlr3.Runtime/Properties/AssemblyInfo.cs
+index 1489fde..0000164 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime/Properties/AssemblyInfo.cs
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime/Properties/AssemblyInfo.cs
+@@ -41,7 +41,7 @@ using System.Security;
+[assembly: AssemblyTitle( "Antlr3.Runtime" )]
+[assembly: AssemblyDescription( "" )]
+[assembly: AssemblyConfiguration( "" )]
+-[assembly: AssemblyCompany( "Pixel Mine, Inc." )]
++[assembly: AssemblyCompany( "Tunnel Vision Laboratories, LLC" )]
+[assembly: AssemblyProduct( "Antlr3.Runtime" )]
+[assembly: AssemblyCopyright("Copyright © Sam Harwell 2011")]
+[assembly: AssemblyTrademark( "" )]
+@@ -68,5 +68,5 @@ using System.Security;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.3.4.8517")]
+-[assembly: AssemblyFileVersion("3.3.4.8517")]
++[assembly: AssemblyVersion("3.4.0.8959")]
++[assembly: AssemblyFileVersion("3.4.0.8959")]
+

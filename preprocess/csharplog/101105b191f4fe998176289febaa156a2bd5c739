@@ -1,0 +1,132 @@
+commit 101105b191f4fe998176289febaa156a2bd5c739
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Fri Feb 25 19:16:38 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Fri Feb 25 19:16:38 2011 -0800
+
+(C# 3) Merge CL7708 : Add support for the -language command line option
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7767]
+
+diff --git a/Antlr3.Test/BaseTest.cs b/Antlr3.Test/BaseTest.cs
+index b23c40d..c728814 100644
+--- a/Antlr3.Test/BaseTest.cs
++++ b/Antlr3.Test/BaseTest.cs
+@@ -362,6 +362,8 @@ namespace AntlrUnitTests
+options.Add( "-lib" );
+options.Add( tmpdir );
+options.Add( Path.Combine( tmpdir, grammarFileName ) );
++                options.Add("-language");
++                options.Add("Java");
+//String[] optionsA = new String[options.size()];
+//options.toArray( optionsA );
+string[] optionsA = options.ToArray();
+diff --git a/Antlr3/AntlrTool.cs b/Antlr3/AntlrTool.cs
+index d2ff2d0..cc32633 100644
+--- a/Antlr3/AntlrTool.cs
++++ b/Antlr3/AntlrTool.cs
+@@ -160,6 +160,12 @@ namespace Antlr3
+set;
+}
+
++        public string ForcedLanguageOption
++        {
++            get;
++            set;
++        }
++
+public virtual void ProcessArgs( string[] args )
+{
+if ( verbose )
+@@ -221,6 +227,18 @@ namespace Antlr3
+}
+}
+}
++                else if (args[i] == "-language")
++                {
++                    if (i + 1 >= args.Length)
++                    {
++                        Console.Error.WriteLine("missing language name; ignoring");
++                    }
++                    else
++                    {
++                        i++;
++                        ForcedLanguageOption = args[i];
++                    }
++                }
+else if ( args[i] == "-nfa" )
+{
+Generate_NFA_dot = true;
+@@ -598,10 +616,9 @@ namespace Antlr3
+try
+{
+StringReader sr = new StringReader( lexerGrammarStr );
+-                            Grammar lexerGrammar = new Grammar();
++                            Grammar lexerGrammar = new Grammar(this);
+lexerGrammar.composite.watchNFAConversion = internalOption_watchNFAConversion;
+lexerGrammar.implicitLexer = true;
+-                            lexerGrammar.Tool = this;
+if ( TestMode )
+lexerGrammar.DefaultRuleModifier = "public";
+FileInfo lexerGrammarFullFile = new FileInfo( System.IO.Path.Combine( GetFileDirectory( lexerGrammarFileName ), lexerGrammarFileName ) );
+@@ -877,6 +894,7 @@ namespace Antlr3
+Console.Error.WriteLine( "  -verbose              generate ANTLR version and other information" );
+Console.Error.WriteLine( "  -make                 only build if generated files older than grammar" );
+Console.Error.WriteLine( "  -version              print the version of ANTLR and exit." );
++            Console.Error.WriteLine( "  -language L           override language grammar option; generate L" );
+Console.Error.WriteLine( "  -X                    display extended argument list" );
+}
+
+diff --git a/Antlr3/Tool/CompositeGrammarTree.cs b/Antlr3/Tool/CompositeGrammarTree.cs
+index dbcae6e..9bf62b4 100644
+--- a/Antlr3/Tool/CompositeGrammarTree.cs
++++ b/Antlr3/Tool/CompositeGrammarTree.cs
+@@ -80,6 +80,9 @@ namespace Antlr3.Tool
+/** Find an option by looking up towards the root grammar rather than down */
+public virtual object GetOption( string key )
+{
++            if (key == "language" && grammar.Tool != null && grammar.Tool.ForcedLanguageOption != null)
++                return grammar.Tool.ForcedLanguageOption;
++
+object o = grammar.GetLocallyDefinedOption( key );
+if ( o != null )
+{
+diff --git a/Antlr3/Tool/Grammar.cs b/Antlr3/Tool/Grammar.cs
+index 1e5a7ad..44e059a 100644
+--- a/Antlr3/Tool/Grammar.cs
++++ b/Antlr3/Tool/Grammar.cs
+@@ -572,10 +572,15 @@ namespace Antlr3.Tool
+target = CodeGenerator.LoadLanguageTarget((string)GetOption("language"), tool.TargetsDirectory);
+}
+
++        public Grammar()
++            : this(default(Tool))
++        {
++        }
++
+/** Useful for when you are sure that you are not part of a composite
+*  already.  Used in Interp/RandomPhrase and testing.
+*/
+-        public Grammar()
++        public Grammar(Tool tool)
+{
+nameSpaceChecker = new NameSpaceChecker( this );
+ll1Analyzer = new LL1Analyzer( this );
+@@ -583,6 +588,7 @@ namespace Antlr3.Tool
+
+builtFromString = true;
+composite = new CompositeGrammar( this );
++            Tool = tool;
+string targetsDirectory = Path.Combine(AntlrTool.ToolPathRoot, "Targets");
+target = CodeGenerator.LoadLanguageTarget((string)GetOption("language"), targetsDirectory);
+}
+@@ -597,7 +603,7 @@ namespace Antlr3.Tool
+*  noncomposite grammars.
+*/
+public Grammar( Tool tool, string grammarString )
+-            : this()
++            : this(tool)
+{
+Tool = tool;
+FileName = "<string>";
+

@@ -1,0 +1,1313 @@
+commit 58bca649a47d0516317317a21510db70029f3d2e
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sat Jan 22 11:40:03 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sat Jan 22 11:40:03 2011 -0800
+
+(C# 3) Change some method getters to properties
+Change Bytecode to an enum (C# doesn't suffer from Java's performance problem with enum types)
+Code cleanup
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7493]
+
+diff --git a/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj b/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj
+index c78c1ee..71e60ed 100644
+--- a/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj
++++ b/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj
+@@ -50,7 +50,9 @@
+<Link>Key.snk</Link>
+</None>
+<None Include="DateRenderer.cs" />
++    <Compile Include="Compiler\Instruction.cs" />
+<Compile Include="Misc\TypeRegistry`1.cs" />
++    <Compile Include="Compiler\OperandType.cs" />
+<Compile Include="Properties\AssemblyInfo.cs" />
+</ItemGroup>
+<ItemGroup>
+diff --git a/Antlr4.StringTemplate/Compiler/Bytecode.cs b/Antlr4.StringTemplate/Compiler/Bytecode.cs
+index d652b7b..ce7aec1 100644
+--- a/Antlr4.StringTemplate/Compiler/Bytecode.cs
++++ b/Antlr4.StringTemplate/Compiler/Bytecode.cs
+@@ -32,145 +32,57 @@
+
+namespace Antlr4.StringTemplate.Compiler
+{
+-    public class Bytecode
++    public enum Bytecode : byte
+{
+-        public const int MAX_OPNDS = 2;
+-        public const int OPND_SIZE_IN_BYTES = 2;
+-
+-        public enum OperandType
+-        {
+-            NONE,
+-            STRING,
+-            ADDR,
+-            INT
+-        }
+-
+-        public class Instruction
+-        {
+-            internal readonly string name; // E.g., "load_str", "new"
+-            internal readonly OperandType[] type = new OperandType[MAX_OPNDS];
+-            internal readonly int nopnds = 0;
+-
+-            public Instruction(string name)
+-                : this(name, OperandType.NONE, OperandType.NONE)
+-            {
+-                nopnds = 0;
+-            }
+-
+-            public Instruction(string name, OperandType a)
+-                : this(name, a, OperandType.NONE)
+-            {
+-                nopnds = 1;
+-            }
+-
+-            public Instruction(string name, OperandType a, OperandType b)
+-            {
+-                this.name = name;
+-                type[0] = a;
+-                type[1] = b;
+-                nopnds = MAX_OPNDS;
+-            }
+-        }
+-
+-        // don't use enum for efficiency; don't want CompiledST.instrs to
+-        // be an array of objects (Bytecode[]). We want it to be byte[].
++        Invalid = 0,
+
+// INSTRUCTION BYTECODES (byte is signed; use a short to keep 0..255)
+-        public const short INSTR_LOAD_STR = 1;
+-        public const short INSTR_LOAD_ATTR = 2;
+-        public const short INSTR_LOAD_LOCAL = 3; // load stuff like it, i, i0
+-        public const short INSTR_LOAD_PROP = 4;
+-        public const short INSTR_LOAD_PROP_IND = 5;
+-        public const short INSTR_STORE_OPTION = 6;
+-        public const short INSTR_STORE_ARG = 7;
+-        public const short INSTR_NEW = 8;  // create new template instance
+-        public const short INSTR_NEW_IND = 9;  // create new instance using value on stack
+-        public const short INSTR_NEW_BOX_ARGS = 10; // create new instance using args in Map on stack
+-        public const short INSTR_SUPER_NEW = 11;  // create new instance using value on stack
+-        public const short INSTR_SUPER_NEW_BOX_ARGS = 12; // create new instance using args in Map on stack
+-        public const short INSTR_WRITE = 13;
+-        public const short INSTR_WRITE_OPT = 14;
+-        public const short INSTR_MAP = 15;  // <a:b()>, <a:b():c()>, <a:{...}>
+-        public const short INSTR_ROT_MAP = 16;  // <a:b(),c()>
+-        public const short INSTR_ZIP_MAP = 17;  // <names,phones:{n,p | ...}>
+-        public const short INSTR_BR = 18;
+-        public const short INSTR_BRF = 19;
+-        public const short INSTR_OPTIONS = 20;  // push options map
+-        public const short INSTR_ARGS = 21;  // push args map
+-        public const short INSTR_LIST = 22;
+-        public const short INSTR_ADD = 23;
+-        public const short INSTR_TOSTR = 24;
++        INSTR_LOAD_STR = 1,
++        INSTR_LOAD_ATTR = 2,
++        INSTR_LOAD_LOCAL = 3, // load stuff like it, i, i0
++        INSTR_LOAD_PROP = 4,
++        INSTR_LOAD_PROP_IND = 5,
++        INSTR_STORE_OPTION = 6,
++        INSTR_STORE_ARG = 7,
++        INSTR_NEW = 8,  // create new template instance
++        INSTR_NEW_IND = 9,  // create new instance using value on stack
++        INSTR_NEW_BOX_ARGS = 10, // create new instance using args in Map on stack
++        INSTR_SUPER_NEW = 11,  // create new instance using value on stack
++        INSTR_SUPER_NEW_BOX_ARGS = 12, // create new instance using args in Map on stack
++        INSTR_WRITE = 13,
++        INSTR_WRITE_OPT = 14,
++        INSTR_MAP = 15,  // <a:b()>, <a:b():c()>, <a:{...}>
++        INSTR_ROT_MAP = 16,  // <a:b(),c()>
++        INSTR_ZIP_MAP = 17,  // <names,phones:{n,p | ...}>
++        INSTR_BR = 18,
++        INSTR_BRF = 19,
++        INSTR_OPTIONS = 20,  // push options map
++        INSTR_ARGS = 21,  // push args map
++        INSTR_LIST = 22,
++        INSTR_ADD = 23,
++        INSTR_TOSTR = 24,
+
+// Predefined functions
+-        public const short INSTR_FIRST = 25;
+-        public const short INSTR_LAST = 26;
+-        public const short INSTR_REST = 27;
+-        public const short INSTR_TRUNC = 28;
+-        public const short INSTR_STRIP = 29;
+-        public const short INSTR_TRIM = 30;
+-        public const short INSTR_LENGTH = 31;
+-        public const short INSTR_STRLEN = 32;
+-        public const short INSTR_REVERSE = 33;
+-
+-        public const short INSTR_NOT = 34;
+-        public const short INSTR_OR = 35;
+-        public const short INSTR_AND = 36;
++        INSTR_FIRST = 25,
++        INSTR_LAST = 26,
++        INSTR_REST = 27,
++        INSTR_TRUNC = 28,
++        INSTR_STRIP = 29,
++        INSTR_TRIM = 30,
++        INSTR_LENGTH = 31,
++        INSTR_STRLEN = 32,
++        INSTR_REVERSE = 33,
+
+-        public const short INSTR_INDENT = 37;
+-        public const short INSTR_DEDENT = 38;
+-        public const short INSTR_NEWLINE = 39;
++        INSTR_NOT = 34,
++        INSTR_OR = 35,
++        INSTR_AND = 36,
+
+-        public const short INSTR_NOOP = 40; // do nothing
+-        public const short INSTR_POP = 41;
+-        public const short INSTR_NULL = 42; // push null value
++        INSTR_INDENT = 37,
++        INSTR_DEDENT = 38,
++        INSTR_NEWLINE = 39,
+
+-        /** Used for assembly/disassembly; describes instruction set */
+-        public static Instruction[] instructions =
+-            new Instruction[]
+-            {
+-                null, // <INVALID>
+-                new Instruction("load_str",OperandType.STRING), // index is the opcode
+-                new Instruction("load_attr",OperandType.STRING),
+-                new Instruction("load_local",OperandType.INT),
+-                new Instruction("load_prop",OperandType.STRING),
+-                new Instruction("load_prop_ind"),
+-                new Instruction("store_option",OperandType.INT),
+-                new Instruction("store_arg",OperandType.STRING),
+-                new Instruction("new",OperandType.STRING,OperandType.INT),
+-                new Instruction("new_ind",OperandType.INT),
+-                new Instruction("new_box_args",OperandType.STRING),
+-                new Instruction("super_new",OperandType.STRING,OperandType.INT),
+-                new Instruction("super_new_box_args",OperandType.STRING),
+-                new Instruction("write"),
+-                new Instruction("write_opt"),
+-                new Instruction("map"),
+-                new Instruction("rot_map", OperandType.INT),
+-                new Instruction("zip_map", OperandType.INT),
+-                new Instruction("br", OperandType.ADDR),
+-                new Instruction("brf", OperandType.ADDR),
+-                new Instruction("options"),
+-                new Instruction("args"),
+-                new Instruction("list"),
+-                new Instruction("add"),
+-                new Instruction("tostr"),
+-                new Instruction("first"),
+-                new Instruction("last"),
+-                new Instruction("rest"),
+-                new Instruction("trunc"),
+-                new Instruction("strip"),
+-                new Instruction("trim"),
+-                new Instruction("length"),
+-                new Instruction("strlen"),
+-                new Instruction("reverse"),
+-                new Instruction("not"),
+-                new Instruction("or"),
+-                new Instruction("and"),
+-                new Instruction("indent", OperandType.STRING),
+-                new Instruction("dedent"),
+-                new Instruction("newline"),
+-                new Instruction("noop"),
+-                new Instruction("pop"),
+-                new Instruction("null")
+-            };
++        INSTR_NOOP = 40, // do nothing
++        INSTR_POP = 41,
++        INSTR_NULL = 42, // push null value
+}
+}
+diff --git a/Antlr4.StringTemplate/Compiler/BytecodeDisassembler.cs b/Antlr4.StringTemplate/Compiler/BytecodeDisassembler.cs
+index becc68a..8399aa1 100644
+--- a/Antlr4.StringTemplate/Compiler/BytecodeDisassembler.cs
++++ b/Antlr4.StringTemplate/Compiler/BytecodeDisassembler.cs
+@@ -55,14 +55,14 @@ namespace Antlr4.StringTemplate.Compiler
+if (ip > 0)
+buf.Append(", ");
+int opcode = code.instrs[ip];
+-                Bytecode.Instruction I = Bytecode.instructions[opcode];
++                Instruction I = Instruction.instructions[opcode];
+buf.Append(I.name);
+ip++;
+for (int opnd = 0; opnd < I.nopnds; opnd++)
+{
+buf.Append(' ');
+buf.Append(getShort(code.instrs, ip));
+-                    ip += Bytecode.OPND_SIZE_IN_BYTES;
++                    ip += Instruction.OperandSizeInBytes;
+}
+}
+return buf.ToString();
+@@ -87,8 +87,7 @@ namespace Antlr4.StringTemplate.Compiler
+{
+throw new ArgumentException("ip out of range: " + ip);
+}
+-            Bytecode.Instruction I =
+-                Bytecode.instructions[opcode];
++            Instruction I = Instruction.instructions[opcode];
+if (I == null)
+{
+throw new ArgumentException("no such instruction " + opcode + " at address " + ip);
+@@ -106,15 +105,15 @@ namespace Antlr4.StringTemplate.Compiler
+for (int i = 0; i < I.nopnds; i++)
+{
+int opnd = getShort(code.instrs, ip);
+-                ip += Bytecode.OPND_SIZE_IN_BYTES;
++                ip += Instruction.OperandSizeInBytes;
+switch (I.type[i])
+{
+-                case Bytecode.OperandType.STRING:
++                case OperandType.String:
+operands.Add(showConstPoolOperand(opnd));
+break;
+
+-                case Bytecode.OperandType.ADDR:
+-                case Bytecode.OperandType.INT:
++                case OperandType.Address:
++                case OperandType.Int:
+operands.Add(opnd.ToString());
+break;
+
+diff --git a/Antlr4.StringTemplate/Compiler/CodeGenerator.g3 b/Antlr4.StringTemplate/Compiler/CodeGenerator.g3
+index 0300a5a..da0013f 100644
+--- a/Antlr4.StringTemplate/Compiler/CodeGenerator.g3
++++ b/Antlr4.StringTemplate/Compiler/CodeGenerator.g3
+@@ -93,7 +93,7 @@ element
+;
+
+exprElement
+-@init { short op = Bytecode.INSTR_WRITE; }
++@init { Bytecode op = Bytecode.INSTR_WRITE; }
+:	^( EXPR expr (exprOptions {op=Bytecode.INSTR_WRITE_OPT;})? )
+{emit($EXPR, op);}
+;
+@@ -105,7 +105,7 @@ region returns [string name]
+{
+CompiledST sub = $template.impl;
+sub.isRegion = true;
+-	        sub.regionDefType = ST.RegionType.EMBEDDED;
++	        sub.regionDefType = ST.RegionType.Embedded;
+sub.dump();
+outermostImpl.addImplicitlyDefinedTemplate(sub);
+}
+diff --git a/Antlr4.StringTemplate/Compiler/CodeGenerator.g3.cs b/Antlr4.StringTemplate/Compiler/CodeGenerator.g3.cs
+index ff9c424..d51eb04 100644
+--- a/Antlr4.StringTemplate/Compiler/CodeGenerator.g3.cs
++++ b/Antlr4.StringTemplate/Compiler/CodeGenerator.g3.cs
+@@ -38,11 +38,14 @@ namespace Antlr4.StringTemplate.Compiler
+
+partial class CodeGenerator
+{
+-        string outermostTemplateName;	// name of overall template
+-        CompiledST outermostImpl;
+-        IToken templateToken;			// overall template token
+-        string _template;  				// overall template text
+-        ErrorManager errMgr;
++        /// <summary>Name of overall template</summary>
++        private readonly string outermostTemplateName;
++        /// <summary>Overall template token</summary>
++        private readonly IToken templateToken;
++        /// <summary>Overall template text</summary>
++        private readonly string _template;
++        private readonly ErrorManager errMgr;
++        private CompiledST outermostImpl;
+
+public CodeGenerator(ITreeNodeStream input, ErrorManager errMgr, string name, string template, IToken templateToken)
+: this(input, new RecognizerSharedState())
+@@ -56,37 +59,37 @@ namespace Antlr4.StringTemplate.Compiler
+// convience funcs to hide offensive sending of emit messages to
+// CompilationState temp data object.
+
+-        public void emit1(CommonTree opAST, short opcode, int arg)
++        public void emit1(CommonTree opAST, Bytecode opcode, int arg)
+{
+template_stack.Peek().state.emit1(opAST, opcode, arg);
+}
+
+-        public void emit1(CommonTree opAST, short opcode, string arg)
++        public void emit1(CommonTree opAST, Bytecode opcode, string arg)
+{
+template_stack.Peek().state.emit1(opAST, opcode, arg);
+}
+
+-        public void emit2(CommonTree opAST, short opcode, int arg, int arg2)
++        public void emit2(CommonTree opAST, Bytecode opcode, int arg, int arg2)
+{
+template_stack.Peek().state.emit2(opAST, opcode, arg, arg2);
+}
+
+-        public void emit2(CommonTree opAST, short opcode, string s, int arg2)
++        public void emit2(CommonTree opAST, Bytecode opcode, string s, int arg2)
+{
+template_stack.Peek().state.emit2(opAST, opcode, s, arg2);
+}
+
+-        public void emit(short opcode)
++        public void emit(Bytecode opcode)
+{
+template_stack.Peek().state.emit(opcode);
+}
+
+-        public void emit(CommonTree opAST, short opcode)
++        public void emit(CommonTree opAST, Bytecode opcode)
+{
+template_stack.Peek().state.emit(opAST, opcode);
+}
+
+-        public void insert(int addr, short opcode, string s)
++        public void insert(int addr, Bytecode opcode, string s)
+{
+template_stack.Peek().state.insert(addr, opcode, s);
+}
+diff --git a/Antlr4.StringTemplate/Compiler/CompilationState.cs b/Antlr4.StringTemplate/Compiler/CompilationState.cs
+index 0801e74..bc3cc92 100644
+--- a/Antlr4.StringTemplate/Compiler/CompilationState.cs
++++ b/Antlr4.StringTemplate/Compiler/CompilationState.cs
+@@ -75,7 +75,7 @@ namespace Antlr4.StringTemplate.Compiler
+FormalArgument arg = impl.TryGetFormalArgument(name);
+if (arg != null)
+{
+-                int index = arg.index;
++                int index = arg.Index;
+emit1(id, Bytecode.INSTR_LOAD_LOCAL, index);
+}
+else
+@@ -100,7 +100,7 @@ namespace Antlr4.StringTemplate.Compiler
+
+public virtual void func(IToken templateToken, CommonTree id)
+{
+-            short funcBytecode;
++            Bytecode funcBytecode;
+if (!Compiler.funcs.TryGetValue(id.Text, out funcBytecode))
+{
+errMgr.compileTimeError(ErrorType.NO_SUCH_FUNCTION, templateToken, id.token);
+@@ -112,12 +112,12 @@ namespace Antlr4.StringTemplate.Compiler
+}
+}
+
+-        public virtual void emit(short opcode)
++        public virtual void emit(Bytecode opcode)
+{
+emit(null, opcode);
+}
+
+-        public virtual void emit(CommonTree opAST, short opcode)
++        public virtual void emit(CommonTree opAST, Bytecode opcode)
+{
+ensureCapacity(1);
+if (opAST != null)
+@@ -132,41 +132,41 @@ namespace Antlr4.StringTemplate.Compiler
+impl.instrs[ip++] = (byte)opcode;
+}
+
+-        public virtual void emit1(CommonTree opAST, short opcode, int arg)
++        public virtual void emit1(CommonTree opAST, Bytecode opcode, int arg)
+{
+emit(opAST, opcode);
+-            ensureCapacity(Bytecode.OPND_SIZE_IN_BYTES);
++            ensureCapacity(Instruction.OperandSizeInBytes);
+writeShort(impl.instrs, ip, (short)arg);
+-            ip += Bytecode.OPND_SIZE_IN_BYTES;
++            ip += Instruction.OperandSizeInBytes;
+}
+
+-        public virtual void emit2(CommonTree opAST, short opcode, int arg, int arg2)
++        public virtual void emit2(CommonTree opAST, Bytecode opcode, int arg, int arg2)
+{
+emit(opAST, opcode);
+-            ensureCapacity(Bytecode.OPND_SIZE_IN_BYTES * 2);
++            ensureCapacity(Instruction.OperandSizeInBytes * 2);
+writeShort(impl.instrs, ip, (short)arg);
+-            ip += Bytecode.OPND_SIZE_IN_BYTES;
++            ip += Instruction.OperandSizeInBytes;
+writeShort(impl.instrs, ip, (short)arg2);
+-            ip += Bytecode.OPND_SIZE_IN_BYTES;
++            ip += Instruction.OperandSizeInBytes;
+}
+
+-        public virtual void emit2(CommonTree opAST, short opcode, string s, int arg2)
++        public virtual void emit2(CommonTree opAST, Bytecode opcode, string s, int arg2)
+{
+int i = defineString(s);
+emit2(opAST, opcode, i, arg2);
+}
+
+-        public virtual void emit1(CommonTree opAST, short opcode, string s)
++        public virtual void emit1(CommonTree opAST, Bytecode opcode, string s)
+{
+int i = defineString(s);
+emit1(opAST, opcode, i);
+}
+
+-        public virtual void insert(int addr, short opcode, string s)
++        public virtual void insert(int addr, Bytecode opcode, string s)
+{
+//System.out.println("before insert of "+opcode+"("+s+"):"+ Arrays.toString(impl.instrs));
+-            ensureCapacity(1 + Bytecode.OPND_SIZE_IN_BYTES);
+-            int instrSize = 1 + Bytecode.OPND_SIZE_IN_BYTES;
++            ensureCapacity(1 + Instruction.OperandSizeInBytes);
++            int instrSize = 1 + Instruction.OperandSizeInBytes;
+// make room for opcode, opnd
+Array.Copy(impl.instrs, addr, impl.instrs, addr + instrSize, ip - addr);
+int save = ip;
+@@ -178,14 +178,14 @@ namespace Antlr4.StringTemplate.Compiler
+int a = addr + instrSize;
+while (a < ip)
+{
+-                byte op = impl.instrs[a];
+-                Bytecode.Instruction I = Bytecode.instructions[op];
++                Bytecode op = (Bytecode)impl.instrs[a];
++                Instruction I = Instruction.instructions[(int)op];
+if (op == Bytecode.INSTR_BR || op == Bytecode.INSTR_BRF)
+{
+int opnd = BytecodeDisassembler.getShort(impl.instrs, a + 1);
+writeShort(impl.instrs, a + 1, (short)(opnd + instrSize));
+}
+-                a += I.nopnds * Bytecode.OPND_SIZE_IN_BYTES + 1;
++                a += I.nopnds * Instruction.OperandSizeInBytes + 1;
+}
+//System.out.println("after  insert of "+opcode+"("+s+"):"+ Arrays.toString(impl.instrs));
+}
+diff --git a/Antlr4.StringTemplate/Compiler/CompiledTemplate.cs b/Antlr4.StringTemplate/Compiler/CompiledTemplate.cs
+index b06980c..0f22010 100644
+--- a/Antlr4.StringTemplate/Compiler/CompiledTemplate.cs
++++ b/Antlr4.StringTemplate/Compiler/CompiledTemplate.cs
+@@ -76,12 +76,12 @@ namespace Antlr4.StringTemplate.Compiler
+*/
+public STGroup nativeGroup = STGroup.defaultGroup;
+
+-        /** Does this template come from a <@region>...<@end> embedded in
++        /** Does this template come from a &lt;@region&gt;...&lt;@end&gt; embedded in
+*  another template?
+*/
+public bool isRegion;
+
+-        /** If someone refs <@r()> in template t, an implicit
++        /** If someone refs &lt;@r()&gt; in template t, an implicit
+*
+*   @t.r() ::= ""
+*
+@@ -100,11 +100,58 @@ namespace Antlr4.StringTemplate.Compiler
+
+public CompiledST()
+{
+-            instrs = new byte[Compiler.TEMPLATE_INITIAL_CODE_SIZE];
+-            sourceMap = new Interval[Compiler.TEMPLATE_INITIAL_CODE_SIZE];
++            instrs = new byte[Compiler.InitialCodeSize];
++            sourceMap = new Interval[Compiler.InitialCodeSize];
+template = "";
+}
+
++        public virtual string TemplateSource
++        {
++            get
++            {
++                Interval r = TemplateRange;
++                return template.Substring(r.A, r.B + 1 - r.A);
++            }
++        }
++
++        public virtual Interval TemplateRange
++        {
++            get
++            {
++                if (isAnonSubtemplate)
++                {
++                    Interval start = sourceMap[0];
++                    Interval stop = null;
++                    for (int i = sourceMap.Length - 1; i > 0; i--)
++                    {
++                        Interval I = sourceMap[i];
++                        if (I != null)
++                        {
++                            stop = I;
++                            break;
++                        }
++                    }
++
++                    if (template != null)
++                        return new Interval(start.A, stop.B);
++                }
++
++                return new Interval(0, template.Length - 1);
++            }
++        }
++
++        public virtual int NumberOfArgsWithDefaultValues
++        {
++            get
++            {
++                if (formalArguments == null)
++                    return 0;
++
++                int n = formalArguments.Count(i => i.DefaultValueToken != null);
++                return n;
++            }
++        }
++
+public virtual FormalArgument TryGetFormalArgument(string name)
+{
+if (name == null)
+@@ -112,7 +159,7 @@ namespace Antlr4.StringTemplate.Compiler
+if (formalArguments == null)
+return null;
+
+-            return formalArguments.FirstOrDefault(i => i.name == name);
++            return formalArguments.FirstOrDefault(i => i.Name == name);
+}
+
+public virtual void addImplicitlyDefinedTemplate(CompiledST sub)
+@@ -123,15 +170,6 @@ namespace Antlr4.StringTemplate.Compiler
+implicitlyDefinedTemplates.Add(sub);
+}
+
+-        public virtual int getNumberOfArgsWithDefaultValues()
+-        {
+-            if (formalArguments == null)
+-                return 0;
+-
+-            int n = formalArguments.Count(i => i.defaultValueToken != null);
+-            return n;
+-        }
+-
+public virtual void defineArgDefaultValueTemplates(STGroup group)
+{
+if (formalArguments == null)
+@@ -139,18 +177,18 @@ namespace Antlr4.StringTemplate.Compiler
+
+foreach (FormalArgument fa in formalArguments)
+{
+-                if (fa.defaultValueToken != null)
++                if (fa.DefaultValueToken != null)
+{
+-                    string argSTname = fa.name + "_default_value";
++                    string argSTname = fa.Name + "_default_value";
+Compiler c2 = new Compiler(group.errMgr, group.delimiterStartChar, group.delimiterStopChar);
+-                    string defArgTemplate = Utility.strip(fa.defaultValueToken.Text, 1);
+-                    fa.compiledDefaultValue = c2.compile(nativeGroup.getFileName(), argSTname, null, defArgTemplate, fa.defaultValueToken);
+-                    fa.compiledDefaultValue.name = argSTname;
++                    string defArgTemplate = Utility.strip(fa.DefaultValueToken.Text, 1);
++                    fa.CompiledDefaultValue = c2.compile(nativeGroup.getFileName(), argSTname, null, defArgTemplate, fa.DefaultValueToken);
++                    fa.CompiledDefaultValue.name = argSTname;
+}
+}
+}
+
+-        public virtual void defineFormalArgs(List<FormalArgument> args)
++        public virtual void defineFormalArgs(IEnumerable<FormalArgument> args)
+{
+hasFormalArgs = true; // even if no args; it's formally defined
+if (args == null)
+@@ -170,7 +208,7 @@ namespace Antlr4.StringTemplate.Compiler
+if (formalArguments == null)
+formalArguments = new List<FormalArgument>();
+
+-            a.index = formalArguments.Count;
++            a.Index = formalArguments.Count;
+formalArguments.Add(a);
+}
+
+@@ -186,34 +224,6 @@ namespace Antlr4.StringTemplate.Compiler
+}
+}
+
+-        public virtual string getTemplateSource()
+-        {
+-            Interval r = getTemplateRange();
+-            return template.Substring(r.A, r.B + 1 - r.A);
+-        }
+-
+-        public virtual Interval getTemplateRange()
+-        {
+-            if (isAnonSubtemplate)
+-            {
+-                Interval start = sourceMap[0];
+-                Interval stop = null;
+-                for (int i = sourceMap.Length - 1; i > 0; i--)
+-                {
+-                    Interval I = sourceMap[i];
+-                    if (I != null)
+-                    {
+-                        stop = I;
+-                        break;
+-                    }
+-                }
+-
+-                if (template != null)
+-                    return new Interval(start.A, stop.B);
+-            }
+-            return new Interval(0, template.Length - 1);
+-        }
+-
+public virtual string Instrs()
+{
+BytecodeDisassembler dis = new BytecodeDisassembler(this);
+@@ -222,13 +232,7 @@ namespace Antlr4.StringTemplate.Compiler
+
+public virtual void dump()
+{
+-            BytecodeDisassembler dis = new BytecodeDisassembler(this);
+-            Console.WriteLine(name + ":");
+-            Console.WriteLine(dis.disassemble());
+-            Console.WriteLine("Strings:");
+-            Console.WriteLine(dis.strings());
+-            Console.WriteLine("Bytecode to template map:");
+-            Console.WriteLine(dis.sourceMap());
++            Console.Write(disasm());
+}
+
+public virtual string disasm()
+diff --git a/Antlr4.StringTemplate/Compiler/FormalArgument.cs b/Antlr4.StringTemplate/Compiler/FormalArgument.cs
+index b8ad4ca..bc2e897 100644
+--- a/Antlr4.StringTemplate/Compiler/FormalArgument.cs
++++ b/Antlr4.StringTemplate/Compiler/FormalArgument.cs
+@@ -76,13 +76,13 @@ namespace Antlr4.StringTemplate.Compiler
+//    public static final LinkedHashMap<String, FormalArgument> UNKNOWN =
+//        new LinkedHashMap<String, FormalArgument>();
+
+-        public string name;
++        private readonly string name;
+
+-        public int index; // which argument is it? from 0..n-1
++        private int index; // which argument is it? from 0..n-1
+
+/** If they specified name="value", store the template here */
+-        public IToken defaultValueToken;
+-        public CompiledST compiledDefaultValue;
++        private readonly IToken defaultValueToken;
++        private CompiledST compiledDefaultValue;
+
+public FormalArgument(string name)
+{
+@@ -95,6 +95,48 @@ namespace Antlr4.StringTemplate.Compiler
+this.defaultValueToken = defaultValueToken;
+}
+
++        public string Name
++        {
++            get
++            {
++                return name;
++            }
++        }
++
++        public int Index
++        {
++            get
++            {
++                return index;
++            }
++
++            internal set
++            {
++                index = value;
++            }
++        }
++
++        public IToken DefaultValueToken
++        {
++            get
++            {
++                return defaultValueToken;
++            }
++        }
++
++        public CompiledST CompiledDefaultValue
++        {
++            get
++            {
++                return compiledDefaultValue;
++            }
++
++            internal set
++            {
++                compiledDefaultValue = value;
++            }
++        }
++
+/*
+public static String getCardinalityName(int cardinality) {
+switch (cardinality) {
+diff --git a/Antlr4.StringTemplate/Compiler/Instruction.cs b/Antlr4.StringTemplate/Compiler/Instruction.cs
+new file mode 100644
+index 0000000..f984de8
+--- /dev/null
++++ b/Antlr4.StringTemplate/Compiler/Instruction.cs
+@@ -0,0 +1,91 @@
++﻿namespace Antlr4.StringTemplate.Compiler
++{
++    using Array = System.Array;
++    using Enum = System.Enum;
++    using System.Linq;
++
++    public sealed class Instruction
++    {
++        public const int MaxOperands = 2;
++        public const int OperandSizeInBytes = 2;
++
++        /// <summary>
++        /// Used for assembly/disassembly; describes instruction set
++        /// </summary>
++        public static readonly Instruction[] instructions;
++
++        internal readonly string name; // E.g., "load_str", "new"
++        internal readonly OperandType[] type = new OperandType[MaxOperands];
++        internal readonly int nopnds = 0;
++
++        static Instruction()
++        {
++            Array values = Enum.GetValues(typeof(Bytecode));
++            instructions = new Instruction[values.Cast<int>().Max()];
++
++            instructions[(int)Bytecode.Invalid] = null;
++            instructions[(int)Bytecode.INSTR_LOAD_STR] = new Instruction("load_str", OperandType.String);
++            instructions[(int)Bytecode.INSTR_LOAD_ATTR] = new Instruction("load_attr", OperandType.String);
++            instructions[(int)Bytecode.INSTR_LOAD_LOCAL] = new Instruction("load_local", OperandType.Int);
++            instructions[(int)Bytecode.INSTR_LOAD_PROP] = new Instruction("load_prop", OperandType.String);
++            instructions[(int)Bytecode.INSTR_LOAD_PROP_IND] = new Instruction("load_prop_ind");
++            instructions[(int)Bytecode.INSTR_STORE_OPTION] = new Instruction("store_option", OperandType.Int);
++            instructions[(int)Bytecode.INSTR_STORE_ARG] = new Instruction("store_arg", OperandType.String);
++            instructions[(int)Bytecode.INSTR_NEW] = new Instruction("new", OperandType.String, OperandType.Int);
++            instructions[(int)Bytecode.INSTR_NEW_IND] = new Instruction("new_ind", OperandType.Int);
++            instructions[(int)Bytecode.INSTR_NEW_BOX_ARGS] = new Instruction("new_box_args", OperandType.String);
++            instructions[(int)Bytecode.INSTR_SUPER_NEW] = new Instruction("super_new", OperandType.String, OperandType.Int);
++            instructions[(int)Bytecode.INSTR_SUPER_NEW_BOX_ARGS] = new Instruction("super_new_box_args", OperandType.String);
++            instructions[(int)Bytecode.INSTR_WRITE] = new Instruction("write");
++            instructions[(int)Bytecode.INSTR_WRITE_OPT] = new Instruction("write_opt");
++            instructions[(int)Bytecode.INSTR_MAP] = new Instruction("map");
++            instructions[(int)Bytecode.INSTR_ROT_MAP] = new Instruction("rot_map", OperandType.Int);
++            instructions[(int)Bytecode.INSTR_ZIP_MAP] = new Instruction("zip_map", OperandType.Int);
++            instructions[(int)Bytecode.INSTR_BR] = new Instruction("br", OperandType.Address);
++            instructions[(int)Bytecode.INSTR_BRF] = new Instruction("brf", OperandType.Address);
++            instructions[(int)Bytecode.INSTR_OPTIONS] = new Instruction("options");
++            instructions[(int)Bytecode.INSTR_ARGS] = new Instruction("args");
++            instructions[(int)Bytecode.INSTR_LIST] = new Instruction("list");
++            instructions[(int)Bytecode.INSTR_ADD] = new Instruction("add");
++            instructions[(int)Bytecode.INSTR_TOSTR] = new Instruction("tostr");
++            instructions[(int)Bytecode.INSTR_FIRST] = new Instruction("first");
++            instructions[(int)Bytecode.INSTR_LAST] = new Instruction("last");
++            instructions[(int)Bytecode.INSTR_REST] = new Instruction("rest");
++            instructions[(int)Bytecode.INSTR_TRUNC] = new Instruction("trunc");
++            instructions[(int)Bytecode.INSTR_STRIP] = new Instruction("strip");
++            instructions[(int)Bytecode.INSTR_TRIM] = new Instruction("trim");
++            instructions[(int)Bytecode.INSTR_LENGTH] = new Instruction("length");
++            instructions[(int)Bytecode.INSTR_STRLEN] = new Instruction("strlen");
++            instructions[(int)Bytecode.INSTR_REVERSE] = new Instruction("reverse");
++            instructions[(int)Bytecode.INSTR_NOT] = new Instruction("not");
++            instructions[(int)Bytecode.INSTR_OR] = new Instruction("or");
++            instructions[(int)Bytecode.INSTR_AND] = new Instruction("and");
++            instructions[(int)Bytecode.INSTR_INDENT] = new Instruction("indent", OperandType.String);
++            instructions[(int)Bytecode.INSTR_DEDENT] = new Instruction("dedent");
++            instructions[(int)Bytecode.INSTR_NEWLINE] = new Instruction("newline");
++            instructions[(int)Bytecode.INSTR_NOOP] = new Instruction("noop");
++            instructions[(int)Bytecode.INSTR_POP] = new Instruction("pop");
++            instructions[(int)Bytecode.INSTR_NULL] = new Instruction("null");
++        }
++
++        public Instruction(string name)
++            : this(name, OperandType.None, OperandType.None)
++        {
++            nopnds = 0;
++        }
++
++        public Instruction(string name, OperandType a)
++            : this(name, a, OperandType.None)
++        {
++            nopnds = 1;
++        }
++
++        public Instruction(string name, OperandType a, OperandType b)
++        {
++            this.name = name;
++            type[0] = a;
++            type[1] = b;
++            nopnds = MaxOperands;
++        }
++    }
++}
+diff --git a/Antlr4.StringTemplate/Compiler/OperandType.cs b/Antlr4.StringTemplate/Compiler/OperandType.cs
+new file mode 100644
+index 0000000..8320acd
+--- /dev/null
++++ b/Antlr4.StringTemplate/Compiler/OperandType.cs
+@@ -0,0 +1,15 @@
++﻿using System;
++using System.Collections.Generic;
++using System.Linq;
++using System.Text;
++
++namespace Antlr4.StringTemplate.Compiler
++{
++    public enum OperandType
++    {
++        None,
++        String,
++        Address,
++        Int
++    }
++}
+diff --git a/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs b/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs
+index f2f328e..7f35905 100644
+--- a/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs
++++ b/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs
+@@ -42,7 +42,7 @@ namespace Antlr4.StringTemplate.Compiler
+{
+public static readonly string SUBTEMPLATE_PREFIX = "_sub";
+
+-        public const int TEMPLATE_INITIAL_CODE_SIZE = 15;
++        public const int InitialCodeSize = 15;
+
+public static readonly IDictionary<string, Interpreter.Option> supportedOptions =
+new Dictionary<string, Interpreter.Option>()
+@@ -63,19 +63,19 @@ namespace Antlr4.StringTemplate.Compiler
+{"wrap",   "\n"},
+};
+
+-        public static IDictionary<string, short> funcs =
+-            new Dictionary<string, short>()
+-        {
+-            {"first", Bytecode.INSTR_FIRST},
+-            {"last", Bytecode.INSTR_LAST},
+-            {"rest", Bytecode.INSTR_REST},
+-            {"trunc", Bytecode.INSTR_TRUNC},
+-            {"strip", Bytecode.INSTR_STRIP},
+-            {"trim", Bytecode.INSTR_TRIM},
+-            {"length", Bytecode.INSTR_LENGTH},
+-            {"strlen", Bytecode.INSTR_STRLEN},
+-            {"reverse", Bytecode.INSTR_REVERSE},
+-        };
++        public static IDictionary<string, Bytecode> funcs =
++            new Dictionary<string, Bytecode>()
++            {
++                {"first", Bytecode.INSTR_FIRST},
++                {"last", Bytecode.INSTR_LAST},
++                {"rest", Bytecode.INSTR_REST},
++                {"trunc", Bytecode.INSTR_TRUNC},
++                {"strip", Bytecode.INSTR_STRIP},
++                {"trim", Bytecode.INSTR_TRIM},
++                {"length", Bytecode.INSTR_LENGTH},
++                {"strlen", Bytecode.INSTR_STRLEN},
++                {"reverse", Bytecode.INSTR_REVERSE},
++            };
+
+/** Name subtemplates _sub1, _sub2, ... */
+public static int subtemplateCount = 0;
+@@ -186,7 +186,7 @@ namespace Antlr4.StringTemplate.Compiler
+string mangled = STGroup.getMangledRegionName(outermostTemplateName, name);
+CompiledST blank = new CompiledST();
+blank.isRegion = true;
+-            blank.regionDefType = ST.RegionType.IMPLICIT;
++            blank.regionDefType = ST.RegionType.Implicit;
+blank.name = mangled;
+outermostImpl.addImplicitlyDefinedTemplate(blank);
+return blank;
+diff --git a/Antlr4.StringTemplate/Interpreter.cs b/Antlr4.StringTemplate/Interpreter.cs
+index fba76ba..ed5ac8e 100644
+--- a/Antlr4.StringTemplate/Interpreter.cs
++++ b/Antlr4.StringTemplate/Interpreter.cs
+@@ -147,7 +147,7 @@ namespace Antlr4.StringTemplate
+try
+{
+int start = @out.index(); // track char we're about to write
+-                int prevOpcode = 0;
++                Bytecode prevOpcode = Bytecode.Invalid;
+int n = 0; // how many char we write out
+int nargs;
+int nameIndex;
+@@ -163,20 +163,20 @@ namespace Antlr4.StringTemplate
+if (trace || STGroup.debug)
+Trace(self, ip);
+
+-                    short opcode = code[ip];
++                    Bytecode opcode = (Bytecode)code[ip];
+current_ip = ip;
+ip++; //jump to next instruction or first byte of operand
+switch (opcode)
+{
+case Bytecode.INSTR_LOAD_STR:
+int strIndex = getShort(code, ip);
+-                        ip += Bytecode.OPND_SIZE_IN_BYTES;
++                        ip += Instruction.OperandSizeInBytes;
+operands[++sp] = self.impl.strings[strIndex];
+break;
+
+case Bytecode.INSTR_LOAD_ATTR:
+nameIndex = getShort(code, ip);
+-                        ip += Bytecode.OPND_SIZE_IN_BYTES;
++                        ip += Instruction.OperandSizeInBytes;
+name = self.impl.strings[nameIndex];
+try
+{
+@@ -192,7 +192,7 @@ namespace Antlr4.StringTemplate
+
+case Bytecode.INSTR_LOAD_LOCAL:
+int valueIndex = getShort(code, ip);
+-                        ip += Bytecode.OPND_SIZE_IN_BYTES;
++                        ip += Instruction.OperandSizeInBytes;
+o = self.locals[valueIndex];
+if (o == ST.EMPTY_ATTR)
+o = null;
+@@ -201,7 +201,7 @@ namespace Antlr4.StringTemplate
+
+case Bytecode.INSTR_LOAD_PROP:
+nameIndex = getShort(code, ip);
+-                        ip += Bytecode.OPND_SIZE_IN_BYTES;
++                        ip += Instruction.OperandSizeInBytes;
+o = operands[sp--];
+name = self.impl.strings[nameIndex];
+operands[++sp] = getObjectProperty(self, o, name);
+@@ -215,10 +215,10 @@ namespace Antlr4.StringTemplate
+
+case Bytecode.INSTR_NEW:
+nameIndex = getShort(code, ip);
+-                        ip += Bytecode.OPND_SIZE_IN_BYTES;
++                        ip += Instruction.OperandSizeInBytes;
+name = self.impl.strings[nameIndex];
+nargs = getShort(code, ip);
+-                        ip += Bytecode.OPND_SIZE_IN_BYTES;
++                        ip += Instruction.OperandSizeInBytes;
+// look up in original hierarchy not enclosing template (variable group)
+// see TestSubtemplates.testEvalSTFromAnotherGroup()
+st = self.groupThatCreatedThisInstance.getEmbeddedInstanceOf(self, ip, name);
+@@ -230,7 +230,7 @@ namespace Antlr4.StringTemplate
+
+case Bytecode.INSTR_NEW_IND:
+nargs = getShort(code, ip);
+-                        ip += Bytecode.OPND_SIZE_IN_BYTES;
++                        ip += Instruction.OperandSizeInBytes;
+name = (string)operands[sp - nargs];
+st = self.groupThatCreatedThisInstance.getEmbeddedInstanceOf(self, ip, name);
+storeArgs(self, nargs, st);
+@@ -241,7 +241,7 @@ namespace Antlr4.StringTemplate
+
+case Bytecode.INSTR_NEW_BOX_ARGS:
+nameIndex = getShort(code, ip);
+-                        ip += Bytecode.OPND_SIZE_IN_BYTES;
++                        ip += Instruction.OperandSizeInBytes;
+name = self.impl.strings[nameIndex];
+IDictionary<string, object> attrs = (IDictionary<string, object>)operands[sp--];
+// look up in original hierarchy not enclosing template (variable group)
+@@ -254,16 +254,16 @@ namespace Antlr4.StringTemplate
+
+case Bytecode.INSTR_SUPER_NEW:
+nameIndex = getShort(code, ip);
+-                        ip += Bytecode.OPND_SIZE_IN_BYTES;
++                        ip += Instruction.OperandSizeInBytes;
+name = self.impl.strings[nameIndex];
+nargs = getShort(code, ip);
+-                        ip += Bytecode.OPND_SIZE_IN_BYTES;
++                        ip += Instruction.OperandSizeInBytes;
+super_new(self, name, nargs);
+break;
+
+case Bytecode.INSTR_SUPER_NEW_BOX_ARGS:
+nameIndex = getShort(code, ip);
+-                        ip += Bytecode.OPND_SIZE_IN_BYTES;
++                        ip += Instruction.OperandSizeInBytes;
+name = self.impl.strings[nameIndex];
+attrs = (IDictionary<string, object>)operands[sp--];
+super_new(self, name, attrs);
+@@ -271,7 +271,7 @@ namespace Antlr4.StringTemplate
+
+case Bytecode.INSTR_STORE_OPTION:
+int optionIndex = getShort(code, ip);
+-                        ip += Bytecode.OPND_SIZE_IN_BYTES;
++                        ip += Instruction.OperandSizeInBytes;
+o = operands[sp--];    // value to store
+options = (object[])operands[sp]; // get options
+options[optionIndex] = o; // store value into options on stack
+@@ -280,7 +280,7 @@ namespace Antlr4.StringTemplate
+case Bytecode.INSTR_STORE_ARG:
+nameIndex = getShort(code, ip);
+name = self.impl.strings[nameIndex];
+-                        ip += Bytecode.OPND_SIZE_IN_BYTES;
++                        ip += Instruction.OperandSizeInBytes;
+o = operands[sp--];
+attrs = (IDictionary<string, object>)operands[sp];
+attrs[name] = o; // leave attrs on stack
+@@ -309,7 +309,7 @@ namespace Antlr4.StringTemplate
+
+case Bytecode.INSTR_ROT_MAP:
+int nmaps = getShort(code, ip);
+-                        ip += Bytecode.OPND_SIZE_IN_BYTES;
++                        ip += Instruction.OperandSizeInBytes;
+List<ST> templates = new List<ST>();
+for (int i = nmaps - 1; i >= 0; i--)
+templates.Add((ST)operands[sp - i]);
+@@ -322,7 +322,7 @@ namespace Antlr4.StringTemplate
+case Bytecode.INSTR_ZIP_MAP:
+st = (ST)operands[sp--];
+nmaps = getShort(code, ip);
+-                        ip += Bytecode.OPND_SIZE_IN_BYTES;
++                        ip += Instruction.OperandSizeInBytes;
+List<object> exprs = new List<object>();
+for (int i = nmaps - 1; i >= 0; i--)
+exprs.Add(operands[sp - i]);
+@@ -337,7 +337,7 @@ namespace Antlr4.StringTemplate
+
+case Bytecode.INSTR_BRF:
+addr = getShort(code, ip);
+-                        ip += Bytecode.OPND_SIZE_IN_BYTES;
++                        ip += Instruction.OperandSizeInBytes;
+o = operands[sp--]; // <if(expr)>...<endif>
+if (!testAttributeTrue(o))
+ip = addr; // jump
+@@ -439,7 +439,7 @@ namespace Antlr4.StringTemplate
+
+case Bytecode.INSTR_INDENT:
+strIndex = getShort(code, ip);
+-                        ip += Bytecode.OPND_SIZE_IN_BYTES;
++                        ip += Instruction.OperandSizeInBytes;
+@out.pushIndentation(self.impl.strings[strIndex]);
+break;
+
+@@ -562,7 +562,7 @@ namespace Antlr4.StringTemplate
+if (attrs != null)
+nargs = attrs.Count;
+
+-            if (nargs < (nformalArgs - st.impl.getNumberOfArgsWithDefaultValues()) || nargs > nformalArgs)
++            if (nargs < (nformalArgs - st.impl.NumberOfArgsWithDefaultValues) || nargs > nformalArgs)
+{
+errMgr.runTimeError(self,
+current_ip,
+@@ -575,7 +575,7 @@ namespace Antlr4.StringTemplate
+foreach (string argName in attrs.Keys)
+{
+// don't let it throw an exception in rawSetAttribute
+-                if (!st.impl.formalArguments.Any(i => i.name == argName))
++                if (!st.impl.formalArguments.Any(i => i.Name == argName))
+{
+errMgr.runTimeError(self, current_ip, ErrorType.NO_SUCH_ATTRIBUTE, argName);
+continue;
+@@ -596,7 +596,7 @@ namespace Antlr4.StringTemplate
+if (st.impl.isAnonSubtemplate)
+nformalArgs -= predefinedAnonSubtemplateAttributes.Count;
+
+-            if (nargs < (nformalArgs - st.impl.getNumberOfArgsWithDefaultValues()) ||
++            if (nargs < (nformalArgs - st.impl.NumberOfArgsWithDefaultValues) ||
+nargs > nformalArgs)
+{
+errMgr.runTimeError(self,
+@@ -610,7 +610,7 @@ namespace Antlr4.StringTemplate
+if (st.impl.formalArguments == null)
+return;
+
+-            Iterator argNames = st.impl.formalArguments.Select(i => i.name).iterator();
++            Iterator argNames = st.impl.formalArguments.Select(i => i.Name).iterator();
+for (int i = 0; i < numToStore; i++)
+{
+// value to store
+@@ -883,7 +883,7 @@ namespace Antlr4.StringTemplate
+}
+
+// todo: track formal args not names for efficient filling of locals
+-            object[] formalArgumentNames = formalArguments.Select(i => i.name).ToArray();
++            object[] formalArgumentNames = formalArguments.Select(i => i.Name).ToArray();
+int nformalArgs = formalArgumentNames.Length;
+if (prototype.isAnonSubtemplate())
+nformalArgs -= predefinedAnonSubtemplateAttributes.Count;
+@@ -1280,25 +1280,25 @@ namespace Antlr4.StringTemplate
+foreach (FormalArgument arg in invokedST.impl.formalArguments)
+{
+// if no value for attribute and default arg, inject default arg into self
+-                if (invokedST.locals[arg.index] == ST.EMPTY_ATTR && arg.compiledDefaultValue != null)
++                if (invokedST.locals[arg.Index] == ST.EMPTY_ATTR && arg.CompiledDefaultValue != null)
+{
+ST defaultArgST = group.createStringTemplate();
+defaultArgST.enclosingInstance = invokedST.enclosingInstance;
+defaultArgST.groupThatCreatedThisInstance = group;
+-                    defaultArgST.impl = arg.compiledDefaultValue;
+-                    Console.WriteLine("setting def arg " + arg.name + " to " + defaultArgST);
++                    defaultArgST.impl = arg.CompiledDefaultValue;
++                    Console.WriteLine("setting def arg " + arg.Name + " to " + defaultArgST);
+// If default arg is template with single expression
+// wrapped in parens, x={<(...)>}, then eval to string
+// rather than setting x to the template for later
+// eval.
+-                    string defArgTemplate = arg.defaultValueToken.Text;
++                    string defArgTemplate = arg.DefaultValueToken.Text;
+if (defArgTemplate.StartsWith("{<(") && defArgTemplate.EndsWith(")>}"))
+{
+-                        invokedST.rawSetAttribute(arg.name, toString(invokedST, defaultArgST));
++                        invokedST.rawSetAttribute(arg.Name, toString(invokedST, defaultArgST));
+}
+else
+{
+-                        invokedST.rawSetAttribute(arg.name, defaultArgST);
++                        invokedST.rawSetAttribute(arg.Name, defaultArgST);
+}
+}
+}
+diff --git a/Antlr4.StringTemplate/Misc/TemplateDump.cs b/Antlr4.StringTemplate/Misc/TemplateDump.cs
+index f3cecf1..5397fb4 100644
+--- a/Antlr4.StringTemplate/Misc/TemplateDump.cs
++++ b/Antlr4.StringTemplate/Misc/TemplateDump.cs
+@@ -132,7 +132,7 @@ namespace Antlr4.StringTemplate.Misc
+buf.Append(self.getName());
+buf.Append("(");
+if (self.impl.formalArguments != null)
+-                buf.Append(string.Join(",", self.impl.formalArguments.Select(i => i.name).ToArray()));
++                buf.Append(string.Join(",", self.impl.formalArguments.Select(i => i.Name).ToArray()));
+buf.Append(")@");
+buf.Append(GetHashCode());
+buf.Append(">");
+diff --git a/Antlr4.StringTemplate/Template.cs b/Antlr4.StringTemplate/Template.cs
+index a775918..cb7edab 100644
+--- a/Antlr4.StringTemplate/Template.cs
++++ b/Antlr4.StringTemplate/Template.cs
+@@ -61,9 +61,9 @@ namespace Antlr4.StringTemplate
+/** <@r()>, <@r>...<@end>, and @t.r() ::= "..." defined manually by coder */
+public enum RegionType
+{
+-            IMPLICIT,
+-            EMBEDDED,
+-            EXPLICIT
++            Implicit,
++            Embedded,
++            Explicit
+}
+
+public static readonly string UNKNOWN_NAME = "anonymous";
+@@ -200,18 +200,18 @@ namespace Antlr4.StringTemplate
+else
+Array.Resize(ref locals, impl.formalArguments.Count);
+
+-                    locals[arg.index] = EMPTY_ATTR;
++                    locals[arg.Index] = EMPTY_ATTR;
+}
+}
+
+if (value is ST)
+((ST)value).enclosingInstance = this;
+
+-            object curvalue = locals[arg.index];
++            object curvalue = locals[arg.Index];
+if (curvalue == EMPTY_ATTR)
+{
+// new attribute
+-                locals[arg.index] = value;
++                locals[arg.Index] = value;
+return;
+}
+
+@@ -219,7 +219,7 @@ namespace Antlr4.StringTemplate
+// convert current attribute to list if not already
+// copy-on-write semantics; copy a list injected by user to add new value
+AttributeList multi = convertToAttributeList(curvalue);
+-            locals[arg.index] = multi; // replace with list
++            locals[arg.Index] = multi; // replace with list
+
+// now, add incoming value to multi-valued attribute
+if (value is IList)
+@@ -252,7 +252,7 @@ namespace Antlr4.StringTemplate
+if (arg == null)
+throw new ArgumentException("no such attribute: " + name);
+
+-            locals[arg.index] = EMPTY_ATTR; // reset value
++            locals[arg.Index] = EMPTY_ATTR; // reset value
+}
+
+/** Set this.locals attr value when you only know the name, not the index.
+@@ -268,7 +268,7 @@ namespace Antlr4.StringTemplate
+if (arg == null)
+throw new ArgumentException("no such attribute: " + name);
+
+-            locals[arg.index] = value;
++            locals[arg.Index] = value;
+}
+
+/** Find an attr via dynamic scoping up enclosing ST chain.
+@@ -283,7 +283,7 @@ namespace Antlr4.StringTemplate
+FormalArgument localArg = p.impl.TryGetFormalArgument(name);
+if (localArg != null)
+{
+-                    object o = p.locals[localArg.index];
++                    object o = p.locals[localArg.Index];
+if (o == ST.EMPTY_ATTR)
+o = null;
+return o;
+@@ -308,11 +308,11 @@ namespace Antlr4.StringTemplate
+IDictionary<string, object> attributes = new Dictionary<string, object>();
+foreach (FormalArgument a in impl.formalArguments)
+{
+-                object o = locals[a.index];
++                object o = locals[a.Index];
+if (o == ST.EMPTY_ATTR)
+o = null;
+
+-                attributes[a.name] = o;
++                attributes[a.Name] = o;
+}
+
+return attributes;
+diff --git a/Antlr4.StringTemplate/TemplateGroup.cs b/Antlr4.StringTemplate/TemplateGroup.cs
+index 3e7dd59..86462e6 100644
+--- a/Antlr4.StringTemplate/TemplateGroup.cs
++++ b/Antlr4.StringTemplate/TemplateGroup.cs
+@@ -372,7 +372,7 @@ namespace Antlr4.StringTemplate
+
+code.name = mangled;
+code.isRegion = true;
+-            code.regionDefType = ST.RegionType.EXPLICIT;
++            code.regionDefType = ST.RegionType.Explicit;
+
+rawDefineTemplate(mangled, code, regionT);
+return code;
+@@ -418,12 +418,12 @@ namespace Antlr4.StringTemplate
+errMgr.compileTimeError(ErrorType.TEMPLATE_REDEFINITION, null, defT);
+return;
+}
+-                if (prev.isRegion && prev.regionDefType == ST.RegionType.EMBEDDED)
++                if (prev.isRegion && prev.regionDefType == ST.RegionType.Embedded)
+{
+errMgr.compileTimeError(ErrorType.EMBEDDED_REGION_REDEFINITION, null, defT, getUnMangledTemplateName(name));
+return;
+}
+-                else if (prev.isRegion && prev.regionDefType == ST.RegionType.EXPLICIT)
++                else if (prev.isRegion && prev.regionDefType == ST.RegionType.Explicit)
+{
+errMgr.compileTimeError(ErrorType.REGION_REDEFINITION, null, defT, getUnMangledTemplateName(name));
+return;
+diff --git a/Antlr4.Test.StringTemplate/TestModelAdaptors.cs b/Antlr4.Test.StringTemplate/TestModelAdaptors.cs
+index 849e00b..6683887 100644
+--- a/Antlr4.Test.StringTemplate/TestModelAdaptors.cs
++++ b/Antlr4.Test.StringTemplate/TestModelAdaptors.cs
+@@ -65,7 +65,9 @@ namespace Antlr4.Test.StringTemplate
+
+private class SuperUser : User
+{
+-            int bitmask;
++#pragma warning disable 414 // The field 'name' is assigned but its value is never used
++            private readonly int bitmask;
++#pragma warning restore 414
+
+public SuperUser(int id, string name)
+: base(id, name)
+diff --git a/Antlr4.Test.StringTemplate/TestSyntaxErrors.cs b/Antlr4.Test.StringTemplate/TestSyntaxErrors.cs
+index bf86e50..49794c2 100644
+--- a/Antlr4.Test.StringTemplate/TestSyntaxErrors.cs
++++ b/Antlr4.Test.StringTemplate/TestSyntaxErrors.cs
+@@ -47,9 +47,8 @@ namespace Antlr4.Test.StringTemplate
+{
+group.defineTemplate("test", template);
+}
+-            catch (STException se)
++            catch (STException)
+{
+-                ;
+}
+string result = errors.ToString();
+string expected = "test 1:0: this doesn't look like a template: \" <> \"" + newline;
+@@ -67,9 +66,8 @@ namespace Antlr4.Test.StringTemplate
+{
+group.defineTemplate("test", template);
+}
+-            catch (STException se)
++            catch (STException)
+{
+-                ;
+}
+string result = errors.ToString();
+string expected = "test 1:3: doesn't look like an expression" + newline;
+

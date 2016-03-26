@@ -1,0 +1,2127 @@
+commit 763bccc7c1c1e3ad306444b18476790e9e401a97
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Apr 6 06:26:01 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Apr 6 06:26:01 2011 -0800
+
+(C# 3) Implemented template's enclosing instance as a stack frame within the interpreter (a variation of combined CL8045, 8047, 8049, 8050)
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8085]
+
+diff --git a/Antlr4.StringTemplate.Visualizer/Extensions/TemplateExtensions.cs b/Antlr4.StringTemplate.Visualizer/Extensions/TemplateExtensions.cs
+index e9173e8..bed5953 100644
+--- a/Antlr4.StringTemplate.Visualizer/Extensions/TemplateExtensions.cs
++++ b/Antlr4.StringTemplate.Visualizer/Extensions/TemplateExtensions.cs
+@@ -1,5 +1,5 @@
+﻿/*
+- * [The "BSD licence"]
++ * [The "BSD license"]
+* Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+@@ -32,7 +32,6 @@
+
+namespace Antlr4.StringTemplate.Visualizer.Extensions
+{
+-    using Antlr4.StringTemplate.Debug;
+using Antlr4.StringTemplate.Misc;
+using CultureInfo = System.Globalization.CultureInfo;
+using StringWriter = System.IO.StringWriter;
+@@ -62,8 +61,9 @@ namespace Antlr4.StringTemplate.Visualizer.Extensions
+ITemplateWriter wr = new AutoIndentWriter(@out);
+wr.LineWidth = lineWidth;
+Interpreter interp = new Interpreter(template.groupThatCreatedThisInstance, culture, true);
+-            interp.Execute(wr, template); // Render and track events
+-            TemplateVisualizer visualizer = new TemplateVisualizer(errorManager, template, @out.ToString(), interp, interp.GetExecutionTrace(), errors.Errors);
++            TemplateFrame frame = new TemplateFrame(template, null);
++            interp.Execute(wr, frame); // Render and track events
++            TemplateVisualizer visualizer = new TemplateVisualizer(errorManager, frame, @out.ToString(), interp, interp.GetExecutionTrace(), errors.Errors);
+visualizer.Show();
+return visualizer;
+}
+diff --git a/Antlr4.StringTemplate.Visualizer/TemplateCallHierarchyViewModel.cs b/Antlr4.StringTemplate.Visualizer/TemplateCallHierarchyViewModel.cs
+index 702c825..aa54daa 100644
+--- a/Antlr4.StringTemplate.Visualizer/TemplateCallHierarchyViewModel.cs
++++ b/Antlr4.StringTemplate.Visualizer/TemplateCallHierarchyViewModel.cs
+@@ -1,5 +1,5 @@
+﻿/*
+- * [The "BSD licence"]
++ * [The "BSD license"]
+* Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+@@ -36,8 +36,8 @@ namespace Antlr4.StringTemplate.Visualizer
+using System.ComponentModel;
+using System.Diagnostics;
+using Antlr4.StringTemplate.Debug;
+-    using Path = System.IO.Path;
+using ArgumentNullException = System.ArgumentNullException;
++    using Path = System.IO.Path;
+
+public class TemplateCallHierarchyViewModel : INotifyPropertyChanged
+{
+@@ -72,6 +72,14 @@ namespace Antlr4.StringTemplate.Visualizer
+}
+}
+
++        public TemplateFrame Frame
++        {
++            get
++            {
++                return _event.Frame;
++            }
++        }
++
+public Template Template
+{
+get
+@@ -122,7 +130,7 @@ namespace Antlr4.StringTemplate.Visualizer
+if (_children == null)
+{
+_children = new List<TemplateCallHierarchyViewModel>();
+-                    foreach (var @event in _interpreter.GetDebugState(_event.Template).ChildEvalTemplateEvents)
++                    foreach (var @event in _event.Frame.GetDebugState().ChildEvalTemplateEvents)
+_children.Add(new TemplateCallHierarchyViewModel(_interpreter, @event));
+}
+
+diff --git a/Antlr4.StringTemplate.Visualizer/TemplateVisualizer.cs b/Antlr4.StringTemplate.Visualizer/TemplateVisualizer.cs
+index 325fb21..99bc74f 100644
+--- a/Antlr4.StringTemplate.Visualizer/TemplateVisualizer.cs
++++ b/Antlr4.StringTemplate.Visualizer/TemplateVisualizer.cs
+@@ -1,5 +1,5 @@
+﻿/*
+- * [The "BSD licence"]
++ * [The "BSD license"]
+* Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+@@ -34,20 +34,19 @@ namespace Antlr4.StringTemplate.Visualizer
+{
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+-    using Antlr4.StringTemplate.Debug;
+using Antlr4.StringTemplate.Misc;
+using ArgumentNullException = System.ArgumentNullException;
+
+public class TemplateVisualizer
+{
+private readonly ErrorManager _errorManager;
+-        private readonly Template _root;
++        private readonly TemplateFrame _root;
+private readonly string _output;
+private readonly Interpreter _interpreter;
+private readonly List<string> _trace;
+private readonly ReadOnlyCollection<TemplateMessage> _errors;
+
+-        public TemplateVisualizer(ErrorManager errorManager, Template root, string output, Interpreter interpreter, List<string> trace, ReadOnlyCollection<TemplateMessage> errors)
++        public TemplateVisualizer(ErrorManager errorManager, TemplateFrame root, string output, Interpreter interpreter, List<string> trace, ReadOnlyCollection<TemplateMessage> errors)
+{
+if (errorManager == null)
+throw new ArgumentNullException("errorManager");
+@@ -76,7 +75,7 @@ namespace Antlr4.StringTemplate.Visualizer
+}
+}
+
+-        public Template RootTemplate
++        public TemplateFrame RootTemplate
+{
+get
+{
+diff --git a/Antlr4.StringTemplate.Visualizer/TemplateVisualizerFrame.xaml.cs b/Antlr4.StringTemplate.Visualizer/TemplateVisualizerFrame.xaml.cs
+index 913c0ad..ab85f77 100644
+--- a/Antlr4.StringTemplate.Visualizer/TemplateVisualizerFrame.xaml.cs
++++ b/Antlr4.StringTemplate.Visualizer/TemplateVisualizerFrame.xaml.cs
+@@ -1,5 +1,5 @@
+﻿/*
+- * [The "BSD licence"]
++ * [The "BSD license"]
+* Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+@@ -50,7 +50,7 @@ namespace Antlr4.StringTemplate.Visualizer
+
+public partial class TemplateVisualizerFrame : UserControl
+{
+-        private Template currentTemplate;
++        private TemplateFrame currentTemplate;
+
+public TemplateVisualizerFrame()
+{
+@@ -97,7 +97,7 @@ namespace Antlr4.StringTemplate.Visualizer
+if (runtimeMessage != null)
+{
+Interval interval = runtimeMessage.SourceInterval;
+-                currentTemplate = message.Self;
++                currentTemplate = runtimeMessage.Frame;
+UpdateCurrentTemplate();
+Highlight(TemplateTextBox.Document, interval);
+}
+@@ -113,7 +113,7 @@ namespace Antlr4.StringTemplate.Visualizer
+TemplateCallHierarchyViewModel selected = CallHierarchyTreeView.SelectedItem as TemplateCallHierarchyViewModel;
+if (selected != null)
+{
+-                currentTemplate = selected.Template;
++                currentTemplate = selected.Frame;
+UpdateCurrentTemplate();
+}
+}
+@@ -124,8 +124,8 @@ namespace Antlr4.StringTemplate.Visualizer
+if (node == null)
+return;
+
+-            CommonToken a = (CommonToken)currentTemplate.impl.tokens.Get(node.TokenStartIndex);
+-            CommonToken b = (CommonToken)currentTemplate.impl.tokens.Get(node.TokenStopIndex);
++            CommonToken a = (CommonToken)currentTemplate.Template.impl.tokens.Get(node.TokenStartIndex);
++            CommonToken b = (CommonToken)currentTemplate.Template.impl.tokens.Get(node.TokenStopIndex);
+if (a == null || b == null)
+return;
+
+@@ -138,7 +138,7 @@ namespace Antlr4.StringTemplate.Visualizer
+if (de == null)
+currentTemplate = ViewModel.Visualizer.RootTemplate;
+else
+-                currentTemplate = de.Template;
++                currentTemplate = de.Frame;
+UpdateCurrentTemplate();
+}
+
+@@ -215,8 +215,8 @@ namespace Antlr4.StringTemplate.Visualizer
+// update all views according to current template
+UpdateStack();
+UpdateAttributes();
+-            viewModel.Bytecode = currentTemplate.impl.Disassemble();
+-            TemplateTextBox.Document = new FlowDocument(new Paragraph(new Run(currentTemplate.impl.template)
++            viewModel.Bytecode = currentTemplate.Template.impl.Disassemble();
++            TemplateTextBox.Document = new FlowDocument(new Paragraph(new Run(currentTemplate.Template.impl.template)
+{
+FontFamily = new FontFamily("Consolas")
+}));
+@@ -235,13 +235,13 @@ namespace Antlr4.StringTemplate.Visualizer
+
+// highlight output text and, if {...} subtemplate, region in ST src
+// get last event for currentST; it's the event that captures ST eval
+-            List<InterpEvent> events = viewModel.Visualizer.Interpreter.GetDebugState(currentTemplate).Events;
++            List<InterpEvent> events = currentTemplate.GetDebugState().Events;
+EvalTemplateEvent e = (EvalTemplateEvent)events[events.Count - 1];
+//m.output.moveCaretPosition(e.outputStartChar);
+Highlight(OutputTextBox.Document, e.OutputInterval);
+-            if (currentTemplate.IsAnonymousSubtemplate)
++            if (currentTemplate.Template.IsAnonymousSubtemplate)
+{
+-                Interval r = currentTemplate.impl.TemplateRange;
++                Interval r = currentTemplate.Template.impl.TemplateRange;
+//				System.out.println("currentST src range="+r);
+//m.template.moveCaretPosition(r.a);
+//TemplateTextBox.CaretPosition.
+@@ -310,7 +310,7 @@ namespace Antlr4.StringTemplate.Visualizer
+return;
+
+List<string> attributesList = new List<string>();
+-            IDictionary<string, object> attributes = currentTemplate.GetAttributes();
++            IDictionary<string, object> attributes = currentTemplate.Template.GetAttributes();
+if (attributes != null)
+{
+foreach (var attribute in attributes)
+@@ -320,10 +320,10 @@ namespace Antlr4.StringTemplate.Visualizer
+if (valueList != null)
+value = valueList.ToListString();
+
+-                    if (currentTemplate.DebugState != null && currentTemplate.DebugState.AddAttributeEvents != null)
++                    if (currentTemplate.Template.DebugState != null && currentTemplate.Template.DebugState.AddAttributeEvents != null)
+{
+List<AddAttributeEvent> events;
+-                        currentTemplate.DebugState.AddAttributeEvents.TryGetValue(attribute.Key, out events);
++                        currentTemplate.Template.DebugState.AddAttributeEvents.TryGetValue(attribute.Key, out events);
+StringBuilder locations = new StringBuilder();
+int i = 0;
+if (events != null)
+diff --git a/Antlr4.StringTemplate.Visualizer/TemplateVisualizerViewModel.cs b/Antlr4.StringTemplate.Visualizer/TemplateVisualizerViewModel.cs
+index d4b7f1c..aa82400 100644
+--- a/Antlr4.StringTemplate.Visualizer/TemplateVisualizerViewModel.cs
++++ b/Antlr4.StringTemplate.Visualizer/TemplateVisualizerViewModel.cs
+@@ -1,5 +1,5 @@
+﻿/*
+- * [The "BSD licence"]
++ * [The "BSD license"]
+* Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+@@ -65,7 +65,7 @@ namespace Antlr4.StringTemplate.Visualizer
+
+_visualizer = visualizer;
+_allEvents = visualizer.Interpreter.GetEvents();
+-            List<InterpEvent> events = visualizer.Interpreter.GetDebugState(visualizer.RootTemplate).Events;
++            List<InterpEvent> events = visualizer.RootTemplate.GetDebugState().Events;
+_templateCallHierarchy =
+new List<TemplateCallHierarchyViewModel>()
+{
+diff --git a/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj b/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj
+index aa1994c..4402ea8 100644
+--- a/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj
++++ b/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj
+@@ -48,6 +48,9 @@
+<Compile Include="Extensions\ExceptionExtensions.cs" />
+<Compile Include="IAttributeRenderer.cs" />
+<Compile Include="AutoIndentWriter.cs" />
++    <Compile Include="Debug\DebugEvents.cs" />
++    <Compile Include="RenderOption.cs" />
++    <Compile Include="TemplateFrame.cs" />
+<Compile Include="Misc\Aggregate.cs" />
+<Compile Include="Misc\AggregateModelAdaptor.cs" />
+<Compile Include="TemplateGroupString.cs" />
+diff --git a/Antlr4.StringTemplate/Compiler/CompilationState.cs b/Antlr4.StringTemplate/Compiler/CompilationState.cs
+index e37b83b..2566c1a 100644
+--- a/Antlr4.StringTemplate/Compiler/CompilationState.cs
++++ b/Antlr4.StringTemplate/Compiler/CompilationState.cs
+@@ -1,5 +1,5 @@
+/*
+- * [The "BSD licence"]
++ * [The "BSD license"]
+* Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+@@ -94,7 +94,7 @@ namespace Antlr4.StringTemplate.Compiler
+
+public virtual void SetOption(CommonTree id)
+{
+-            Interpreter.Option O = TemplateCompiler.supportedOptions[id.Text];
++            RenderOption O = TemplateCompiler.supportedOptions[id.Text];
+Emit1(id, Bytecode.INSTR_STORE_OPTION, (int)O);
+}
+
+diff --git a/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs b/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs
+index 32300c8..7148aa5 100644
+--- a/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs
++++ b/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs
+@@ -45,14 +45,14 @@ namespace Antlr4.StringTemplate.Compiler
+
+public const int InitialCodeSize = 15;
+
+-        public static readonly IDictionary<string, Interpreter.Option> supportedOptions =
+-            new Dictionary<string, Interpreter.Option>()
++        public static readonly IDictionary<string, RenderOption> supportedOptions =
++            new Dictionary<string, RenderOption>()
+{
+-                {"anchor",       Interpreter.Option.Anchor},
+-                {"format",       Interpreter.Option.Format},
+-                {"null",         Interpreter.Option.Null},
+-                {"separator",    Interpreter.Option.Separator},
+-                {"wrap",         Interpreter.Option.Wrap},
++                {"anchor",       RenderOption.Anchor},
++                {"format",       RenderOption.Format},
++                {"null",         RenderOption.Null},
++                {"separator",    RenderOption.Separator},
++                {"wrap",         RenderOption.Wrap},
+};
+
+public static readonly int NUM_OPTIONS = supportedOptions.Count;
+diff --git a/Antlr4.StringTemplate/Debug/DebugEvents.cs b/Antlr4.StringTemplate/Debug/DebugEvents.cs
+new file mode 100644
+index 0000000..7270bd6
+--- /dev/null
++++ b/Antlr4.StringTemplate/Debug/DebugEvents.cs
+@@ -0,0 +1,59 @@
++﻿/*
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2011 Sam Harwell, Tunnel Vision Laboratories, LLC
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace Antlr4.StringTemplate.Debug
++{
++    using System.Collections.Generic;
++
++    /** Track all events that happen while evaluating this template */
++    public class DebugEvents
++    {
++        /* Includes the EvalTemplateEvent for this template.  This
++        *  is a subset of Interpreter.events field. The final
++        *  EvalTemplateEvent is stored in 3 places:
++        *
++        *  	1. In enclosingInstance's childTemplateEvents
++        *  	2. In this event list
++        *  	3. In the overall event list
++        *
++        *  The root ST has the final EvalTemplateEvent in its list.
++        *
++        *  All events get added to the enclosingInstance's event list.
++        */
++        public List<InterpEvent> Events = new List<InterpEvent>();
++
++        /** All templates evaluated and embedded in this ST. Used
++         *  for tree view in STViz.
++         */
++        public List<EvalTemplateEvent> ChildEvalTemplateEvents = new List<EvalTemplateEvent>();
++    }
++}
+diff --git a/Antlr4.StringTemplate/Debug/EvalExprEvent.cs b/Antlr4.StringTemplate/Debug/EvalExprEvent.cs
+index 2a97eb1..966491e 100644
+--- a/Antlr4.StringTemplate/Debug/EvalExprEvent.cs
++++ b/Antlr4.StringTemplate/Debug/EvalExprEvent.cs
+@@ -1,5 +1,5 @@
+/*
+- * [The "BSD licence"]
++ * [The "BSD license"]
+* Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+@@ -40,12 +40,12 @@ namespace Antlr4.StringTemplate.Debug
+private readonly Interval _sourceInterval;
+private readonly string expr = string.Empty;
+
+-        public EvalExprEvent(Template template, Interval outputInterval, Interval sourceInterval)
+-            : base(template, outputInterval)
++        public EvalExprEvent(TemplateFrame frame, Interval outputInterval, Interval sourceInterval)
++            : base(frame, outputInterval)
+{
+this._sourceInterval = sourceInterval;
+if (_sourceInterval != null)
+-                expr = template.impl.template.Substring(_sourceInterval.Start, _sourceInterval.Length);
++                expr = frame.Template.impl.template.Substring(_sourceInterval.Start, _sourceInterval.Length);
+}
+
+public Interval SourceInterval
+diff --git a/Antlr4.StringTemplate/Debug/EvalTemplateEvent.cs b/Antlr4.StringTemplate/Debug/EvalTemplateEvent.cs
+index ed580a4..a1accfc 100644
+--- a/Antlr4.StringTemplate/Debug/EvalTemplateEvent.cs
++++ b/Antlr4.StringTemplate/Debug/EvalTemplateEvent.cs
+@@ -1,5 +1,5 @@
+/*
+- * [The "BSD licence"]
++ * [The "BSD license"]
+* Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+@@ -36,8 +36,8 @@ namespace Antlr4.StringTemplate.Debug
+
+public class EvalTemplateEvent : InterpEvent
+{
+-        public EvalTemplateEvent(Template template, Interval interval)
+-            : base(template, interval)
++        public EvalTemplateEvent(TemplateFrame frame, Interval interval)
++            : base(frame, interval)
+{
+}
+}
+diff --git a/Antlr4.StringTemplate/Debug/IndentEvent.cs b/Antlr4.StringTemplate/Debug/IndentEvent.cs
+index 28cc453..84f3a3e 100644
+--- a/Antlr4.StringTemplate/Debug/IndentEvent.cs
++++ b/Antlr4.StringTemplate/Debug/IndentEvent.cs
+@@ -36,8 +36,8 @@ namespace Antlr4.StringTemplate.Debug
+
+public class IndentEvent : EvalExprEvent
+{
+-        public IndentEvent(Template template, Interval outputInterval, Interval sourceInterval)
+-            : base(template, outputInterval, sourceInterval)
++        public IndentEvent(TemplateFrame frame, Interval outputInterval, Interval sourceInterval)
++            : base(frame, outputInterval, sourceInterval)
+{
+}
+}
+diff --git a/Antlr4.StringTemplate/Debug/InterpEvent.cs b/Antlr4.StringTemplate/Debug/InterpEvent.cs
+index e7ead07..5840e89 100644
+--- a/Antlr4.StringTemplate/Debug/InterpEvent.cs
++++ b/Antlr4.StringTemplate/Debug/InterpEvent.cs
+@@ -1,5 +1,5 @@
+/*
+- * [The "BSD licence"]
++ * [The "BSD license"]
+* Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+@@ -37,26 +37,34 @@ namespace Antlr4.StringTemplate.Debug
+
+public class InterpEvent
+{
+-        private readonly Template _template;
++        private readonly TemplateFrame _frame;
+// output location
+private readonly Interval _interval;
+
+-        public InterpEvent(Template template, Interval interval)
++        public InterpEvent(TemplateFrame frame, Interval interval)
+{
+-            if (template == null)
+-                throw new ArgumentNullException("template");
++            if (frame == null)
++                throw new ArgumentNullException("frame");
+if (interval == null)
+throw new ArgumentNullException("interval");
+
+-            this._template = template;
++            this._frame = frame;
+this._interval = interval;
+}
+
++        public TemplateFrame Frame
++        {
++            get
++            {
++                return _frame;
++            }
++        }
++
+public Template Template
+{
+get
+{
+-                return _template;
++                return _frame.Template;
+}
+}
+
+@@ -70,7 +78,7 @@ namespace Antlr4.StringTemplate.Debug
+
+public override string ToString()
+{
+-            return string.Format("{0}{{self={1}, output={2}}}", GetType().Name, _template, OutputInterval);
++            return string.Format("{0}{{self={1}, output={2}}}", GetType().Name, Template, OutputInterval);
+}
+}
+}
+diff --git a/Antlr4.StringTemplate/IModelAdaptor.cs b/Antlr4.StringTemplate/IModelAdaptor.cs
+index 7fae256..68252ce 100644
+--- a/Antlr4.StringTemplate/IModelAdaptor.cs
++++ b/Antlr4.StringTemplate/IModelAdaptor.cs
+@@ -1,5 +1,5 @@
+/*
+- * [The "BSD licence"]
++ * [The "BSD license"]
+* Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+@@ -53,6 +53,6 @@ namespace Antlr4.StringTemplate
+*  if o is Map, property could be any key type.  If we need to convert
+*  to string, then it's done by Template and passed in here.
+*/
+-        object GetProperty(Template self, object obj, object property, string propertyName);
++        object GetProperty(Interpreter interpreter, TemplateFrame frame, object obj, object property, string propertyName);
+}
+}
+diff --git a/Antlr4.StringTemplate/Interpreter.cs b/Antlr4.StringTemplate/Interpreter.cs
+index cae0ba7..d41260a 100644
+--- a/Antlr4.StringTemplate/Interpreter.cs
++++ b/Antlr4.StringTemplate/Interpreter.cs
+@@ -1,5 +1,5 @@
+/*
+- * [The "BSD licence"]
++ * [The "BSD license"]
+* Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+@@ -69,16 +69,8 @@ namespace Antlr4.StringTemplate
+*  We create a new interpreter for each Template.Render(), DebugTemplate.Visualize, or
+*  DebugTemplate.GetEvents() invocation.
+*/
+-    public class Interpreter
++    public partial class Interpreter
+{
+-        public enum Option
+-        {
+-            Anchor,
+-            Format,
+-            Null,
+-            Separator,
+-            Wrap
+-        }
+
+public const int DefaultOperandStackSize = 100;
+
+@@ -116,9 +108,6 @@ namespace Antlr4.StringTemplate
+*/
+private List<InterpEvent> events;
+
+-        /** Track interp events for every ST we exec */
+-        protected IDictionary<Template, Template.InterpDebugState> debugStateMap;
+-
+public Interpreter(TemplateGroup group, bool debug)
+: this(group, CultureInfo.CurrentCulture, group.ErrorManager, debug)
+{
+@@ -143,18 +132,17 @@ namespace Antlr4.StringTemplate
+if (debug)
+{
+events = new List<InterpEvent>();
+-                debugStateMap = new Dictionary<Template, Template.InterpDebugState>();
+executeTrace = new List<string>();
+}
+}
+
+/** Execute template self and return how many characters it wrote to out */
+-        public virtual int Execute(ITemplateWriter @out, Template self)
++        public virtual int Execute(ITemplateWriter @out, TemplateFrame frame)
+{
+int save_ip = current_ip;
+try
+{
+-                return ExecuteImpl(@out, self);
++                return ExecuteImpl(@out, frame);
+}
+finally
+{
+@@ -162,8 +150,9 @@ namespace Antlr4.StringTemplate
+}
+}
+
+-        protected virtual int ExecuteImpl(ITemplateWriter @out, Template self)
++        protected virtual int ExecuteImpl(ITemplateWriter @out, TemplateFrame frame)
+{
++            Template self = frame.Template;
+int start = @out.Index; // track char we're about to Write
+Bytecode prevOpcode = Bytecode.Invalid;
+int n = 0; // how many char we Write out
+@@ -179,7 +168,7 @@ namespace Antlr4.StringTemplate
+while (ip < self.impl.codeSize)
+{
+if (trace || _debug)
+-                    Trace(self, ip);
++                    Trace(frame, ip);
+
+Bytecode opcode = (Bytecode)code[ip];
+current_ip = ip;
+@@ -198,11 +187,11 @@ namespace Antlr4.StringTemplate
+name = self.impl.strings[nameIndex];
+try
+{
+-                        o = self.GetAttribute(name);
++                        o = GetAttribute(frame, name);
+}
+catch (TemplateNoSuchPropertyException)
+{
+-                        errMgr.RuntimeError(self, current_ip, ErrorType.NO_SUCH_ATTRIBUTE, name);
++                        errMgr.RuntimeError(frame, current_ip, ErrorType.NO_SUCH_ATTRIBUTE, name);
+o = null;
+}
+operands[++sp] = o;
+@@ -222,13 +211,13 @@ namespace Antlr4.StringTemplate
+ip += Instruction.OperandSizeInBytes;
+o = operands[sp--];
+name = self.impl.strings[nameIndex];
+-                    operands[++sp] = GetObjectProperty(self, o, name);
++                    operands[++sp] = GetObjectProperty(frame, o, name);
+break;
+
+case Bytecode.INSTR_LOAD_PROP_IND:
+object propName = operands[sp--];
+o = operands[sp];
+-                    operands[sp] = GetObjectProperty(self, o, propName);
++                    operands[sp] = GetObjectProperty(frame, o, propName);
+break;
+
+case Bytecode.INSTR_NEW:
+@@ -239,9 +228,9 @@ namespace Antlr4.StringTemplate
+ip += Instruction.OperandSizeInBytes;
+// look up in original hierarchy not enclosing template (variable group)
+// see TestSubtemplates.testEvalSTFromAnotherGroup()
+-                    st = self.groupThatCreatedThisInstance.GetEmbeddedInstanceOf(self, ip, name);
++                    st = self.groupThatCreatedThisInstance.GetEmbeddedInstanceOf(frame, ip, name);
+// get n args and store into st's attr list
+-                    StoreArguments(self, nargs, st);
++                    StoreArguments(frame, nargs, st);
+sp -= nargs;
+operands[++sp] = st;
+break;
+@@ -250,8 +239,8 @@ namespace Antlr4.StringTemplate
+nargs = GetShort(code, ip);
+ip += Instruction.OperandSizeInBytes;
+name = (string)operands[sp - nargs];
+-                    st = self.groupThatCreatedThisInstance.GetEmbeddedInstanceOf(self, ip, name);
+-                    StoreArguments(self, nargs, st);
++                    st = self.groupThatCreatedThisInstance.GetEmbeddedInstanceOf(frame, ip, name);
++                    StoreArguments(frame, nargs, st);
+sp -= nargs;
+sp--; // pop template name
+operands[++sp] = st;
+@@ -264,9 +253,9 @@ namespace Antlr4.StringTemplate
+IDictionary<string, object> attrs = (IDictionary<string, object>)operands[sp--];
+// look up in original hierarchy not enclosing template (variable group)
+// see TestSubtemplates.testEvalSTFromAnotherGroup()
+-                    st = self.groupThatCreatedThisInstance.GetEmbeddedInstanceOf(self, ip, name);
++                    st = self.groupThatCreatedThisInstance.GetEmbeddedInstanceOf(frame, ip, name);
+// get n args and store into st's attr list
+-                    StoreArguments(self, attrs, st);
++                    StoreArguments(frame, attrs, st);
+operands[++sp] = st;
+break;
+
+@@ -276,7 +265,7 @@ namespace Antlr4.StringTemplate
+name = self.impl.strings[nameIndex];
+nargs = GetShort(code, ip);
+ip += Instruction.OperandSizeInBytes;
+-                    SuperNew(self, name, nargs);
++                    SuperNew(frame, name, nargs);
+break;
+
+case Bytecode.INSTR_SUPER_NEW_BOX_ARGS:
+@@ -284,7 +273,7 @@ namespace Antlr4.StringTemplate
+ip += Instruction.OperandSizeInBytes;
+name = self.impl.strings[nameIndex];
+attrs = (IDictionary<string, object>)operands[sp--];
+-                    SuperNew(self, name, attrs);
++                    SuperNew(frame, name, attrs);
+break;
+
+case Bytecode.INSTR_STORE_OPTION:
+@@ -306,7 +295,7 @@ namespace Antlr4.StringTemplate
+
+case Bytecode.INSTR_WRITE:
+o = operands[sp--];
+-                    int n1 = WriteObjectNoOptions(@out, self, o);
++                    int n1 = WriteObjectNoOptions(@out, frame, o);
+n += n1;
+nwline += n1;
+break;
+@@ -314,7 +303,7 @@ namespace Antlr4.StringTemplate
+case Bytecode.INSTR_WRITE_OPT:
+options = (object[])operands[sp--]; // get options
+o = operands[sp--];                 // get option to Write
+-                    int n2 = WriteObjectWithOptions(@out, self, o, options);
++                    int n2 = WriteObjectWithOptions(@out, frame, o, options);
+n += n2;
+nwline += n2;
+break;
+@@ -322,7 +311,7 @@ namespace Antlr4.StringTemplate
+case Bytecode.INSTR_MAP:
+st = (Template)operands[sp--]; // get prototype off stack
+o = operands[sp--];		 // get object to map prototype across
+-                    Map(self, o, st);
++                    Map(frame, o, st);
+break;
+
+case Bytecode.INSTR_ROT_MAP:
+@@ -334,7 +323,7 @@ namespace Antlr4.StringTemplate
+sp -= nmaps;
+o = operands[sp--];
+if (o != null)
+-                        RotateMap(self, o, templates);
++                        RotateMap(frame, o, templates);
+break;
+
+case Bytecode.INSTR_ZIP_MAP:
+@@ -346,7 +335,7 @@ namespace Antlr4.StringTemplate
+exprs.Add(operands[sp - i]);
+
+sp -= nmaps;
+-                    operands[++sp] = ZipMap(self, exprs, st);
++                    operands[++sp] = ZipMap(frame, exprs, st);
+break;
+
+case Bytecode.INSTR_BR:
+@@ -382,7 +371,7 @@ namespace Antlr4.StringTemplate
+
+case Bytecode.INSTR_TOSTR:
+// replace with string value; early eval
+-                    operands[sp] = ToString(self, operands[sp]);
++                    operands[sp] = ToString(frame, operands[sp]);
+break;
+
+case Bytecode.INSTR_FIRST:
+@@ -413,7 +402,7 @@ namespace Antlr4.StringTemplate
+}
+else
+{
+-                        errMgr.RuntimeError(self, current_ip, ErrorType.EXPECTING_STRING, "trim", o.GetType());
++                        errMgr.RuntimeError(frame, current_ip, ErrorType.EXPECTING_STRING, "trim", o.GetType());
+operands[++sp] = o;
+}
+break;
+@@ -430,7 +419,7 @@ namespace Antlr4.StringTemplate
+}
+else
+{
+-                        errMgr.RuntimeError(self, current_ip, ErrorType.EXPECTING_STRING, "strlen", o.GetType());
++                        errMgr.RuntimeError(frame, current_ip, ErrorType.EXPECTING_STRING, "strlen", o.GetType());
+operands[++sp] = 0;
+}
+break;
+@@ -458,7 +447,7 @@ namespace Antlr4.StringTemplate
+case Bytecode.INSTR_INDENT:
+strIndex = GetShort(code, ip);
+ip += Instruction.OperandSizeInBytes;
+-                    Indent(@out, self, strIndex);
++                    Indent(@out, frame, strIndex);
+break;
+
+case Bytecode.INSTR_DEDENT:
+@@ -505,7 +494,7 @@ namespace Antlr4.StringTemplate
+strIndex = GetShort(code, ip);
+ip += Instruction.OperandSizeInBytes;
+o = self.impl.strings[strIndex];
+-                    n1 = WriteObjectNoOptions(@out, self, o);
++                    n1 = WriteObjectNoOptions(@out, frame, o);
+n += n1;
+nwline += n1;
+break;
+@@ -517,7 +506,7 @@ namespace Antlr4.StringTemplate
+if (o == Template.EmptyAttribute)
+o = null;
+
+-                    n1 = WriteObjectNoOptions(@out, self, o);
++                    n1 = WriteObjectNoOptions(@out, frame, o);
+n += n1;
+nwline += n1;
+break;
+@@ -533,24 +522,23 @@ namespace Antlr4.StringTemplate
+
+if (_debug)
+{
+-                EvalTemplateEvent e = new EvalTemplateEvent(self, Interval.FromBounds(start, @out.Index));
+-                TrackDebugEvent(self, e);
++                EvalTemplateEvent e = new EvalTemplateEvent(frame, Interval.FromBounds(start, @out.Index));
++                TrackDebugEvent(frame, e);
+}
+return n;
+}
+
+// TODO: refactor to Remove dup'd code
+
+-        internal virtual void SuperNew(Template self, string name, int nargs)
++        internal virtual void SuperNew(TemplateFrame frame, string name, int nargs)
+{
++            Template self = frame.Template;
+Template st = null;
+CompiledTemplate imported = self.impl.NativeGroup.LookupImportedTemplate(name);
+if (imported == null)
+{
+-                errMgr.RuntimeError(self, current_ip, ErrorType.NO_IMPORTED_TEMPLATE,
+-                                    name);
++                errMgr.RuntimeError(frame, current_ip, ErrorType.NO_IMPORTED_TEMPLATE, name);
+st = self.groupThatCreatedThisInstance.CreateStringTemplateInternally();
+-                st.EnclosingInstance = self;
+st.impl = new CompiledTemplate();
+sp -= nargs;
+operands[++sp] = st;
+@@ -558,41 +546,39 @@ namespace Antlr4.StringTemplate
+}
+
+st = imported.NativeGroup.CreateStringTemplateInternally();
+-            st.EnclosingInstance = self; // self invoked super.name()
+st.groupThatCreatedThisInstance = group;
+st.impl = imported;
+
+// get n args and store into st's attr list
+-            StoreArguments(self, nargs, st);
++            StoreArguments(frame, nargs, st);
+sp -= nargs;
+operands[++sp] = st;
+}
+
+-        internal virtual void SuperNew(Template self, string name, IDictionary<string, object> attrs)
++        internal virtual void SuperNew(TemplateFrame frame, string name, IDictionary<string, object> attrs)
+{
++            Template self = frame.Template;
+Template st = null;
+CompiledTemplate imported = self.impl.NativeGroup.LookupImportedTemplate(name);
+if (imported == null)
+{
+-                errMgr.RuntimeError(self, current_ip, ErrorType.NO_IMPORTED_TEMPLATE, name);
++                errMgr.RuntimeError(frame, current_ip, ErrorType.NO_IMPORTED_TEMPLATE, name);
+st = self.groupThatCreatedThisInstance.CreateStringTemplateInternally();
+-                st.EnclosingInstance = self;
+st.impl = new CompiledTemplate();
+operands[++sp] = st;
+return;
+}
+
+st = imported.NativeGroup.CreateStringTemplateInternally();
+-            st.EnclosingInstance = self; // self invoked super.name()
+st.groupThatCreatedThisInstance = group;
+st.impl = imported;
+
+// get n args and store into st's attr list
+-            StoreArguments(self, attrs, st);
++            StoreArguments(frame, attrs, st);
+operands[++sp] = st;
+}
+
+-        internal virtual void StoreArguments(Template self, IDictionary<string, object> attrs, Template st)
++        internal virtual void StoreArguments(TemplateFrame frame, IDictionary<string, object> attrs, Template st)
+{
+int nformalArgs = 0;
+if (st.impl.FormalArguments != null)
+@@ -603,7 +589,7 @@ namespace Antlr4.StringTemplate
+
+if (nargs < (nformalArgs - st.impl.NumberOfArgsWithDefaultValues) || nargs > nformalArgs)
+{
+-                errMgr.RuntimeError(self,
++                errMgr.RuntimeError(frame,
+current_ip,
+ErrorType.ARGUMENT_COUNT_MISMATCH,
+nargs,
+@@ -616,7 +602,7 @@ namespace Antlr4.StringTemplate
+// don't let it throw an exception in RawSetAttribute
+if (st.impl.FormalArguments == null || !st.impl.FormalArguments.Any(i => i.Name == argName))
+{
+-                    errMgr.RuntimeError(self, current_ip, ErrorType.NO_SUCH_ATTRIBUTE, argName);
++                    errMgr.RuntimeError(frame, current_ip, ErrorType.NO_SUCH_ATTRIBUTE, argName);
+continue;
+}
+
+@@ -625,7 +611,7 @@ namespace Antlr4.StringTemplate
+}
+}
+
+-        internal virtual void StoreArguments(Template self, int nargs, Template st)
++        internal virtual void StoreArguments(TemplateFrame frame, int nargs, Template st)
+{
+int nformalArgs = 0;
+if (st.impl.FormalArguments != null)
+@@ -638,7 +624,7 @@ namespace Antlr4.StringTemplate
+if (nargs < (nformalArgs - st.impl.NumberOfArgsWithDefaultValues) ||
+nargs > nformalArgs)
+{
+-                errMgr.RuntimeError(self,
++                errMgr.RuntimeError(frame,
+current_ip,
+ErrorType.ARGUMENT_COUNT_MISMATCH,
+nargs,
+@@ -657,14 +643,15 @@ namespace Antlr4.StringTemplate
+}
+}
+
+-        protected void Indent(ITemplateWriter @out, Template self, int strIndex)
++        protected void Indent(ITemplateWriter @out, TemplateFrame frame, int strIndex)
+{
++            Template self = frame.Template;
+string indent = self.impl.strings[strIndex];
+if (_debug)
+{
+int start = @out.Index; // track char we're about to write
+-                EvalExprEvent e = new IndentEvent(self, new Interval(start, indent.Length), GetExpressionInterval(self));
+-                TrackDebugEvent(self, e);
++                EvalExprEvent e = new IndentEvent(frame, new Interval(start, indent.Length), GetExpressionInterval(self));
++                TrackDebugEvent(frame, e);
+}
+
+@out.PushIndentation(indent);
+@@ -673,15 +660,15 @@ namespace Antlr4.StringTemplate
+/** Write out an expression result that doesn't use expression options.
+*  E.g., &lt;name&gt;
+*/
+-        protected virtual int WriteObjectNoOptions(ITemplateWriter @out, Template self, object o)
++        protected virtual int WriteObjectNoOptions(ITemplateWriter @out, TemplateFrame frame, object o)
+{
+int start = @out.Index; // track char we're about to Write
+-            int n = WriteObject(@out, self, o, null);
++            int n = WriteObject(@out, frame, o, null);
+if (_debug)
+{
+-                Interval templateLocation = self.impl.sourceMap[current_ip];
+-                EvalExprEvent e = new EvalExprEvent(self, Interval.FromBounds(start, @out.Index), templateLocation);
+-                TrackDebugEvent(self, e);
++                Interval templateLocation = frame.Template.impl.sourceMap[current_ip];
++                EvalExprEvent e = new EvalExprEvent(frame, Interval.FromBounds(start, @out.Index), templateLocation);
++                TrackDebugEvent(frame, e);
+}
+
+return n;
+@@ -690,8 +677,7 @@ namespace Antlr4.StringTemplate
+/** Write out an expression result that uses expression options.
+*  E.g., &lt;names; separator=", "&gt;
+*/
+-        protected virtual int WriteObjectWithOptions(ITemplateWriter @out, Template self, object o,
+-                                             object[] options)
++        protected virtual int WriteObjectWithOptions(ITemplateWriter @out, TemplateFrame frame, object o, object[] options)
+{
+int start = @out.Index; // track char we're about to Write
+// precompute all option values (Render all the way to strings)
+@@ -701,27 +687,27 @@ namespace Antlr4.StringTemplate
+optionStrings = new string[options.Length];
+for (int i = 0; i < Compiler.TemplateCompiler.NUM_OPTIONS; i++)
+{
+-                    optionStrings[i] = ToString(self, options[i]);
++                    optionStrings[i] = ToString(frame, options[i]);
+}
+}
+
+-            if (options != null && options[(int)Option.Anchor] != null)
++            if (options != null && options[(int)RenderOption.Anchor] != null)
+{
+@out.PushAnchorPoint();
+}
+
+-            int n = WriteObject(@out, self, o, optionStrings);
++            int n = WriteObject(@out, frame, o, optionStrings);
+
+-            if (options != null && options[(int)Option.Anchor] != null)
++            if (options != null && options[(int)RenderOption.Anchor] != null)
+{
+@out.PopAnchorPoint();
+}
+
+if (_debug)
+{
+-                Interval templateLocation = self.impl.sourceMap[current_ip];
+-                EvalExprEvent e = new EvalExprEvent(self, Interval.FromBounds(start, @out.Index), templateLocation);
+-                TrackDebugEvent(self, e);
++                Interval templateLocation = frame.Template.impl.sourceMap[current_ip];
++                EvalExprEvent e = new EvalExprEvent(frame, Interval.FromBounds(start, @out.Index), templateLocation);
++                TrackDebugEvent(frame, e);
+}
+
+return n;
+@@ -730,42 +716,41 @@ namespace Antlr4.StringTemplate
+/** Generic method to emit text for an object. It differentiates
+*  between templates, iterable objects, and plain old Java objects (POJOs)
+*/
+-        protected virtual int WriteObject(ITemplateWriter @out, Template self, object o, string[] options)
++        protected virtual int WriteObject(ITemplateWriter @out, TemplateFrame frame, object o, string[] options)
+{
+int n = 0;
+if (o == null)
+{
+-                if (options != null && options[(int)Option.Null] != null)
+-                    o = options[(int)Option.Null];
++                if (options != null && options[(int)RenderOption.Null] != null)
++                    o = options[(int)RenderOption.Null];
+else
+return 0;
+}
+
+-            ITypeProxyFactory proxyFactory = self.groupThatCreatedThisInstance.GetTypeProxyFactory(o.GetType());
++            ITypeProxyFactory proxyFactory = frame.Template.groupThatCreatedThisInstance.GetTypeProxyFactory(o.GetType());
+if (proxyFactory != null)
+o = proxyFactory.CreateProxy(o);
+
++            System.Diagnostics.Debug.Assert(!(o is TemplateFrame));
+Template template = o as Template;
+if (template != null)
+{
+-                if (template.EnclosingInstance != self)
+-                    template = template.CreateShadow(self);
+-
+-                SetDefaultArguments(template);
+-                if (options != null && options[(int)Option.Wrap] != null)
++                frame = new TemplateFrame(template, frame);
++                SetDefaultArguments(frame);
++                if (options != null && options[(int)RenderOption.Wrap] != null)
+{
+// if we have a wrap string, then inform writer it
+// might need to wrap
+try
+{
+-                        @out.WriteWrap(options[(int)Option.Wrap]);
++                        @out.WriteWrap(options[(int)RenderOption.Wrap]);
+}
+catch (IOException ioe)
+{
+-                        errMgr.IOError(self, ErrorType.WRITE_IO_ERROR, ioe);
++                        errMgr.IOError(template, ErrorType.WRITE_IO_ERROR, ioe);
+}
+}
+-                n = Execute(@out, template);
++                n = Execute(@out, frame);
+}
+else
+{
+@@ -773,28 +758,29 @@ namespace Antlr4.StringTemplate
+try
+{
+if (o is Iterator)
+-                        n = WriteIterator(@out, self, o, options);
++                        n = WriteIterator(@out, frame, o, options);
+else
+n = WritePlainObject(@out, o, options);
+}
+catch (IOException ioe)
+{
+-                    errMgr.IOError(self, ErrorType.WRITE_IO_ERROR, ioe, o);
++                    errMgr.IOError(frame.Template, ErrorType.WRITE_IO_ERROR, ioe, o);
+}
+}
+
+return n;
+}
+
+-        protected virtual int WriteIterator(ITemplateWriter @out, Template self, object o, string[] options)
++        protected virtual int WriteIterator(ITemplateWriter @out, TemplateFrame frame, object o, string[] options)
+{
+if (o == null)
+return 0;
++
+int n = 0;
+Iterator it = (Iterator)o;
+string separator = null;
+if (options != null)
+-                separator = options[(int)Option.Separator];
++                separator = options[(int)RenderOption.Separator];
+bool seenAValue = false;
+while (it.hasNext())
+{
+@@ -803,10 +789,10 @@ namespace Antlr4.StringTemplate
+bool needSeparator = seenAValue &&
+separator != null &&            // we have a separator and
+(iterValue != null ||           // either we have a value
+-                        options[(int)Option.Null] != null); // or no value but null option
++                        options[(int)RenderOption.Null] != null); // or no value but null option
+if (needSeparator)
+n += @out.WriteSeparator(separator);
+-                int nw = WriteObject(@out, self, iterValue, options);
++                int nw = WriteObject(@out, frame, iterValue, options);
+if (nw > 0)
+seenAValue = true;
+n += nw;
+@@ -818,7 +804,7 @@ namespace Antlr4.StringTemplate
+{
+string formatString = null;
+if (options != null)
+-                formatString = options[(int)Option.Format];
++                formatString = options[(int)RenderOption.Format];
+IAttributeRenderer r = group.GetAttributeRenderer(o.GetType());
+string v;
+if (r != null)
+@@ -826,9 +812,9 @@ namespace Antlr4.StringTemplate
+else
+v = o.ToString();
+int n;
+-            if (options != null && options[(int)Option.Wrap] != null)
++            if (options != null && options[(int)RenderOption.Wrap] != null)
+{
+-                n = @out.Write(v, options[(int)Option.Wrap]);
++                n = @out.Write(v, options[(int)RenderOption.Wrap]);
+}
+else
+{
+@@ -842,13 +828,13 @@ namespace Antlr4.StringTemplate
+return self.impl.sourceMap[current_ip];
+}
+
+-        protected virtual void Map(Template self, object attr, Template st)
++        protected virtual void Map(TemplateFrame frame, object attr, Template st)
+{
+-            RotateMap(self, attr, new List<Template>() { st });
++            RotateMap(frame, attr, new List<Template>() { st });
+}
+
+// <names:a> or <names:a,b>
+-        protected virtual void RotateMap(Template self, object attr, List<Template> prototypes)
++        protected virtual void RotateMap(TemplateFrame frame, object attr, List<Template> prototypes)
+{
+if (attr == null)
+{
+@@ -859,7 +845,7 @@ namespace Antlr4.StringTemplate
+Iterator iterator = attr as Iterator;
+if (iterator != null)
+{
+-                List<Template> mapped = RotateMapIterator(self, iterator, prototypes);
++                List<Template> mapped = RotateMapIterator(frame, iterator, prototypes);
+operands[++sp] = mapped;
+}
+else
+@@ -867,10 +853,9 @@ namespace Antlr4.StringTemplate
+// if only single value, just apply first template to sole value
+Template proto = prototypes[0];
+Template st = group.CreateStringTemplateInternally(proto);
+-                st.EnclosingInstance = self;
+if (st != null)
+{
+-                    SetFirstArgument(self, st, attr);
++                    SetFirstArgument(frame, st, attr);
+if (st.impl.isAnonSubtemplate)
+{
+st.RawSetAttribute("i0", 0);
+@@ -886,7 +871,7 @@ namespace Antlr4.StringTemplate
+}
+}
+
+-        protected virtual List<Template> RotateMapIterator(Template self, Iterator iterator, List<Template> prototypes)
++        protected virtual List<Template> RotateMapIterator(TemplateFrame frame, Iterator iterator, List<Template> prototypes)
+{
+List<Template> mapped = new List<Template>();
+int i0 = 0;
+@@ -905,8 +890,7 @@ namespace Antlr4.StringTemplate
+ti++;
+Template proto = prototypes[templateIndex];
+Template st = group.CreateStringTemplateInternally(proto);
+-                st.EnclosingInstance = self;
+-                SetFirstArgument(self, st, iterValue);
++                SetFirstArgument(frame, st, iterValue);
+if (st.impl.isAnonSubtemplate)
+{
+st.RawSetAttribute("i0", i0);
+@@ -923,8 +907,10 @@ namespace Antlr4.StringTemplate
+
+// <names,phones:{n,p | ...}> or <a,b:t()>
+// todo: i, i0 not set unless mentioned? map:{k,v | ..}?
+-        protected virtual Template.AttributeList ZipMap(Template self, List<object> exprs, Template prototype)
++        protected virtual Template.AttributeList ZipMap(TemplateFrame frame, List<object> exprs, Template prototype)
+{
++            Template self = frame.Template;
++
+if (exprs == null || prototype == null || exprs.Count == 0)
+{
+return null; // do not apply if missing templates or empty values
+@@ -943,7 +929,7 @@ namespace Antlr4.StringTemplate
+List<FormalArgument> formalArguments = code.FormalArguments;
+if (!code.hasFormalArgs || formalArguments == null)
+{
+-                errMgr.RuntimeError(self, current_ip, ErrorType.MISSING_FORMAL_ARGUMENTS);
++                errMgr.RuntimeError(frame, current_ip, ErrorType.MISSING_FORMAL_ARGUMENTS);
+return null;
+}
+
+@@ -955,7 +941,7 @@ namespace Antlr4.StringTemplate
+
+if (nformalArgs != numExprs)
+{
+-                errMgr.RuntimeError(self, current_ip, ErrorType.MAP_ARGUMENT_COUNT_MISMATCH, numExprs, nformalArgs);
++                errMgr.RuntimeError(frame, current_ip, ErrorType.MAP_ARGUMENT_COUNT_MISMATCH, numExprs, nformalArgs);
+// TODO just fill first n
+// truncate arg list to match smaller size
+int shorterSize = Math.Min(formalArgumentNames.Length, numExprs);
+@@ -972,7 +958,6 @@ namespace Antlr4.StringTemplate
+// get a value for each attribute in list; put into Template instance
+int numEmpty = 0;
+Template embedded = group.CreateStringTemplateInternally(prototype);
+-                embedded.EnclosingInstance = self;
+embedded.RawSetAttribute("i0", i2);
+embedded.RawSetAttribute("i", i2 + 1);
+for (int a = 0; a < numExprs; a++)
+@@ -999,11 +984,11 @@ namespace Antlr4.StringTemplate
+return results;
+}
+
+-        protected virtual void SetFirstArgument(Template self, Template st, object attr)
++        protected virtual void SetFirstArgument(TemplateFrame frame, Template st, object attr)
+{
+if (st.impl.FormalArguments == null)
+{
+-                errMgr.RuntimeError(self, current_ip, ErrorType.ARGUMENT_COUNT_MISMATCH, 1, st.impl.name, 0);
++                errMgr.RuntimeError(frame, current_ip, ErrorType.ARGUMENT_COUNT_MISMATCH, 1, st.impl.name, 0);
+return;
+}
+
+@@ -1215,28 +1200,20 @@ namespace Antlr4.StringTemplate
+return 1;
+}
+
+-        protected virtual string ToString(Template self, object value)
++        protected virtual string ToString(TemplateFrame frame, object value)
+{
+if (value != null)
+{
+if (value.GetType() == typeof(string))
+return (string)value;
+
+-                // if Template, make sure it evaluates with enclosing template as self
+-                Template template = value as Template;
+-                if (template != null)
+-                {
+-                    if (template.EnclosingInstance != self)
+-                        value = template = template.CreateShadow(self);
+-                }
+-
+// if not string already, must evaluate it
+StringWriter sw = new StringWriter();
+/*
+Interpreter interp = new Interpreter(group, new NoIndentWriter(sw), culture);
+interp.WriteObjectNoOptions(self, value, -1, -1);
+*/
+-                WriteObjectNoOptions(new NoIndentWriter(sw), self, value);
++                WriteObjectNoOptions(new NoIndentWriter(sw), frame, value);
+
+return sw.ToString();
+}
+@@ -1317,11 +1294,13 @@ namespace Antlr4.StringTemplate
+return true;
+}
+
+-        protected virtual object GetObjectProperty(Template self, object o, object property)
++        protected virtual object GetObjectProperty(TemplateFrame frame, object o, object property)
+{
++            Template self = frame.Template;
++
+if (o == null)
+{
+-                errMgr.RuntimeError(self, current_ip, ErrorType.NO_SUCH_PROPERTY,
++                errMgr.RuntimeError(frame, current_ip, ErrorType.NO_SUCH_PROPERTY,
+"null attribute");
+return null;
+}
+@@ -1333,24 +1312,55 @@ namespace Antlr4.StringTemplate
+o = proxyFactory.CreateProxy(o);
+
+IModelAdaptor adap = self.groupThatCreatedThisInstance.GetModelAdaptor(o.GetType());
+-                return adap.GetProperty(self, o, property, ToString(self, property));
++                return adap.GetProperty(this, frame, o, property, ToString(frame, property));
+}
+catch (TemplateNoSuchPropertyException e)
+{
+-                errMgr.RuntimeError(self, current_ip, ErrorType.NO_SUCH_PROPERTY,
++                errMgr.RuntimeError(frame, current_ip, ErrorType.NO_SUCH_PROPERTY,
+e, o.GetType().Name + "." + property);
+}
+return null;
+}
+
++        /** Find an attr via dynamic scoping up enclosing scope chain.
++         *  If not found, look for a map.  So attributes sent in to a template
++         *  override dictionary names.
++         */
++        public virtual object GetAttribute(TemplateFrame frame, string name)
++        {
++            TemplateFrame scope = frame;
++            while (scope != null)
++            {
++                Template template = scope.Template;
++                FormalArgument arg = template.impl.TryGetFormalArgument(name);
++                if (arg != null)
++                {
++                    object o = template.locals[arg.Index];
++                    if (o == Template.EmptyAttribute)
++                        o = null;
++                    return o;
++                }
++                scope = scope.Parent;
++            }
++
++            // got to root template and no definition, try dictionaries in group
++            Template self = frame.Template;
++            if (self.impl.NativeGroup.IsDictionary(name))
++                return self.impl.NativeGroup.RawGetDictionary(name);
++
++            // not found, report unknown attr
++            throw new TemplateNoSuchPropertyException(name);
++        }
++
+/** Set any default argument values that were not set by the
+*  invoking template or by setAttribute directly.  Note
+*  that the default values may be templates.
+*
+*  The evaluation context is the template enclosing invokedST.
+*/
+-        public virtual void SetDefaultArguments(Template invokedST)
++        public virtual void SetDefaultArguments(TemplateFrame frame)
+{
++            Template invokedST = frame.Template;
+if (invokedST.impl.FormalArguments == null || invokedST.impl.NumberOfArgsWithDefaultValues == 0)
+return;
+
+@@ -1365,7 +1375,6 @@ namespace Antlr4.StringTemplate
+Template defaultArgST = group.CreateStringTemplateInternally();
+// default arg template must see other args so it's enclosing
+// instance is the template we are invoking.
+-                    defaultArgST.EnclosingInstance = invokedST;
+defaultArgST.groupThatCreatedThisInstance = group;
+defaultArgST.impl = arg.CompiledDefaultValue;
+// If default arg is template with single expression
+@@ -1376,7 +1385,7 @@ namespace Antlr4.StringTemplate
+if (defArgTemplate.StartsWith("{" + group.delimiterStartChar + "(")
+&& defArgTemplate.EndsWith(")" + group.delimiterStopChar + "}"))
+{
+-                        invokedST.RawSetAttribute(arg.Name, ToString(invokedST, defaultArgST));
++                        invokedST.RawSetAttribute(arg.Name, ToString(new TemplateFrame(defaultArgST, frame), defaultArgST));
+}
+else
+{
+@@ -1390,8 +1399,9 @@ namespace Antlr4.StringTemplate
+}
+}
+
+-        protected virtual void Trace(Template self, int ip)
++        protected virtual void Trace(TemplateFrame frame, int ip)
+{
++            Template self = frame.Template;
+StringBuilder tr = new StringBuilder();
+BytecodeDisassembler dis = new BytecodeDisassembler(self.impl);
+StringBuilder buf = new StringBuilder();
+@@ -1409,7 +1419,7 @@ namespace Antlr4.StringTemplate
+}
+
+tr.Append(" ], calls=");
+-            tr.Append(self.GetEnclosingInstanceStackString());
++            tr.Append(frame.GetEnclosingInstanceStackString());
+tr.Append(", sp=" + sp + ", nw=" + nwline);
+string s = tr.ToString();
+
+@@ -1458,39 +1468,27 @@ namespace Antlr4.StringTemplate
+*  create it.  If EvalTemplateEvent, store in parent's
+*  childEvalTemplateEvents list for STViz tree view.
+*/
+-        protected void TrackDebugEvent(Template self, InterpEvent e)
++        protected void TrackDebugEvent(TemplateFrame frame, InterpEvent e)
+{
+//		System.out.println(e);
+this.events.Add(e);
+//		if ( self.debugState==null ) self.debugState = new ST.DebugState();
+//		self.debugState.events.add(e);
+-            GetDebugState(self).Events.Add(e);
++            frame.GetDebugState().Events.Add(e);
+if (e is EvalTemplateEvent)
+{
+//ST parent = getDebugState(self).interpEnclosingInstance;
+-                Template parent = self.EnclosingInstance;
++                TemplateFrame parent = frame.Parent;
+if (parent != null)
+{
+// System.out.println("add eval "+e.self.getName()+" to children of "+parent.getName());
+//				if ( parent.debugState==null ) parent.debugState = new ST.DebugState();
+//				parent.debugState.childEvalTemplateEvents.add((EvalTemplateEvent)e);
+-                    GetDebugState(parent).ChildEvalTemplateEvents.Add((EvalTemplateEvent)e);
++                    parent.GetDebugState().ChildEvalTemplateEvents.Add((EvalTemplateEvent)e);
+}
+}
+}
+
+-        public Template.InterpDebugState GetDebugState(Template st)
+-        {
+-            Template.InterpDebugState result;
+-            if (!debugStateMap.TryGetValue(st, out result))
+-            {
+-                result = new Template.InterpDebugState();
+-                debugStateMap[st] = result;
+-            }
+-
+-            return result;
+-        }
+-
+public virtual List<string> GetExecutionTrace()
+{
+return executeTrace;
+diff --git a/Antlr4.StringTemplate/Misc/AggregateModelAdaptor.cs b/Antlr4.StringTemplate/Misc/AggregateModelAdaptor.cs
+index c47b142..e2bd2ce 100644
+--- a/Antlr4.StringTemplate/Misc/AggregateModelAdaptor.cs
++++ b/Antlr4.StringTemplate/Misc/AggregateModelAdaptor.cs
+@@ -37,13 +37,13 @@ namespace Antlr4.StringTemplate.Misc
+/** Deal with structs created via ST.add("structname.{prop1, prop2}", ...); */
+public class AggregateModelAdaptor : MapModelAdaptor
+{
+-        public override object GetProperty(Template self, object o, object property, string propertyName)
++        public override object GetProperty(Interpreter interpreter, TemplateFrame frame, object o, object property, string propertyName)
+{
+Aggregate aggregate = o as Aggregate;
+if (aggregate == null)
+throw new ArgumentException();
+
+-            return base.GetProperty(self, aggregate.Properties, property, propertyName);
++            return base.GetProperty(interpreter, frame, aggregate.Properties, property, propertyName);
+}
+}
+}
+diff --git a/Antlr4.StringTemplate/Misc/ErrorManager.cs b/Antlr4.StringTemplate/Misc/ErrorManager.cs
+index 0c0cc73..4fe4966 100644
+--- a/Antlr4.StringTemplate/Misc/ErrorManager.cs
++++ b/Antlr4.StringTemplate/Misc/ErrorManager.cs
+@@ -1,5 +1,5 @@
+/*
+- * [The "BSD licence"]
++ * [The "BSD license"]
+* Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+@@ -146,29 +146,29 @@ namespace Antlr4.StringTemplate.Misc
+listener.CompiletimeError(new TemplateGroupCompiletimeMessage(error, srcName, e.Token, e, msg));
+}
+
+-        public virtual void RuntimeError(Template self, int ip, ErrorType error)
++        public virtual void RuntimeError(TemplateFrame frame, int ip, ErrorType error)
+{
+-            listener.RuntimeError(new TemplateRuntimeMessage(error, ip, self));
++            listener.RuntimeError(new TemplateRuntimeMessage(error, ip, frame));
+}
+
+-        public virtual void RuntimeError(Template self, int ip, ErrorType error, object arg)
++        public virtual void RuntimeError(TemplateFrame frame, int ip, ErrorType error, object arg)
+{
+-            listener.RuntimeError(new TemplateRuntimeMessage(error, ip, self, arg));
++            listener.RuntimeError(new TemplateRuntimeMessage(error, ip, frame, arg));
+}
+
+-        public virtual void RuntimeError(Template self, int ip, ErrorType error, Exception e, object arg)
++        public virtual void RuntimeError(TemplateFrame frame, int ip, ErrorType error, Exception e, object arg)
+{
+-            listener.RuntimeError(new TemplateRuntimeMessage(error, ip, self, e, arg));
++            listener.RuntimeError(new TemplateRuntimeMessage(error, ip, frame, e, arg));
+}
+
+-        public virtual void RuntimeError(Template self, int ip, ErrorType error, object arg, object arg2)
++        public virtual void RuntimeError(TemplateFrame frame, int ip, ErrorType error, object arg, object arg2)
+{
+-            listener.RuntimeError(new TemplateRuntimeMessage(error, ip, self, null, arg, arg2));
++            listener.RuntimeError(new TemplateRuntimeMessage(error, ip, frame, null, arg, arg2));
+}
+
+-        public virtual void RuntimeError(Template self, int ip, ErrorType error, object arg, object arg2, object arg3)
++        public virtual void RuntimeError(TemplateFrame frame, int ip, ErrorType error, object arg, object arg2, object arg3)
+{
+-            listener.RuntimeError(new TemplateRuntimeMessage(error, ip, self, null, arg, arg2, arg3));
++            listener.RuntimeError(new TemplateRuntimeMessage(error, ip, frame, null, arg, arg2, arg3));
+}
+
+public virtual void IOError(Template self, ErrorType error, Exception e)
+diff --git a/Antlr4.StringTemplate/Misc/MapModelAdaptor.cs b/Antlr4.StringTemplate/Misc/MapModelAdaptor.cs
+index cff1932..dd0e581 100644
+--- a/Antlr4.StringTemplate/Misc/MapModelAdaptor.cs
++++ b/Antlr4.StringTemplate/Misc/MapModelAdaptor.cs
+@@ -1,5 +1,5 @@
+/*
+- * [The "BSD licence"]
++ * [The "BSD license"]
+* Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+@@ -36,7 +36,7 @@ namespace Antlr4.StringTemplate.Misc
+
+public class MapModelAdaptor : IModelAdaptor
+{
+-        public virtual object GetProperty(Template self, object o, object property, string propertyName)
++        public virtual object GetProperty(Interpreter interpreter, TemplateFrame frame, object o, object property, string propertyName)
+{
+object value;
+IDictionary map = (IDictionary)o;
+@@ -65,7 +65,6 @@ namespace Antlr4.StringTemplate.Misc
+{
+// dup, don't alter existing template; it's a prototype
+template = template.groupThatCreatedThisInstance.CreateStringTemplateInternally(template);
+-                template.EnclosingInstance = self;
+value = template;
+}
+
+diff --git a/Antlr4.StringTemplate/Misc/ObjectModelAdaptor.cs b/Antlr4.StringTemplate/Misc/ObjectModelAdaptor.cs
+index 3ab0105..5635b52 100644
+--- a/Antlr4.StringTemplate/Misc/ObjectModelAdaptor.cs
++++ b/Antlr4.StringTemplate/Misc/ObjectModelAdaptor.cs
+@@ -1,5 +1,5 @@
+/*
+- * [The "BSD licence"]
++ * [The "BSD license"]
+* Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+@@ -46,7 +46,7 @@ namespace Antlr4.StringTemplate.Misc
+private static readonly Dictionary<Type, Dictionary<string, System.Func<object, object>>> _memberAccessors =
+new Dictionary<Type, Dictionary<string, System.Func<object, object>>>();
+
+-        public virtual object GetProperty(Template self, object o, object property, string propertyName)
++        public virtual object GetProperty(Interpreter interpreter, TemplateFrame frame, object o, object property, string propertyName)
+{
+if (o == null)
+throw new ArgumentNullException("o");
+diff --git a/Antlr4.StringTemplate/Misc/TemplateModelAdaptor.cs b/Antlr4.StringTemplate/Misc/TemplateModelAdaptor.cs
+index 23a1f55..2796648 100644
+--- a/Antlr4.StringTemplate/Misc/TemplateModelAdaptor.cs
++++ b/Antlr4.StringTemplate/Misc/TemplateModelAdaptor.cs
+@@ -1,5 +1,5 @@
+/*
+- * [The "BSD licence"]
++ * [The "BSD license"]
+* Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+@@ -34,10 +34,13 @@ namespace Antlr4.StringTemplate.Misc
+{
+public class TemplateModelAdaptor : IModelAdaptor
+{
+-        public virtual object GetProperty(Template self, object o, object property, string propertyName)
++        public virtual object GetProperty(Interpreter interpreter, TemplateFrame frame, object o, object property, string propertyName)
+{
+-            Template st = (Template)o;
+-            return st.GetAttribute(propertyName);
++            Template template = (Template)o;
++            if (frame.Template != template)
++                frame = new TemplateFrame(template, frame);
++
++            return interpreter.GetAttribute(frame, propertyName);
+}
+}
+}
+diff --git a/Antlr4.StringTemplate/Misc/TemplateRuntimeMessage.cs b/Antlr4.StringTemplate/Misc/TemplateRuntimeMessage.cs
+index a65c41d..f448862 100644
+--- a/Antlr4.StringTemplate/Misc/TemplateRuntimeMessage.cs
++++ b/Antlr4.StringTemplate/Misc/TemplateRuntimeMessage.cs
+@@ -1,5 +1,5 @@
+/*
+- * [The "BSD licence"]
++ * [The "BSD license"]
+* Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+@@ -41,36 +41,48 @@ namespace Antlr4.StringTemplate.Misc
+/** Where error occurred in bytecode memory */
+private readonly int ip = -1;
+
++        private readonly TemplateFrame _frame;
++
+public TemplateRuntimeMessage(ErrorType error, int ip)
+: this(error, ip, null)
+{
+}
+
+-        public TemplateRuntimeMessage(ErrorType error, int ip, Template self)
+-            : this(error, ip, self, null)
++        public TemplateRuntimeMessage(ErrorType error, int ip, TemplateFrame frame)
++            : this(error, ip, frame, null)
+{
+}
+
+-        public TemplateRuntimeMessage(ErrorType error, int ip, Template self, object arg)
+-            : this(error, ip, self, null, arg, null)
++        public TemplateRuntimeMessage(ErrorType error, int ip, TemplateFrame frame, object arg)
++            : this(error, ip, frame, null, arg, null)
+{
+}
+
+-        public TemplateRuntimeMessage(ErrorType error, int ip, Template self, Exception e, object arg)
+-            : this(error, ip, self, e, arg, null)
++        public TemplateRuntimeMessage(ErrorType error, int ip, TemplateFrame frame, Exception e, object arg)
++            : this(error, ip, frame, e, arg, null)
+{
+}
+
+-        public TemplateRuntimeMessage(ErrorType error, int ip, Template self, Exception e, object arg, object arg2)
+-            : base(error, self, e, arg, arg2)
++        public TemplateRuntimeMessage(ErrorType error, int ip, TemplateFrame frame, Exception e, object arg, object arg2)
++            : base(error, frame.Template, e, arg, arg2)
+{
+this.ip = ip;
++            this._frame = frame;
+}
+
+-        public TemplateRuntimeMessage(ErrorType error, int ip, Template self, Exception e, object arg, object arg2, object arg3)
+-            : base(error, self, e, arg, arg2, arg3)
++        public TemplateRuntimeMessage(ErrorType error, int ip, TemplateFrame frame, Exception e, object arg, object arg2, object arg3)
++            : base(error, frame.Template, e, arg, arg2, arg3)
+{
+this.ip = ip;
++            this._frame = frame;
++        }
++
++        public TemplateFrame Frame
++        {
++            get
++            {
++                return _frame;
++            }
+}
+
+public Interval SourceInterval
+@@ -103,10 +115,10 @@ namespace Antlr4.StringTemplate.Misc
+{
+StringBuilder buf = new StringBuilder();
+string loc = GetSourceLocation();
+-            if (Self != null)
++            if (_frame != null)
+{
+buf.Append("context [");
+-                buf.Append(Self.GetEnclosingInstanceStackString());
++                buf.Append(_frame.GetEnclosingInstanceStackString());
+buf.Append("]");
+}
+if (loc != null)
+diff --git a/Antlr4.StringTemplate/RenderOption.cs b/Antlr4.StringTemplate/RenderOption.cs
+new file mode 100644
+index 0000000..1d5d09b
+--- /dev/null
++++ b/Antlr4.StringTemplate/RenderOption.cs
+@@ -0,0 +1,43 @@
++﻿/*
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2011 Sam Harwell, Tunnel Vision Laboratories, LLC
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace Antlr4.StringTemplate
++{
++    public enum RenderOption
++    {
++        Anchor,
++        Format,
++        Null,
++        Separator,
++        Wrap
++    }
++}
+diff --git a/Antlr4.StringTemplate/Template.cs b/Antlr4.StringTemplate/Template.cs
+index 5dcc6ec..09a4de3 100644
+--- a/Antlr4.StringTemplate/Template.cs
++++ b/Antlr4.StringTemplate/Template.cs
+@@ -1,5 +1,5 @@
+/*
+- * [The "BSD licence"]
++ * [The "BSD license"]
+* Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+@@ -45,7 +45,6 @@ namespace Antlr4.StringTemplate
+using Console = System.Console;
+using CultureInfo = System.Globalization.CultureInfo;
+using IList = System.Collections.IList;
+-    using StringBuilder = System.Text.StringBuilder;
+using StringWriter = System.IO.StringWriter;
+using TextWriter = System.IO.TextWriter;
+
+@@ -82,12 +81,6 @@ namespace Antlr4.StringTemplate
+*/
+protected internal object[] locals;
+
+-        /** Enclosing instance if I'm embedded within another template.
+-         *  IF-subtemplates are considered embedded as well. We look up
+-         *  dynamically scoped attributes with this ptr.
+-         */
+-        private Template _enclosingInstance; // who's your daddy?
+-
+/** Created as instance of which group? We need this to init interpreter
+*  via Render.  So, we create st and then it needs to know which
+*  group created it for sake of polymorphism:
+@@ -168,18 +161,17 @@ namespace Antlr4.StringTemplate
+*  except DebugState.
+*/
+public Template(Template prototype)
+-            : this(prototype, false, prototype != null ? prototype.EnclosingInstance : null)
++            : this(prototype, false)
+{
+}
+
+-        protected Template(Template prototype, bool shadowLocals, Template enclosingInstance)
++        protected Template(Template prototype, bool shadowLocals)
+{
+if (prototype == null)
+throw new ArgumentNullException("prototype");
+
+this.impl = prototype.impl;
+this.locals = shadowLocals || prototype.locals == null ? prototype.locals : (object[])prototype.locals.Clone();
+-            this.EnclosingInstance = enclosingInstance;
+this.groupThatCreatedThisInstance = prototype.groupThatCreatedThisInstance;
+}
+
+@@ -196,22 +188,9 @@ namespace Antlr4.StringTemplate
+}
+}
+
+-        public Template EnclosingInstance
++        public virtual Template CreateShadow()
+{
+-            get
+-            {
+-                return _enclosingInstance;
+-            }
+-
+-            set
+-            {
+-                _enclosingInstance = value;
+-            }
+-        }
+-
+-        public virtual Template CreateShadow(Template shadowEnclosingInstance)
+-        {
+-            return new Template(this, true, shadowEnclosingInstance);
++            return new Template(this, true);
+}
+
+/** Inject an attribute (name/value pair). If there is already an
+@@ -370,33 +349,37 @@ namespace Antlr4.StringTemplate
+locals[arg.Index] = value;
+}
+
+-        /** Find an attr via dynamic scoping up enclosing Template chain.
+-         *  If not found, look for a map.  So attributes sent in to a template
+-         *  override dictionary names.
++        /** Find an attr in this template only.
+*/
+public virtual object GetAttribute(string name)
+{
+-            Template p = this;
+-            while (p != null)
++            FormalArgument localArg = impl.TryGetFormalArgument(name);
++            if (localArg != null)
+{
+-                FormalArgument localArg = p.impl.TryGetFormalArgument(name);
+-                if (localArg != null)
+-                {
+-                    object o = p.locals[localArg.Index];
+-                    if (o == Template.EmptyAttribute)
+-                        o = null;
+-                    return o;
+-                }
+-
+-                p = p.EnclosingInstance;
+-            }
+-            // got to root template and no definition, try dictionaries in group
+-            if (impl.NativeGroup.IsDictionary(name))
+-            {
+-                return impl.NativeGroup.RawGetDictionary(name);
++                object o = locals[localArg.Index];
++                if (o == Template.EmptyAttribute)
++                    o = null;
++                return o;
+}
+
+-            throw new TemplateNoSuchPropertyException(name);
++            return null;
++            //    if (context != null)
++            //    {
++            //        p = context.Template;
++            //        context = context.Parent;
++            //    }
++            //    else
++            //    {
++            //        p = null;
++            //    }
++
++            //// got to root template and no definition, try dictionaries in group
++            //if (impl.NativeGroup.IsDictionary(name))
++            //{
++            //    return impl.NativeGroup.RawGetDictionary(name);
++            //}
++
++            //throw new TemplateNoSuchPropertyException(name);
+}
+
+public virtual IDictionary<string, object> GetAttributes()
+@@ -455,42 +438,6 @@ namespace Antlr4.StringTemplate
+return multi;
+}
+
+-        /** If an instance of x is enclosed in a y which is in a z, return
+-         *  a String of these instance names in order from topmost to lowest;
+-         *  here that would be "[z y x]".
+-         */
+-        public virtual string GetEnclosingInstanceStackString()
+-        {
+-            List<Template> templates = GetEnclosingInstanceStack(true);
+-            StringBuilder buf = new StringBuilder();
+-            int i = 0;
+-            foreach (Template st in templates)
+-            {
+-                if (i > 0)
+-                    buf.Append(" ");
+-                buf.Append(st.Name);
+-                i++;
+-            }
+-
+-            return buf.ToString();
+-        }
+-
+-        public virtual List<Template> GetEnclosingInstanceStack(bool topdown)
+-        {
+-            List<Template> stack = new List<Template>();
+-            Template p = this;
+-            while (p != null)
+-            {
+-                if (topdown)
+-                    stack.Insert(0, p);
+-                else
+-                    stack.Add(p);
+-
+-                p = p.EnclosingInstance;
+-            }
+-            return stack;
+-        }
+-
+public virtual string Name
+{
+get
+@@ -510,29 +457,33 @@ namespace Antlr4.StringTemplate
+public virtual int Write(ITemplateWriter @out)
+{
+Interpreter interp = new Interpreter(groupThatCreatedThisInstance, impl.NativeGroup.ErrorManager, false);
+-            interp.SetDefaultArguments(this);
+-            return interp.Execute(@out, this);
++            TemplateFrame frame = new TemplateFrame(this, null);
++            interp.SetDefaultArguments(frame);
++            return interp.Execute(@out, frame);
+}
+
+public virtual int Write(ITemplateWriter @out, CultureInfo culture)
+{
+Interpreter interp = new Interpreter(groupThatCreatedThisInstance, culture, impl.NativeGroup.ErrorManager, false);
+-            interp.SetDefaultArguments(this);
+-            return interp.Execute(@out, this);
++            TemplateFrame frame = new TemplateFrame(this, null);
++            interp.SetDefaultArguments(frame);
++            return interp.Execute(@out, frame);
+}
+
+public virtual int Write(ITemplateWriter @out, ITemplateErrorListener listener)
+{
+Interpreter interp = new Interpreter(groupThatCreatedThisInstance, new ErrorManager(listener), false);
+-            interp.SetDefaultArguments(this);
+-            return interp.Execute(@out, this);
++            TemplateFrame frame = new TemplateFrame(this, null);
++            interp.SetDefaultArguments(frame);
++            return interp.Execute(@out, frame);
+}
+
+public virtual int Write(ITemplateWriter @out, CultureInfo culture, ITemplateErrorListener listener)
+{
+Interpreter interp = new Interpreter(groupThatCreatedThisInstance, culture, new ErrorManager(listener), false);
+-            interp.SetDefaultArguments(this);
+-            return interp.Execute(@out, this);
++            TemplateFrame frame = new TemplateFrame(this, null);
++            interp.SetDefaultArguments(frame);
++            return interp.Execute(@out, frame);
+}
+
+public virtual int Write(TextWriter writer, ITemplateErrorListener listener)
+@@ -612,7 +563,8 @@ namespace Antlr4.StringTemplate
+public virtual List<InterpEvent> GetEvents(CultureInfo culture, ITemplateWriter writer)
+{
+Interpreter interp = new Interpreter(groupThatCreatedThisInstance, culture, true);
+-            interp.Execute(writer, this); // Render and track events
++            TemplateFrame frame = new TemplateFrame(this, null);
++            interp.Execute(writer, frame); // Render and track events
+return interp.GetEvents();
+}
+
+@@ -660,28 +612,5 @@ namespace Antlr4.StringTemplate
+/** Track construction-time add attribute "events"; used for ST user-level debugging */
+public MultiMap<string, AddAttributeEvent> AddAttributeEvents = new MultiMap<string, AddAttributeEvent>();
+}
+-
+-        /** Track all events that happen while evaluating this template */
+-        public class InterpDebugState
+-        {
+-            /* Includes the EvalTemplateEvent for this template.  This
+-            *  is a subset of Interpreter.events field. The final
+-            *  EvalTemplateEvent is stored in 3 places:
+-            *
+-            *  	1. In enclosingInstance's childTemplateEvents
+-            *  	2. In this event list
+-            *  	3. In the overall event list
+-            *
+-            *  The root ST has the final EvalTemplateEvent in its list.
+-            *
+-            *  All events get added to the enclosingInstance's event list.
+-            */
+-            public List<InterpEvent> Events = new List<InterpEvent>();
+-
+-            /** All templates evaluated and embedded in this ST. Used
+-             *  for tree view in STViz.
+-             */
+-            public List<EvalTemplateEvent> ChildEvalTemplateEvents = new List<EvalTemplateEvent>();
+-        }
+}
+}
+diff --git a/Antlr4.StringTemplate/TemplateFrame.cs b/Antlr4.StringTemplate/TemplateFrame.cs
+new file mode 100644
+index 0000000..ca72851
+--- /dev/null
++++ b/Antlr4.StringTemplate/TemplateFrame.cs
+@@ -0,0 +1,109 @@
++﻿/*
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2011 Sam Harwell, Tunnel Vision Laboratories, LLC
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace Antlr4.StringTemplate
++{
++    using System.Collections.Generic;
++    using Antlr4.StringTemplate.Debug;
++    using StringBuilder = System.Text.StringBuilder;
++
++    public sealed class TemplateFrame
++    {
++        private readonly Template _template;
++        private readonly TemplateFrame _parent;
++        private DebugEvents _debugState;
++
++        public TemplateFrame(Template template, TemplateFrame parent)
++        {
++            _template = template;
++            _parent = parent;
++        }
++
++        public Template Template
++        {
++            get
++            {
++                return _template;
++            }
++        }
++
++        public TemplateFrame Parent
++        {
++            get
++            {
++                return _parent;
++            }
++        }
++
++        public DebugEvents GetDebugState()
++        {
++            _debugState = _debugState ?? new DebugEvents();
++            return _debugState;
++        }
++
++        /** If an instance of x is enclosed in a y which is in a z, return
++         *  a String of these instance names in order from topmost to lowest;
++         *  here that would be "[z y x]".
++         */
++        public string GetEnclosingInstanceStackString()
++        {
++            List<Template> templates = GetEnclosingInstanceStack(true);
++            StringBuilder buf = new StringBuilder();
++            int i = 0;
++            foreach (Template st in templates)
++            {
++                if (i > 0)
++                    buf.Append(" ");
++                buf.Append(st.Name);
++                i++;
++            }
++
++            return buf.ToString();
++        }
++
++        public List<Template> GetEnclosingInstanceStack(bool topdown)
++        {
++            List<Template> stack = new List<Template>();
++            TemplateFrame p = this;
++            while (p != null)
++            {
++                if (topdown)
++                    stack.Insert(0, p.Template);
++                else
++                    stack.Add(p.Template);
++
++                p = p.Parent;
++            }
++            return stack;
++        }
++    }
++}
+diff --git a/Antlr4.StringTemplate/TemplateGroup.cs b/Antlr4.StringTemplate/TemplateGroup.cs
+index 65ff58c..8f4f409 100644
+--- a/Antlr4.StringTemplate/TemplateGroup.cs
++++ b/Antlr4.StringTemplate/TemplateGroup.cs
+@@ -1,5 +1,5 @@
+/*
+- * [The "BSD licence"]
++ * [The "BSD license"]
+* Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+@@ -236,7 +236,7 @@ namespace Antlr4.StringTemplate
+return null;
+}
+
+-        protected internal virtual Template GetEmbeddedInstanceOf(Template enclosingInstance, int ip, string name)
++        protected internal virtual Template GetEmbeddedInstanceOf(TemplateFrame frame, int ip, string name)
+{
+if (Verbose)
+{
+@@ -246,7 +246,7 @@ namespace Antlr4.StringTemplate
+Template st = GetInstanceOf(name);
+if (st == null)
+{
+-                ErrorManager.RuntimeError(enclosingInstance, ip, ErrorType.NO_SUCH_TEMPLATE, name);
++                ErrorManager.RuntimeError(frame, ip, ErrorType.NO_SUCH_TEMPLATE, name);
+st = CreateStringTemplate();
+st.impl = new CompiledTemplate();
+return st;
+@@ -259,7 +259,6 @@ namespace Antlr4.StringTemplate
+st.DebugState.NewTemplateEvent = null;
+}
+
+-            st.EnclosingInstance = enclosingInstance;
+return st;
+}
+
+diff --git a/Antlr4.Test.StringTemplate/TestModelAdaptors.cs b/Antlr4.Test.StringTemplate/TestModelAdaptors.cs
+index 923cbff..96360d5 100644
+--- a/Antlr4.Test.StringTemplate/TestModelAdaptors.cs
++++ b/Antlr4.Test.StringTemplate/TestModelAdaptors.cs
+@@ -1,5 +1,5 @@
+/*
+- * [The "BSD licence"]
++ * [The "BSD license"]
+* Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+@@ -41,7 +41,7 @@ namespace Antlr4.Test.StringTemplate
+{
+private class UserAdaptor : IModelAdaptor
+{
+-            public object GetProperty(Template self, object o, object property, string propertyName)
++            public object GetProperty(Interpreter interpreter, TemplateFrame frame, object o, object property, string propertyName)
+{
+if (propertyName.Equals("id"))
+return ((User)o).id;
+@@ -53,7 +53,7 @@ namespace Antlr4.Test.StringTemplate
+
+private class UserAdaptorConst : IModelAdaptor
+{
+-            public object GetProperty(Template self, object o, object property, string propertyName)
++            public object GetProperty(Interpreter interpreter, TemplateFrame frame, object o, object property, string propertyName)
+{
+if (propertyName.Equals("id"))
+return "const id value";
+

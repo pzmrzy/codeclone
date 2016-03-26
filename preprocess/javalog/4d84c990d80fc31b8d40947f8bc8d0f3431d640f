@@ -1,0 +1,70 @@
+commit 4d84c990d80fc31b8d40947f8bc8d0f3431d640f
+Author:     Mike Lischke <mike.lischke@gmail.com>
+AuthorDate: Fri Nov 8 09:01:18 2013 +0100
+Commit:     Mike Lischke <mike.lischke@gmail.com>
+CommitDate: Fri Nov 8 09:01:18 2013 +0100
+
+- Added 64bit define for LP64 target.
+- Free exceptions in base recognizer reset to avoid memory leaks.
+- Removed useless assignment in collections.
+- Fixed start position in input stream.
+
+diff --git a/runtime/C/include/antlr3defs.h b/runtime/C/include/antlr3defs.h
+index 2435b02..84efd01 100644
+--- a/runtime/C/include/antlr3defs.h
++++ b/runtime/C/include/antlr3defs.h
+@@ -111,6 +111,10 @@
+# define	ANTLR3_WIN64
+# define	ANTLR3_USE_64BIT
+
++#elif __LP64__
++
++# define ANTLR3_USE_64BIT
++
+#else
+
+#ifdef	_WIN32
+diff --git a/runtime/C/src/antlr3baserecognizer.c b/runtime/C/src/antlr3baserecognizer.c
+index 00adf64..0014164 100644
+--- a/runtime/C/src/antlr3baserecognizer.c
++++ b/runtime/C/src/antlr3baserecognizer.c
+@@ -2142,6 +2142,13 @@ reset(pANTLR3_BASE_RECOGNIZER recognizer)
+}
+}
+
++  // ml: 2013-11-05, added reset of old exceptions.
++  pANTLR3_EXCEPTION thisE = recognizer->state->exception;
++  if	(thisE != NULL)
++  {
++    thisE->freeEx(thisE);
++    recognizer->state->exception = NULL;
++  }
+
+// Install a new following set
+//
+diff --git a/runtime/C/src/antlr3collections.c b/runtime/C/src/antlr3collections.c
+index 6efb5d4..be62490 100644
+--- a/runtime/C/src/antlr3collections.c
++++ b/runtime/C/src/antlr3collections.c
+@@ -1893,7 +1893,6 @@ intTrieDel	(pANTLR3_INT_TRIE trie, ANTLR3_INTKEY key)
+pANTLR3_INT_TRIE_NODE   p;
+
+p=trie->root;
+-    key = key;
+
+return ANTLR3_FALSE;
+}
+diff --git a/runtime/C/src/antlr3inputstream.c b/runtime/C/src/antlr3inputstream.c
+index 6ec7f85..8ffa72f 100644
+--- a/runtime/C/src/antlr3inputstream.c
++++ b/runtime/C/src/antlr3inputstream.c
+@@ -263,7 +263,7 @@ antlr3InputReset(pANTLR3_INPUT_STREAM input)
+
+input->nextChar		= input->data;	/* Input at first character */
+input->line			= 1;		/* starts at line 1	    */
+-    input->charPositionInLine	= -1;
++    input->charPositionInLine	= 0;
+input->currentLine		= input->data;
+input->markDepth		= 0;		/* Reset markers	    */
+
+

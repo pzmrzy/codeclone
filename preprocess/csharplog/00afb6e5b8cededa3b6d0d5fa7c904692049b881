@@ -1,0 +1,639 @@
+commit 00afb6e5b8cededa3b6d0d5fa7c904692049b881
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sun Dec 13 20:16:46 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sun Dec 13 20:16:46 2009 -0800
+
+C# Port:
+* Merge CL6387
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6497]
+
+diff --git a/Antlr3.Test/ST4/TestLineWrap.cs b/Antlr3.Test/ST4/TestLineWrap.cs
+index 440d051..f3820d0 100644
+--- a/Antlr3.Test/ST4/TestLineWrap.cs
++++ b/Antlr3.Test/ST4/TestLineWrap.cs
+@@ -53,26 +53,6 @@ namespace AntlrUnitTests.ST4
+"array(values) ::= <<int[] a = { <values; wrap=\"\\n\", separator=\",\"> };>>" + newline;
+WriteFile(tmpdir, "t.stg", templates);
+STGroup group = new STGroupFile(Path.Combine(tmpdir, "t.stg"));
+-            ST a = group.GetInstanceOf("array");
+-            a.Add("values",
+-                           new int[] {3,9,20,2,1,4,6,32,5,6,77,888,2,1,6,32,5,6,77,
+-						4,9,20,2,1,4,63,9,20,2,1,4,6,32,5,6,77,6,32,5,6,77,
+-					    3,9,20,2,1,4,6,32,5,6,77,888,1,6,32,5});
+-            String expecting =
+-                "int[] a = { 3,9,20,2,1,4,6,32,5,6,77,888,\n" +
+-                "2,1,6,32,5,6,77,4,9,20,2,1,4,63,9,20,2,1,\n" +
+-                "4,6,32,5,6,77,6,32,5,6,77,3,9,20,2,1,4,6,\n" +
+-                "32,5,6,77,888,1,6,32,5 };";
+-            Assert.AreEqual(expecting, a.Render(40));
+-        }
+-
+-        [TestMethod]
+-        public void TestLineWrapWithNormalizedNewlines()
+-        {
+-            String templates =
+-                    "array(values) ::= <<int[] a = { <values; wrap=\"\\r\\n\", separator=\",\"> };>>" + newline;
+-            WriteFile(tmpdir, "t.stg", templates);
+-            STGroup group = new STGroupFile(Path.Combine(tmpdir, "t.stg"));
+
+ST a = group.GetInstanceOf("array");
+a.Add("values",
+@@ -80,7 +60,7 @@ namespace AntlrUnitTests.ST4
+4,9,20,2,1,4,63,9,20,2,1,4,6,32,5,6,77,6,32,5,6,77,
+3,9,20,2,1,4,6,32,5,6,77,888,1,6,32,5});
+String expecting =
+-                "int[] a = { 3,9,20,2,1,4,6,32,5,6,77,888,\n" + // wrap is \r\n, normalize to \n
++                "int[] a = { 3,9,20,2,1,4,6,32,5,6,77,888,\n" +
+"2,1,6,32,5,6,77,4,9,20,2,1,4,63,9,20,2,1,\n" +
+"4,6,32,5,6,77,6,32,5,6,77,3,9,20,2,1,4,6,\n" +
+"32,5,6,77,888,1,6,32,5 };";
+@@ -97,7 +77,7 @@ namespace AntlrUnitTests.ST4
+public void TestLineWrapAnchored()
+{
+String templates =
+-                    "array(values) ::= <<int[] a = { <values; anchor, wrap=\"\\n\", separator=\",\"> };>>" + newline;
++                    "array(values) ::= <<int[] a = { <values; anchor, wrap, separator=\",\"> };>>" + newline;
+WriteFile(tmpdir, "t.stg", templates);
+STGroup group = new STGroupFile(Path.Combine(tmpdir, "t.stg"));
+
+@@ -130,10 +110,10 @@ namespace AntlrUnitTests.ST4
+ST a = group.GetInstanceOf("array");
+a.Add("values", new ArrayList() { "a", x, "b" });
+String expecting =
+-                "{ a, \n" +
+-                "  { 1,\n" +
+-                "    2,\n" +
+-                "    3 }\n" +
++                "{ a," + newline +
++                "  { 1," + newline +
++                "    2," + newline +
++                "    3 }" + newline +
+"  , b }";
+Assert.AreEqual(expecting, a.Render(40));
+}
+@@ -150,7 +130,7 @@ namespace AntlrUnitTests.ST4
+a.Add("args",
+new String[] { "a", "b", "c", "d", "e", "f" });
+String expecting =
+-                "       FUNCTION line( a,b,c,d,\n" +
++                "       FUNCTION line( a,b,c,d," + newline +
+"      ce,f )";
+Assert.AreEqual(expecting, a.Render(30));
+}
+@@ -168,10 +148,10 @@ namespace AntlrUnitTests.ST4
+new int[] {3,9,20,2,1,4,6,32,5,6,77,888,2,1,6,32,5,6,77,
+4,9,20,2,1,4,63,9,20,2,1,4,6});
+String expecting =
+-                "int[] a = { 1,9,2,3,9,20,2,1,4,\n" +
+-                "            6,32,5,6,77,888,2,\n" +
+-                "            1,6,32,5,6,77,4,9,\n" +
+-                "            20,2,1,4,63,9,20,2,\n" +
++                "int[] a = { 1,9,2,3,9,20,2,1,4," + newline +
++                "            6,32,5,6,77,888,2," + newline +
++                "            1,6,32,5,6,77,4,9," + newline +
++                "            20,2,1,4,63,9,20,2," + newline +
+"            1,4,6 };";
+Assert.AreEqual(expecting, a.Render(30));
+}
+@@ -188,7 +168,7 @@ namespace AntlrUnitTests.ST4
+a.Add("chars", new String[] { "a", "b", "c", "d", "e" });
+// lineWidth==3 implies that we can have 3 characters at most
+String expecting =
+-                "abc\n" +
++                "abc" + newline +
+"de";
+Assert.AreEqual(expecting, a.Render(3));
+}
+@@ -205,7 +185,7 @@ namespace AntlrUnitTests.ST4
+a.Add("chars", new String[] { "a", "b", "\n", "d", "e" });
+// don't do \n if it's last element anyway
+String expecting =
+-                "ab\n" +
++                "ab" + newline +
+"de";
+Assert.AreEqual(expecting, a.Render(3));
+}
+@@ -224,13 +204,30 @@ namespace AntlrUnitTests.ST4
+// after a wrap is just an "unfortunate" event.  People will expect
+// a newline if it's in the data.
+String expecting =
+-                "abc\n" +
+-                "\n" +
++                "abc" + newline +
++                "" + newline +
+"de";
+Assert.AreEqual(expecting, a.Render(3));
+}
+
+[TestMethod]
++        public void TestLineWrapForList()
++        {
++            String templates =
++                    "duh(data) ::= <<!<data; wrap>!>>" + newline;
++            WriteFile(tmpdir, "t.stg", templates);
++            STGroup group = new STGroupFile(tmpdir + "/" + "t.stg");
++
++            ST a = group.GetInstanceOf("duh");
++            a.Add("data", new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
++            String expecting =
++                "!123" + newline +
++                "4567" + newline +
++                "89!";
++            Assert.AreEqual(expecting, a.Render(4));
++        }
++
++        [TestMethod]
+public void TestLineWrapForAnonTemplate()
+{
+String templates =
+@@ -241,8 +238,8 @@ namespace AntlrUnitTests.ST4
+ST a = group.GetInstanceOf("duh");
+a.Add("data", new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+String expecting =
+-                "![1][2][3]\n" + // width=9 is the 3 char; don't break til after ]
+-                "[4][5][6]\n" +
++                "![1][2][3]" + newline + // width=9 is the 3 char; don't break til after ]
++                "[4][5][6]" + newline +
+"[7][8][9]!";
+Assert.AreEqual(expecting, a.Render(9));
+}
+@@ -258,8 +255,8 @@ namespace AntlrUnitTests.ST4
+ST a = group.GetInstanceOf("duh");
+a.Add("data", new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+String expecting =
+-                "![1][2][3]\n" +
+-                " [4][5][6]\n" +
++                "![1][2][3]" + newline +
++                " [4][5][6]" + newline +
+" [7][8][9]!";
+Assert.AreEqual(expecting, a.Render(9));
+}
+@@ -278,10 +275,10 @@ namespace AntlrUnitTests.ST4
+s.Add("data", new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+t.Add("s", s);
+String expecting =
+-                "  ![1][2]!+\n" +
+-                "  ![3][4]!+\n" +
+-                "  ![5][6]!+\n" +
+-                "  ![7][8]!+\n" +
++                "  ![1][2]!+" + newline +
++                "  ![3][4]!+" + newline +
++                "  ![5][6]!+" + newline +
++                "  ![7][8]!+" + newline +
+"  ![9]!.";
+Assert.AreEqual(expecting, t.Render(9));
+}
+@@ -298,10 +295,10 @@ namespace AntlrUnitTests.ST4
+a.Add("chars", new String[] { "a", "b", "c", "d", "e" });
+//
+String expecting =
+-                "    a\n" +
+-                "    b\n" +
+-                "    c\n" +
+-                "    d\n" +
++                "    a" + newline +
++                "    b" + newline +
++                "    c" + newline +
++                "    d" + newline +
+"    e";
+Assert.AreEqual(expecting, a.Render(2));
+}
+@@ -318,8 +315,8 @@ namespace AntlrUnitTests.ST4
+a.Add("chars", new String[] { "a", "b", "c", "d", "e" });
+//
+String expecting =
+-                "    ab\n" +
+-                "    cd\n" +
++                "    ab" + newline +
++                "    cd" + newline +
+"    e";
+// width=4 spaces + 2 char.
+Assert.AreEqual(expecting, a.Render(6));
+@@ -339,8 +336,8 @@ namespace AntlrUnitTests.ST4
+duh.Add("chars", new String[] { "a", "b", "c", "d", "e" });
+top.Add("d", duh);
+String expecting =
+-                "    ab\n" +
+-                "    cd\n" +
++                "    ab" + newline +
++                "    cd" + newline +
+"    e!";
+// width=4 spaces + 2 char.
+Assert.AreEqual(expecting, top.Render(6));
+@@ -361,8 +358,8 @@ namespace AntlrUnitTests.ST4
+top.Add("d", duh);
+//
+String expecting =
+-                "  x: ab\n" +
+-                "     cd\n" +
++                "  x: ab" + newline +
++                "     cd" + newline +
+"     e!";
+Assert.AreEqual(expecting, top.Render(7));
+}
+@@ -398,7 +395,7 @@ namespace AntlrUnitTests.ST4
+m.Add("body", "i=3;");
+// make it wrap because of ") throws Ick { " literal
+String expecting =
+-                "{ \n" +
++                "{ " + newline +
+"  i=3; }";
+Assert.AreEqual(expecting, m.Render(2));
+}
+@@ -421,18 +418,18 @@ namespace AntlrUnitTests.ST4
+top.Add("arrays", a);
+top.Add("arrays", a); // add twice
+String expecting =
+-                "Arrays: int[] a = { 3,9,20,2,1,4,6,32,5,\n" +
+-                "                    6,77,888,2,1,6,32,5,\n" +
+-                "                    6,77,4,9,20,2,1,4,63,\n" +
+-                "                    9,20,2,1,4,6,32,5,6,\n" +
+-                "                    77,6,32,5,6,77,3,9,20,\n" +
+-                "                    2,1,4,6,32,5,6,77,888,\n" +
+-                "                    1,6,32,5 };\n" +
+-                "int[] a = { 3,9,20,2,1,4,6,32,5,6,77,888,\n" +
+-                "            2,1,6,32,5,6,77,4,9,20,2,1,4,\n" +
+-                "            63,9,20,2,1,4,6,32,5,6,77,6,\n" +
+-                "            32,5,6,77,3,9,20,2,1,4,6,32,\n" +
+-                "            5,6,77,888,1,6,32,5 };\n" +
++                "Arrays: int[] a = { 3,9,20,2,1,4,6,32,5," + newline +
++                "                    6,77,888,2,1,6,32,5," + newline +
++                "                    6,77,4,9,20,2,1,4,63," + newline +
++                "                    9,20,2,1,4,6,32,5,6," + newline +
++                "                    77,6,32,5,6,77,3,9,20," + newline +
++                "                    2,1,4,6,32,5,6,77,888," + newline +
++                "                    1,6,32,5 };" + newline +
++                "int[] a = { 3,9,20,2,1,4,6,32,5,6,77,888," + newline +
++                "            2,1,6,32,5,6,77,4,9,20,2,1,4," + newline +
++                "            63,9,20,2,1,4,6,32,5,6,77,6," + newline +
++                "            32,5,6,77,3,9,20,2,1,4,6,32," + newline +
++                "            5,6,77,888,1,6,32,5 };" + newline +
+"done";
+Assert.AreEqual(expecting, top.Render(40));
+}
+diff --git a/Antlr3.vsmdi b/Antlr3.vsmdi
+index f53af8b..d141f3f 100644
+--- a/Antlr3.vsmdi
++++ b/Antlr3.vsmdi
+@@ -1051,13 +1051,13 @@
+<TestLink id="71b3ac14-27de-a832-967f-448176c3df33" name="TestLineWrapInNestedExpr" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="f89f2b27-5959-f27c-a9d1-b88883b08eeb" name="TestLineWrapWithDiffAnchor" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="c89bc4c1-1e46-eae1-834b-e67db9f096b9" name="TestSubtemplatesAnchorToo" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="8b609b90-d3a1-d42a-6e66-7eb2fab5cfc1" name="TestLineDoesNotWrapDueToLiteral" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="3623795b-5fcd-25fa-8660-34143166eb65" name="TestFortranLineWrap" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="c9f4ee1b-26ab-bf37-330f-9e5c834efdef" name="TestLineWrapWithNormalizedNewlines" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="8b609b90-d3a1-d42a-6e66-7eb2fab5cfc1" name="TestLineDoesNotWrapDueToLiteral" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="7139a7b3-cdda-7a94-0bef-acf1ce7b7698" name="TestLineWrapForAnonTemplate" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="1e52c0fa-0f76-c04a-28aa-770e37cc5839" name="TestNestedWithIndentAndTrackStartOfExpr" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="71fcdb5d-4d1a-1fdf-5db1-f9ad732c5f82" name="TestLineWrapAnchored" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="aaadba17-2b86-96f4-edfb-227174742980" name="TestLineWrapForAnonTemplateAnchored" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="7139a7b3-cdda-7a94-0bef-acf1ce7b7698" name="TestLineWrapForAnonTemplate" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="bdda5562-1c35-769a-28bc-9f3ecb2fc860" name="TestLineWrapForList" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+</TestLinks>
+</TestList>
+<TestList name="Subtemplates" id="c068d150-8506-4339-a463-a78bf2ce4e9e" parentListId="4adbb104-d28d-4362-8420-a9fefe69c167">
+diff --git a/StringTemplate4/AutoIndentWriter.cs b/StringTemplate4/AutoIndentWriter.cs
+index 0a0db49..eefee1d 100644
+--- a/StringTemplate4/AutoIndentWriter.cs
++++ b/StringTemplate4/AutoIndentWriter.cs
+@@ -97,8 +97,9 @@ namespace StringTemplate
+*/
+public virtual void PushIndentation(string indent)
+{
+-            int lastAnchor = 0;
++#if false
+int indentWidth = GetIndentationWidth();
++            int lastAnchor = 0;
+// If current anchor is beyond current indent width, add in difference
+if (anchors_sp >= 0 && anchors[anchors_sp] > indentWidth)
+{
+@@ -109,6 +110,7 @@ namespace StringTemplate
+indents.Add(buf.ToString());
+return;
+}
++#endif
+indents.Add(indent);
+}
+
+@@ -158,18 +160,16 @@ namespace StringTemplate
+{
+char c = str[i];
+// found \n or \r\n newline?
+-                if (c == '\r' || c == '\n')
++                if (c == '\r')
++                    continue;
++
++                if (c == '\n')
+{
+atStartOfLine = true;
+charPosition = -1; // set so the write below sets to 0
+n += newline.Length;
+@out.Write(newline);
+-                    charPosition += n; // wrote n more char
+-                    // skip an extra char upon \r\n
+-                    if ((c == '\r' && (i + 1) < str.Length && str[i + 1] == '\n'))
+-                    {
+-                        i++; // loop iteration i++ takes care of skipping 2nd char
+-                    }
++                    charPosition += n; // wrote n more char
+continue;
+}
+// normal character
+@@ -199,11 +199,11 @@ namespace StringTemplate
+*/
+public virtual int Write(string str, string wrap)
+{
+-            int n = WriteWrapSeparator(wrap);
++            int n = WriteWrap(wrap);
+return n + Write(str);
+}
+
+-        public virtual int WriteWrapSeparator(string wrap)
++        public virtual int WriteWrap(string wrap)
+{
+int n = 0;
+// if want wrap and not already at start of line (last char was \n)
+@@ -220,8 +220,8 @@ namespace StringTemplate
+char c = wrap[i];
+if (c == '\n')
+{
+-                        n++;
+-                        @out.Write(c);
++                        @out.Write(newline);
++                        n += newline.Length;
+charPosition = 0;
+n += Indent();
+// continue writing any chars out
+@@ -249,18 +249,20 @@ namespace StringTemplate
+@out.Write(ind);
+}
+}
+-            charPosition += n;
+-            return n;
+-        }
+
+-        public virtual int Indent(int spaces)
+-        {
+-            for (int i = 1; i <= spaces; i++)
++            // If current anchor is beyond current indent width, indent to anchor
++            // *after* doing indents (might tabs in there or whatever)
++            int indentWidth = n;
++            if (anchors_sp >= 0 && anchors[anchors_sp] > indentWidth)
+{
+-                @out.Write(' ');
++                int remainder = anchors[anchors_sp] - indentWidth;
++                for (int i = 1; i <= remainder; i++)
++                    @out.Write(' ');
++                n += remainder;
+}
+-            charPosition += spaces;
+-            return spaces;
++
++            charPosition += n;
++            return n;
+}
+
+protected virtual StringBuilder GetIndentString(int spaces)
+diff --git a/StringTemplate4/Group.g3 b/StringTemplate4/Group.g3
+index a3ba919..4535882 100644
+--- a/StringTemplate4/Group.g3
++++ b/StringTemplate4/Group.g3
+@@ -190,6 +190,9 @@ BIGSTRING
+|	~'\\'
+)*
+'>>'
++        {
++        $text = $text.Replace(@"\>", ">");
++        }
+;
+
+ANONYMOUS_TEMPLATE
+diff --git a/StringTemplate4/ITemplateWriter.cs b/StringTemplate4/ITemplateWriter.cs
+index 424eeb0..fce049d 100644
+--- a/StringTemplate4/ITemplateWriter.cs
++++ b/StringTemplate4/ITemplateWriter.cs
+@@ -55,12 +55,19 @@ namespace StringTemplate
+*/
+int Write(string str, string wrap);
+
+-        /** Because we might need to wrap at a non-atomic string boundary
+-         *  (such as when we wrap in between template applications
+-         *   <data:{v|[<v>]}; wrap>) we need to expose the wrap string
+-         *  writing just like for the separator.
++        /** Because we evaluate ST instance by invoking exec() again, we
++         *  can't pass options in.  So the WRITE instruction of an applied
++         *  template (such as when we wrap in between template applications
++         *  like &lt;data:{v|[&lt;v&gt;]}; wrap&gt;) we need to write the wrap string
++         *  before calling exec().  We expose just like for the separator.
++         *  See Interpreter.writeObject where it checks for ST instance.
++         *  If POJO, writePOJO passes wrap to STWriter's
++         *
++         *     write(String str, String wrap)
++         *
++         *  method.  Can't pass to exec().
+*/
+-        int WriteWrapSeparator(string wrap);
++        int WriteWrap(string wrap);
+
+/** Write a separator.  Same as write() except that a \n cannot
+*  be inserted before emitting a separator.
+diff --git a/StringTemplate4/Interpreter.cs b/StringTemplate4/Interpreter.cs
+index 067db24..1b57397 100644
+--- a/StringTemplate4/Interpreter.cs
++++ b/StringTemplate4/Interpreter.cs
+@@ -218,13 +218,13 @@ namespace StringTemplate
+break;
+case Bytecode.INSTR_WRITE:
+o = operands[sp--];
+-                    nw = WriteObject(@out, self, o, (string[])null);
++                    nw = WriteObjectNoOptions(@out, self, o);
+n += nw;
+break;
+case Bytecode.INSTR_WRITE_OPT:
+options = (object[])operands[sp--]; // get options
+o = operands[sp--];                 // get option to write
+-                    nw = WriteObject(@out, self, o, options);
++                    nw = WriteObjectWithOptions(@out, self, o, options);
+n += nw;
+break;
+case Bytecode.INSTR_MAP:
+@@ -364,7 +364,7 @@ namespace StringTemplate
+return n;
+}
+
+-        protected int WriteObject(ITemplateWriter @out, Template self, object o, object[] options)
++        protected int WriteObjectWithOptions(ITemplateWriter @out, Template self, object o, object[] options)
+{
+// precompute all option values (render all the way to strings)
+string[] optionStrings = null;
+@@ -376,7 +376,21 @@ namespace StringTemplate
+optionStrings[i] = ToString(self, options[i]);
+}
+}
+-            return WriteObject(@out, self, o, optionStrings);
++
++            if (options != null && options[OPTION_ANCHOR] != null)
++                @out.PushAnchorPoint();
++
++            int n = WriteObject(@out, self, o, optionStrings);
++
++            if (options != null && options[OPTION_ANCHOR] != null)
++                @out.PopAnchorPoint();
++
++            return n;
++        }
++
++        protected int WriteObjectNoOptions(ITemplateWriter @out, Template self, object o)
++        {
++            return WriteObject(@out, self, o, (string[])null);
+}
+
+protected int WriteObject(ITemplateWriter @out, Template self, object o, string[] options)
+@@ -394,11 +408,6 @@ namespace StringTemplate
+}
+}
+
+-            if (options != null && options[OPTION_ANCHOR] != null)
+-                @out.PushAnchorPoint();
+-
+-            @out.PushIndentation(null);
+-
+if (o is Template)
+{
+((Template)o).enclosingInstance = self;
+@@ -407,7 +416,7 @@ namespace StringTemplate
+// if we have a wrap string, then inform writer it might need to wrap
+try
+{
+-                        @out.WriteWrapSeparator(options[OPTION_WRAP]);
++                        @out.WriteWrap(options[OPTION_WRAP]);
+}
+catch (IOException)
+{
+@@ -432,10 +441,6 @@ namespace StringTemplate
+}
+}
+
+-            if (options != null && options[OPTION_ANCHOR] != null)
+-                @out.PopAnchorPoint();
+-
+-            @out.PopIndentation();
+return n;
+}
+
+@@ -449,7 +454,6 @@ namespace StringTemplate
+if (options != null)
+separator = options[OPTION_SEPARATOR];
+bool seenAValue = false;
+-            int i = 0;
+while (it.MoveNext())
+{
+object iterValue = it.Current;
+@@ -464,7 +468,6 @@ namespace StringTemplate
+if (nw > 0)
+seenAValue = true;
+n += nw;
+-                i++;
+}
+return n;
+}
+diff --git a/StringTemplate4/Template.cs b/StringTemplate4/Template.cs
+index 95ae9cf..80d6954 100644
+--- a/StringTemplate4/Template.cs
++++ b/StringTemplate4/Template.cs
+@@ -318,7 +318,7 @@ namespace StringTemplate
+public virtual string Render(CultureInfo culture, int lineWidth)
+{
+StringWriter @out = new StringWriter();
+-            ITemplateWriter wr = groupThatCreatedThisInstance.GetStringTemplateWriter(@out);
++            ITemplateWriter wr = new AutoIndentWriter(@out);
+wr.SetLineWidth(lineWidth);
+try
+{
+diff --git a/StringTemplate4/TemplateGroup.cs b/StringTemplate4/TemplateGroup.cs
+index 887d3f1..1cf97f1 100644
+--- a/StringTemplate4/TemplateGroup.cs
++++ b/StringTemplate4/TemplateGroup.cs
+@@ -418,11 +418,6 @@ namespace StringTemplate
+return st;
+}
+
+-        public ITemplateWriter GetStringTemplateWriter(TextWriter w)
+-        {
+-            return new AutoIndentWriter(w);
+-        }
+-
+public override string ToString()
+{
+return Name;
+diff --git a/StringTemplate4/TemplateLexer.cs b/StringTemplate4/TemplateLexer.cs
+index 368f3f9..9486dcf 100644
+--- a/StringTemplate4/TemplateLexer.cs
++++ b/StringTemplate4/TemplateLexer.cs
+@@ -216,6 +216,7 @@ namespace StringTemplate
+}
+if (c == '\r')
+{
++                // \r\n -> \n
+Consume();
+Consume();
+return NewToken(NEWLINE);
+diff --git a/StringTemplate4/TemplateParser.g3 b/StringTemplate4/TemplateParser.g3
+index 082ec6e..9352790 100644
+--- a/StringTemplate4/TemplateParser.g3
++++ b/StringTemplate4/TemplateParser.g3
+@@ -49,27 +49,30 @@ templateAndEOF
+// TODO: remove backtracking
+public
+template
+-	:	(	options {backtrack=true; k=2;}
+-		:	i=INDENT         {Indent($i.text);}
+-			ifOnOneLine      {gen.Emit(Bytecode.INSTR_DEDENT);}
+-		|	i=INDENT ifOnMultiLines
+-		|	ifOnMultiLines
+-		|	i=INDENT       	 {Indent($i.text);}
+-			exprTag          {gen.Emit(Bytecode.INSTR_DEDENT);}
+-		|	exprTag
+-		|	i=INDENT         {Indent($i.text);}
+-			text             {gen.Emit(Bytecode.INSTR_DEDENT);}
+-		|	text
+-		|   (i=INDENT {Indent($i.text);})? region
+-							 {
+-							 gen.Emit(Bytecode.INSTR_NEW, $region.name);
+-							 gen.Emit(Bytecode.INSTR_WRITE);
+-							 }
+-		|	i=INDENT         {Indent($i.text);}
+-		 	NEWLINE          {gen.Emit(Bytecode.INSTR_NEWLINE);}
+-		 	                 {gen.Emit(Bytecode.INSTR_DEDENT);}
+-		|	NEWLINE          {gen.Emit(Bytecode.INSTR_NEWLINE);}
+-		)*
++	:	element*
++	;
++
++element
++options {backtrack=true; k=2;}
++	:	i=INDENT         {Indent($i.text);}
++		ifOnOneLine      {gen.Emit(Bytecode.INSTR_DEDENT);}
++	|	i=INDENT ifOnMultiLines
++	|	ifOnMultiLines
++	|	i=INDENT       	 {Indent($i.text);}
++		exprTag          {gen.Emit(Bytecode.INSTR_DEDENT);}
++	|	exprTag
++	|	i=INDENT         {Indent($i.text);}
++		text             {gen.Emit(Bytecode.INSTR_DEDENT);}
++	|	text
++	|   (i=INDENT {Indent($i.text);})? region
++						 {
++						 gen.Emit(Bytecode.INSTR_NEW, $region.name);
++						 gen.Emit(Bytecode.INSTR_WRITE);
++						 }
++	|	i=INDENT         {Indent($i.text);}
++	 	NEWLINE          {gen.Emit(Bytecode.INSTR_NEWLINE);}
++	 	                 {gen.Emit(Bytecode.INSTR_DEDENT);}
++	|	NEWLINE          {gen.Emit(Bytecode.INSTR_NEWLINE);}
+;
+
+text
+

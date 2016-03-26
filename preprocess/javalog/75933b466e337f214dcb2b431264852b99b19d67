@@ -1,0 +1,59 @@
+commit 75933b466e337f214dcb2b431264852b99b19d67
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Thu Nov 22 13:53:26 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Thu Nov 22 13:55:39 2012 -0600
+
+CSharp target: StringExtensions only included in DEBUG builds
+
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime.JavaExtensions/StringExtensions.cs b/runtime/CSharp3/Sources/Antlr3.Runtime.JavaExtensions/StringExtensions.cs
+index 8432512..837908a 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime.JavaExtensions/StringExtensions.cs
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime.JavaExtensions/StringExtensions.cs
+@@ -30,6 +30,7 @@
+* THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
++#if DEBUG
+namespace Antlr.Runtime.JavaExtensions
+{
+using ObsoleteAttribute = System.ObsoleteAttribute;
+@@ -38,7 +39,6 @@ namespace Antlr.Runtime.JavaExtensions
+
+public static class StringExtensions
+{
+-#if DEBUG
+[Obsolete]
+public static char charAt( this string str, int index )
+{
+@@ -98,19 +98,19 @@ namespace Antlr.Runtime.JavaExtensions
+{
+return str.Replace(oldValue, newValue);
+}
+-#endif
+
++        [Obsolete]
+public static string replaceAll( this string str, string regex, string newValue )
+{
+return Regex.Replace( str, regex, newValue );
+}
+
++        [Obsolete]
+public static string replaceFirst( this string str, string regex, string replacement )
+{
+return Regex.Replace( str, regex, replacement );
+}
+
+-#if DEBUG
+[Obsolete]
+public static bool startsWith( this string str, string value )
+{
+@@ -146,6 +146,6 @@ namespace Antlr.Runtime.JavaExtensions
+{
+return str.Trim();
+}
+-#endif
+}
+}
++#endif
+

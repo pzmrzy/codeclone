@@ -1,0 +1,230 @@
+commit b4121a8ff5b48642ad5ed7152e1f4bc0df99dbe1
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Mar 7 13:25:27 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Mar 7 13:25:27 2011 -0800
+
+(C# 3) Merge CL7810, 7811
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7825]
+
+diff --git a/Antlr4.StringTemplate/Compiler/CodeGenerator.g3 b/Antlr4.StringTemplate/Compiler/CodeGenerator.g3
+index e177470..4c5050a 100644
+--- a/Antlr4.StringTemplate/Compiler/CodeGenerator.g3
++++ b/Antlr4.StringTemplate/Compiler/CodeGenerator.g3
+@@ -112,6 +112,7 @@ region returns [string name]
+CompiledTemplate sub = $template.impl;
+sub.isRegion = true;
+sub.regionDefType = Template.RegionType.Embedded;
++			sub.templateDefStartToken = $ID.Token;
+outermostImpl.AddImplicitlyDefinedTemplate(sub);
+}
+)
+@@ -129,6 +130,7 @@ subtemplate returns [string name, int nargs]
+{
+CompiledTemplate sub = $template.impl;
+sub.isAnonSubtemplate = true;
++			sub.templateDefStartToken = $SUBTEMPLATE.Token;
+if ( Group.Debug ) {
+sub.ast = $SUBTEMPLATE;
+sub.ast.SetUnknownTokenBoundaries();
+@@ -265,12 +267,12 @@ includeExpr
+}
+|	^(INCLUDE_REGION ID)		{
+CompiledTemplate impl =
+-										TemplateCompiler.DefineBlankRegion(outermostImpl, $ID.text);
++										TemplateCompiler.DefineBlankRegion(outermostImpl, $ID.Token);
+emit2($INCLUDE_REGION,Bytecode.INSTR_NEW,impl.name,0);
+}
+|	^(INCLUDE_SUPER_REGION ID)	{
+CompiledTemplate impl =
+-										TemplateCompiler.DefineBlankRegion(outermostImpl, $ID.text);
++										TemplateCompiler.DefineBlankRegion(outermostImpl, $ID.Token);
+emit2($INCLUDE_SUPER_REGION,Bytecode.INSTR_SUPER_NEW,impl.name,0);
+}
+|	primary
+diff --git a/Antlr4.StringTemplate/Compiler/CompiledTemplate.cs b/Antlr4.StringTemplate/Compiler/CompiledTemplate.cs
+index 76a2c10..af1e8ec 100644
+--- a/Antlr4.StringTemplate/Compiler/CompiledTemplate.cs
++++ b/Antlr4.StringTemplate/Compiler/CompiledTemplate.cs
+@@ -56,6 +56,9 @@ namespace Antlr4.StringTemplate.Compiler
+*/
+public string template;
+
++        /** The token that begins template definition; could be &lt;@r&gt; of region. */
++        public IToken templateDefStartToken;
++
+/** Overall token stream for template (debug only) */
+public ITokenStream tokens;
+
+@@ -151,7 +154,7 @@ namespace Antlr4.StringTemplate.Compiler
+{
+Interval start = sourceMap[0];
+Interval stop = null;
+-                    for (int i = sourceMap.Length - 1; i > 0; i--)
++                    for (int i = sourceMap.Length - 1; i >= 0; i--)
+{
+Interval interval = sourceMap[i];
+if (interval != null)
+@@ -258,7 +261,7 @@ namespace Antlr4.StringTemplate.Compiler
+{
+foreach (CompiledTemplate sub in implicitlyDefinedTemplates)
+{
+-                    group.RawDefineTemplate(sub.name, sub, null);
++                    group.RawDefineTemplate(sub.name, sub, sub.templateDefStartToken);
+sub.DefineImplicitlyDefinedTemplates(group);
+}
+}
+diff --git a/Antlr4.StringTemplate/Compiler/Group.g3 b/Antlr4.StringTemplate/Compiler/Group.g3
+index 329c2a5..2515980 100644
+--- a/Antlr4.StringTemplate/Compiler/Group.g3
++++ b/Antlr4.StringTemplate/Compiler/Group.g3
+@@ -116,11 +116,15 @@ templateDef[string prefix]
+}
+)
+{
+-        template = Utility.Strip(template, n);
+-        string templateName = $name.text;
+-        if (prefix.Length > 0) templateName = prefix+"/"+$name.text;
+-	    _group.DefineTemplateOrRegion(templateName, $enclosing.text, templateToken,
+-	    							 template, $name, $formalArgs.args);
++		if ($name.index >= 0)
++		{
++			// if ID missing
++			template = Utility.Strip(template, n);
++			string templateName = $name.text;
++			if (prefix.Length > 0) templateName = prefix+"/"+$name.text;
++			_group.DefineTemplateOrRegion(templateName, $enclosing.text, templateToken,
++	    								 template, $name, $formalArgs.args);
++		}
+}
+|   alias=ID '::=' target=ID  {_group.DefineTemplateAlias($alias, $target);}
+;
+diff --git a/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs b/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs
+index 252707e..8e3f817 100644
+--- a/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs
++++ b/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs
+@@ -191,12 +191,18 @@ namespace Antlr4.StringTemplate.Compiler
+return impl2;
+}
+
+-        public static CompiledTemplate DefineBlankRegion(CompiledTemplate outermostImpl, string name)
++        public static CompiledTemplate DefineBlankRegion(CompiledTemplate outermostImpl, IToken nameToken)
+{
++            if (outermostImpl == null)
++                throw new ArgumentNullException("outermostImpl");
++            if (nameToken == null)
++                throw new ArgumentNullException("nameToken");
++
+string outermostTemplateName = outermostImpl.name;
+-            string mangled = TemplateGroup.GetMangledRegionName(outermostTemplateName, name);
++            string mangled = TemplateGroup.GetMangledRegionName(outermostTemplateName, nameToken.Text);
+CompiledTemplate blank = new CompiledTemplate();
+blank.isRegion = true;
++            blank.templateDefStartToken = nameToken;
+blank.regionDefType = Template.RegionType.Implicit;
+blank.name = mangled;
+outermostImpl.AddImplicitlyDefinedTemplate(blank);
+diff --git a/Antlr4.StringTemplate/TemplateGroup.cs b/Antlr4.StringTemplate/TemplateGroup.cs
+index 2938e17..f174e7c 100644
+--- a/Antlr4.StringTemplate/TemplateGroup.cs
++++ b/Antlr4.StringTemplate/TemplateGroup.cs
+@@ -413,13 +413,14 @@ namespace Antlr4.StringTemplate
+
+if (LookupTemplate(mangled) == null)
+{
+-                ErrorManager.CompiletimeError(ErrorType.NO_SUCH_REGION, null, regionT, enclosingTemplateName, name);
++                ErrorManager.CompiletimeError(ErrorType.NO_SUCH_REGION, templateToken, regionT, enclosingTemplateName, name);
+return new CompiledTemplate();
+}
+
+code.name = mangled;
+code.isRegion = true;
+code.regionDefType = Template.RegionType.Explicit;
++            code.templateDefStartToken = regionT;
+
+RawDefineTemplate(mangled, code, regionT);
+code.DefineArgumentDefaultValueTemplates(this);
+@@ -464,19 +465,24 @@ namespace Antlr4.StringTemplate
+ErrorManager.CompiletimeError(ErrorType.TEMPLATE_REDEFINITION, null, defT);
+return;
+}
+-                if (prev.isRegion && prev.regionDefType == Template.RegionType.Embedded)
+-                {
+-                    ErrorManager.CompiletimeError(ErrorType.EMBEDDED_REGION_REDEFINITION, null, defT, GetUnmangledTemplateName(name));
+-                    return;
+-                }
+-                else if (prev.isRegion && prev.regionDefType == Template.RegionType.Explicit)
++
++                if (prev.isRegion)
+{
+-                    ErrorManager.CompiletimeError(ErrorType.REGION_REDEFINITION, null, defT, GetUnmangledTemplateName(name));
+-                    return;
++                    if (code.regionDefType != Template.RegionType.Implicit && prev.regionDefType == Template.RegionType.Embedded)
++                    {
++                        ErrorManager.CompiletimeError(ErrorType.EMBEDDED_REGION_REDEFINITION, null, defT, GetUnmangledTemplateName(name));
++                        return;
++                    }
++                    else if (code.regionDefType == Template.RegionType.Implicit && prev.regionDefType == Template.RegionType.Explicit)
++                    {
++                        ErrorManager.CompiletimeError(ErrorType.REGION_REDEFINITION, null, defT, GetUnmangledTemplateName(name));
++                        return;
++                    }
+}
+}
+
+code.NativeGroup = this;
++            code.templateDefStartToken = defT;
+templates[name] = code;
+}
+
+diff --git a/Antlr4.Test.StringTemplate/TestRegions.cs b/Antlr4.Test.StringTemplate/TestRegions.cs
+index 7162f1e..2939e62 100644
+--- a/Antlr4.Test.StringTemplate/TestRegions.cs
++++ b/Antlr4.Test.StringTemplate/TestRegions.cs
+@@ -176,6 +176,44 @@ namespace Antlr4.Test.StringTemplate
+}
+
+[TestMethod]
++        public void TestCantDefineEmbeddedRegionAgainInTemplate()
++        {
++            string dir = tmpdir;
++            string g =
++                "a() ::= <<\n" +
++                "[\n" +
++                "<@r>foo<@end>\n" +
++                "<@r()>" +
++                "]\n" +
++                ">>\n"; // error; dup
++            writeFile(dir, "g.stg", g);
++
++            TemplateGroupFile group = new TemplateGroupFile(Path.Combine(dir, "g.stg"));
++            ErrorBuffer errors = new ErrorBuffer();
++            group.Listener = errors;
++            group.Load();
++            string expected = "g.stg 3:2: redefinition of region a.r" + newline;
++            string result = errors.ToString();
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
++        public void TestMissingRegionName()
++        {
++            string dir = tmpdir;
++            string g = "@t.() ::= \"\"\n";
++            writeFile(dir, "g.stg", g);
++
++            TemplateGroupFile group = new TemplateGroupFile(Path.Combine(dir, "g.stg"));
++            ErrorBuffer errors = new ErrorBuffer();
++            group.Listener = errors;
++            group.Load();
++            string expected = "g.stg 1:3: missing ID at '('" + newline;
++            string result = errors.ToString();
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
+public void TestIndentBeforeRegionIsIgnored()
+{
+string dir = tmpdir;
+

@@ -1,0 +1,207 @@
+commit 57f30d744da236894bd969cb7e8d7fb2a76c5b05
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Thu Feb 3 10:30:12 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Thu Feb 3 10:30:12 2011 -0800
+
+(C# 3) C# naming
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7619]
+
+diff --git a/Antlr3/Tool/AttributeScope.cs b/Antlr3/Tool/AttributeScope.cs
+index 46d0d88..f3265b4 100644
+--- a/Antlr3/Tool/AttributeScope.cs
++++ b/Antlr3/Tool/AttributeScope.cs
+@@ -67,12 +67,12 @@ namespace Antlr3.Tool
+}
+
+/** This scope is associated with which input token (for error handling)? */
+-        public IToken derivedFromToken;
++        private readonly IToken derivedFromToken;
+
+-        public Grammar grammar;
++        private readonly Grammar grammar;
+
+/** The scope name */
+-        private string name;
++        private readonly string name;
+
+/** Not a rule scope, but visible to all rules "scope symbols { ...}" */
+public bool isDynamicGlobalScope;
+@@ -88,13 +88,13 @@ namespace Antlr3.Tool
+
+public bool isPredefinedLexerRuleScope;
+
+-        IDictionary<string, GrammarAST> actions = new Dictionary<string, GrammarAST>();
++        private readonly IDictionary<string, GrammarAST> actions = new Dictionary<string, GrammarAST>();
+
+/** The list of Attribute objects */
+
+// until we have a list-ordered dictionary
+//protected internal IDictionary<string, Attribute> attributes = new SortedList<string, Attribute>();
+-        protected internal IList<Attribute> attributes = new List<Attribute>();
++        private readonly List<Attribute> attributes = new List<Attribute>();
+
+public AttributeScope( string name, IToken derivedFromToken )
+: this( null, name, derivedFromToken )
+@@ -109,6 +109,7 @@ namespace Antlr3.Tool
+}
+
+#region Properties
++
+public IDictionary<string, GrammarAST> Actions
+{
+get
+@@ -116,43 +117,47 @@ namespace Antlr3.Tool
+return actions;
+}
+}
++
+[CLSCompliant(false)]
+-        public ICollection<Attribute> Attributes
++        public IList<Attribute> Attributes
+{
+get
+{
+-                return GetAttributes();
++                return attributes.AsReadOnly();
+}
+}
++
+public int Count
+{
+get
+{
+-                return Size();
++                return attributes == null ? 0 : attributes.Count;
+}
+}
+-        public string Name
++
++        public Grammar Grammar
+{
+get
+{
+-                return GetName();
++                return grammar;
+}
+}
+-        #endregion
+
+-        public virtual string GetName()
++        public string Name
+{
+-            if ( isParameterScope )
+-            {
+-                return name + "_parameter";
+-            }
+-            else if ( isReturnScope )
++            get
+{
+-                return name + "_return";
++                if ( isParameterScope )
++                    return name + "_parameter";
++                else if ( isReturnScope )
++                    return name + "_return";
++
++                return name;
+}
+-            return name;
+}
+
++        #endregion
++
+/** From a chunk of text holding the definitions of the attributes,
+*  pull them apart and create an Attribute for each one.  Add to
+*  the list of attributes for this scope.  Pass in the character
+@@ -249,12 +254,6 @@ namespace Antlr3.Tool
+return attributes.FirstOrDefault( attr => attr.Name == name );
+}
+
+-        /** Used by templates to get all attributes */
+-        public virtual IList<Attribute> GetAttributes()
+-        {
+-            return attributes.ToArray();
+-        }
+-
+/** Return the set of keys that collide from
+*  this and other.
+*/
+@@ -280,11 +279,6 @@ namespace Antlr3.Tool
+return inter;
+}
+
+-        public virtual int Size()
+-        {
+-            return attributes == null ? 0 : attributes.Count;
+-        }
+-
+public override string ToString()
+{
+return ( isDynamicGlobalScope ? "global " : "" ) + Name + ":" + attributes;
+diff --git a/Antlr3/Tool/Rule.cs b/Antlr3/Tool/Rule.cs
+index e8f84e7..e280f7c 100644
+--- a/Antlr3/Tool/Rule.cs
++++ b/Antlr3/Tool/Rule.cs
+@@ -647,7 +647,7 @@ namespace Antlr3.Tool
+return
+referencedPredefinedRuleAttributes || grammar.BuildAST ||
+grammar.BuildTemplate ||
+-                ( returnScope != null && returnScope.attributes.Count > 1 );
++                ( returnScope != null && returnScope.Attributes.Count > 1 );
+}
+
+public virtual bool GetHasSingleReturnValue()
+@@ -655,7 +655,7 @@ namespace Antlr3.Tool
+return
+!( referencedPredefinedRuleAttributes || grammar.BuildAST ||
+grammar.BuildTemplate ) &&
+-                                           ( returnScope != null && returnScope.attributes.Count == 1 );
++                                           ( returnScope != null && returnScope.Attributes.Count == 1 );
+}
+
+public virtual bool GetHasReturnValue()
+@@ -663,14 +663,14 @@ namespace Antlr3.Tool
+return
+referencedPredefinedRuleAttributes || grammar.BuildAST ||
+grammar.BuildTemplate ||
+-                ( returnScope != null && returnScope.attributes.Count > 0 );
++                ( returnScope != null && returnScope.Attributes.Count > 0 );
+}
+
+public virtual string GetSingleValueReturnType()
+{
+-            if ( returnScope != null && returnScope.attributes.Count == 1 )
++            if ( returnScope != null && returnScope.Attributes.Count == 1 )
+{
+-                return returnScope.attributes[0].Type;
++                return returnScope.Attributes[0].Type;
+//ICollection<Attribute> retvalAttrs = returnScope.attributes.Values;
+//return retvalAttrs.First().Type;
+
+@@ -682,9 +682,9 @@ namespace Antlr3.Tool
+
+public virtual string GetSingleValueReturnName()
+{
+-            if ( returnScope != null && returnScope.attributes.Count == 1 )
++            if ( returnScope != null && returnScope.Attributes.Count == 1 )
+{
+-                return returnScope.attributes[0].Name;
++                return returnScope.Attributes[0].Name;
+}
+return null;
+}
+diff --git a/Antlr3/Tool/RuleLabelScope.cs b/Antlr3/Tool/RuleLabelScope.cs
+index d3cd365..352e9a0 100644
+--- a/Antlr3/Tool/RuleLabelScope.cs
++++ b/Antlr3/Tool/RuleLabelScope.cs
+@@ -102,7 +102,7 @@ namespace Antlr3.Tool
+public override Attribute GetAttribute( string name )
+{
+AttributeScope rulePropertiesScope =
+-                RuleLabelScope.grammarTypeToRulePropertiesScope[(int)grammar.type];
++                RuleLabelScope.grammarTypeToRulePropertiesScope[(int)Grammar.type];
+if ( rulePropertiesScope.GetAttribute( name ) != null )
+{
+return rulePropertiesScope.GetAttribute( name );
+

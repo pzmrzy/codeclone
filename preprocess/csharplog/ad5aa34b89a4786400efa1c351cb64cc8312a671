@@ -1,0 +1,34 @@
+commit ad5aa34b89a4786400efa1c351cb64cc8312a671
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sun Nov 21 09:00:04 2010 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sun Nov 21 09:00:04 2010 -0800
+
+(C# 3) Added some notes about the complicated publishing process (since it uses bootstrapping)
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7093]
+
+diff --git a/Antlr3.sln b/Antlr3.sln
+index ddf8122..10e72b9 100644
+--- a/Antlr3.sln
++++ b/Antlr3.sln
+@@ -55,6 +55,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution
+ProjectSection(SolutionItems) = preProject
+Antlr3.vsmdi = Antlr3.vsmdi
+AntlrTestConfig.testrunconfig = AntlrTestConfig.testrunconfig
++		PublishingProcess.txt = PublishingProcess.txt
+EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Runtime.JavaExtensions", "..\..\antlr\main\runtime\CSharp3\Sources\Antlr3.Runtime.JavaExtensions\Antlr3.Runtime.JavaExtensions.csproj", "{A7EEC557-EB14-451C-9616-B7A61F4ECE69}"
+diff --git a/PublishingProcess.txt b/PublishingProcess.txt
+new file mode 100644
+index 0000000..1ed0595
+--- /dev/null
++++ b/PublishingProcess.txt
+@@ -0,0 +1,5 @@
++1. Rebuild solution
++2. Compress existing files in the bootstrap directory
++3. Copy fresh build files to the bootstrap directory
++4. Rebuild solution
++5. Copy fresh build files to the bootstrap directory
+

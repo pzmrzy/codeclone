@@ -1,0 +1,182 @@
+commit 7d1319008c83ae8ea3163cf33bf67d41b08e7bb7
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Tue Jan 29 23:00:06 2013 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Tue Jan 29 23:01:19 2013 -0600
+
+Fix unit tests
+
+diff --git a/Antlr3.Test/BaseTest.cs b/Antlr3.Test/BaseTest.cs
+index 7e4066c..2d66280 100644
+--- a/Antlr3.Test/BaseTest.cs
++++ b/Antlr3.Test/BaseTest.cs
+@@ -389,7 +389,7 @@ namespace AntlrUnitTests
+if ( equeue.errors.Count > 0 )
+{
+allIsWell = false;
+-                        Console.Error.WriteLine( "antlr reports errors from " + options );
++                        Console.Error.WriteLine( "antlr reports errors from [" + string.Join(", ", options) + ']' );
+for ( int i = 0; i < equeue.errors.Count; i++ )
+{
+Message msg = (Message)equeue.errors[i];
+diff --git a/Antlr3.Test/TestAttributes.cs b/Antlr3.Test/TestAttributes.cs
+index da883e6..fd92bcc 100644
+--- a/Antlr3.Test/TestAttributes.cs
++++ b/Antlr3.Test/TestAttributes.cs
+@@ -934,7 +934,7 @@ namespace AntlrUnitTests
+
+[TestMethod][TestCategory(TestCategories.Antlr3)]
+public void TestNonDynamicAttributeOutsideRule() /*throws Exception*/ {
+-            string action = "[TestMethod] public void foo() { $x; }";
++            string action = "public void foo() { $x; }";
+string expecting = action;
+
+ErrorQueue equeue = new ErrorQueue();
+@@ -960,7 +960,7 @@ namespace AntlrUnitTests
+
+[TestMethod][TestCategory(TestCategories.Antlr3)]
+public void TestNonDynamicAttributeOutsideRule2() /*throws Exception*/ {
+-            string action = "[TestMethod] public void foo() { $x.y; }";
++            string action = "public void foo() { $x.y; }";
+string expecting = action;
+
+ErrorQueue equeue = new ErrorQueue();
+@@ -3253,6 +3253,7 @@ namespace AntlrUnitTests
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+
++        [Ignore] // The Java target does not support this feature yet
+[TestMethod][TestCategory(TestCategories.Antlr3)]
+public void TestGlobalAttributeScopeInit()
+{
+@@ -3264,6 +3265,7 @@ namespace AntlrUnitTests
+Assert.AreEqual( "true" + NewLine, found );
+}
+
++        [Ignore] // The Java target does not support this feature yet
+[TestMethod][TestCategory(TestCategories.Antlr3)]
+public void TestRuleAttributeScopeInit()
+{
+diff --git a/Antlr3.Test/TestAutoAST.cs b/Antlr3.Test/TestAutoAST.cs
+index 5bd6fa7..806c233 100644
+--- a/Antlr3.Test/TestAutoAST.cs
++++ b/Antlr3.Test/TestAutoAST.cs
+@@ -399,7 +399,6 @@ namespace AntlrUnitTests
+
+[TestMethod][TestCategory(TestCategories.Antlr3)]
+public void TestSetRootWithLabel() /*throws Exception*/ {
+-            // FAILS until I rebuild the antlr.g in v3 (ROOT can't follow a block after an ID assign)
+string grammar =
+"grammar T;\n" +
+"options {output=AST;}\n" +
+@@ -409,7 +408,6 @@ namespace AntlrUnitTests
+"WS : (' '|'\\n') {$channel=HIDDEN;} ;\n";
+string found = execParser( "T.g", grammar, "TParser", "TLexer",
+"a", "+abc", debug );
+-            Assert.Inconclusive("Known to fail.");
+Assert.AreEqual( "(+ abc)" + NewLine, found );
+}
+
+diff --git a/Antlr3.Test/TestInterpretedParsing.cs b/Antlr3.Test/TestInterpretedParsing.cs
+index ffcd8fe..b8b43ec 100644
+--- a/Antlr3.Test/TestInterpretedParsing.cs
++++ b/Antlr3.Test/TestInterpretedParsing.cs
+@@ -82,7 +82,6 @@ namespace AntlrUnitTests
+[TestMethod][TestCategory(TestCategories.Antlr3)]
+public void TestMismatchedTokenError()
+{
+-            Assert.Inconclusive("May be failing on just my port...");
+Grammar pg = new Grammar(
+"parser grammar p;\n" +
+"prog : WHILE ID LCURLY (assign)* RCURLY;\n" +
+@@ -120,7 +119,6 @@ namespace AntlrUnitTests
+[TestMethod][TestCategory(TestCategories.Antlr3)]
+public void TestMismatchedSetError()
+{
+-            Assert.Inconclusive("May be failing on just my port...");
+Grammar pg = new Grammar(
+"parser grammar p;\n" +
+"prog : WHILE ID LCURLY (assign)* RCURLY;\n" +
+@@ -158,7 +156,6 @@ namespace AntlrUnitTests
+[TestMethod][TestCategory(TestCategories.Antlr3)]
+public void TestNoViableAltError()
+{
+-            Assert.Inconclusive("May be failing on just my port...");
+Grammar pg = new Grammar(
+"parser grammar p;\n" +
+"prog : WHILE ID LCURLY (assign)* RCURLY;\n" +
+diff --git a/Antlr3.Test/TestSemanticPredicateEvaluation.cs b/Antlr3.Test/TestSemanticPredicateEvaluation.cs
+index 98d1258..02abfdb 100644
+--- a/Antlr3.Test/TestSemanticPredicateEvaluation.cs
++++ b/Antlr3.Test/TestSemanticPredicateEvaluation.cs
+@@ -249,7 +249,7 @@ namespace AntlrUnitTests
+string grammar =
+"grammar foo;\n" +
+"a : B EOF {System.out.println(\"B\");};\n" +
+-                "B : '/*';\n" +
++                "B : '/*'\n" +
+"    ( ('/' ~'*') => '/'\n" +
+"    | ('*' ~'/') => '*'\n" +
+"    | B\n" +
+diff --git a/Antlr3.Test/TestSemanticPredicates.cs b/Antlr3.Test/TestSemanticPredicates.cs
+index c13153e..66b8853 100644
+--- a/Antlr3.Test/TestSemanticPredicates.cs
++++ b/Antlr3.Test/TestSemanticPredicates.cs
+@@ -122,10 +122,9 @@ namespace AntlrUnitTests
+"a : ( {p1}? A )+ (A)+;" );
+string expecting =
+".s0-A->.s1" + NewLine +
+-                ".s1-{!(p1)}?->:s2=>1" + NewLine +
+-                ".s1-{p1}?->:s3=>2" + NewLine;       // loop back
+-            Assert.Inconclusive("Also fails in the Java version.");
+-            checkDecision( g, 1, expecting, null, null, null, null, null, 0, false );
++                ".s1-{p1}?->:s2=>1" + NewLine +
++                ".s1-{true}?->:s3=>2" + NewLine;       // loop back
++            checkDecision(g, 1, expecting, null, null, null, null, null, 0, false);
+}
+
+[TestMethod][TestCategory(TestCategories.Antlr3)]
+diff --git a/Antlr3.Test/TestSyntaxErrors.cs b/Antlr3.Test/TestSyntaxErrors.cs
+index ecd3a8b..637eb8f 100644
+--- a/Antlr3.Test/TestSyntaxErrors.cs
++++ b/Antlr3.Test/TestSyntaxErrors.cs
+@@ -101,7 +101,7 @@ namespace AntlrUnitTests
+"  ;\n";
+Console.WriteLine(grammar);
+string found = execParser("T.g", grammar, "TParser", "TLexer", "a", "((i))z", false);
+-            string expecting = "line 1:0 no viable alternative at input '('" + NewLine;
++            string expecting = "line 1:1 no viable alternative at input '('" + NewLine;
+string result = Regex.Replace(stderrDuringParse, ".*?/input ", "input ");
+Assert.AreEqual(expecting, result);
+}
+@@ -150,7 +150,7 @@ namespace AntlrUnitTests
+Assert.IsFalse(found);
+Assert.AreEqual(
+"[error(100): :4:27: syntax error: antlr: dangling ']'? make sure to escape with \\]]",
+-                errorQueue.errors.ToString());
++                '[' + string.Join(", ", errorQueue.errors) + ']');
+}
+
+/**
+@@ -178,7 +178,7 @@ namespace AntlrUnitTests
+Assert.IsFalse(success);
+Assert.AreEqual(
+"[error(117): " + tmpdir.ToString() + Path.DirectorySeparatorChar + "T.g:6:9: missing attribute access on rule scope: x]",
+-                errorQueue.errors.ToString());
++                '[' + string.Join(", ", errorQueue.errors) + ']');
+}
+}
+}
+diff --git a/Antlr3.Test/TestTreeGrammarRewriteAST.cs b/Antlr3.Test/TestTreeGrammarRewriteAST.cs
+index 83e3b96..9b51ae9 100644
+--- a/Antlr3.Test/TestTreeGrammarRewriteAST.cs
++++ b/Antlr3.Test/TestTreeGrammarRewriteAST.cs
+@@ -922,7 +922,6 @@ namespace AntlrUnitTests
+}
+
+[TestMethod][TestCategory(TestCategories.Antlr3)]
+-        [Ignore]
+public void TestRewriteOfRuleRefRootListLabeled() /*throws Exception*/ {
+string grammar =
+"grammar T;\n" +
+

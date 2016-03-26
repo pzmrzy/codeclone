@@ -1,0 +1,1902 @@
+commit 4c5e859298c800d0988751b732e397cf2e1e1dc7
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sun Nov 21 09:00:29 2010 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sun Nov 21 09:00:29 2010 -0800
+
+(C# 3) Updated through 7091
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7094]
+
+diff --git a/Antlr3.Test/TestDFAConversion.cs b/Antlr3.Test/TestDFAConversion.cs
+index 40a3110..e1cb40c 100644
+--- a/Antlr3.Test/TestDFAConversion.cs
++++ b/Antlr3.Test/TestDFAConversion.cs
+@@ -238,6 +238,53 @@ namespace AntlrUnitTests
+}
+
+[TestMethod]
++        public void TestSynPredMissingInMiddle()
++        {
++            Grammar g = new Grammar(
++                "parser grammar t;\n" +
++                "x   : (A)=> X\n" +
++                "    | X\n" +  // assume missing synpred is true also
++                "	 | (C)=> X" +
++                "    ;\n");
++            string expecting =
++                ".s0-X->.s1\n" +
++                ".s1-{synpred1_t}?->:s2=>1\n" +
++                ".s1-{synpred2_t}?->:s4=>3\n" +
++                ".s1-{true}?->:s3=>2\n";
++            int[] unreachableAlts = null;
++            int[] nonDetAlts = null;
++            string ambigInput = null;
++            int[] danglingAlts = null;
++            int numWarnings = 0;
++            checkDecision(g, 1, expecting, unreachableAlts,
++                          nonDetAlts, ambigInput, danglingAlts, numWarnings);
++        }
++
++        [TestMethod]
++        public void TestAutoBacktrackAndPredMissingInMiddle()
++        {
++            Grammar g = new Grammar(
++                "parser grammar t;\n" +
++                "options {backtrack=true;}\n" +
++                "x   : (A)=> X\n" +
++                "    | X\n" +  // assume missing synpred is true also
++                "	 | (C)=> X" +
++                "    ;\n");
++            string expecting =
++                ".s0-X->.s1\n" +
++                ".s1-{synpred1_t}?->:s2=>1\n" +  // gen code should have this as (A)=>
++                ".s1-{synpred2_t}?->:s3=>2\n" + // gen code should have this as (X)=>
++                ".s1-{synpred3_t}?->:s4=>3\n"; // gen code should have this as (C)=>
++            int[] unreachableAlts = null;
++            int[] nonDetAlts = null;
++            string ambigInput = null;
++            int[] danglingAlts = null;
++            int numWarnings = 0;
++            checkDecision(g, 1, expecting, unreachableAlts,
++                          nonDetAlts, ambigInput, danglingAlts, numWarnings);
++        }
++
++        [TestMethod]
+public void TestSemPredResolvesRecursion() /*throws Exception*/ {
+Grammar g = new Grammar(
+"parser grammar t;\n" +
+@@ -550,9 +597,8 @@ namespace AntlrUnitTests
+
+assertTrue( expectedRules.SequenceEqual( ruleNames( leftRecursive ) ) );
+
+-            g.CreateLookaheadDFAs( false );
+-
+-            Message msg = (Message)equeue.errors[0];
++            Assert.AreEqual(1, equeue.errors.Count);
++            Message msg = equeue.errors[0];
+assertTrue( "expecting left recursion cycles; found " + msg.GetType().Name,
+msg is LeftRecursionCyclesMessage );
+LeftRecursionCyclesMessage cyclesMsg = (LeftRecursionCyclesMessage)msg;
+@@ -586,10 +632,9 @@ namespace AntlrUnitTests
+expectedRules.Add( "b" );
+assertTrue( expectedRules.SequenceEqual( ruleNames( leftRecursive ) ) );
+
+-            g.CreateLookaheadDFAs( false );
+-
+-            Message msg = (Message)equeue.errors[0];
+-            assertTrue( "expecting left recursion cycles; found " + msg.GetType().Name,
++            Assert.AreEqual(1, equeue.errors.Count);
++            Message msg = equeue.errors[0];
++            assertTrue("expecting left recursion cycles; found " + msg.GetType().Name,
+msg is LeftRecursionCyclesMessage );
+LeftRecursionCyclesMessage cyclesMsg = (LeftRecursionCyclesMessage)msg;
+
+@@ -623,8 +668,9 @@ namespace AntlrUnitTests
+
+assertTrue( expectedRules.SequenceEqual( ruleNames( leftRecursive ) ) );
+
+-            Message msg = (Message)equeue.errors[0];
+-            assertTrue( "expecting left recursion cycles; found " + msg.GetType().Name,
++            Assert.AreEqual(1, equeue.errors.Count);
++            Message msg = equeue.errors[0];
++            assertTrue("expecting left recursion cycles; found " + msg.GetType().Name,
+msg is LeftRecursionCyclesMessage );
+LeftRecursionCyclesMessage cyclesMsg = (LeftRecursionCyclesMessage)msg;
+
+@@ -932,12 +978,13 @@ namespace AntlrUnitTests
+// should look the same as A+ since no ambiguity
+string expecting =
+".s0-A->:s1=>1\n"; // always chooses to enter loop upon A
++            // turns off 1 of warnings. A can never exit loop now
+int[] unreachableAlts = new int[] { 2 };
+-            int[] nonDetAlts = new int[] { 1, 2 };
+-            string ambigInput = "A";
++            int[] nonDetAlts = null;
++            string ambigInput = null;
+int[] danglingAlts = null;
+-            int numWarnings = 2;
+-            checkDecision( g, 1, expecting, unreachableAlts,
++            int numWarnings = 1;
++            checkDecision(g, 1, expecting, unreachableAlts,
+nonDetAlts, ambigInput, danglingAlts, numWarnings );
+}
+
+@@ -1477,28 +1524,107 @@ namespace AntlrUnitTests
+}
+
+[TestMethod]
+-        public void TestHoistedGatedSynPred() /*throws Exception*/ {
++        public void TestHoistedGatedSynPred()
++        {
+Grammar g = new Grammar(
+"parser grammar t;\n" +
+"x   : (X)=> X\n" +
+"    | X\n" +
+-                "    ;\n" );
++                "    ;\n");
+string expecting =
+".s0-X->.s1\n" +
+".s1-{synpred1_t}?->:s2=>1\n" + // hoists into decision
+-                ".s1-{true}?->:s3=>2\n";
++            ".s1-{true}?->:s3=>2\n";
+int[] unreachableAlts = null;
+int[] nonDetAlts = null;
+string ambigInput = null;
+int[] danglingAlts = null;
+int numWarnings = 0;
+-            checkDecision( g, 1, expecting, unreachableAlts,
+-                          nonDetAlts, ambigInput, danglingAlts, numWarnings );
++            checkDecision(g, 1, expecting, unreachableAlts,
++                          nonDetAlts, ambigInput, danglingAlts, numWarnings);
++
++            HashSet<string> preds = g.synPredNamesUsedInDFA;
++            HashSet<string> expectedPreds = new HashSet<string>() { "synpred1_t" };
++            assertEquals("predicate names not recorded properly in grammar", expectedPreds, preds);
++        }
++
++        [TestMethod]
++        public void TestHoistedGatedSynPred2()
++        {
++            Grammar g = new Grammar(
++                "parser grammar t;\n" +
++                "x   : (X)=> (X|Y)\n" +
++                "    | X\n" +
++                "    ;\n");
++            string expecting =
++                ".s0-X->.s1\n" +
++                ".s0-Y&&{synpred1_t}?->:s2=>1\n" +
++                ".s1-{synpred1_t}?->:s2=>1\n" +
++                    ".s1-{true}?->:s3=>2\n";
++            int[] unreachableAlts = null;
++            int[] nonDetAlts = null;
++            string ambigInput = null;
++            int[] danglingAlts = null;
++            int numWarnings = 0;
++            checkDecision(g, 1, expecting, unreachableAlts,
++                          nonDetAlts, ambigInput, danglingAlts, numWarnings);
+
+HashSet<string> preds = g.synPredNamesUsedInDFA;
+HashSet<string> expectedPreds = new HashSet<string>(); //{{add("synpred1_t");}};
+-            expectedPreds.Add( "synpred1_t" );
+-            assertTrue( "predicate names not recorded properly in grammar", expectedPreds.SequenceEqual( preds ) );
++            expectedPreds.Add("synpred1_t");
++            assertTrue("predicate names not recorded properly in grammar", expectedPreds.SequenceEqual(preds));
++        }
++
++        [TestMethod]
++        public void TestGreedyGetsNoErrorForAmbig()
++        {
++            Grammar g = new Grammar(
++                "parser grammar t;\n" +
++                "s : IF s (options {greedy=true;} : E s)? | B;\n" +
++                "slist: s SEMI ;");
++            string expecting =
++                ".s0-E->:s1=>1\n" +
++                ".s0-SEMI->:s2=>2\n";
++            int[] unreachableAlts = null;
++            int[] nonDetAlts = null;
++            string ambigInput = null;
++            int[] danglingAlts = null;
++            int numWarnings = 0;
++            checkDecision(g, 1, expecting, unreachableAlts,
++                          nonDetAlts, ambigInput, danglingAlts, numWarnings);
++            expecting =
++                ".s0-B->:s2=>2\n" +
++                ".s0-IF->:s1=>1\n";
++            checkDecision(g, 2, expecting, null, null, null, null, 0);
++        }
++
++        [TestMethod]
++        public void TestGreedyNonLLStarStillGetsError()
++        {
++            Grammar g = new Grammar(
++                "parser grammar t;\n" +
++                "x   : ( options {greedy=true;}\n" +
++                "	   : y X\n" +
++                "      | y Y\n" +
++                "	   )\n" +
++                "    ;\n" +
++                "y   : L y R\n" +
++                "    | B\n" +
++                "    ;");
++            IList<int> altsWithRecursion = new int[] { 1, 2 };
++            assertNonLLStar(g, altsWithRecursion);
++        }
++
++        [TestMethod]
++        public void TestGreedyRecOverflowStillGetsError()
++        {
++            Grammar g = new Grammar(
++                "parser grammar t;\n" +
++                "s : (options {greedy=true;} : a Y | A A A A A X) ;\n" + // force recursion past m=4
++                "a : A a | Q;");
++            IList expectedTargetRules = new string[] { "a" };
++            int expectedAlt = 1;
++            assertRecursionOverflow(g, expectedTargetRules, expectedAlt);
+}
+
+// Check state table creation
+diff --git a/Antlr3.Test/TestSemanticPredicates.cs b/Antlr3.Test/TestSemanticPredicates.cs
+index f600322..a72ab16 100644
+--- a/Antlr3.Test/TestSemanticPredicates.cs
++++ b/Antlr3.Test/TestSemanticPredicates.cs
+@@ -293,7 +293,7 @@ namespace AntlrUnitTests
+*/
+
+assertEquals( "unexpected number of expected problems", 1, equeue.size() );
+-            Message msg = (Message)equeue.warnings[0];
++            Message msg = equeue.errors[0];
+assertTrue( "warning must be a left recursion msg",
+msg is LeftRecursionCyclesMessage );
+}
+diff --git a/Antlr3/Analysis/DFA.cs b/Antlr3/Analysis/DFA.cs
+index e5cae36..9e83f49 100644
+--- a/Antlr3/Analysis/DFA.cs
++++ b/Antlr3/Analysis/DFA.cs
+@@ -57,6 +57,10 @@ namespace Antlr3.Analysis
+public const int REACHABLE_NO = 0;
+public const int REACHABLE_YES = 1;
+
++        public const int CYCLIC_UNKNOWN = -2;
++        public const int CYCLIC_BUSY = -1; // in process of computing
++        public const int CYCLIC_DONE = 0;
++
+#if false
+/** Prevent explosion of DFA states during conversion. The max number
+*  of states per alt in a single decision's DFA.
+@@ -170,12 +174,6 @@ namespace Antlr3.Analysis
+*/
+public DecisionProbe probe;
+
+-        /** Track absolute time of the conversion so we can have a failsafe:
+-         *  if it takes too long, then terminate.  Assume bugs are in the
+-         *  analysis engine.
+-         */
+-        internal DateTime conversionStartTime;
+-
+/** Map an edge transition table to a unique set number; ordered so
+*  we can push into the output template as an ordered list of sets
+*  and then ref them from within the transition[][] table.  Like this
+@@ -267,14 +265,6 @@ namespace Antlr3.Analysis
+//long stop = JSystem.currentTimeMillis();
+//JSystem.@out.println("verify cost: "+(int)(stop-start)+" ms");
+}
+-            catch ( AnalysisTimeoutException /*at*/ )
+-            {
+-                probe.ReportAnalysisTimeout();
+-                if ( !OkToRetryWithK1 )
+-                {
+-                    probe.IssueWarnings();
+-                }
+-            }
+catch ( NonLLStarDecisionException /*nonLL*/ )
+{
+probe.ReportNonLLStarDecision( this );
+@@ -287,13 +277,7 @@ namespace Antlr3.Analysis
+}
+
+#region Properties
+-        public bool AnalysisTimedOut
+-        {
+-            get
+-            {
+-                return probe.AnalysisTimedOut;
+-            }
+-        }
++
+public bool CanInlineDecision
+{
+get
+@@ -349,6 +333,17 @@ namespace Antlr3.Analysis
+return _cyclic && UserMaxLookahead == 0;
+}
+}
++
++        public bool IsClassicDFA
++        {
++            get
++            {
++                return !IsCyclic &&
++                       !nfa.grammar.decisionsWhoseDFAsUsesSemPreds.Contains(this) &&
++                       !nfa.grammar.decisionsWhoseDFAsUsesSynPreds.Contains(this);
++            }
++        }
++
+public bool IsGreedy
+{
+get
+@@ -375,18 +370,20 @@ namespace Antlr3.Analysis
+return GetIsTokensRuleDecision();
+}
+}
+-        /** Return k if decision is LL(k) for some k else return max int */
++
++        /** Return k if decision is LL(k) for some k else return max int
++         */
+public int MaxLookaheadDepth
+{
+get
+{
+-                if ( IsCyclic )
+-                {
++                if (HasCycle)
+return int.MaxValue;
+-                }
+-                return max_k;
++                // compute to be sure
++                return CalculateMaxLookaheadDepth(startState, 0);
+}
+}
++
+/** What is the max state number ever created?  This may be beyond
+*  getNumberOfStates().
+*/
+@@ -483,6 +480,138 @@ namespace Antlr3.Analysis
+}
+#endregion
+
++        private int CalculateMaxLookaheadDepth(DFAState d, int depth)
++        {
++            // not cyclic; don't worry about termination
++            // fail if pred edge.
++            int max = depth;
++            for (int i = 0; i < d.NumberOfTransitions; i++)
++            {
++                Transition t = d.Transition(i);
++                //			if ( t.isSemanticPredicate() ) return Integer.MAX_VALUE;
++                if (!t.IsSemanticPredicate)
++                {
++                    // if pure pred not gated, it must target stop state; don't count
++                    DFAState edgeTarget = (DFAState)t.target;
++                    int m = CalculateMaxLookaheadDepth(edgeTarget, depth + 1);
++                    max = Math.Max(max, m);
++                }
++            }
++
++            return max;
++        }
++
++        /** Count all disambiguating syn preds (ignore synpred tests
++         *  for gated edges, which occur for nonambig input sequences).
++         *  E.g.,
++         *  x  : (X)=> (X|Y)\n" +
++         *     | X\n" +
++         *     ;
++         *
++         *  gives
++         *
++         * .s0-X->.s1
++         * .s0-Y&&{synpred1_t}?->:s2=>1
++         * .s1-{synpred1_t}?->:s2=>1
++         * .s1-{true}?->:s3=>2
++         */
++        public bool HasSynPred
++        {
++            get
++            {
++                bool has = CalculateHasSynPred(startState, new HashSet<DFAState>());
++                //		if ( !has ) {
++                //			System.out.println("no synpred in dec "+decisionNumber);
++                //			FASerializer serializer = new FASerializer(nfa.grammar);
++                //			String result = serializer.serialize(startState);
++                //			System.out.println(result);
++                //		}
++                return has;
++            }
++        }
++
++        internal virtual bool CalculateHasSynPred(DFAState d, HashSet<DFAState> busy)
++        {
++            busy.Add(d);
++            for (int i = 0; i < d.NumberOfTransitions; i++)
++            {
++                Transition t = d.Transition(i);
++                if (t.IsSemanticPredicate)
++                {
++                    SemanticContext ctx = t.label.SemanticContext;
++                    //				if ( ctx.toString().indexOf("synpred")>=0 ) {
++                    //					System.out.println("has pred "+ctx.toString()+" "+ctx.isSyntacticPredicate());
++                    //					System.out.println(((SemanticContext.Predicate)ctx).predicateAST.token);
++                    //				}
++                    if (ctx.IsSyntacticPredicate)
++                        return true;
++                }
++                DFAState edgeTarget = (DFAState)t.target;
++                if (!busy.Contains(edgeTarget) &&CalculateHasSynPred(edgeTarget, busy))
++                    return true;
++            }
++
++            return false;
++        }
++
++        public virtual bool HasSemPred
++        {
++            get
++            { // has user-defined sempred
++                bool has = CalculateHasSemPred(startState, new HashSet<DFAState>());
++                return has;
++            }
++        }
++
++        internal virtual bool CalculateHasSemPred(DFAState d, HashSet<DFAState> busy)
++        {
++            busy.Add(d);
++            for (int i = 0; i < d.NumberOfTransitions; i++)
++            {
++                Transition t = d.Transition(i);
++                if (t.IsSemanticPredicate)
++                {
++                    SemanticContext ctx = t.label.SemanticContext;
++                    if (ctx.HasUserSemanticPredicate)
++                        return true;
++                }
++                DFAState edgeTarget = (DFAState)t.target;
++                if (!busy.Contains(edgeTarget) && CalculateHasSemPred(edgeTarget, busy))
++                    return true;
++            }
++
++            return false;
++        }
++
++        /** Compute cyclic w/o relying on state computed during analysis. just check. */
++        public virtual bool HasCycle
++        {
++            get
++            {
++                bool cyclic = CalculateHasCycle(startState, new Dictionary<DFAState, int>());
++                return cyclic;
++            }
++        }
++
++        internal virtual bool CalculateHasCycle(DFAState d, IDictionary<DFAState, int> busy)
++        {
++            busy[d] = CYCLIC_BUSY;
++            for (int i = 0; i < d.NumberOfTransitions; i++)
++            {
++                Transition t = d.Transition(i);
++                DFAState target = (DFAState)t.target;
++                int cond;
++                if (!busy.TryGetValue(target, out cond))
++                    cond = CYCLIC_UNKNOWN;
++                if (cond == CYCLIC_BUSY)
++                    return true;
++                if (cond != CYCLIC_DONE && CalculateHasCycle(target, busy))
++                    return true;
++            }
++            busy[d] = CYCLIC_DONE;
++            return false;
++        }
++
+/** Walk all states and reset their numbers to be a contiguous sequence
+*  of integers starting from 0.  Only cyclic DFA can have unused positions
+*  in states list.  State i might be identical to a previous state j and
+@@ -1182,8 +1311,8 @@ namespace Antlr3.Analysis
+bool nonLLStarOrOverflowAndPredicateVisible =
+( probe.IsNonLLStarDecision || probe.AnalysisOverflowed ) &&
+predicateVisible; // auto backtrack or manual sem/syn
+-            return UserMaxLookahead != 1 &&
+-                 ( AnalysisTimedOut || nonLLStarOrOverflowAndPredicateVisible );
++
++            return UserMaxLookahead != 1 && nonLLStarOrOverflowAndPredicateVisible;
+}
+
+public virtual string GetReasonForFailure()
+@@ -1205,16 +1334,7 @@ namespace Antlr3.Analysis
+buf.Append( " && predicate visible" );
+}
+}
+-            if ( AnalysisTimedOut )
+-            {
+-                if ( buf.Length > 0 )
+-                {
+-                    buf.Append( " && " );
+-                }
+-                buf.Append( "timed out (>" );
+-                buf.Append( DFA.MAX_TIME_PER_DFA_CREATION );
+-                buf.Append( "ms)" );
+-            }
++
+buf.Append( "\n" );
+return buf.ToString();
+}
+diff --git a/Antlr3/Analysis/DecisionProbe.cs b/Antlr3/Analysis/DecisionProbe.cs
+index 0bf8dfc..ed0aef2 100644
+--- a/Antlr3/Analysis/DecisionProbe.cs
++++ b/Antlr3/Analysis/DecisionProbe.cs
+@@ -130,7 +130,7 @@ namespace Antlr3.Analysis
+*/
+ICollection<int> _altsWithProblem = new HashSet<int>();
+
+-        /** If decision with > 1 alt has recursion in > 1 alt, it's nonregular
++        /** If decision with > 1 alt has recursion in > 1 alt, it's (likely) nonregular
+*  lookahead.  The decision cannot be made with a DFA.
+*  the alts are stored in altsWithProblem.
+*/
+@@ -155,9 +155,6 @@ namespace Antlr3.Analysis
+new Dictionary<int, List<NFAConfiguration>>();
+#endif
+
+-        /** Did ANTLR have to terminate early on the analysis of this decision? */
+-        bool _timedOut = false;
+-
+/** Used to find paths through syntactically ambiguous DFA. If we've
+*  seen statement number before, what did we learn?
+*/
+@@ -194,14 +191,7 @@ namespace Antlr3.Analysis
+return _stateToRecursionOverflowConfigurationsMap.Count > 0;
+}
+}
+-        /** Did the analysis complete it's work? */
+-        public bool AnalysisTimedOut
+-        {
+-            get
+-            {
+-                return _timedOut;
+-            }
+-        }
++
+/** return set of states w/o emanating edges and w/o resolving sem preds.
+*  These states come about because the analysis algorithm had to
+*  terminate early to avoid infinite recursion for example (due to
+@@ -500,17 +490,6 @@ namespace Antlr3.Analysis
+ErrorManager.NonLLStarDecision( this );
+}
+
+-            if ( AnalysisTimedOut )
+-            {
+-                // only report early termination errors if !backtracking
+-                if ( !dfa.AutoBacktrackMode )
+-                {
+-                    ErrorManager.AnalysisAborted( this );
+-                }
+-                // now just return...if we bailed out, don't spew other messages
+-                return;
+-            }
+-
+IssueRecursionWarnings();
+
+// generate a separate message for each problem state in DFA
+@@ -537,7 +516,19 @@ namespace Antlr3.Analysis
+StripWildCardAlts( disabledAlts );
+if ( disabledAlts.Count > 0 )
+{
+-                            ErrorManager.Nondeterminism( this, d );
++                            // nondeterminism; same input predicts multiple alts.
++                            // but don't emit error if greedy=true explicitly set
++                            bool explicitlyGreedy = false;
++                            GrammarAST blockAST = d.dfa.nfa.grammar.GetDecisionBlockAST(d.dfa.decisionNumber);
++                            if (blockAST != null)
++                            {
++                                String greedyS = (String)blockAST.GetBlockOption("greedy");
++                                if (greedyS != null && greedyS.Equals("true"))
++                                    explicitlyGreedy = true;
++                            }
++
++                            if (!explicitlyGreedy)
++                                ErrorManager.Nondeterminism(this, d);
+}
+}
+}
+@@ -729,12 +720,6 @@ namespace Antlr3.Analysis
+_danglingStates.Add( d );
+}
+
+-        public virtual void ReportAnalysisTimeout()
+-        {
+-            _timedOut = true;
+-            dfa.nfa.grammar.setOfDFAWhoseAnalysisTimedOut.Add( dfa );
+-        }
+-
+/** Report that at least 2 alts have recursive constructs.  There is
+*  no way to build a DFA so we terminated.
+*/
+@@ -745,6 +730,7 @@ namespace Antlr3.Analysis
+dfa.recursiveAltSet.toList());
+*/
+_nonLLStarDecision = true;
++            dfa.nfa.grammar.numNonLLStar++;
+_altsWithProblem.addAll( dfa.recursiveAltSet.ToList() );
+}
+
+diff --git a/Antlr3/Analysis/NFAtoDFAConverter.cs b/Antlr3/Analysis/NFAtoDFAConverter.cs
+index a71ae6a..8a35afb 100644
+--- a/Antlr3/Analysis/NFAtoDFAConverter.cs
++++ b/Antlr3/Analysis/NFAtoDFAConverter.cs
+@@ -41,6 +41,7 @@ namespace Antlr3.Analysis
+using ErrorManager = Antlr3.Tool.ErrorManager;
+using IList = System.Collections.IList;
+using IToken = Antlr.Runtime.IToken;
++    using Antlr3.Misc;
+
+/** Code that embodies the NFA conversion to DFA. A new object is needed
+*  per DFA (also required for thread safety if multiple conversions
+@@ -85,7 +86,7 @@ namespace Antlr3.Analysis
+
+public virtual void Convert()
+{
+-            _dfa.conversionStartTime = System.DateTime.Now;
++            //_dfa.conversionStartTime = System.DateTime.Now;
+
+// create the DFA start state
+_dfa.startState = ComputeStartState();
+@@ -343,7 +344,6 @@ namespace Antlr3.Analysis
+}
+
+//JSystem.@out.println("DFA after reach / closures:\n"+dfa);
+-
+if ( !d.IsResolvedWithPredicates && numberOfEdgesEmanating == 0 )
+{
+//JSystem.@out.println("dangling DFA state "+d+"\nAfter reach / closures:\n"+dfa);
+@@ -364,6 +364,7 @@ namespace Antlr3.Analysis
+}
+
+// Check to see if we need to add any semantic predicate transitions
++            // might have both token and predicated edges from d
+if ( d.IsResolvedWithPredicates )
+{
+AddPredicateTransitions( d );
+@@ -642,13 +643,13 @@ namespace Antlr3.Analysis
+);
+}
+
+-            if ( DFA.MAX_TIME_PER_DFA_CREATION > System.TimeSpan.Zero &&
+-                 System.DateTime.Now - d.dfa.conversionStartTime >=
+-                 DFA.MAX_TIME_PER_DFA_CREATION )
+-            {
+-                // bail way out; we've blown up somehow
+-                throw new AnalysisTimeoutException( d.dfa );
+-            }
++            //if ( DFA.MAX_TIME_PER_DFA_CREATION > System.TimeSpan.Zero &&
++            //     System.DateTime.Now - d.dfa.conversionStartTime >=
++            //     DFA.MAX_TIME_PER_DFA_CREATION )
++            //{
++            //    // bail way out; we've blown up somehow
++            //    throw new AnalysisTimeoutException( d.dfa );
++            //}
+
+NFAConfiguration proposedNFAConfiguration =
+new NFAConfiguration( p.stateNumber,
+@@ -1467,7 +1468,6 @@ namespace Antlr3.Analysis
+if ( nondeterministicAlts.Count - altToPredMap.Count > 1 )
+{
+// too few predicates to resolve; just return
+-                // TODO: actually do we need to gen error here?
+return false;
+}
+
+@@ -1498,8 +1498,13 @@ namespace Antlr3.Analysis
+else
+{
+// pretend naked alternative is covered with !(union other preds)
+-                    // unless it's a synpred since those have precedence same
+-                    // as alt order
++                    // unless one of preds from other alts is a manually specified synpred
++                    // since those have precedence same as alt order.  Missing synpred
++                    // is true so that alt wins (or is at least attempted).
++                    // Note: can't miss any preds on alts (can't be here) if auto backtrack
++                    // since it prefixes all.
++                    // In LL(*) paper, i'll just have algorithm emit warning about uncovered
++                    // pred
+SemanticContext unionOfPredicatesFromAllAlts =
+GetUnionOfPredicates( altToPredMap );
+//JSystem.@out.println("all predicates "+unionOfPredicatesFromAllAlts);
+@@ -1521,6 +1526,8 @@ namespace Antlr3.Analysis
+int numConfigs = d.nfaConfigurations.Size();
+for ( int i = 0; i < numConfigs; i++ )
+{
++                    // TODO: I don't think we need to do this; altToPredMap has it
++                    //7/27/10  theok, I removed it and it still seems to work with everything; leave in anyway just in case
+NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations.Get( i );
+if ( configuration.alt == nakedAlt )
+{
+@@ -1540,6 +1547,7 @@ namespace Antlr3.Analysis
+d.dfa.probe.RemoveRecursiveOverflowState( d );
+}
+int numConfigs = d.nfaConfigurations.Size();
++                //System.out.println("pred map="+altToPredMap);
+for ( int i = 0; i < numConfigs; i++ )
+{
+NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations.Get( i );
+@@ -1549,7 +1557,9 @@ namespace Antlr3.Analysis
+{
+// resolve (first found) with pred
+// and remove alt from problem list
++                        //System.out.println("c="+configuration);
+configuration.resolveWithPredicate = true;
++                        // altToPredMap has preds from all alts; store into "annointed" config
+configuration.semanticContext = semCtx; // reset to combined
+altToPredMap.Remove( configuration.alt );
+
+@@ -1598,11 +1608,11 @@ namespace Antlr3.Analysis
+IDictionary<int, SemanticContext> altToPredicateContextMap =
+new Dictionary<int, SemanticContext>();
+// init the alt to predicate set map
+-            IDictionary<int, HashSet<SemanticContext>> altToSetOfContextsMap =
+-                new Dictionary<int, HashSet<SemanticContext>>();
++            IDictionary<int, OrderedHashSet<SemanticContext>> altToSetOfContextsMap =
++                new Dictionary<int, OrderedHashSet<SemanticContext>>();
+foreach ( int altI in nondeterministicAlts )
+{
+-                altToSetOfContextsMap[altI] = new HashSet<SemanticContext>();
++                altToSetOfContextsMap[altI] = new OrderedHashSet<SemanticContext>();
+}
+
+/*
+@@ -1631,7 +1641,7 @@ namespace Antlr3.Analysis
+if ( configuration.semanticContext !=
+SemanticContext.EmptySemanticContext )
+{
+-                        HashSet<SemanticContext> predSet = altToSetOfContextsMap.get( altI );
++                        OrderedHashSet<SemanticContext> predSet = altToSetOfContextsMap.get( altI );
+predSet.Add( configuration.semanticContext );
+}
+else
+@@ -1671,7 +1681,7 @@ namespace Antlr3.Analysis
+IList<int> incompletelyCoveredAlts = new List<int>();
+foreach ( int altI in nondeterministicAlts )
+{
+-                HashSet<SemanticContext> contextsForThisAlt = altToSetOfContextsMap.get( altI );
++                OrderedHashSet<SemanticContext> contextsForThisAlt = altToSetOfContextsMap.get( altI );
+if ( nondetAltsWithUncoveredConfiguration.Contains( altI ) )
+{ // >= 1 config has no ctx
+if ( contextsForThisAlt.Count > 0 )
+diff --git a/Antlr3/Analysis/SemanticContext.cs b/Antlr3/Analysis/SemanticContext.cs
+index 467522c..a441d53 100644
+--- a/Antlr3/Analysis/SemanticContext.cs
++++ b/Antlr3/Analysis/SemanticContext.cs
+@@ -89,6 +89,12 @@ namespace Antlr3.Analysis
+StringTemplateGroup templates,
+DFA dfa );
+
++        // user-specified sempred {}? or {}?=>
++        public abstract bool HasUserSemanticPredicate
++        {
++            get;
++        }
++
+public abstract bool IsSyntacticPredicate
+{
+get;
+@@ -235,6 +241,17 @@ namespace Antlr3.Analysis
+}
+}
+
++            public override bool HasUserSemanticPredicate
++            {
++                get
++                {
++                    // user-specified sempred
++                    return predicateAST != null &&
++                           (predicateAST.Type == ANTLRParser.GATED_SEMPRED ||
++                             predicateAST.Type == ANTLRParser.SEMPRED);
++                }
++            }
++
+public override bool IsSyntacticPredicate
+{
+get
+@@ -281,6 +298,14 @@ namespace Antlr3.Analysis
+return new StringTemplate( "true" );
+}
+
++            public override bool HasUserSemanticPredicate
++            {
++                get
++                {
++                    return false;
++                }
++            }
++
+public override string ToString()
+{
+return "true"; // not used for code gen, just DOT and print outs
+@@ -355,6 +380,15 @@ namespace Antlr3.Analysis
+return new AND( gatedLeft, gatedRight );
+}
+}
++
++            public override bool HasUserSemanticPredicate
++            {
++                get
++                {
++                    return _left.HasUserSemanticPredicate || _right.HasUserSemanticPredicate;
++                }
++            }
++
+public override bool IsSyntacticPredicate
+{
+get
+@@ -433,6 +467,22 @@ namespace Antlr3.Analysis
+return result;
+}
+}
++
++            public override bool HasUserSemanticPredicate
++            {
++                get
++                {
++                    for (Iterator it = _operands.iterator(); it.hasNext(); )
++                    {
++                        SemanticContext semctx = (SemanticContext)it.next();
++                        if (semctx.HasUserSemanticPredicate)
++                            return true;
++                    }
++
++                    return false;
++                }
++            }
++
+public override bool IsSyntacticPredicate
+{
+get
+@@ -508,6 +558,15 @@ namespace Antlr3.Analysis
+return new NOT( p );
+}
+}
++
++            public override bool HasUserSemanticPredicate
++            {
++                get
++                {
++                    return ctx.HasUserSemanticPredicate;
++                }
++            }
++
+public override bool IsSyntacticPredicate
+{
+get
+diff --git a/Antlr3/Antlr3.csproj b/Antlr3/Antlr3.csproj
+index 4344e8e..3034fa7 100644
+--- a/Antlr3/Antlr3.csproj
++++ b/Antlr3/Antlr3.csproj
+@@ -157,6 +157,7 @@
+<Compile Include="Tool\GrammarInsufficientPredicatesMessage.cs" />
+<Compile Include="Tool\GrammarNonDeterminismMessage.cs" />
+<Compile Include="Tool\GrammarReport.cs" />
++    <Compile Include="Tool\GrammarReport2.cs" />
+<Compile Include="Tool\GrammarSemanticsMessage.cs" />
+<Compile Include="Tool\GrammarSpelunker.cs" />
+<Compile Include="Tool\GrammarSyntaxMessage.cs" />
+diff --git a/Antlr3/AntlrTool.cs b/Antlr3/AntlrTool.cs
+index 97df56f..c91d8ef 100644
+--- a/Antlr3/AntlrTool.cs
++++ b/Antlr3/AntlrTool.cs
+@@ -557,20 +557,17 @@ namespace Antlr3
+grammar.PrintGrammar( Console.Out );
+}
+
+-                    if ( Report )
++                    if (Report)
+{
+-                        GrammarReport report2 = new GrammarReport( grammar );
+-                        Console.Out.WriteLine( report2.ToString() );
+-                        // print out a backtracking report too (that is not encoded into log)
+-                        Console.Out.WriteLine( report2.GetBacktrackingReport() );
+-                        // same for aborted NFA->DFA conversions
+-                        Console.Out.WriteLine( report2.GetAnalysisTimeoutReport() );
+-
+-                        if ( Profile )
+-                        {
+-                            Stats.WriteReport( GrammarReport.GRAMMAR_STATS_FILENAME,
+-                                              report2.ToNotifyString() );
+-                        }
++                        GrammarReport2 greport = new GrammarReport2(grammar);
++                        Console.WriteLine(greport.ToString());
++                    }
++
++                    if ( Profile )
++                    {
++                        GrammarReport report = new GrammarReport(grammar);
++                        Stats.WriteReport( GrammarReport.GRAMMAR_STATS_FILENAME,
++                                          report.ToNotifyString() );
+}
+
+// now handle the lexer if one was created for a merged spec
+@@ -855,6 +852,7 @@ namespace Antlr3
+Console.Error.WriteLine( "  -report               print out a report about the grammar(s) processed" );
+Console.Error.WriteLine( "  -print                print out the grammar without actions" );
+Console.Error.WriteLine( "  -debug                generate a parser that emits debugging events" );
++            Console.Error.WriteLine( "  -trace                generate a recognizer that traces rule entry/exit" );
+Console.Error.WriteLine( "  -profile              generate a parser that computes profiling information" );
+Console.Error.WriteLine( "  -nfa                  generate an NFA for each rule" );
+Console.Error.WriteLine( "  -dfa                  generate a DFA for each decision point" );
+@@ -881,7 +879,6 @@ namespace Antlr3
+Console.Error.WriteLine("  -Xnfastates             for nondeterminisms, list NFA states for each path");
+Console.Error.WriteLine("  -Xm m                   max number of rule invocations during conversion           [" + NFAContext.MAX_SAME_RULE_INVOCATIONS_PER_NFA_CONFIG_STACK + "]");
+Console.Error.WriteLine("  -Xmaxdfaedges m         max \"comfortable\" number of edges for single DFA state     [" + DFA.MAX_STATE_TRANSITIONS_FOR_TABLE + "]");
+-            Console.Error.WriteLine("  -Xconversiontimeout t   set NFA conversion timeout for each decision               [" + DFA.MAX_TIME_PER_DFA_CREATION + "]");
+Console.Error.WriteLine("  -Xmaxinlinedfastates m  max DFA states before table used rather than inlining      [" + CodeGenerator.DefaultMaxSwitchCaseLabels + "]");
+Console.Error.WriteLine("  -Xmaxswitchcaselabels m don't generate switch() statements for dfas bigger than m  [" + CodeGenerator.DefaultMaxSwitchCaseLabels + "]");
+Console.Error.WriteLine("  -Xminswitchalts m       don't generate switch() statements for dfas smaller than m [" + CodeGenerator.DefaultMinSwitchAlts + "]");
+@@ -1415,23 +1412,6 @@ namespace Antlr3
+}
+
+/**
+-         * Gets or sets the current setting of the conversion timeout on DFA creation.
+-         *
+-         * @return DFA creation timeout value in milliseconds
+-         */
+-        public virtual TimeSpan ConversionTimeout
+-        {
+-            get
+-            {
+-                return DFA.MAX_TIME_PER_DFA_CREATION;
+-            }
+-            set
+-            {
+-                DFA.MAX_TIME_PER_DFA_CREATION = value;
+-            }
+-        }
+-
+-        /**
+* Gets or sets the current setting of the message format descriptor.
+*/
+public virtual string MessageFormat
+diff --git a/Antlr3/Tool/Grammar.cs b/Antlr3/Tool/Grammar.cs
+index 42ee63a..cf52803 100644
+--- a/Antlr3/Tool/Grammar.cs
++++ b/Antlr3/Tool/Grammar.cs
+@@ -64,6 +64,7 @@ namespace Antlr3.Tool
+using TextWriter = System.IO.TextWriter;
+using TimeSpan = System.TimeSpan;
+using Tool = Antlr3.AntlrTool;
++    using System.Collections.ObjectModel;
+
+/** Represents a grammar in memory. */
+public class Grammar
+@@ -163,6 +164,7 @@ namespace Antlr3.Tool
+
+public class Decision
+{
++            public Grammar grammar;
+public int decision;
+public NFAState startState;
+public GrammarAST blockAST;
+@@ -380,6 +382,8 @@ namespace Antlr3.Tool
+*/
+protected bool externalAnalysisAbort;
+
++        public int numNonLLStar = 0; // hack to track for -report
++
+/** When we read in a grammar, we track the list of syntactic predicates
+*  and build faux rules for them later.  See my blog entry Dec 2, 2005:
+*  http://www.antlr.org/blog/antlr3/lookahead.tml
+@@ -411,7 +415,7 @@ namespace Antlr3.Tool
+*  in the recognizer for this file; only those that are affected by rule
+*  definitions in this grammar.  I am not sure the Java target will need
+*  this but I'm leaving in case other targets need it.
+-         *  @see NameSpaceChecker.lookForReferencesToUndefinedSymbols()
++         *  see NameSpaceChecker.lookForReferencesToUndefinedSymbols()
+*/
+protected internal HashSet<Rule> delegatedRuleReferences = new HashSet<Rule>();
+
+@@ -499,7 +503,6 @@ namespace Antlr3.Tool
+public HashSet<int> setOfNondeterministicDecisionNumbers = new HashSet<int>();
+public HashSet<int> setOfNondeterministicDecisionNumbersResolvedWithPredicates =
+new HashSet<int>();
+-        public HashSet<DFA> setOfDFAWhoseAnalysisTimedOut = new HashSet<DFA>();
+
+/** Track decisions with syn preds specified for reporting.
+*  This is the a set of BLOCK type AST nodes.
+@@ -660,6 +663,15 @@ namespace Antlr3.Tool
+generator = value;
+}
+}
++
++        public virtual ReadOnlyCollection<Decision> Decisions
++        {
++            get
++            {
++                return indexToDecision.AsReadOnly();
++            }
++        }
++
+public string DefaultRuleModifier
+{
+get
+@@ -1768,7 +1780,6 @@ namespace Antlr3.Tool
+// Retry to create a simpler DFA if analysis failed (non-LL(*),
+// recursion overflow, or time out).
+bool failed =
+-                lookaheadDFA.AnalysisTimedOut ||
+lookaheadDFA.probe.IsNonLLStarDecision ||
+lookaheadDFA.probe.AnalysisOverflowed;
+if ( failed && lookaheadDFA.OkToRetryWithK1 )
+@@ -1787,13 +1798,6 @@ namespace Antlr3.Tool
+lookaheadDFA = null; // make sure other memory is "free" before redoing
+lookaheadDFA = new DFA( decision, decisionStartState );
+}
+-            if ( lookaheadDFA.AnalysisTimedOut )
+-            { // did analysis bug out?
+-                ErrorManager.InternalError( "could not even do k=1 for decision " +
+-                                           decision + "; reason: " +
+-                                           lookaheadDFA.ReasonForFailure );
+-            }
+-
+
+SetLookaheadDFA( decision, lookaheadDFA );
+
+@@ -3252,7 +3256,7 @@ namespace Antlr3.Tool
+{
+return null;
+}
+-            Decision d = (Decision)indexToDecision[index];
++            Decision d = indexToDecision[index];
+return d;
+}
+
+@@ -3265,6 +3269,7 @@ namespace Antlr3.Tool
+}
+Decision d = new Decision();
+d.decision = decision;
++            d.grammar = this;
+indexToDecision.setSize( NumberOfDecisions );
+indexToDecision[index] = d;
+return d;
+diff --git a/Antlr3/Tool/GrammarReport.cs b/Antlr3/Tool/GrammarReport.cs
+index 2ed8b26..9649d09 100644
+--- a/Antlr3/Tool/GrammarReport.cs
++++ b/Antlr3/Tool/GrammarReport.cs
+@@ -40,13 +40,16 @@ namespace Antlr3.Tool
+using Stats = Antlr.Runtime.Misc.Stats;
+using StringBuilder = System.Text.StringBuilder;
+using StringComparison = System.StringComparison;
++    using System.Reflection;
++    using System;
++    using Antlr3.Grammars;
+
+public class GrammarReport
+{
+-        /** Because I may change the stats, I need to track that for later
++        /** Because I may change the stats, I need to track version for later
+*  computations to be consistent.
+*/
+-        public const string Version = "4";
++        public const string Version = "5";
+public const string GRAMMAR_STATS_FILENAME = "grammar.stats";
+public const int NUM_GRAMMAR_STATS = 41;
+
+@@ -59,154 +62,213 @@ namespace Antlr3.Tool
+this.grammar = grammar;
+}
+
+-        /** Create a single-line stats report about this grammar suitable to
+-         *  send to the notify page at antlr.org
+-         */
+-        public virtual string ToNotifyString()
++        public static ReportData GetReportData(Grammar g)
+{
+-            StringBuilder buf = new StringBuilder();
+-            buf.Append( Version );
+-            buf.Append( '\t' );
+-            buf.Append( grammar.name );
+-            buf.Append( '\t' );
+-            buf.Append( grammar.GrammarTypeString );
+-            buf.Append( '\t' );
+-            buf.Append( grammar.GetOption( "language" ) );
++            ReportData data = new ReportData();
++            data.version = Version;
++            data.gname = g.name;
++
++            data.gtype = g.GrammarTypeString;
++
++            data.language = (string)g.GetOption("language");
++            data.output = (string)g.GetOption("output");
++            if (data.output == null)
++            {
++                data.output = "none";
++            }
++
++            string k = (string)g.GetOption("k");
++            if (k == null)
++            {
++                k = "none";
++            }
++            data.grammarLevelk = k;
++
++            string backtrack = (string)g.GetOption("backtrack");
++            if (backtrack == null)
++            {
++                backtrack = "false";
++            }
++            data.grammarLevelBacktrack = backtrack;
++
+int totalNonSynPredProductions = 0;
+int totalNonSynPredRules = 0;
+-            foreach ( Rule r in grammar.Rules )
++            ICollection<Rule> rules = g.Rules;
++            for (Iterator it = rules.iterator(); it.hasNext(); )
+{
+-                if ( !r.Name.StartsWith( Grammar.SynpredRulePrefix, StringComparison.InvariantCultureIgnoreCase ) )
++                Rule r = (Rule)it.next();
++                if (!r.Name.ToUpperInvariant()
++                    .StartsWith(Grammar.SynpredRulePrefix.ToUpperInvariant()))
+{
+totalNonSynPredProductions += r.numberOfAlts;
+totalNonSynPredRules++;
+}
+}
+-            buf.Append( '\t' );
+-            buf.Append( totalNonSynPredRules );
+-            buf.Append( '\t' );
+-            buf.Append( totalNonSynPredProductions );
++
++            data.numRules = totalNonSynPredRules;
++            data.numOuterProductions = totalNonSynPredProductions;
++
+int numACyclicDecisions =
+-                grammar.NumberOfDecisions - grammar.GetNumberOfCyclicDecisions();
+-            int[] depths = new int[numACyclicDecisions];
++                g.NumberOfDecisions - g.GetNumberOfCyclicDecisions();
++            List<int> depths = new List<int>();
+int[] acyclicDFAStates = new int[numACyclicDecisions];
+-            int[] cyclicDFAStates = new int[grammar.GetNumberOfCyclicDecisions()];
++            int[] cyclicDFAStates = new int[g.GetNumberOfCyclicDecisions()];
+int acyclicIndex = 0;
+int cyclicIndex = 0;
+int numLL1 = 0;
+-            int numDec = 0;
+-            for ( int i = 1; i <= grammar.NumberOfDecisions; i++ )
++            int blocksWithSynPreds = 0;
++            int dfaWithSynPred = 0;
++            int numDecisions = 0;
++            int numCyclicDecisions = 0;
++            for (int i = 1; i <= g.NumberOfDecisions; i++)
+{
+-                Grammar.Decision d = grammar.GetDecision( i );
+-                if ( d.dfa == null )
++                Grammar.Decision d = g.GetDecision(i);
++                if (d.dfa == null)
++                {
++                    //System.out.println("dec "+d.decision+" has no AST");
++                    continue;
++                }
++                Rule r = d.dfa.NFADecisionStartState.enclosingRule;
++                if (r.Name.ToUpperInvariant()
++                    .StartsWith(Grammar.SynpredRulePrefix.ToUpperInvariant()))
+{
++                    //System.out.println("dec "+d.decision+" is a synpred");
+continue;
+}
+-                numDec++;
+-                if ( !d.dfa.IsCyclic )
++
++                numDecisions++;
++                if (BlockHasSynPred(d.blockAST))
++                    blocksWithSynPreds++;
++                //if (g.decisionsWhoseDFAsUsesSynPreds.contains(d.dfa))
++                //    dfaWithSynPred++;
++                if (d.dfa.HasSynPred)
++                    dfaWithSynPred++;
++                //			NFAState decisionStartState = g.getDecisionNFAStartState(d.decision);
++                //			int nalts = g.getNumberOfAltsForDecisionNFA(decisionStartState);
++                //			for (int alt = 1; alt <= nalts; alt++) {
++                //				int walkAlt =
++                //					decisionStartState.translateDisplayAltToWalkAlt(alt);
++                //				NFAState altLeftEdge = g.getNFAStateForAltOfDecision(decisionStartState, walkAlt);
++                //			}
++                //			int nalts = g.getNumberOfAltsForDecisionNFA(d.dfa.decisionNFAStartState);
++                //			for (int a=1; a<nalts; a++) {
++                //				NFAState altStart =
++                //					g.getNFAStateForAltOfDecision(d.dfa.decisionNFAStartState, a);
++                //			}
++                if (!d.dfa.IsCyclic)
+{
+-                    int maxk = d.dfa.MaxLookaheadDepth;
+-                    if ( maxk == 1 )
++                    if (d.dfa.IsClassicDFA)
+{
+-                        numLL1++;
++                        int maxk = d.dfa.MaxLookaheadDepth;
++                        //System.out.println("decision "+d.dfa.decisionNumber+" k="+maxk);
++                        if (maxk == 1)
++                            numLL1++;
++                        depths.Add(maxk);
++                    }
++                    else
++                    {
++                        acyclicDFAStates[acyclicIndex] = d.dfa.NumberOfStates;
++                        acyclicIndex++;
+}
+-                    depths[acyclicIndex] = maxk;
+-                    acyclicDFAStates[acyclicIndex] = d.dfa.NumberOfStates;
+-                    acyclicIndex++;
+}
+else
+{
++                    //System.out.println("CYCLIC decision "+d.dfa.decisionNumber);
++                    numCyclicDecisions++;
+cyclicDFAStates[cyclicIndex] = d.dfa.NumberOfStates;
+cyclicIndex++;
+}
+}
+-            buf.Append( '\t' );
+-            buf.Append( numDec );
+-            buf.Append( '\t' );
+-            buf.Append( grammar.GetNumberOfCyclicDecisions() );
+-            buf.Append( '\t' );
+-            buf.Append( numLL1 );
+-            buf.Append( '\t' );
+-            buf.Append( depths.DefaultIfEmpty( int.MaxValue ).Min() );
+-            buf.Append( '\t' );
+-            buf.Append( depths.DefaultIfEmpty( int.MinValue ).Max() );
+-            buf.Append( '\t' );
+-            buf.Append( depths.DefaultIfEmpty( 0 ).Average() );
+-            buf.Append( '\t' );
+-            buf.Append( Stats.Stddev( depths ) );
+-            buf.Append( '\t' );
+-            buf.Append( acyclicDFAStates.DefaultIfEmpty( int.MaxValue ).Min() );
+-            buf.Append( '\t' );
+-            buf.Append( acyclicDFAStates.DefaultIfEmpty( int.MinValue ).Max() );
+-            buf.Append( '\t' );
+-            buf.Append( acyclicDFAStates.DefaultIfEmpty( 0 ).Average() );
+-            buf.Append( '\t' );
+-            buf.Append( Stats.Stddev( acyclicDFAStates ) );
+-            buf.Append( '\t' );
+-            buf.Append( acyclicDFAStates.Sum() );
+-            buf.Append( '\t' );
+-            buf.Append( cyclicDFAStates.DefaultIfEmpty( int.MaxValue ).Min() );
+-            buf.Append( '\t' );
+-            buf.Append( cyclicDFAStates.DefaultIfEmpty( int.MinValue ).Max() );
+-            buf.Append( '\t' );
+-            buf.Append( cyclicDFAStates.DefaultIfEmpty( 0 ).Average() );
+-            buf.Append( '\t' );
+-            buf.Append( Stats.Stddev( cyclicDFAStates ) );
+-            buf.Append( '\t' );
+-            buf.Append( cyclicDFAStates.Sum() );
+-            buf.Append( '\t' );
+-            buf.Append( grammar.TokenTypes.Count );
+-            buf.Append( '\t' );
+-            buf.Append( grammar.DFACreationWallClockTimeInMS );
+-            buf.Append( '\t' );
+-            buf.Append( grammar.numberOfSemanticPredicates );
+-            buf.Append( '\t' );
+-            buf.Append( grammar.numberOfManualLookaheadOptions );
+-            buf.Append( '\t' );
+-            buf.Append( grammar.setOfNondeterministicDecisionNumbers.Count );
+-            buf.Append( '\t' );
+-            buf.Append( grammar.setOfNondeterministicDecisionNumbersResolvedWithPredicates.Count );
+-            buf.Append( '\t' );
+-            buf.Append( grammar.setOfDFAWhoseAnalysisTimedOut.Count );
+-            buf.Append( '\t' );
+-            buf.Append( ErrorManager.GetErrorState().errors );
+-            buf.Append( '\t' );
+-            buf.Append( ErrorManager.GetErrorState().warnings );
+-            buf.Append( '\t' );
+-            buf.Append( ErrorManager.GetErrorState().infos );
+-            buf.Append( '\t' );
+-            var synpreds = grammar.SyntacticPredicates;
+-            int num_synpreds = synpreds != null ? synpreds.Count : 0;
+-            buf.Append( num_synpreds );
+-            buf.Append( '\t' );
+-            buf.Append( grammar.blocksWithSynPreds.Count );
+-            buf.Append( '\t' );
+-            buf.Append( grammar.decisionsWhoseDFAsUsesSynPreds.Count );
+-            buf.Append( '\t' );
+-            buf.Append( grammar.blocksWithSemPreds.Count );
+-            buf.Append( '\t' );
+-            buf.Append( grammar.decisionsWhoseDFAsUsesSemPreds.Count );
+-            buf.Append( '\t' );
+-            string output = (string)grammar.GetOption( "output" );
+-            if ( output == null )
+-            {
+-                output = "none";
+-            }
+-            buf.Append( output );
+-            buf.Append( '\t' );
+-            object k = grammar.GetOption( "k" );
+-            if ( k == null )
+-            {
+-                k = "none";
+-            }
+-            buf.Append( k );
+-            buf.Append( '\t' );
+-            string backtrack = (string)grammar.GetOption( "backtrack" );
+-            if ( backtrack == null )
++
++            data.numLL1 = numLL1;
++            data.numberOfFixedKDecisions = depths.Count;
++            data.mink = depths.DefaultIfEmpty(int.MaxValue).Min();
++            data.maxk = depths.DefaultIfEmpty(int.MinValue).Max();
++            data.avgk = depths.DefaultIfEmpty(0).Average();
++
++            data.numberOfDecisionsInRealRules = numDecisions;
++            data.numberOfDecisions = g.NumberOfDecisions;
++            data.numberOfCyclicDecisions = numCyclicDecisions;
++
++            //		Map synpreds = g.getSyntacticPredicates();
++            //		int num_synpreds = synpreds!=null ? synpreds.Count : 0;
++            //		data.num_synpreds = num_synpreds;
++            data.blocksWithSynPreds = blocksWithSynPreds;
++            data.decisionsWhoseDFAsUsesSynPreds = dfaWithSynPred;
++
++            //
++            //		data. = Stats.stddev(depths);
++            //
++            //		data. = Stats.min(acyclicDFAStates);
++            //
++            //		data. = Stats.max(acyclicDFAStates);
++            //
++            //		data. = Stats.avg(acyclicDFAStates);
++            //
++            //		data. = Stats.stddev(acyclicDFAStates);
++            //
++            //		data. = Stats.sum(acyclicDFAStates);
++            //
++            //		data. = Stats.min(cyclicDFAStates);
++            //
++            //		data. = Stats.max(cyclicDFAStates);
++            //
++            //		data. = Stats.avg(cyclicDFAStates);
++            //
++            //		data. = Stats.stddev(cyclicDFAStates);
++            //
++            //		data. = Stats.sum(cyclicDFAStates);
++
++            data.numTokens = g.TokenTypes.Count;
++
++            data.DFACreationWallClockTimeInMS = g.DFACreationWallClockTimeInMS;
++
++            // includes true ones and preds in synpreds I think; strip out.
++            data.numberOfSemanticPredicates = g.numberOfSemanticPredicates;
++
++            data.numberOfManualLookaheadOptions = g.numberOfManualLookaheadOptions;
++
++            data.numNonLLStarDecisions = g.numNonLLStar;
++            data.numNondeterministicDecisions = g.setOfNondeterministicDecisionNumbers.Count;
++            data.numNondeterministicDecisionNumbersResolvedWithPredicates =
++                g.setOfNondeterministicDecisionNumbersResolvedWithPredicates.Count;
++
++            data.errors = ErrorManager.GetErrorState().errors;
++            data.warnings = ErrorManager.GetErrorState().warnings;
++            data.infos = ErrorManager.GetErrorState().infos;
++
++            data.blocksWithSemPreds = g.blocksWithSemPreds.Count;
++
++            data.decisionsWhoseDFAsUsesSemPreds = g.decisionsWhoseDFAsUsesSemPreds.Count;
++
++            return data;
++        }
++
++        /** Create a single-line stats report about this grammar suitable to
++         *  send to the notify page at antlr.org
++         */
++        public virtual string ToNotifyString()
++        {
++            StringBuilder buf = new StringBuilder();
++            ReportData data = GetReportData(grammar);
++            FieldInfo[] fields = typeof(ReportData).GetFields();
++            int i = 0;
++            foreach (FieldInfo f in fields)
+{
+-                backtrack = "false";
++                try
++                {
++                    object v = f.GetValue(data);
++                    string s = v != null ? v.ToString() : "null";
++                    if (i > 0)
++                        buf.Append('\t');
++                    buf.Append(s);
++                }
++                catch (Exception e)
++                {
++                    ErrorManager.InternalError("Can't get data", e);
++                }
++                i++;
+}
+-            buf.Append( backtrack );
+return buf.ToString();
+}
+
+@@ -222,18 +284,6 @@ namespace Antlr3.Tool
+return buf.ToString();
+}
+
+-        public virtual string GetAnalysisTimeoutReport()
+-        {
+-            StringBuilder buf = new StringBuilder();
+-            buf.Append( "NFA conversion early termination report:" );
+-            buf.Append( newline );
+-            buf.Append( "Number of NFA conversions that terminated early: " );
+-            buf.Append( grammar.setOfDFAWhoseAnalysisTimedOut.Count );
+-            buf.Append( newline );
+-            buf.Append( GetDFALocations( grammar.setOfDFAWhoseAnalysisTimedOut ) );
+-            return buf.ToString();
+-        }
+-
+protected virtual string GetDFALocations( HashSet<DFA> dfas )
+{
+HashSet<int> decisions = new HashSet<int>();
+@@ -270,156 +320,217 @@ namespace Antlr3.Tool
+return ToString( ToNotifyString() );
+}
+
+-        protected static string[] DecodeReportData( string data )
++        protected static ReportData DecodeReportData(string dataS)
+{
+-            string[] fields = new string[NUM_GRAMMAR_STATS];
+-            StringTokenizer st = new StringTokenizer( data, "\t" );
+-            int i = 0;
+-            while ( st.hasMoreTokens() )
+-            {
+-                fields[i] = st.nextToken();
+-                i++;
+-            }
+-            if ( i != NUM_GRAMMAR_STATS )
++            ReportData data = new ReportData();
++            StringTokenizer st = new StringTokenizer(dataS, "\t");
++            FieldInfo[] fields = typeof(ReportData).GetFields();
++            foreach (FieldInfo f in fields)
+{
+-                return null;
++                string v = st.nextToken();
++                try
++                {
++                    if (f.FieldType == typeof(string))
++                    {
++                        f.SetValue(data, v);
++                    }
++                    else if (f.FieldType == typeof(double))
++                    {
++                        f.SetValue(data, double.Parse(v));
++                    }
++                    else
++                    {
++                        f.SetValue(data, int.Parse(v));
++                    }
++                }
++                catch (Exception e)
++                {
++                    ErrorManager.InternalError("Can't get data", e);
++                }
+}
+-            return fields;
++            return data;
+}
+
+-        public static string ToString( string notifyDataLine )
++        public static string ToString(string notifyDataLine)
+{
+-            string[] fields = DecodeReportData( notifyDataLine );
+-            if ( fields == null )
++            ReportData data = DecodeReportData(notifyDataLine);
++            if (data == null)
+{
+return null;
+}
+StringBuilder buf = new StringBuilder();
+-            buf.Append( "ANTLR Grammar Report; Stats Version " );
+-            buf.Append( fields[0] );
+-            buf.Append( '\n' );
+-            buf.Append( "Grammar: " );
+-            buf.Append( fields[1] );
+-            buf.Append( '\n' );
+-            buf.Append( "Type: " );
+-            buf.Append( fields[2] );
+-            buf.Append( '\n' );
+-            buf.Append( "Target language: " );
+-            buf.Append( fields[3] );
+-            buf.Append( '\n' );
+-            buf.Append( "Output: " );
+-            buf.Append( fields[38] );
+-            buf.Append( '\n' );
+-            buf.Append( "Grammar option k: " );
+-            buf.Append( fields[39] );
+-            buf.Append( '\n' );
+-            buf.Append( "Grammar option backtrack: " );
+-            buf.Append( fields[40] );
+-            buf.Append( '\n' );
+-            buf.Append( "Rules: " );
+-            buf.Append( fields[4] );
+-            buf.Append( '\n' );
+-            buf.Append( "Productions: " );
+-            buf.Append( fields[5] );
+-            buf.Append( '\n' );
+-            buf.Append( "Decisions: " );
+-            buf.Append( fields[6] );
+-            buf.Append( '\n' );
+-            buf.Append( "Cyclic DFA decisions: " );
+-            buf.Append( fields[7] );
+-            buf.Append( '\n' );
+-            buf.Append( "LL(1) decisions: " );
+-            buf.Append( fields[8] );
+-            buf.Append( '\n' );
+-            buf.Append( "Min fixed k: " );
+-            buf.Append( fields[9] );
+-            buf.Append( '\n' );
+-            buf.Append( "Max fixed k: " );
+-            buf.Append( fields[10] );
+-            buf.Append( '\n' );
+-            buf.Append( "Average fixed k: " );
+-            buf.Append( fields[11] );
+-            buf.Append( '\n' );
+-            buf.Append( "Standard deviation of fixed k: " );
+-            buf.Append( fields[12] );
+-            buf.Append( '\n' );
+-            buf.Append( "Min acyclic DFA states: " );
+-            buf.Append( fields[13] );
+-            buf.Append( '\n' );
+-            buf.Append( "Max acyclic DFA states: " );
+-            buf.Append( fields[14] );
+-            buf.Append( '\n' );
+-            buf.Append( "Average acyclic DFA states: " );
+-            buf.Append( fields[15] );
+-            buf.Append( '\n' );
+-            buf.Append( "Standard deviation of acyclic DFA states: " );
+-            buf.Append( fields[16] );
+-            buf.Append( '\n' );
+-            buf.Append( "Total acyclic DFA states: " );
+-            buf.Append( fields[17] );
+-            buf.Append( '\n' );
+-            buf.Append( "Min cyclic DFA states: " );
+-            buf.Append( fields[18] );
+-            buf.Append( '\n' );
+-            buf.Append( "Max cyclic DFA states: " );
+-            buf.Append( fields[19] );
+-            buf.Append( '\n' );
+-            buf.Append( "Average cyclic DFA states: " );
+-            buf.Append( fields[20] );
+-            buf.Append( '\n' );
+-            buf.Append( "Standard deviation of cyclic DFA states: " );
+-            buf.Append( fields[21] );
+-            buf.Append( '\n' );
+-            buf.Append( "Total cyclic DFA states: " );
+-            buf.Append( fields[22] );
+-            buf.Append( '\n' );
+-            buf.Append( "Vocabulary size: " );
+-            buf.Append( fields[23] );
+-            buf.Append( '\n' );
+-            buf.Append( "DFA creation time in ms: " );
+-            buf.Append( fields[24] );
+-            buf.Append( '\n' );
+-            buf.Append( "Number of semantic predicates found: " );
+-            buf.Append( fields[25] );
+-            buf.Append( '\n' );
+-            buf.Append( "Number of manual fixed lookahead k=value options: " );
+-            buf.Append( fields[26] );
+-            buf.Append( '\n' );
+-            buf.Append( "Number of nondeterministic decisions: " );
+-            buf.Append( fields[27] );
+-            buf.Append( '\n' );
+-            buf.Append( "Number of nondeterministic decisions resolved with predicates: " );
+-            buf.Append( fields[28] );
+-            buf.Append( '\n' );
+-            buf.Append( "Number of DFA conversions terminated early: " );
+-            buf.Append( fields[29] );
+-            buf.Append( '\n' );
+-            buf.Append( "Number of errors: " );
+-            buf.Append( fields[30] );
+-            buf.Append( '\n' );
+-            buf.Append( "Number of warnings: " );
+-            buf.Append( fields[31] );
+-            buf.Append( '\n' );
+-            buf.Append( "Number of infos: " );
+-            buf.Append( fields[32] );
+-            buf.Append( '\n' );
+-            buf.Append( "Number of syntactic predicates found: " );
+-            buf.Append( fields[33] );
+-            buf.Append( '\n' );
+-            buf.Append( "Decisions with syntactic predicates: " );
+-            buf.Append( fields[34] );
+-            buf.Append( '\n' );
+-            buf.Append( "Decision DFAs using syntactic predicates: " );
+-            buf.Append( fields[35] );
+-            buf.Append( '\n' );
+-            buf.Append( "Decisions with semantic predicates: " );
+-            buf.Append( fields[36] );
+-            buf.Append( '\n' );
+-            buf.Append( "Decision DFAs using semantic predicates: " );
+-            buf.Append( fields[37] );
+-            buf.Append( '\n' );
++            buf.Append("ANTLR Grammar Report; Stats Version ");
++            buf.Append(data.version);
++            buf.AppendLine();
++            buf.Append("Grammar: ");
++            buf.Append(data.gname);
++            buf.AppendLine();
++            buf.Append("Type: ");
++            buf.Append(data.gtype);
++            buf.AppendLine();
++            buf.Append("Target language: ");
++            buf.Append(data.language);
++            buf.AppendLine();
++            buf.Append("Output: ");
++            buf.Append(data.output);
++            buf.AppendLine();
++            buf.Append("Grammar option k: ");
++            buf.Append(data.grammarLevelk);
++            buf.AppendLine();
++            buf.Append("Grammar option backtrack: ");
++            buf.Append(data.grammarLevelBacktrack);
++            buf.AppendLine();
++            buf.Append("Rules: ");
++            buf.Append(data.numRules);
++            buf.AppendLine();
++            buf.Append("Outer productions: ");
++            buf.Append(data.numOuterProductions);
++            buf.AppendLine();
++            buf.Append("Decisions: ");
++            buf.Append(data.numberOfDecisions);
++            buf.AppendLine();
++            buf.Append("Decisions (ignoring decisions in synpreds): ");
++            buf.Append(data.numberOfDecisionsInRealRules);
++            buf.AppendLine();
++            buf.Append("Fixed k DFA decisions: ");
++            buf.Append(data.numberOfFixedKDecisions);
++            buf.AppendLine();
++            buf.Append("Cyclic DFA decisions: ");
++            buf.Append(data.numberOfCyclicDecisions);
++            buf.AppendLine();
++            buf.Append("LL(1) decisions: ");
++            buf.Append(data.numLL1);
++            buf.AppendLine();
++            buf.Append("Min fixed k: ");
++            buf.Append(data.mink);
++            buf.AppendLine();
++            buf.Append("Max fixed k: ");
++            buf.Append(data.maxk);
++            buf.AppendLine();
++            buf.Append("Average fixed k: ");
++            buf.Append(data.avgk);
++            buf.AppendLine();
++            //		buf.Append("Standard deviation of fixed k: "); buf.Append(fields[12]);
++            //		buf.AppendLine();
++            //		buf.Append("Min acyclic DFA states: "); buf.Append(fields[13]);
++            //		buf.AppendLine();
++            //		buf.Append("Max acyclic DFA states: "); buf.Append(fields[14]);
++            //		buf.AppendLine();
++            //		buf.Append("Average acyclic DFA states: "); buf.Append(fields[15]);
++            //		buf.AppendLine();
++            //		buf.Append("Standard deviation of acyclic DFA states: "); buf.Append(fields[16]);
++            //		buf.AppendLine();
++            //		buf.Append("Total acyclic DFA states: "); buf.Append(fields[17]);
++            //		buf.AppendLine();
++            //		buf.Append("Min cyclic DFA states: "); buf.Append(fields[18]);
++            //		buf.AppendLine();
++            //		buf.Append("Max cyclic DFA states: "); buf.Append(fields[19]);
++            //		buf.AppendLine();
++            //		buf.Append("Average cyclic DFA states: "); buf.Append(fields[20]);
++            //		buf.AppendLine();
++            //		buf.Append("Standard deviation of cyclic DFA states: "); buf.Append(fields[21]);
++            //		buf.AppendLine();
++            //		buf.Append("Total cyclic DFA states: "); buf.Append(fields[22]);
++            //		buf.AppendLine();
++            buf.Append("DFA creation time in ms: ");
++            buf.Append(data.DFACreationWallClockTimeInMS);
++            buf.AppendLine();
++
++            //		buf.Append("Number of syntactic predicates available (including synpred rules): ");
++            //		buf.Append(data.num_synpreds);
++            //		buf.AppendLine();
++            buf.Append("Decisions with available syntactic predicates (ignoring synpred rules): ");
++            buf.Append(data.blocksWithSynPreds);
++            buf.AppendLine();
++            buf.Append("Decision DFAs using syntactic predicates (ignoring synpred rules): ");
++            buf.Append(data.decisionsWhoseDFAsUsesSynPreds);
++            buf.AppendLine();
++
++            buf.Append("Number of semantic predicates found: ");
++            buf.Append(data.numberOfSemanticPredicates);
++            buf.AppendLine();
++            buf.Append("Decisions with semantic predicates: ");
++            buf.Append(data.blocksWithSemPreds);
++            buf.AppendLine();
++            buf.Append("Decision DFAs using semantic predicates: ");
++            buf.Append(data.decisionsWhoseDFAsUsesSemPreds);
++            buf.AppendLine();
++
++            buf.Append("Number of (likely) non-LL(*) decisions: ");
++            buf.Append(data.numNonLLStarDecisions);
++            buf.AppendLine();
++            buf.Append("Number of nondeterministic decisions: ");
++            buf.Append(data.numNondeterministicDecisions);
++            buf.AppendLine();
++            buf.Append("Number of nondeterministic decisions resolved with predicates: ");
++            buf.Append(data.numNondeterministicDecisionNumbersResolvedWithPredicates);
++            buf.AppendLine();
++
++            buf.Append("Number of manual or forced fixed lookahead k=value options: ");
++            buf.Append(data.numberOfManualLookaheadOptions);
++            buf.AppendLine();
++
++            buf.Append("Vocabulary size: ");
++            buf.Append(data.numTokens);
++            buf.AppendLine();
++            buf.Append("Number of errors: ");
++            buf.Append(data.errors);
++            buf.AppendLine();
++            buf.Append("Number of warnings: ");
++            buf.Append(data.warnings);
++            buf.AppendLine();
++            buf.Append("Number of infos: ");
++            buf.Append(data.infos);
++            buf.AppendLine();
+return buf.ToString();
+}
+
++        public static bool BlockHasSynPred(GrammarAST blockAST)
++        {
++            GrammarAST c1 = blockAST.FindFirstType(ANTLRParser.SYN_SEMPRED);
++            GrammarAST c2 = blockAST.FindFirstType(ANTLRParser.BACKTRACK_SEMPRED);
++            if (c1 != null || c2 != null)
++                return true;
++            //		System.out.println(blockAST.enclosingRuleName+
++            //						   " "+blockAST.getLine()+":"+blockAST.getColumn()+" no preds AST="+blockAST.toStringTree());
++
++            return false;
++        }
++
++        public class ReportData
++        {
++            internal string version;
++            internal string gname;
++            internal string gtype;
++            internal string language;
++            internal int numRules;
++            internal int numOuterProductions;
++            internal int numberOfDecisionsInRealRules;
++            internal int numberOfDecisions;
++            internal int numberOfCyclicDecisions;
++            internal int numberOfFixedKDecisions;
++            internal int numLL1;
++            internal int mink;
++            internal int maxk;
++            internal double avgk;
++            internal int numTokens;
++            internal TimeSpan DFACreationWallClockTimeInMS;
++            internal int numberOfSemanticPredicates;
++            internal int numberOfManualLookaheadOptions; // TODO: verify
++            internal int numNonLLStarDecisions;
++            internal int numNondeterministicDecisions;
++            internal int numNondeterministicDecisionNumbersResolvedWithPredicates;
++            internal int errors;
++            internal int warnings;
++            internal int infos;
++            //internal int num_synpreds;
++            internal int blocksWithSynPreds;
++            internal int decisionsWhoseDFAsUsesSynPreds;
++            internal int blocksWithSemPreds;
++            internal int decisionsWhoseDFAsUsesSemPreds;
++            internal string output;
++            internal string grammarLevelk;
++            internal string grammarLevelBacktrack;
++        }
+}
+}
+diff --git a/Antlr3/Tool/GrammarReport2.cs b/Antlr3/Tool/GrammarReport2.cs
+new file mode 100644
+index 0000000..0d00557
+--- /dev/null
++++ b/Antlr3/Tool/GrammarReport2.cs
+@@ -0,0 +1,109 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell, Pixel Mine, Inc.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace Antlr3.Tool
++{
++    using System;
++    using StringBuilder = System.Text.StringBuilder;
++
++    /** Simplifying report dramatically for LL(*) paper.  Old results were
++     *  wrong anyway it seems.  We need:
++     *
++     * 		percent decisions that potentially backtrack
++     *  	histogram of regular lookahead depth (int k or *)
++     */
++    public class GrammarReport2
++    {
++        public static readonly string newline = Environment.NewLine;
++
++        public Grammar root;
++
++        public GrammarReport2(Grammar rootGrammar)
++        {
++            this.root = rootGrammar;
++        }
++
++        internal virtual void Stats(Grammar g, StringBuilder buf)
++        {
++            int numDec = g.NumberOfDecisions;
++            for (int decision = 1; decision <= numDec; decision++)
++            {
++                Grammar.Decision d = g.GetDecision(decision);
++                if (d.dfa == null)
++                { // unusued decisions in auto synpreds
++                    //System.err.println("no decision "+decision+" dfa for "+d.blockAST.toStringTree());
++                    continue;
++                }
++                int k = d.dfa.MaxLookaheadDepth;
++                Rule enclosingRule = d.dfa.NFADecisionStartState.enclosingRule;
++                if (enclosingRule.isSynPred)
++                    continue; // don't count synpred rules
++                buf.Append(g.name + "." + enclosingRule.Name + ":" +
++                           "");
++                GrammarAST decisionAST =
++                    d.dfa.NFADecisionStartState.associatedASTNode;
++                buf.Append(decisionAST.Line);
++                buf.Append(":");
++                buf.Append(decisionAST.CharPositionInLine);
++                buf.Append(" decision " + decision + ":");
++
++                if (d.dfa.IsCyclic)
++                    buf.Append(" cyclic");
++                if (k != int.MaxValue)
++                    buf.Append(" k=" + k); // fixed, no sempreds
++                if (d.dfa.HasSynPred)
++                    buf.Append(" backtracks"); // isolated synpred not gated
++                if (d.dfa.HasSemPred)
++                    buf.Append(" sempred"); // user-defined sempred
++                //			else {
++                //				buf.append("undefined");
++                //				FASerializer serializer = new FASerializer(g);
++                //				String result = serializer.serialize(d.dfa.startState);
++                //				System.err.println(result);
++                //			}
++                buf.AppendLine();
++            }
++        }
++
++        public override string ToString()
++        {
++            StringBuilder buf = new StringBuilder();
++            Stats(root, buf);
++            CompositeGrammar composite = root.composite;
++            foreach (Grammar g in composite.GetDelegates(root))
++            {
++                Stats(g, buf);
++            }
++            return buf.ToString();
++        }
++    }
++}
+

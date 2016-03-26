@@ -1,0 +1,57 @@
+commit c2db3bd1b54e2918e9df1ba115a809fcccccf23d
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Fri Feb 1 10:55:48 2013 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Fri Feb 1 10:55:48 2013 -0600
+
+CSharp targets: Updated assembly info for build 3.5.0.1
+
+diff --git a/Antlr3.Runtime.Debug/Properties/AssemblyInfo.cs b/Antlr3.Runtime.Debug/Properties/AssemblyInfo.cs
+index 5473727..a3f2477 100644
+--- a/Antlr3.Runtime.Debug/Properties/AssemblyInfo.cs
++++ b/Antlr3.Runtime.Debug/Properties/AssemblyInfo.cs
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.5.0.0")]
+-[assembly: AssemblyFileVersion("3.5.0.0")]
++[assembly: AssemblyVersion("3.5.0.1")]
++[assembly: AssemblyFileVersion("3.5.0.1")]
+diff --git a/Antlr3.Runtime.JavaExtensions/Properties/AssemblyInfo.cs b/Antlr3.Runtime.JavaExtensions/Properties/AssemblyInfo.cs
+index 0908b03..9439e35 100644
+--- a/Antlr3.Runtime.JavaExtensions/Properties/AssemblyInfo.cs
++++ b/Antlr3.Runtime.JavaExtensions/Properties/AssemblyInfo.cs
+@@ -65,5 +65,5 @@ using System.Runtime.InteropServices;
+*      of whether it's an incremental or nightly). The value resets to zero whenever
+*      the Major or Minor version is incremented.
+*/
+-[assembly: AssemblyVersion("3.5.0.0")]
+-[assembly: AssemblyFileVersion("3.5.0.0")]
++[assembly: AssemblyVersion("3.5.0.1")]
++[assembly: AssemblyFileVersion("3.5.0.1")]
+diff --git a/Antlr3.Runtime.Test/Properties/AssemblyInfo.cs b/Antlr3.Runtime.Test/Properties/AssemblyInfo.cs
+index df467a2..7437eda 100644
+--- a/Antlr3.Runtime.Test/Properties/AssemblyInfo.cs
++++ b/Antlr3.Runtime.Test/Properties/AssemblyInfo.cs
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.5.0.0")]
+-[assembly: AssemblyFileVersion("3.5.0.0")]
++[assembly: AssemblyVersion("3.5.0.1")]
++[assembly: AssemblyFileVersion("3.5.0.1")]
+diff --git a/Antlr3.Runtime/Properties/AssemblyInfo.cs b/Antlr3.Runtime/Properties/AssemblyInfo.cs
+index 5172174..42f80e7 100644
+--- a/Antlr3.Runtime/Properties/AssemblyInfo.cs
++++ b/Antlr3.Runtime/Properties/AssemblyInfo.cs
+@@ -68,5 +68,5 @@ using System.Security;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.5.0.0")]
+-[assembly: AssemblyFileVersion("3.5.0.0")]
++[assembly: AssemblyVersion("3.5.0.1")]
++[assembly: AssemblyFileVersion("3.5.0.1")]
+

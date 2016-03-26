@@ -1,0 +1,54 @@
+commit 9ba14f50e60d2ec1f83c7494dcbc5355957e3c59
+Author:     parrt <parrt@antlr.org>
+AuthorDate: Wed Jun 29 10:13:49 2011 -0800
+Commit:     parrt <parrt@antlr.org>
+CommitDate: Wed Jun 29 10:13:49 2011 -0800
+
+Sam noticed CommonToken.getText() cached substring pulled from input, which
+defeated purpose of pointing into input char array.  Altered to not cache.
+Should reduce memory footprint.
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8795]
+
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/CommonToken.java b/runtime/Java/src/main/java/org/antlr/runtime/CommonToken.java
+index f01e1f4..13dcb1c 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/CommonToken.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/CommonToken.java
+@@ -98,13 +98,12 @@ public class CommonToken implements Token, Serializable {
+if ( input==null ) {
+return null;
+}
+-        if ( start<input.size() && stop<input.size() ) {
+-		    text = input.substring(start,stop);
+-        }
+-        else {
+-            text = "<EOF>";
+-        }
+-		return text;
++		if ( start<input.size() && stop<input.size() ) {
++			return input.substring(start,stop);
++		}
++		else {
++			return "<EOF>";
++		}
+}
+
+/** Override the text for this token.  getText() will return this text
+diff --git a/tool/CHANGES.txt b/tool/CHANGES.txt
+index 782fc0e..0378111 100644
+--- a/tool/CHANGES.txt
++++ b/tool/CHANGES.txt
+@@ -7,6 +7,12 @@ University of San Francisco
+
+CHANGES
+
++June 29, 2011
++
++* Sam noticed CommonToken.getText() cached substring pulled from input, which
++  defeated purpose of pointing into input char array.  Altered to not cache.
++  Should reduce memory footprint.
++
+June 24, 2011
+
+* empty alts with actions didn't have EPSILON dummy alt node.
+

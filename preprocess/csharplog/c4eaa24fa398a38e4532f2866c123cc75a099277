@@ -1,0 +1,323 @@
+commit c4eaa24fa398a38e4532f2866c123cc75a099277
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Apr 13 18:30:54 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Apr 13 18:30:54 2011 -0800
+
+(C# 3) Updated bootstrap binaries
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8213]
+
+diff --git a/bin/Bootstrap/Antlr3.Runtime.Debug.dll b/bin/Bootstrap/Antlr3.Runtime.Debug.dll
+index 3cdb332..ccdd2b1 100644
+Binary files a/bin/Bootstrap/Antlr3.Runtime.Debug.dll and b/bin/Bootstrap/Antlr3.Runtime.Debug.dll differ
+diff --git a/bin/Bootstrap/Antlr3.Runtime.dll b/bin/Bootstrap/Antlr3.Runtime.dll
+index 4d24de2..614666f 100644
+Binary files a/bin/Bootstrap/Antlr3.Runtime.dll and b/bin/Bootstrap/Antlr3.Runtime.dll differ
+diff --git a/bin/Bootstrap/Antlr3.exe b/bin/Bootstrap/Antlr3.exe
+index bac2ca0..e9edf01 100755
+Binary files a/bin/Bootstrap/Antlr3.exe and b/bin/Bootstrap/Antlr3.exe differ
+diff --git a/bin/Bootstrap/Antlr4.StringTemplate.Visualizer.dll b/bin/Bootstrap/Antlr4.StringTemplate.Visualizer.dll
+new file mode 100644
+index 0000000..175ca37
+Binary files /dev/null and b/bin/Bootstrap/Antlr4.StringTemplate.Visualizer.dll differ
+diff --git a/bin/Bootstrap/Antlr4.StringTemplate.dll b/bin/Bootstrap/Antlr4.StringTemplate.dll
+new file mode 100644
+index 0000000..b9b7b60
+Binary files /dev/null and b/bin/Bootstrap/Antlr4.StringTemplate.dll differ
+diff --git a/bin/Bootstrap/AntlrBuildTask.dll b/bin/Bootstrap/AntlrBuildTask.dll
+index 2562cb7..11660c4 100644
+Binary files a/bin/Bootstrap/AntlrBuildTask.dll and b/bin/Bootstrap/AntlrBuildTask.dll differ
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/AST.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/AST.stg
+index b308fab..705215d 100644
+--- a/bin/Bootstrap/Codegen/Templates/CSharp3/AST.stg
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/AST.stg
+@@ -49,9 +49,7 @@ parserCtorBody() ::= <<
+<super.parserCtorBody()>
+<treeAdaptorType()> treeAdaptor = default(<treeAdaptorType()>);
+CreateTreeAdaptor(ref treeAdaptor);
+-
+TreeAdaptor = treeAdaptor<if(!actions.(actionScope).treeAdaptorType)> ?? new CommonTreeAdaptor()<endif>;
+-
+>>
+
+/** Add an adaptor property that knows how to build trees */
+@@ -80,16 +78,9 @@ treeAdaptorType() ::= <<
+<actions.(actionScope).treeAdaptorType; null="ITreeAdaptor">
+>>
+
+-@returnScope.ruleReturnInterfaces() ::= <<
+-, IAstRuleReturnScope\<<ASTLabelType>\>, IAstRuleReturnScope
+->>
+-
+-@returnScope.ruleReturnMembers() ::= <<
+-private <ASTLabelType> _tree;
+-public <ASTLabelType> Tree { get { return _tree; } set { _tree = value; } }
+-object IAstRuleReturnScope.Tree { get { return Tree; } }
+-<@super.ruleReturnMembers()>
+->>
++ruleReturnBaseType() ::= <%
++Ast<if(TREE_PARSER)>Tree<else>Parser<endif>RuleReturnScope\<<ASTLabelType>, <labelType>>
++%>
+
+/** Add a variable to track rule's return AST */
+ruleDeclarations() ::= <<
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg
+index 848c33a..a5da1f7 100644
+--- a/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg
+@@ -38,16 +38,6 @@ csharpVisibilityMap ::= [
+default:"private"
+]
+
+-// System.Boolean.ToString() returns "True" and "False", but the proper C# literals are "true" and "false"
+-// The Java version of Boolean returns "true" and "false", so they map to themselves here.
+-booleanLiteral ::= [
+-	"True":"true",
+-	"False":"false",
+-	"true":"true",
+-	"false":"false",
+-	default:"false"
+-]
+-
+/** The overall file structure of a recognizer; stores methods for rules
+*  and cyclic DFAs plus support code.
+*/
+@@ -285,13 +275,17 @@ genericParser(grammar, name, scopes, tokens, tokenNames, rules, numRules,
+<endif>
+<tokens:{it|public const int <it.name; format="id">=<it.type>;}; separator="\n">
+
++<if(grammar.delegates)>
+// delegates
+<grammar.delegates:
+{g|private <g.recognizerName> <g:delegateName()>;}; separator="\n">
++<endif>
++<if(grammar.delegators)>
+// delegators
+<grammar.delegators:
+{g|private <g.recognizerName> <g:delegateName()>;}; separator="\n">
+<last(grammar.delegators):{g|private <g.recognizerName> gParent;}>
++<endif>
+
+<scopes:{it|<if(it.isDynamicGlobalScope)><globalAttributeScope(scope=it)><endif>}>
+<@members()>
+@@ -314,7 +308,7 @@ genericParser(grammar, name, scopes, tokens, tokenNames, rules, numRules,
+appear to be defined in this recognizer. !>
+#region Delegated rules
+<grammar.delegatedRules:{ruleDescriptor|
+-	<ruleModifier(grammar=grammar,ruleDescriptor=ruleDescriptor)> <returnType()> <ruleDescriptor.name; format="id">(<ruleDescriptor.parameterScope:parameterScope()>) <!throws RecognitionException !>{ <if(ruleDescriptor.hasReturnValue)>return <endif><ruleDescriptor.grammar:delegateName()>.<ruleDescriptor.name; format="id">(<ruleDescriptor.parameterScope.attributes:{a|<a.name; format="id">}; separator=", ">); \}}; separator="\n">
++	<ruleModifier(grammar=grammar,ruleDescriptor=ruleDescriptor)> <returnType(ruleDescriptor)> <ruleDescriptor.name; format="id">(<ruleDescriptor.parameterScope:parameterScope()>) <!throws RecognitionException !>{ <if(ruleDescriptor.hasReturnValue)>return <endif><ruleDescriptor.grammar:delegateName()>.<ruleDescriptor.name; format="id">(<ruleDescriptor.parameterScope.attributes:{a|<a.name; format="id">}; separator=", ">); \}}; separator="\n">
+#endregion Delegated rules
+<endif>
+
+@@ -338,8 +332,7 @@ genericParser(grammar, name, scopes, tokens, tokenNames, rules, numRules,
+#region Follow sets
+private static class Follow
+{
+-		<bitsets:{it|<bitset(name={_<it.name>_in_<it.inName><it.tokenIndex>},
+-							words64=it.bits)>}>
++		<bitsets:{it|<bitset(name={_<it.name>_in_<it.inName><it.tokenIndex>}, words64=it.bits)>}; separator="\n">
+}
+#endregion Follow sets
+<endif>
+@@ -348,19 +341,24 @@ genericParser(grammar, name, scopes, tokens, tokenNames, rules, numRules,
+
+@genericParser.members() ::= <<
+<! WARNING. bug in ST: this is cut-n-paste into Dbg.stg !>
+-<actions.(actionScope).ctorModifier; null="public"> <grammar.recognizerName>( <inputStreamType> input<grammar.delegators:{g|, <g.recognizerName> <g:delegateName()>}> )
+-	: this( input, new RecognizerSharedState()<grammar.delegators:{g|, <g:delegateName()>}> )
++<actions.(actionScope).ctorModifier; null="public"> <grammar.recognizerName>(<inputStreamType> input<grammar.delegators:{g|, <g.recognizerName> <g:delegateName()>}>)
++	: this(input, new RecognizerSharedState()<grammar.delegators:{g|, <g:delegateName()>}>)
+{
+}
+<actions.(actionScope).ctorModifier; null="public"> <grammar.recognizerName>(<inputStreamType> input, RecognizerSharedState state<grammar.delegators:{g|, <g.recognizerName> <g:delegateName()>}>)
+: base(input, state)
+{
+<parserCtorBody()>
++<if(grammar.directDelegates)>
+<grammar.directDelegates:
+{g|<g:delegateName()> = new <g.recognizerName>(input, state<trunc(g.delegators):{p|, <p:delegateName()>}>, this);}; separator="\n">
++<endif>
++<if(grammar.indirectDelegates)>
+<grammar.indirectDelegates:{g | <g:delegateName()> = <g.delegator:delegateName()>.<g:delegateName()>;}; separator="\n">
++<endif>
++<if(grammar.delegators)>
+<last(grammar.delegators):{g|gParent = <g:delegateName()>;}>
+-
++<endif>
+OnCreated();
+}
+>>
+@@ -485,14 +483,14 @@ ruleBacktrackFailure() ::= <<
+*/
+rule(ruleName,ruleDescriptor,block,emptyRule,description,exceptions,finally,memoize) ::= <<
+<ruleAttributeScope(scope=ruleDescriptor.ruleScope)>
+-<returnScope(scope=ruleDescriptor.returnScope)>
++<returnScope(ruleDescriptor.returnScope)>
+partial void EnterRule_<ruleName>();
+partial void LeaveRule_<ruleName>();
+
+// $ANTLR start "<ruleName>"
+// <fileName>:<description>
+[GrammarRule("<ruleName>")]
+-<ruleModifier(grammar=grammar,ruleDescriptor=ruleDescriptor)> <returnType()> <ruleName; format="id">(<ruleDescriptor.parameterScope:parameterScope()>)
++<ruleModifier(grammar=grammar,ruleDescriptor=ruleDescriptor)> <returnType(ruleDescriptor)> <ruleName; format="id">(<ruleDescriptor.parameterScope:parameterScope()>)
+{
+EnterRule_<ruleName>();
+EnterRule("<ruleName>", <ruleDescriptor.index>);
+@@ -563,7 +561,7 @@ catch (<e.decl>)
+
+ruleDeclarations() ::= <<
+<if(ruleDescriptor.hasMultipleReturnValues)>
+-<returnType()> retval = new <returnType()>(this);
++<returnType(ruleDescriptor)> retval = new <returnType(ruleDescriptor)>(<if(ruleDescriptor.returnScope.attributes)>this<endif>);
+retval.Start = (<labelType>)input.LT(1);
+<else>
+<ruleDescriptor.returnScope.attributes:{ a |
+@@ -717,7 +715,7 @@ int alt<decisionNumber>=<maxAlt>;
+<decls>
+<@predecision()>
+try { DebugEnterSubRule(<decisionNumber>);
+-try { DebugEnterDecision(<decisionNumber>, false<!<booleanLiteral.(decision.dfa.hasSynPred)>!>);
++try { DebugEnterDecision(<decisionNumber>, false<!<decision.dfa.hasSynPred>!>);
+<decision>
+} finally { DebugExitDecision(<decisionNumber>); }
+<@postdecision()>
+@@ -736,7 +734,7 @@ ruleBlock(alts,decls,decision,enclosingBlockLevel,blockLevel,decisionNumber,maxK
+int alt<decisionNumber>=<maxAlt>;
+<decls>
+<@predecision()>
+-try { DebugEnterDecision(<decisionNumber>, false<!<booleanLiteral.(decision.dfa.hasSynPred)>!>);
++try { DebugEnterDecision(<decisionNumber>, false<!<decision.dfa.hasSynPred>!>);
+<decision>
+} finally { DebugExitDecision(<decisionNumber>); }
+<@postdecision()>
+@@ -776,7 +774,7 @@ while (true)
+{
+int alt<decisionNumber>=<maxAlt>;
+<@predecision()>
+-	try { DebugEnterDecision(<decisionNumber>, false<!<booleanLiteral.(decision.dfa.hasSynPred)>!>);
++	try { DebugEnterDecision(<decisionNumber>, false<!<decision.dfa.hasSynPred>!>);
+<decision>
+} finally { DebugExitDecision(<decisionNumber>); }
+<@postdecision()>
+@@ -814,7 +812,7 @@ while (true)
+{
+int alt<decisionNumber>=<maxAlt>;
+<@predecision()>
+-	try { DebugEnterDecision(<decisionNumber>, false<!<booleanLiteral.(decision.dfa.hasSynPred)>!>);
++	try { DebugEnterDecision(<decisionNumber>, false<!<decision.dfa.hasSynPred>!>);
+<decision>
+} finally { DebugExitDecision(<decisionNumber>); }
+<@postdecision()>
+@@ -1446,15 +1444,15 @@ ruleAttributeScope(scope) ::= <<
+
+returnStructName(it) ::= "<it.name>_return"
+
+-returnType() ::= <%
+-<if(ruleDescriptor.hasMultipleReturnValues)>
+-<ruleDescriptor.grammar.recognizerName>.<ruleDescriptor:returnStructName()>
++returnType(ruleDescriptor) ::= <%
++<if(ruleDescriptor.returnScope.attributes && ruleDescriptor.hasMultipleReturnValues)>
++	<ruleDescriptor.grammar.recognizerName>.<ruleDescriptor:returnStructName()>
++<elseif(ruleDescriptor.hasMultipleReturnValues)>
++	<ruleReturnBaseType()>
++<elseif(ruleDescriptor.hasSingleReturnValue)>
++	<ruleDescriptor.singleValueReturnType>
+<else>
+-<if(ruleDescriptor.hasSingleReturnValue)>
+-<ruleDescriptor.singleValueReturnType>
+-<else>
+-void
+-<endif>
++	void
+<endif>
+%>
+
+@@ -1462,14 +1460,14 @@ void
+*  values.
+*/
+ruleLabelType(referencedRule) ::= <%
+-<if(referencedRule.hasMultipleReturnValues)>
+-<referencedRule.grammar.recognizerName>.<referencedRule.name>_return
+-<else>
+-<if(referencedRule.hasSingleReturnValue)>
+-<referencedRule.singleValueReturnType>
++<if(referencedRule.returnScope.attributes&&referencedRule.hasMultipleReturnValues)>
++	<referencedRule.grammar.recognizerName>.<referencedRule:returnStructName()>
++<elseif(referencedRule.hasMultipleReturnValues)>
++	<ruleReturnBaseType()>
++<elseif(referencedRule.hasSingleReturnValue)>
++	<referencedRule.singleValueReturnType>
+<else>
+-void
+-<endif>
++	void
+<endif>
+%>
+
+@@ -1494,8 +1492,8 @@ ruleLabelDef(label) ::= <%
+*  subgroups to stick in members.
+*/
+returnScope(scope) ::= <<
+-<if(ruleDescriptor.hasMultipleReturnValues)>
+-<returnScopeModifier(grammar=grammar,ruleDescriptor=ruleDescriptor)> sealed partial class <ruleDescriptor:returnStructName()> : <if(TREE_PARSER)>Tree<else>Parser<endif>RuleReturnScope\<<labelType>\><@ruleReturnInterfaces()>
++<if(scope.attributes && ruleDescriptor.hasMultipleReturnValues)>
++<returnScopeModifier(grammar=grammar,ruleDescriptor=ruleDescriptor)> sealed partial class <ruleDescriptor:returnStructName()> : <ruleReturnBaseType()><@ruleReturnInterfaces()>
+{
+<scope.attributes:{it|public <it.decl>;}; separator="\n">
+<@ruleReturnMembers()>
+@@ -1503,6 +1501,10 @@ returnScope(scope) ::= <<
+<endif>
+>>
+
++ruleReturnBaseType() ::= <%
++<if(TREE_PARSER)>Tree<else>Parser<endif>RuleReturnScope\<<labelType>>
++%>
++
+@returnScope.ruleReturnMembers() ::= <<
+public <ruleDescriptor:returnStructName()>(<grammar.recognizerName> grammar) {OnCreated(grammar);}
+partial void OnCreated(<grammar.recognizerName> grammar);
+@@ -1684,7 +1686,7 @@ execForcedAction(action) ::= "<action>"
+// M I S C (properties, etc...)
+
+bitset(name, words64) ::= <<
+-public static readonly BitSet <name> = new BitSet(new ulong[]{<words64:{it|<it>UL};separator=",">});<\n>
++public static readonly BitSet <name> = new BitSet(new ulong[]{<words64:{it|<it>UL};separator=",">});
+>>
+
+codeFileExtension() ::= ".cs"
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/ST.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/ST.stg
+index 0873b55..fd1322f 100644
+--- a/bin/Bootstrap/Codegen/Templates/CSharp3/ST.stg
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/ST.stg
+@@ -39,14 +39,6 @@ using Antlr3.ST;
+using Antlr3.ST.Language;
+>>
+
+-/** Add this to each rule's return value struct */
+-@returnScope.ruleReturnMembers() ::= <<
+-private StringTemplate _st;
+-public StringTemplate Template { get { return _st; } set { _st = value; } }
+-public override string ToString() { return (Template==null) ? string.Empty : Template.ToString(); }
+-<@super.ruleReturnMembers()>
+->>
+-
+@genericParser.members() ::= <<
+<@super.members()>
+private StringTemplateGroup _templateGroup = new StringTemplateGroup("<name>Templates", typeof(AngleBracketTemplateLexer) );
+@@ -58,6 +50,10 @@ public StringTemplateGroup TemplateGroup
+}
+>>
+
++ruleReturnBaseType() ::= <%
++Template<if(TREE_PARSER)>Tree<else>Parser<endif>RuleReturnScope\<StringTemplate, <labelType>>
++%>
++
+/** x+=rule when output=template */
+ruleRefAndListLabel(rule,label,elementIndex,args,scope) ::= <<
+<ruleRef(...)>
+diff --git a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll
+index 7e8a5fe..69f7e5d 100644
+Binary files a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll and b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll differ
+

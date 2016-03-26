@@ -1,0 +1,34 @@
+commit 33552aedfc3b5f356349107aa4a4a5ae6480c376
+Author:     Terence Parr <parrt@antlr.org>
+AuthorDate: Sun Mar 4 09:42:43 2012 -0800
+Commit:     Terence Parr <parrt@antlr.org>
+CommitDate: Sun Mar 4 09:42:43 2012 -0800
+
+Fix for http://www.antlr.org/pipermail/antlr-interest/2009-December/036969.html
+
+diff --git a/antlrjar.xml b/antlrjar.xml
+index b9c3213..b3afe73 100644
+--- a/antlrjar.xml
++++ b/antlrjar.xml
+@@ -14,11 +14,15 @@
+-->
+<id>completejar</id>
+
+-    <!--
+-        Exclude the antlr-master pom from the jar - we don't need it
+-        and it causes silly things to happen.
+-      -->
+-    <useProjectArtifact>false</useProjectArtifact>
++    <dependencySets>
++        <dependencySet>
++            <!--
++                Exclude the antlr-master pom from the jar - we don't need it
++                and it causes silly things to happen.
++              -->
++            <useProjectArtifact>false</useProjectArtifact>
++        </dependencySet>
++    </dependencySets>
+
+<!--
+The only output format we need is the executable jar file
+

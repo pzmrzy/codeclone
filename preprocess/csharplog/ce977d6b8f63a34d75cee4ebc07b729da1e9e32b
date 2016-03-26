@@ -1,0 +1,32 @@
+commit ce977d6b8f63a34d75cee4ebc07b729da1e9e32b
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sun Apr 3 10:12:22 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sun Apr 3 10:12:22 2011 -0800
+
+(C# 3) Forgot to mark an alt as optional
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8033]
+
+diff --git a/Antlr4.StringTemplate/Compiler/TemplateParser.g3 b/Antlr4.StringTemplate/Compiler/TemplateParser.g3
+index 06ba8a6..90c9fb0 100644
+--- a/Antlr4.StringTemplate/Compiler/TemplateParser.g3
++++ b/Antlr4.StringTemplate/Compiler/TemplateParser.g3
+@@ -265,6 +265,14 @@ bool empty = true;
+bool finished = false;
+}
+:	'['<LIST>^
+-			({!finished}? => (exprNoComma (','! | ']'! {finished=true;}) {empty=false;} | ','<NULL> {empty=false;} | {!empty}? => ']'<NULL> {finished=true;}))+
+-			({!finished}? => ']'!)
++			(	{!finished}? =>
++				(	exprNoComma
++					(	','!
++					|	']'! {{finished=true;}}
++					) {{empty=false;}}
++				|	','<NULL> {{empty=false;}}
++				|	{!empty}? => ']'<NULL> {{finished=true;}}
++				)
++			)+
++			({!finished}? => ']'!)?
+;
+

@@ -1,0 +1,25 @@
+commit 6546bb5efbb82c185583e006333dde5085a35a14
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Tue Feb 21 23:24:20 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Wed Feb 22 12:25:41 2012 -0600
+
+Specify generic type arguments for Class<T>
+
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/debug/RemoteDebugEventSocketListener.java b/runtime/Java/src/main/java/org/antlr/runtime/debug/RemoteDebugEventSocketListener.java
+index 9092278..ad754a8 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/debug/RemoteDebugEventSocketListener.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/debug/RemoteDebugEventSocketListener.java
+@@ -355,9 +355,9 @@ public class RemoteDebugEventSocketListener implements Runnable {
+String indexS = elements[2];
+String lineS = elements[3];
+String posS = elements[4];
+-			Class excClass;
++			Class<? extends RecognitionException> excClass;
+try {
+-				excClass = Class.forName(excName);
++				excClass = Class.forName(excName).asSubclass(RecognitionException.class);
+RecognitionException e =
+(RecognitionException)excClass.newInstance();
+e.index = Integer.parseInt(indexS);
+

@@ -1,0 +1,64 @@
+commit ed64d6637f9cff7514629b1e08caa2ab651c73c5
+Author:     parrt <parrt@antlr.org>
+AuthorDate: Fri Jun 24 19:03:39 2011 -0800
+Commit:     parrt <parrt@antlr.org>
+CommitDate: Fri Jun 24 19:03:39 2011 -0800
+
+empty alts with actions didn't have EPSILON dummy alt node.
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8761]
+
+diff --git a/tool/CHANGES.txt b/tool/CHANGES.txt
+index 6784a5e..782fc0e 100644
+--- a/tool/CHANGES.txt
++++ b/tool/CHANGES.txt
+@@ -7,6 +7,10 @@ University of San Francisco
+
+CHANGES
+
++June 24, 2011
++
++* empty alts with actions didn't have EPSILON dummy alt node.
++
+June 19, 2011
+
+* Udo noticed that Parser.getMissingSymbol() didn't set invented token's input
+diff --git a/tool/src/main/java/org/antlr/tool/GrammarAST.java b/tool/src/main/java/org/antlr/tool/GrammarAST.java
+index 420b3b7..d6d47da 100644
+--- a/tool/src/main/java/org/antlr/tool/GrammarAST.java
++++ b/tool/src/main/java/org/antlr/tool/GrammarAST.java
+@@ -501,6 +501,12 @@ public class GrammarAST extends CommonTree {
+result.add(child);
+}
+}
++		if ( result.size()==1 && result.get(0).getType()==ANTLRParser.EOA &&
++			 t.getType()==ANTLRParser.ALT )
++		{
++			// can't have an empty alt, insert epsilon
++			result.add(0, new GrammarAST(ANTLRParser.EPSILON, "epsilon"));
++		}
+
+return result;
+}
+diff --git a/tool/src/test/java/org/antlr/test/TestASTConstruction.java b/tool/src/test/java/org/antlr/test/TestASTConstruction.java
+index 794b681..88df12a 100644
+--- a/tool/src/test/java/org/antlr/test/TestASTConstruction.java
++++ b/tool/src/test/java/org/antlr/test/TestASTConstruction.java
+@@ -46,6 +46,16 @@ public class TestASTConstruction extends BaseTest {
+assertEquals(expecting, found);
+}
+
++	@Test public void testEmptyAlt() throws Exception {
++		Grammar g = new Grammar(
++				"parser grammar P;\n"+
++				"a : ;");
++		String expecting =
++			"(rule a ARG RET scope (BLOCK (ALT epsilon <end-of-alt>) <end-of-block>) <end-of-rule>)";
++		String found = g.getRule("a").tree.toStringTree();
++		assertEquals(expecting, found);
++	}
++
+@Test public void testNakeRulePlusInLexer() throws Exception {
+Grammar g = new Grammar(
+"lexer grammar P;\n"+
+

@@ -1,0 +1,25 @@
+commit 351212d685a44bfc782a2685fff96d20b3025cdc
+Author:     Mike Lischke <mike@lischke-online.de>
+AuthorDate: Thu Sep 27 16:49:10 2012 +0200
+Commit:     Mike Lischke <mike@lischke-online.de>
+CommitDate: Thu Sep 27 16:49:10 2012 +0200
+
+Fixed wrong parent setter for common trees in C runtime
+
+Fixed (again) the wrong value used for setting a tree's parent. This
+had accidentially been reverted.
+
+diff --git a/runtime/C/src/antlr3commontree.c b/runtime/C/src/antlr3commontree.c
+index cffc8cc..a66dd0f 100644
+--- a/runtime/C/src/antlr3commontree.c
++++ b/runtime/C/src/antlr3commontree.c
+@@ -511,7 +511,7 @@ getParent				(pANTLR3_BASE_TREE tree)
+static void
+setParent				(pANTLR3_BASE_TREE tree, pANTLR3_BASE_TREE parent)
+{
+-	((pANTLR3_COMMON_TREE)(tree->super))->parent = parent == NULL ? NULL : ((pANTLR3_COMMON_TREE)(parent->super))->parent;
++	((pANTLR3_COMMON_TREE)(tree->super))->parent = parent == NULL ? NULL : ((pANTLR3_COMMON_TREE)(parent->super));
+}
+
+static void
+

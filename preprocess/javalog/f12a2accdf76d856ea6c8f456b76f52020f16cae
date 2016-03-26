@@ -1,0 +1,150 @@
+commit f12a2accdf76d856ea6c8f456b76f52020f16cae
+Author:     acondit <acondit@parrt.spork>
+AuthorDate: Sun Jan 29 21:37:13 2012 -0800
+Commit:     acondit <acondit@parrt.spork>
+CommitDate: Sun Jan 29 21:37:13 2012 -0800
+
+Working on TreeFilter.h
+Trying to overcome java implementation of nested class fptr.
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 9929]
+
+diff --git a/runtime/ObjC/Framework/TreeFilter.h b/runtime/ObjC/Framework/TreeFilter.h
+index d54072d..0032cd9 100644
+--- a/runtime/ObjC/Framework/TreeFilter.h
++++ b/runtime/ObjC/Framework/TreeFilter.h
+@@ -157,10 +157,8 @@ public class TreeFilter extends TreeParser {
+@property (assign) SEL whichRule;
+@property (assign) TreeFilter *treeFilter;
+
+-+ (fptr *) newfptr;
++ (fptr *) newfptr:(TreeFilter *)aTreeFilter Rule:(SEL) aRule;
+
+-
+- (fptr *) init:(TreeFilter *)aTreeFilter Rule:(SEL)aRule;
+
+- (void) rule;
+diff --git a/runtime/ObjC/Framework/TreeFilter.m b/runtime/ObjC/Framework/TreeFilter.m
+index 1a37e64..8483527 100644
+--- a/runtime/ObjC/Framework/TreeFilter.m
++++ b/runtime/ObjC/Framework/TreeFilter.m
+@@ -148,14 +148,6 @@ public class TreeFilter extends TreeParser {
+
+@implementation fptr
+
+-- (void) rule
+-{
+-    if ( [treeFilter respondsToSelector:whichRule] ) {
+-        [treeFilter performSelector:whichRule];
+-    }
+-    return;
+-}
+-
++ (fptr *) newfptr:(TreeFilter *)aTreeFilter Rule:(SEL) aRule
+{
+return [[fptr alloc] init];
+@@ -170,6 +162,14 @@ public class TreeFilter extends TreeParser {
+return self;
+}
+
++- (void) rule
++{
++    if ( [treeFilter respondsToSelector:whichRule] ) {
++        [treeFilter performSelector:whichRule];
++    }
++    return;
++}
++
+@synthesize whichRule;
+@synthesize treeFilter;
+
+@@ -185,7 +185,7 @@ public class TreeFilter extends TreeParser {
+
++ (TreeFilter *) newTreeFilter:(id<TreeNodeStream>)anInput State:(RecognizerSharedState *) aState
+{
+-    return [[TreeFilter alloc] init:anInput State:aState];
++    return [[TreeFilter alloc] initWithStream:anInput State:aState];
+}
+
+- (id) initWithStream:(id<TreeNodeStream>)anInput State:(RecognizerSharedState *)aState
+diff --git a/runtime/ObjC/Framework/TreeVisitorAction.h b/runtime/ObjC/Framework/TreeVisitorAction.h
+index 52576ec..443443e 100644
+--- a/runtime/ObjC/Framework/TreeVisitorAction.h
++++ b/runtime/ObjC/Framework/TreeVisitorAction.h
+@@ -39,23 +39,26 @@
+
+}
+
+-@property (assign) SEL preAction;
+-@property (assign) SEL postAction;
++@property (assign, setter=setPreAction:) SEL preAction;
++@property (assign, setter=setPostAction:) SEL postAction;
+
++ (TreeVisitorAction *)newTreeVisitorAction;
+- (id) init;
+
++- (void)setPreAction:(SEL)anAction;
++- (void)setPostAction:(SEL)anAction;
++
+/** Execute an action before visiting children of t.  Return t or
+*  a rewritten t.  It is up to the visitor to decide what to do
+*  with the return value.  Children of returned value will be
+*  visited if using TreeVisitor.visit().
+*/
+-- (id<Tree>)pre:(id<BaseTree>) t;
++- (id<BaseTree>)pre:(id<BaseTree>) t;
+
+/** Execute an action after visiting children of t.  Return t or
+*  a rewritten t.  It is up to the visitor to decide what to do
+*  with the return value.
+*/
+-- (id<Tree>)post:(id<BaseTree>) t;
++- (id<BaseTree>)post:(id<BaseTree>) t;
+
+@end
+diff --git a/runtime/ObjC/Framework/TreeVisitorAction.m b/runtime/ObjC/Framework/TreeVisitorAction.m
+index 579845c..133dd2f 100644
+--- a/runtime/ObjC/Framework/TreeVisitorAction.m
++++ b/runtime/ObjC/Framework/TreeVisitorAction.m
+@@ -48,6 +48,16 @@
+return self;
+}
+
++- (void)setPreAction:(SEL)anAction
++{
++    preAction = anAction;
++}
++
++- (void)setPostAction:(SEL)anAction
++{
++    postAction = anAction;
++}
++
+/** Execute an action before visiting children of t.  Return t or
+*  a rewritten t.  It is up to the visitor to decide what to do
+*  with the return value.  Children of returned value will be
+@@ -55,7 +65,10 @@
+*/
+- (id<BaseTree>)pre:(id<BaseTree>) t
+{
+-    return nil;
++    if ( (preAction != nil ) && ( [self respondsToSelector:preAction] )) {
++        [self performSelector:preAction];
++    }
++    return t;
+}
+
+/** Execute an action after visiting children of t.  Return t or
+@@ -64,7 +77,10 @@
+*/
+- (id<BaseTree>)post:(id<BaseTree>) t
+{
+-    return nil;
++    if ( (postAction != nil ) && ( [self respondsToSelector:postAction] )) {
++        [self performSelector:postAction];
++    }
++    return t;
+}
+
+@synthesize preAction;
+

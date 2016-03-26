@@ -1,0 +1,802 @@
+commit 35c1aaf0050f8c9ef5db5950ddddeaa3a1ada416
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Tue Feb 21 23:29:33 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Wed Feb 22 12:25:43 2012 -0600
+
+Use StringBuilder instead of StringBuffer, use chained calls to .append() instead of string concatenation
+
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/BitSet.java b/runtime/Java/src/main/java/org/antlr/runtime/BitSet.java
+index 5eff39d..ffe3144 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/BitSet.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/BitSet.java
+@@ -301,7 +301,7 @@ public class BitSet implements Cloneable {
+}
+
+public String toString(String[] tokenNames) {
+-		StringBuffer buf = new StringBuffer();
++		StringBuilder buf = new StringBuilder();
+String separator = ",";
+boolean havePrintedAnElement = false;
+buf.append('{');
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/BufferedTokenStream.java b/runtime/Java/src/main/java/org/antlr/runtime/BufferedTokenStream.java
+index 77974be..571834b 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/BufferedTokenStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/BufferedTokenStream.java
+@@ -257,7 +257,7 @@ public class BufferedTokenStream implements TokenStream {
+if ( start<0 || stop<0 ) return null;
+if ( p == -1 ) setup();
+if ( stop>=tokens.size() ) stop = tokens.size()-1;
+-        StringBuffer buf = new StringBuffer();
++        StringBuilder buf = new StringBuilder();
+for (int i = start; i <= stop; i++) {
+Token t = tokens.get(i);
+if ( t.getType()==Token.EOF ) break;
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/LegacyCommonTokenStream.java b/runtime/Java/src/main/java/org/antlr/runtime/LegacyCommonTokenStream.java
+index eab2333..9c55cdc 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/LegacyCommonTokenStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/LegacyCommonTokenStream.java
+@@ -393,7 +393,7 @@ public class LegacyCommonTokenStream implements TokenStream {
+if ( stop>=tokens.size() ) {
+stop = tokens.size()-1;
+}
+- 		StringBuffer buf = new StringBuffer();
++ 		StringBuilder buf = new StringBuilder();
+for (int i = start; i <= stop; i++) {
+Token t = (Token)tokens.get(i);
+buf.append(t.getText());
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/SerializedGrammar.java b/runtime/Java/src/main/java/org/antlr/runtime/SerializedGrammar.java
+index ac1ca4d..7ccfad3 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/SerializedGrammar.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/SerializedGrammar.java
+@@ -69,7 +69,7 @@ public class SerializedGrammar {
+}
+@Override
+public String toString() {
+-            StringBuffer buf = new StringBuffer();
++            StringBuilder buf = new StringBuilder();
+buf.append("(");
+for (int i = 0; i < alts.length; i++) {
+List<?> alt = alts[i];
+@@ -191,7 +191,7 @@ public class SerializedGrammar {
+
+protected String readString(DataInputStream in) throws IOException {
+byte c = in.readByte();
+-        StringBuffer buf = new StringBuffer();
++        StringBuilder buf = new StringBuilder();
+while ( c!=';' ) {
+buf.append((char)c);
+c = in.readByte();
+@@ -201,8 +201,8 @@ public class SerializedGrammar {
+
+@Override
+public String toString() {
+-        StringBuffer buf = new StringBuffer();
+-        buf.append(type+" grammar "+name);
++        StringBuilder buf = new StringBuilder();
++        buf.append(type).append(" grammar ").append(name);
+buf.append(rules);
+return buf.toString();
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/TokenRewriteStream.java b/runtime/Java/src/main/java/org/antlr/runtime/TokenRewriteStream.java
+index 7ca99ae..33f5ec9 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/TokenRewriteStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/TokenRewriteStream.java
+@@ -341,7 +341,7 @@ public class TokenRewriteStream extends CommonTokenStream {
+}
+
+public String toOriginalString(int start, int end) {
+-		StringBuffer buf = new StringBuffer();
++		StringBuilder buf = new StringBuilder();
+for (int i=start; i>=MIN_TOKEN_INDEX && i<=end && i<tokens.size(); i++) {
+if ( get(i).getType()!=Token.EOF ) buf.append(get(i).getText());
+}
+@@ -587,7 +587,7 @@ public class TokenRewriteStream extends CommonTokenStream {
+}
+
+public String toDebugString(int start, int end) {
+-		StringBuffer buf = new StringBuffer();
++		StringBuilder buf = new StringBuilder();
+for (int i=start; i>=MIN_TOKEN_INDEX && i<=end && i<tokens.size(); i++) {
+buf.append(get(i));
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugEventSocketProxy.java b/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugEventSocketProxy.java
+index 2d99e36..8590368 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugEventSocketProxy.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugEventSocketProxy.java
+@@ -205,7 +205,7 @@ public class DebugEventSocketProxy extends BlankDebugEventListener {
+
+@Override
+public void recognitionException(RecognitionException e) {
+-		StringBuffer buf = new StringBuffer(50);
++		StringBuilder buf = new StringBuilder(50);
+buf.append("exception\t");
+buf.append(e.getClass().getName());
+// dump only the data common to all exceptions for now
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/debug/Profiler.java b/runtime/Java/src/main/java/org/antlr/runtime/debug/Profiler.java
+index c6c5af5..ef4ed8b 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/debug/Profiler.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/debug/Profiler.java
+@@ -449,7 +449,7 @@ public class Profiler extends BlankDebugEventListener {
+// R E P O R T I N G
+
+public String toNotifyString() {
+-		StringBuffer buf = new StringBuffer();
++		StringBuilder buf = new StringBuilder();
+buf.append(Version);
+buf.append('\t');
+buf.append(parser.getClass().getName());
+@@ -540,7 +540,7 @@ public class Profiler extends BlankDebugEventListener {
+}
+
+public static String toString(ProfileStats stats) {
+-		StringBuffer buf = new StringBuffer();
++		StringBuilder buf = new StringBuilder();
+buf.append("ANTLR Runtime Report; Profile Version ");
+buf.append(stats.Version);
+buf.append(newline);
+@@ -663,7 +663,7 @@ public class Profiler extends BlankDebugEventListener {
+}
+
+public String getDecisionStatsDump() {
+-		StringBuffer buf = new StringBuffer();
++		StringBuilder buf = new StringBuilder();
+buf.append("location");
+buf.append(DATA_SEP);
+buf.append("n");
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/misc/FastQueue.java b/runtime/Java/src/main/java/org/antlr/runtime/misc/FastQueue.java
+index a7737ce..e5b146b 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/misc/FastQueue.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/misc/FastQueue.java
+@@ -90,7 +90,7 @@ public class FastQueue<T> {
+/** Return string of current buffer contents; non-destructive */
+@Override
+public String toString() {
+-        StringBuffer buf = new StringBuffer();
++        StringBuilder buf = new StringBuilder();
+int n = size();
+for (int i=0; i<n; i++) {
+buf.append(elementAt(i));
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTree.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTree.java
+index 174cc42..97117b0 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTree.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTree.java
+@@ -362,7 +362,7 @@ public abstract class BaseTree implements Tree {
+if ( children==null || children.isEmpty() ) {
+return this.toString();
+}
+-		StringBuffer buf = new StringBuffer();
++		StringBuilder buf = new StringBuilder();
+if ( !isNil() ) {
+buf.append("(");
+buf.append(this.toString());
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/BufferedTreeNodeStream.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/BufferedTreeNodeStream.java
+index b8f1394..33b6b26 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/BufferedTreeNodeStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/BufferedTreeNodeStream.java
+@@ -413,7 +413,7 @@ public class BufferedTreeNodeStream implements TreeNodeStream {
+if ( p==-1 ) {
+fillBuffer();
+}
+-		StringBuffer buf = new StringBuffer();
++		StringBuilder buf = new StringBuilder();
+for (int i = 0; i < nodes.size(); i++) {
+Object t = (Object) nodes.get(i);
+buf.append(" ");
+@@ -427,7 +427,7 @@ public class BufferedTreeNodeStream implements TreeNodeStream {
+if ( p==-1 ) {
+fillBuffer();
+}
+-		StringBuffer buf = new StringBuffer();
++		StringBuilder buf = new StringBuilder();
+for (int i = start; i < nodes.size() && i <= stop; i++) {
+Object t = (Object) nodes.get(i);
+buf.append(" ");
+@@ -478,7 +478,7 @@ public class BufferedTreeNodeStream implements TreeNodeStream {
+}
+}
+// now walk until we see stop, filling string buffer with text
+-		 StringBuffer buf = new StringBuffer();
++		 StringBuilder buf = new StringBuilder();
+t = nodes.get(i);
+while ( t!=stop ) {
+String text = adaptor.getText(t);
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonTreeNodeStream.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonTreeNodeStream.java
+index 9edf950..2d442ab 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonTreeNodeStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonTreeNodeStream.java
+@@ -168,7 +168,7 @@ public class CommonTreeNodeStream extends LookaheadStream<Object> implements Tre
+/** For debugging; destructive: moves tree iterator to end. */
+public String toTokenTypeString() {
+reset();
+-		StringBuffer buf = new StringBuffer();
++		StringBuilder buf = new StringBuilder();
+Object o = LT(1);
+int type = adaptor.getType(o);
+while ( type!=Token.EOF ) {
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/ParseTree.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/ParseTree.java
+index a60d96c..a451e48 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/ParseTree.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/ParseTree.java
+@@ -93,7 +93,7 @@ public class ParseTree extends BaseTree {
+*  hidden tokens after last real token.
+*/
+public String toStringWithHiddenTokens() {
+-		StringBuffer buf = new StringBuffer();
++		StringBuilder buf = new StringBuilder();
+if ( hiddenTokens!=null ) {
+for (int i = 0; i < hiddenTokens.size(); i++) {
+Token hidden = (Token) hiddenTokens.get(i);
+diff --git a/tool/src/main/java/org/antlr/analysis/DFA.java b/tool/src/main/java/org/antlr/analysis/DFA.java
+index 7a3fac1..246efe5 100644
+--- a/tool/src/main/java/org/antlr/analysis/DFA.java
++++ b/tool/src/main/java/org/antlr/analysis/DFA.java
+@@ -1034,7 +1034,7 @@ public class DFA {
+}
+
+public String getReasonForFailure() {
+-		StringBuffer buf = new StringBuffer();
++		StringBuilder buf = new StringBuilder();
+if ( probe.isNonLLStarDecision() ) {
+buf.append("non-LL(*)");
+if ( predicateVisible ) {
+diff --git a/tool/src/main/java/org/antlr/analysis/DFAState.java b/tool/src/main/java/org/antlr/analysis/DFAState.java
+index d16ffd2..8d61787 100644
+--- a/tool/src/main/java/org/antlr/analysis/DFAState.java
++++ b/tool/src/main/java/org/antlr/analysis/DFAState.java
+@@ -755,8 +755,8 @@ public class DFAState extends State {
+/** Print all NFA states plus what alts they predict */
+@Override
+public String toString() {
+-        StringBuffer buf = new StringBuffer();
+-        buf.append(stateNumber+":{");
++        StringBuilder buf = new StringBuilder();
++        buf.append(stateNumber).append(":{");
+for (int i = 0; i < nfaConfigurations.size(); i++) {
+NFAConfiguration configuration = (NFAConfiguration) nfaConfigurations.get(i);
+if ( i>0 ) {
+diff --git a/tool/src/main/java/org/antlr/analysis/DecisionProbe.java b/tool/src/main/java/org/antlr/analysis/DecisionProbe.java
+index 8f95cc0..5f231d0 100644
+--- a/tool/src/main/java/org/antlr/analysis/DecisionProbe.java
++++ b/tool/src/main/java/org/antlr/analysis/DecisionProbe.java
+@@ -318,7 +318,7 @@ public class DecisionProbe {
+*/
+public String getInputSequenceDisplay(List<? extends Label> labels) {
+Grammar g = dfa.nfa.grammar;
+-		StringBuffer buf = new StringBuffer();
++		StringBuilder buf = new StringBuilder();
+for (Iterator<? extends Label> it = labels.iterator(); it.hasNext();) {
+Label label = (Label) it.next();
+buf.append(label.toString(g));
+@@ -888,7 +888,7 @@ public class DecisionProbe {
+}
+
+protected String getStateLabelIndexKey(int s, int i) {
+-		StringBuffer buf = new StringBuffer();
++		StringBuilder buf = new StringBuilder();
+buf.append(s);
+buf.append('_');
+buf.append(i);
+diff --git a/tool/src/main/java/org/antlr/analysis/NFAConfiguration.java b/tool/src/main/java/org/antlr/analysis/NFAConfiguration.java
+index 408830a..adc814f 100644
+--- a/tool/src/main/java/org/antlr/analysis/NFAConfiguration.java
++++ b/tool/src/main/java/org/antlr/analysis/NFAConfiguration.java
+@@ -128,7 +128,7 @@ public class NFAConfiguration {
+}
+
+public String toString(boolean showAlt) {
+-		StringBuffer buf = new StringBuffer();
++		StringBuilder buf = new StringBuilder();
+buf.append(state);
+if ( showAlt ) {
+buf.append("|");
+diff --git a/tool/src/main/java/org/antlr/analysis/NFAContext.java b/tool/src/main/java/org/antlr/analysis/NFAContext.java
+index e7da251..16002a2 100644
+--- a/tool/src/main/java/org/antlr/analysis/NFAContext.java
++++ b/tool/src/main/java/org/antlr/analysis/NFAContext.java
+@@ -283,7 +283,7 @@ public class NFAContext {
+
+@Override
+public String toString() {
+-        StringBuffer buf = new StringBuffer();
++        StringBuilder buf = new StringBuilder();
+NFAContext sp = this;
+buf.append("[");
+while ( sp.parent!=null ) {
+diff --git a/tool/src/main/java/org/antlr/analysis/SemanticContext.java b/tool/src/main/java/org/antlr/analysis/SemanticContext.java
+index 0bfd91c..feb3758 100644
+--- a/tool/src/main/java/org/antlr/analysis/SemanticContext.java
++++ b/tool/src/main/java/org/antlr/analysis/SemanticContext.java
+@@ -418,7 +418,7 @@ public abstract class SemanticContext {
+
+@Override
+public String toString() {
+-			StringBuffer buf = new StringBuffer();
++			StringBuilder buf = new StringBuilder();
+buf.append("(");
+int i = 0;
+for (SemanticContext semctx : operands) {
+diff --git a/tool/src/main/java/org/antlr/codegen/ActionScriptTarget.java b/tool/src/main/java/org/antlr/codegen/ActionScriptTarget.java
+index 4cf4914..e4da108 100644
+--- a/tool/src/main/java/org/antlr/codegen/ActionScriptTarget.java
++++ b/tool/src/main/java/org/antlr/codegen/ActionScriptTarget.java
+@@ -90,7 +90,7 @@ public class ActionScriptTarget extends Target {
+System.err.println("Warning: character literal out of range for ActionScript target " + v);
+return "";
+}
+-        StringBuffer buf = new StringBuffer("\\u80");
++        StringBuilder buf = new StringBuilder("\\u80");
+buf.append(Integer.toHexString((v >> 8) | 0x100).substring(1, 3)); // high - order bits
+buf.append("\\x");
+buf.append(Integer.toHexString((v & 0xff) | 0x100).substring(1, 3)); // low -order bits
+diff --git a/tool/src/main/java/org/antlr/codegen/CPPTarget.java b/tool/src/main/java/org/antlr/codegen/CPPTarget.java
+index 961d17d..5abc4b4 100644
+--- a/tool/src/main/java/org/antlr/codegen/CPPTarget.java
++++ b/tool/src/main/java/org/antlr/codegen/CPPTarget.java
+@@ -75,7 +75,7 @@ public class CPPTarget extends Target {
+*/
+public String escapeString(String s)
+{
+-		StringBuffer retval = new StringBuffer();
++		StringBuilder retval = new StringBuilder();
+for (int i = 0; i < s.length(); i++) {
+retval.append(escapeChar(s.charAt(i)));
+}
+diff --git a/tool/src/main/java/org/antlr/codegen/CTarget.java b/tool/src/main/java/org/antlr/codegen/CTarget.java
+index 01ad46c..9ecae9a 100644
+--- a/tool/src/main/java/org/antlr/codegen/CTarget.java
++++ b/tool/src/main/java/org/antlr/codegen/CTarget.java
+@@ -195,7 +195,7 @@ public class CTarget extends Target {
+String literal) {
+int index;
+String bytes;
+-        StringBuffer buf = new StringBuffer();
++        StringBuilder buf = new StringBuilder();
+
+buf.append("{ ");
+
+diff --git a/tool/src/main/java/org/antlr/codegen/DelphiTarget.java b/tool/src/main/java/org/antlr/codegen/DelphiTarget.java
+index 0f94274..2e1d19a 100644
+--- a/tool/src/main/java/org/antlr/codegen/DelphiTarget.java
++++ b/tool/src/main/java/org/antlr/codegen/DelphiTarget.java
+@@ -72,7 +72,7 @@ public class DelphiTarget extends Target
+CodeGenerator generator,
+String literal)
+{
+-    StringBuffer buf = new StringBuffer();
++    StringBuilder buf = new StringBuilder();
+int c = Grammar.getCharValueFromGrammarCharLiteral(literal);
+if ( c<Label.MIN_CHAR_VALUE ) {
+return "0";
+@@ -88,7 +88,7 @@ public class DelphiTarget extends Target
+if ( s==null ) {
+return null;
+}
+-    StringBuffer buf = new StringBuffer();
++    StringBuilder buf = new StringBuilder();
+if ( quoted ) {
+buf.append('\'');
+}
+@@ -125,7 +125,7 @@ public class DelphiTarget extends Target
+literal = Utils.replace(literal,"\\r\\n","'#13#10'");
+literal = Utils.replace(literal,"\\r","'#13'");
+literal = Utils.replace(literal,"\\n","'#10'");
+-    StringBuffer buf = new StringBuffer(literal);
++    StringBuilder buf = new StringBuilder(literal);
+buf.setCharAt(0,'\'');
+buf.setCharAt(literal.length()-1,'\'');
+return buf.toString();
+@@ -134,7 +134,7 @@ public class DelphiTarget extends Target
+@Override
+public String getTarget64BitStringFromValue(long word) {
+int numHexDigits = 8*2;
+-    StringBuffer buf = new StringBuffer(numHexDigits+2);
++    StringBuilder buf = new StringBuilder(numHexDigits+2);
+buf.append("$");
+String digits = Long.toHexString(word);
+digits = digits.toUpperCase();
+diff --git a/tool/src/main/java/org/antlr/codegen/ObjCTarget.java b/tool/src/main/java/org/antlr/codegen/ObjCTarget.java
+index 002ffbd..0f34011 100644
+--- a/tool/src/main/java/org/antlr/codegen/ObjCTarget.java
++++ b/tool/src/main/java/org/antlr/codegen/ObjCTarget.java
+@@ -74,7 +74,7 @@ public class ObjCTarget extends Target {
+String literal)
+{
+literal = Utils.replace(literal,"\"","\\\"");
+-		StringBuffer buf = new StringBuffer(literal);
++		StringBuilder buf = new StringBuilder(literal);
+buf.setCharAt(0,'"');
+buf.setCharAt(literal.length()-1,'"');
+buf.insert(0,'@');
+diff --git a/tool/src/main/java/org/antlr/codegen/Target.java b/tool/src/main/java/org/antlr/codegen/Target.java
+index 3530375..08d6f8c 100644
+--- a/tool/src/main/java/org/antlr/codegen/Target.java
++++ b/tool/src/main/java/org/antlr/codegen/Target.java
+@@ -166,7 +166,7 @@ public class Target {
+CodeGenerator generator,
+String literal)
+{
+-		StringBuffer buf = new StringBuffer();
++		StringBuilder buf = new StringBuilder();
+buf.append('\'');
+int c = Grammar.getCharValueFromGrammarCharLiteral(literal);
+if ( c<Label.MIN_CHAR_VALUE ) {
+@@ -213,7 +213,7 @@ public class Target {
+String literal)
+{
+StringBuilder sb = new StringBuilder();
+-        StringBuffer is = new StringBuffer(literal);
++        StringBuilder is = new StringBuilder(literal);
+
+// Opening quote
+//
+@@ -295,7 +295,7 @@ public class Target {
+return null;
+}
+
+-		StringBuffer buf = new StringBuffer();
++		StringBuilder buf = new StringBuilder();
+if ( quoted ) {
+buf.append('"');
+}
+@@ -326,7 +326,7 @@ public class Target {
+*/
+public String getTarget64BitStringFromValue(long word) {
+int numHexDigits = 8*2;
+-		StringBuffer buf = new StringBuffer(numHexDigits+2);
++		StringBuilder buf = new StringBuilder(numHexDigits+2);
+buf.append("0x");
+String digits = Long.toHexString(word);
+digits = digits.toUpperCase();
+diff --git a/tool/src/main/java/org/antlr/misc/BitSet.java b/tool/src/main/java/org/antlr/misc/BitSet.java
+index 90ccfc3..8df08bd 100644
+--- a/tool/src/main/java/org/antlr/misc/BitSet.java
++++ b/tool/src/main/java/org/antlr/misc/BitSet.java
+@@ -491,7 +491,7 @@ public class BitSet implements IntSet, Cloneable {
+*/
+@Override
+public String toString(Grammar g) {
+-        StringBuffer buf = new StringBuffer();
++        StringBuilder buf = new StringBuilder();
+String separator = ",";
+boolean havePrintedAnElement = false;
+buf.append('{');
+@@ -550,7 +550,7 @@ public class BitSet implements IntSet, Cloneable {
+* This generates a comma-separated list of C++-like unsigned long constants.
+*/
+public String toStringOfHalfWords() {
+-        StringBuffer s = new StringBuffer();
++        StringBuilder s = new StringBuilder();
+for (int i = 0; i < bits.length; i++) {
+if (i != 0) s.append(", ");
+long tmp = bits[i];
+@@ -571,7 +571,7 @@ public class BitSet implements IntSet, Cloneable {
+* This generates a comma-separated list of Java-like long int constants.
+*/
+public String toStringOfWords() {
+-		StringBuffer s = new StringBuffer();
++		StringBuilder s = new StringBuilder();
+for (int i = 0; i < bits.length; i++) {
+if (i != 0) s.append(", ");
+s.append(bits[i]);
+diff --git a/tool/src/main/java/org/antlr/misc/IntArrayList.java b/tool/src/main/java/org/antlr/misc/IntArrayList.java
+index 7844ded..f1ee077 100644
+--- a/tool/src/main/java/org/antlr/misc/IntArrayList.java
++++ b/tool/src/main/java/org/antlr/misc/IntArrayList.java
+@@ -146,7 +146,7 @@ public class IntArrayList extends AbstractList<Integer> implements Cloneable {
+
+@Override
+public String toString() {
+-		StringBuffer buf = new StringBuffer();
++		StringBuilder buf = new StringBuilder();
+for (int i = 0; i < n; i++) {
+if ( i>0 ) {
+buf.append(", ");
+diff --git a/tool/src/main/java/org/antlr/misc/IntervalSet.java b/tool/src/main/java/org/antlr/misc/IntervalSet.java
+index c215b41..47227e8 100644
+--- a/tool/src/main/java/org/antlr/misc/IntervalSet.java
++++ b/tool/src/main/java/org/antlr/misc/IntervalSet.java
+@@ -573,7 +573,7 @@ public class IntervalSet implements IntSet {
+
+@Override
+public String toString(Grammar g) {
+-        StringBuffer buf = new StringBuffer();
++        StringBuilder buf = new StringBuilder();
+if ( this.intervals==null || this.intervals.isEmpty() ) {
+return "{}";
+}
+@@ -595,10 +595,10 @@ public class IntervalSet implements IntSet {
+}
+else {
+if ( g!=null ) {
+-                    buf.append(g.getTokenDisplayName(a)+".."+g.getTokenDisplayName(b));
++                    buf.append(g.getTokenDisplayName(a)).append("..").append(g.getTokenDisplayName(b));
+}
+else {
+-                    buf.append(a+".."+b);
++                    buf.append(a).append("..").append(b);
+}
+}
+if ( iter.hasNext() ) {
+diff --git a/tool/src/main/java/org/antlr/misc/Utils.java b/tool/src/main/java/org/antlr/misc/Utils.java
+index ca156d5..cfdd019 100644
+--- a/tool/src/main/java/org/antlr/misc/Utils.java
++++ b/tool/src/main/java/org/antlr/misc/Utils.java
+@@ -59,7 +59,7 @@ public class Utils {
+uses regex (I only want to play with strings anyway).
+*/
+public static String replace(String src, String replacee, String replacer) {
+-		StringBuffer result = new StringBuffer(src.length() + 50);
++		StringBuilder result = new StringBuilder(src.length() + 50);
+int startIndex = 0;
+int endIndex = src.indexOf(replacee);
+while(endIndex != -1) {
+diff --git a/tool/src/main/java/org/antlr/tool/DOTGenerator.java b/tool/src/main/java/org/antlr/tool/DOTGenerator.java
+index e6bf17f..734f240 100644
+--- a/tool/src/main/java/org/antlr/tool/DOTGenerator.java
++++ b/tool/src/main/java/org/antlr/tool/DOTGenerator.java
+@@ -313,7 +313,7 @@ public class DOTGenerator {
+}
+String stateLabel = String.valueOf(s.stateNumber);
+if ( s instanceof DFAState ) {
+-            StringBuffer buf = new StringBuffer(250);
++            StringBuilder buf = new StringBuilder(250);
+buf.append('s');
+buf.append(s.stateNumber);
+if ( Tool.internalOption_ShowNFAConfigsInDFA ) {
+diff --git a/tool/src/main/java/org/antlr/tool/FASerializer.java b/tool/src/main/java/org/antlr/tool/FASerializer.java
+index f59cdc0..f20951b 100644
+--- a/tool/src/main/java/org/antlr/tool/FASerializer.java
++++ b/tool/src/main/java/org/antlr/tool/FASerializer.java
+@@ -92,7 +92,7 @@ public class FASerializer {
+String s0 = getStateString(0, s);
+lines.add(s0+"\n");
+}
+-        StringBuffer buf = new StringBuffer(0);
++        StringBuilder buf = new StringBuilder(0);
+// sort lines to normalize; makes states come out ordered
+// and then ordered by edge labels then by target state number :)
+Collections.sort(lines);
+@@ -150,7 +150,7 @@ public class FASerializer {
+// depth first walk each transition, printing its edge first
+for (int i = 0; i < s.getNumberOfTransitions(); i++) {
+Transition edge = (Transition) s.transition(i);
+-            StringBuffer buf = new StringBuffer();
++            StringBuilder buf = new StringBuilder();
+buf.append(stateStr);
+if ( edge.isAction() ) {
+buf.append("-{}->");
+@@ -159,7 +159,7 @@ public class FASerializer {
+buf.append("->");
+}
+else if ( edge.isSemanticPredicate() ) {
+-				buf.append("-{"+edge.label.getSemanticContext()+"}?->");
++				buf.append("-{").append(edge.label.getSemanticContext()).append("}?->");
+}
+else {
+String predsStr = "";
+@@ -174,7 +174,7 @@ public class FASerializer {
++"}?";
+}
+}
+-				buf.append("-"+edge.label.toString(grammar)+predsStr+"->");
++				buf.append("-").append(edge.label.toString(grammar)).append(predsStr).append("->");
+}
+
+int normalizedTargetStateNumber = edge.target.stateNumber;
+diff --git a/tool/src/main/java/org/antlr/tool/Grammar.java b/tool/src/main/java/org/antlr/tool/Grammar.java
+index 876fa43..deca630 100644
+--- a/tool/src/main/java/org/antlr/tool/Grammar.java
++++ b/tool/src/main/java/org/antlr/tool/Grammar.java
+@@ -817,7 +817,7 @@ public class Grammar {
+//System.out.println("grammarsFromRootToMe="+grammarsFromRootToMe);
+String qualifiedName = name;
+if ( grammarsFromRootToMe!=null ) {
+-			StringBuffer buf = new StringBuffer();
++			StringBuilder buf = new StringBuilder();
+for (Grammar g : grammarsFromRootToMe) {
+buf.append(g.name);
+buf.append('_');
+@@ -1240,7 +1240,7 @@ outer:
+GrammarAST decisionAST = nfa.grammar.getDecisionBlockAST(lookaheadDFA.decisionNumber);
+int line = decisionAST.getLine();
+int col = decisionAST.getCharPositionInLine();
+-		lineColumnToLookaheadDFAMap.put(new StringBuffer().append(line + ":")
++		lineColumnToLookaheadDFAMap.put(new StringBuffer().append(line).append(":")
+.append(col).toString(), lookaheadDFA);
+}
+
+@@ -1573,7 +1573,7 @@ outer:
+ruleAST.ruleStopTokenIndex);
+*/
+// first, create the text of the rule
+-		StringBuffer buf = new StringBuffer();
++		StringBuilder buf = new StringBuilder();
+buf.append("// $ANTLR src \"");
+buf.append(getFileName());
+buf.append("\" ");
+@@ -2190,7 +2190,7 @@ outer:
+else if ( Character.isDigit(c) ) {
+ErrorManager.error(ErrorManager.MSG_SYNTAX_ERROR,
+"invalid char literal: "+literal);
+-					buf.append("\\"+(char)c);
++					buf.append("\\").append((char)c);
+}
+else {
+buf.append((char)ANTLRLiteralEscapedCharValue[c]); // normal \x escape
+@@ -2827,7 +2827,7 @@ outer:
+/** Useful for ANTLRWorks to map position in file to the DFA for display */
+public DFA getLookaheadDFAFromPositionInFile(int line, int col) {
+return (DFA)lineColumnToLookaheadDFAMap.get(
+-			new StringBuffer().append(line + ":").append(col).toString());
++			new StringBuffer().append(line).append(":").append(col).toString());
+}
+
+public Map<String, DFA> getLineColumnToLookaheadDFAMap() {
+diff --git a/tool/src/main/java/org/antlr/tool/GrammarReport.java b/tool/src/main/java/org/antlr/tool/GrammarReport.java
+index b3bd1e5..de2eff4 100644
+--- a/tool/src/main/java/org/antlr/tool/GrammarReport.java
++++ b/tool/src/main/java/org/antlr/tool/GrammarReport.java
+@@ -257,7 +257,7 @@ public class GrammarReport {
+*  send to the notify page at antlr.org
+*/
+public String toNotifyString() {
+-		StringBuffer buf = new StringBuffer();
++		StringBuilder buf = new StringBuilder();
+ReportData data = getReportData(grammar);
+Field[] fields = ReportData.class.getDeclaredFields();
+int i = 0;
+@@ -277,7 +277,7 @@ public class GrammarReport {
+}
+
+public String getBacktrackingReport() {
+-		StringBuffer buf = new StringBuffer();
++		StringBuilder buf = new StringBuilder();
+buf.append("Backtracking report:");
+buf.append(newline);
+buf.append("Number of decisions that backtrack: ");
+@@ -289,7 +289,7 @@ public class GrammarReport {
+
+protected String getDFALocations(Set<DFA> dfas) {
+Set<Integer> decisions = new HashSet<Integer>();
+-		StringBuffer buf = new StringBuffer();
++		StringBuilder buf = new StringBuilder();
+Iterator<DFA> it = dfas.iterator();
+while ( it.hasNext() ) {
+DFA dfa = (DFA) it.next();
+@@ -351,7 +351,7 @@ public class GrammarReport {
+if ( data ==null ) {
+return null;
+}
+-		StringBuffer buf = new StringBuffer();
++		StringBuilder buf = new StringBuilder();
+buf.append("ANTLR Grammar Report; Stats Version ");
+buf.append(data.version);
+buf.append('\n');
+diff --git a/tool/src/main/java/org/antlr/tool/GrammarReport2.java b/tool/src/main/java/org/antlr/tool/GrammarReport2.java
+index d068dfd..409273d 100644
+--- a/tool/src/main/java/org/antlr/tool/GrammarReport2.java
++++ b/tool/src/main/java/org/antlr/tool/GrammarReport2.java
+@@ -65,17 +65,17 @@ public class GrammarReport2 {
+int k = d.dfa.getMaxLookaheadDepth();
+Rule enclosingRule = d.dfa.decisionNFAStartState.enclosingRule;
+if ( enclosingRule.isSynPred ) continue; // don't count synpred rules
+-			buf.append(g.name+"."+enclosingRule.name+":" +
++			buf.append(g.name).append(".").append(enclosingRule.name).append(":" +
+"");
+GrammarAST decisionAST =
+d.dfa.decisionNFAStartState.associatedASTNode;
+buf.append(decisionAST.getLine());
+buf.append(":");
+buf.append(decisionAST.getCharPositionInLine());
+-			buf.append(" decision "+decision+":");
++			buf.append(" decision ").append(decision).append(":");
+
+if ( d.dfa.isCyclic() ) buf.append(" cyclic");
+-			if ( k!=Integer.MAX_VALUE ) buf.append(" k="+k); // fixed, no sempreds
++			if ( k!=Integer.MAX_VALUE ) buf.append(" k=").append(k); // fixed, no sempreds
+if ( d.dfa.hasSynPred() ) buf.append(" backtracks"); // isolated synpred not gated
+if ( d.dfa.hasSemPred() ) buf.append(" sempred"); // user-defined sempred
+//			else {
+diff --git a/tool/src/main/java/org/antlr/tool/GrammarSpelunker.java b/tool/src/main/java/org/antlr/tool/GrammarSpelunker.java
+index 6e6a83d..4b5314b 100644
+--- a/tool/src/main/java/org/antlr/tool/GrammarSpelunker.java
++++ b/tool/src/main/java/org/antlr/tool/GrammarSpelunker.java
+@@ -189,19 +189,19 @@ public class GrammarSpelunker {
+
+/** NAME : LETTER+ ; // NAME is sequence of >=1 letter */
+String ID() throws IOException {
+-            StringBuffer buf = new StringBuffer();
++            StringBuilder buf = new StringBuilder();
+while ( c!=EOF && isID_LETTER() ) { buf.append((char)c); consume(); }
+return buf.toString();
+}
+
+String INT() throws IOException {
+-            StringBuffer buf = new StringBuffer();
++            StringBuilder buf = new StringBuilder();
+while ( c!=EOF && isDIGIT() ) { buf.append((char)c); consume(); }
+return buf.toString();
+}
+
+String STRING() throws IOException {
+-            StringBuffer buf = new StringBuffer();
++            StringBuilder buf = new StringBuilder();
+consume();
+while ( c!=EOF && c!='\'' ) {
+if ( c=='\\' ) {
+diff --git a/tool/src/test/java/org/antlr/test/BaseTest.java b/tool/src/test/java/org/antlr/test/BaseTest.java
+index 6446927..a4349ab 100644
+--- a/tool/src/test/java/org/antlr/test/BaseTest.java
++++ b/tool/src/test/java/org/antlr/test/BaseTest.java
+@@ -850,7 +850,7 @@ public abstract class BaseTest {
+String lines[] = s.split("\n");
+Arrays.sort(lines);
+List<String> linesL = Arrays.asList(lines);
+-        StringBuffer buf = new StringBuffer();
++        StringBuilder buf = new StringBuilder();
+for (String l : linesL) {
+buf.append(l);
+buf.append('\n');
+diff --git a/tool/src/test/java/org/antlr/test/TestDFAConversion.java b/tool/src/test/java/org/antlr/test/TestDFAConversion.java
+index b4978ad..ce3502f 100644
+--- a/tool/src/test/java/org/antlr/test/TestDFAConversion.java
++++ b/tool/src/test/java/org/antlr/test/TestDFAConversion.java
+@@ -1759,7 +1759,7 @@ As a result, alternative(s) 2 were disabled for that input
+}
+
+protected String str(int[] elements) {
+-		StringBuffer buf = new StringBuffer();
++		StringBuilder buf = new StringBuilder();
+for (int i = 0; i < elements.length; i++) {
+if ( i>0 ) {
+buf.append(", ");
+diff --git a/tool/src/test/java/org/antlr/test/TestFastQueue.java b/tool/src/test/java/org/antlr/test/TestFastQueue.java
+index 9a3c717..ff8aed1 100644
+--- a/tool/src/test/java/org/antlr/test/TestFastQueue.java
++++ b/tool/src/test/java/org/antlr/test/TestFastQueue.java
+@@ -54,7 +54,7 @@ public class TestFastQueue {
+q.add("c");
+q.add("d");
+q.add("e");
+-        StringBuffer buf = new StringBuffer();
++        StringBuilder buf = new StringBuilder();
+while ( q.size()>0 ) {
+String o = q.remove();
+buf.append(o);
+@@ -67,7 +67,7 @@ public class TestFastQueue {
+}
+
+@Test public void testQueueThenRemoveOneByOne() throws Exception {
+-        StringBuffer buf = new StringBuffer();
++        StringBuilder buf = new StringBuilder();
+FastQueue<String> q = new FastQueue<String>();
+q.add("a");
+buf.append(q.remove());
+diff --git a/tool/src/test/java/org/antlr/test/TestSemanticPredicates.java b/tool/src/test/java/org/antlr/test/TestSemanticPredicates.java
+index 1a900b7..707b99c 100644
+--- a/tool/src/test/java/org/antlr/test/TestSemanticPredicates.java
++++ b/tool/src/test/java/org/antlr/test/TestSemanticPredicates.java
+@@ -920,7 +920,7 @@ public class TestSemanticPredicates extends BaseTest {
+}
+
+protected String str(int[] elements) {
+-		StringBuffer buf = new StringBuffer();
++		StringBuilder buf = new StringBuilder();
+for (int i = 0; i < elements.length; i++) {
+if ( i>0 ) {
+buf.append(", ");
+diff --git a/tool/src/test/java/org/antlr/test/TestTreeNodeStream.java b/tool/src/test/java/org/antlr/test/TestTreeNodeStream.java
+index 747fc3a..004d23b 100644
+--- a/tool/src/test/java/org/antlr/test/TestTreeNodeStream.java
++++ b/tool/src/test/java/org/antlr/test/TestTreeNodeStream.java
+@@ -359,7 +359,7 @@ public class TestTreeNodeStream extends BaseTest {
+
+public String toNodesOnlyString(TreeNodeStream nodes) {
+TreeAdaptor adaptor = nodes.getTreeAdaptor();
+-		StringBuffer buf = new StringBuffer();
++		StringBuilder buf = new StringBuilder();
+Object o = nodes.LT(1);
+int type = adaptor.getType(o);
+while ( o!=null && type!=Token.EOF ) {
+

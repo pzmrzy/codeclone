@@ -1,0 +1,12 @@
+commit 0fda2464366922704fdfd52d577170352dd43f05
+Author:     Alan Condit <acondit@ipns.com>
+AuthorDate: Wed Apr 4 11:15:30 2012 -0700
+Commit:     Alan Condit <acondit@ipns.com>
+CommitDate: Wed Apr 4 11:15:30 2012 -0700
+
+Latest Binary ANTLR.framework to match latest changes.
+
+diff --git a/runtime/ObjC/ANTLR.framework.zip b/runtime/ObjC/ANTLR.framework.zip
+index e119b47..d1cf845 100644
+Binary files a/runtime/ObjC/ANTLR.framework.zip and b/runtime/ObjC/ANTLR.framework.zip differ
+

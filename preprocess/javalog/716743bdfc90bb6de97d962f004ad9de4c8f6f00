@@ -1,0 +1,35 @@
+commit 716743bdfc90bb6de97d962f004ad9de4c8f6f00
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Mon Dec 3 12:08:30 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Mon Dec 3 12:08:30 2012 -0600
+
+Shaded jar is antlr-3.5-complete.jar, and needs to include all of the v3 runtime and StringTemplate 3
+
+diff --git a/tool/pom.xml b/tool/pom.xml
+index dd48499..12343f8 100644
+--- a/tool/pom.xml
++++ b/tool/pom.xml
+@@ -72,6 +72,21 @@
+<createDependencyReducedPom>false</createDependencyReducedPom>
+<shadedArtifactAttached>true</shadedArtifactAttached>
+<createSourcesJar>true</createSourcesJar>
++                            <shadedClassifierName>complete</shadedClassifierName>
++                            <filters>
++                                <filter>
++                                    <artifact>org.antlr:antlr-runtime</artifact>
++                                    <includes>
++                                        <include>org/antlr/runtime/**</include>
++                                    </includes>
++                                </filter>
++                                <filter>
++                                    <artifact>org.antlr:stringtemplate</artifact>
++                                    <includes>
++                                        <include>org/antlr/stringtemplate/**</include>
++                                    </includes>
++                                </filter>
++                            </filters>
+<transformers>
+<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+<mainClass>org.antlr.Tool</mainClass>
+

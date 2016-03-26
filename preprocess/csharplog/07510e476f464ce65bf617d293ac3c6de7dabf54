@@ -1,0 +1,37 @@
+commit 07510e476f464ce65bf617d293ac3c6de7dabf54
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sun Nov 21 00:32:19 2010 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sun Nov 21 00:32:19 2010 -0800
+
+(C# 3) Changed comments (CL6920, 6923)
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7088]
+
+diff --git a/Antlr3/Analysis/DFAState.cs b/Antlr3/Analysis/DFAState.cs
+index ced758e..f0f6656 100644
+--- a/Antlr3/Analysis/DFAState.cs
++++ b/Antlr3/Analysis/DFAState.cs
+@@ -875,7 +875,7 @@ namespace Antlr3.Analysis
+else if ( acceptState || !configuration.semanticContext.IsSyntacticPredicate )
+{
+// at this point we have a gated predicate and, due to elseif,
+-                    // we know it's an accept and not a syn pred.  In this case,
++                    // we know it's an accept or not a syn pred.  In this case,
+// it's safe to add the gated predicate to the union.  We
+// only want to add syn preds if it's an accept state.  Other
+// gated preds can be used with edges leading to accept states.
+diff --git a/Antlr3/Analysis/NFAtoDFAConverter.cs b/Antlr3/Analysis/NFAtoDFAConverter.cs
+index f63c47a..a71ae6a 100644
+--- a/Antlr3/Analysis/NFAtoDFAConverter.cs
++++ b/Antlr3/Analysis/NFAtoDFAConverter.cs
+@@ -680,7 +680,7 @@ namespace Antlr3.Analysis
+{
+int depth = context.RecursionDepthEmanatingFromState( p.stateNumber );
+// Detect recursion by more than a single alt, which indicates
+-                // that the decision's lookahead language is non-regular; terminate
++                // that the decision's lookahead language is potentially non-regular; terminate
+if ( depth == 1 && d.dfa.UserMaxLookahead == 0 )
+{ // k=* only
+d.dfa.recursiveAltSet.Add( alt ); // indicate that this alt is recursive
+

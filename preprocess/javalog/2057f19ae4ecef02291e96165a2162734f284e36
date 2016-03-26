@@ -1,0 +1,358 @@
+commit 2057f19ae4ecef02291e96165a2162734f284e36
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Wed Dec 12 01:34:51 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Wed Dec 12 01:41:12 2012 -0600
+
+Fix template warnings: no such property null.node
+
+diff --git a/tool/src/main/antlr3/org/antlr/grammar/v3/CodeGenTreeWalker.g b/tool/src/main/antlr3/org/antlr/grammar/v3/CodeGenTreeWalker.g
+index 54a5ffb..1c556b0 100644
+--- a/tool/src/main/antlr3/org/antlr/grammar/v3/CodeGenTreeWalker.g
++++ b/tool/src/main/antlr3/org/antlr/grammar/v3/CodeGenTreeWalker.g
+@@ -1456,7 +1456,9 @@ rewrite_atom[boolean isRoot] returns [ST code=null]
+stName += "Root";
+}
+$code = templates.getInstanceOf(stName);
+-			$code.add("terminalOptions",term.terminalOptions);
++			if (term.terminalOptions != null) {
++				$code.add("terminalOptions",term.terminalOptions);
++			}
+if ( $arg!=null )
+{
+List<? extends Object> args = generator.translateAction(currentRuleName,$arg);
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Java/AST.stg b/tool/src/main/resources/org/antlr/codegen/templates/Java/AST.stg
+index dbbef3a..78f918b 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Java/AST.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Java/AST.stg
+@@ -99,7 +99,7 @@ root_0 = (<ASTLabelType>)adaptor.nil();<\n>
+// T r a c k i n g  R u l e  E l e m e n t s
+
+/** ID and track it for use in a rewrite rule */
+-tokenRefTrack(token,label,elementIndex,terminalOptions) ::= <<
++tokenRefTrack(token,label,elementIndex,terminalOptions={}) ::= <<
+<tokenRefBang(...)> <! Track implies no auto AST construction!>
+<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) <endif>stream_<token>.add(<label>);<\n>
+>>
+@@ -107,19 +107,19 @@ tokenRefTrack(token,label,elementIndex,terminalOptions) ::= <<
+/** ids+=ID and track it for use in a rewrite rule; adds to ids *and*
+*  to the tracking list stream_ID for use in the rewrite.
+*/
+-tokenRefTrackAndListLabel(token,label,elementIndex,terminalOptions) ::= <<
++tokenRefTrackAndListLabel(token,label,elementIndex,terminalOptions={}) ::= <<
+<tokenRefTrack(...)>
+<listLabel(elem=label, ...)>
+>>
+
+/** ^(ID ...) track for rewrite */
+-tokenRefRuleRootTrack(token,label,elementIndex,terminalOptions) ::= <<
++tokenRefRuleRootTrack(token,label,elementIndex,terminalOptions={}) ::= <<
+<tokenRefBang(...)>
+<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) <endif>stream_<token>.add(<label>);<\n>
+>>
+
+/** Match ^(label+=TOKEN ...) track for rewrite */
+-tokenRefRuleRootTrackAndListLabel(token,label,elementIndex,terminalOptions) ::= <<
++tokenRefRuleRootTrackAndListLabel(token,label,elementIndex,terminalOptions={}) ::= <<
+<tokenRefRuleRootTrack(...)>
+<listLabel(elem=label, ...)>
+>>
+@@ -304,7 +304,7 @@ rewriteElement(e) ::= <<
+>>
+
+/** Gen ID or ID[args] */
+-rewriteTokenRef(token,elementIndex,terminalOptions,args) ::= <<
++rewriteTokenRef(token,elementIndex,args,terminalOptions={}) ::= <<
+adaptor.addChild(root_<treeLevel>, <createRewriteNodeFromElement(...)>);<\n>
+>>
+
+@@ -327,16 +327,16 @@ root_<treeLevel> = (<ASTLabelType>)adaptor.becomeRoot(stream_<label>.nextNode(),
+rewriteTokenListLabelRefRoot ::= rewriteTokenLabelRefRoot
+
+/** Gen ^(ID ...) or ^(ID[args] ...) */
+-rewriteTokenRefRoot(token,elementIndex,terminalOptions,args) ::= <<
++rewriteTokenRefRoot(token,elementIndex,args,terminalOptions={}) ::= <<
+root_<treeLevel> = (<ASTLabelType>)adaptor.becomeRoot(<createRewriteNodeFromElement(...)>, root_<treeLevel>);<\n>
+>>
+
+-rewriteImaginaryTokenRef(args,token,terminalOptions,elementIndex) ::= <<
+-adaptor.addChild(root_<treeLevel>, <createImaginaryNode(token,terminalOptions,args)>);<\n>
++rewriteImaginaryTokenRef(args,token,elementIndex,terminalOptions={}) ::= <<
++adaptor.addChild(root_<treeLevel>, <createImaginaryNode(token,args,terminalOptions)>);<\n>
+>>
+
+-rewriteImaginaryTokenRefRoot(args,token,terminalOptions,elementIndex) ::= <<
+-root_<treeLevel> = (<ASTLabelType>)adaptor.becomeRoot(<createImaginaryNode(token,terminalOptions,args)>, root_<treeLevel>);<\n>
++rewriteImaginaryTokenRefRoot(args,token,elementIndex,terminalOptions={}) ::= <<
++root_<treeLevel> = (<ASTLabelType>)adaptor.becomeRoot(<createImaginaryNode(token,args,terminalOptions)>, root_<treeLevel>);<\n>
+>>
+
+/** plain -> {foo} action */
+@@ -392,7 +392,7 @@ adaptor.addChild(root_<treeLevel>, stream_<label>.nextTree());<\n>
+>>
+
+
+-createImaginaryNode(tokenType,terminalOptions,args) ::= <<
++createImaginaryNode(tokenType,args,terminalOptions={}) ::= <<
+<if(terminalOptions.node)>
+<! new MethodNode(IDLabel, args) !>
+new <terminalOptions.node>(<tokenType><if(args)>, <args; separator=", "><endif>)
+@@ -401,7 +401,7 @@ new <terminalOptions.node>(<tokenType><if(args)>, <args; separator=", "><endif>)
+<endif>
+>>
+
+-createRewriteNodeFromElement(token,terminalOptions,args) ::= <<
++createRewriteNodeFromElement(token,args,terminalOptions={}) ::= <<
+<if(terminalOptions.node)>
+new <terminalOptions.node>(stream_<token>.nextToken()<if(args)>, <args; separator=", "><endif>)
+<else>
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Java/ASTParser.stg b/tool/src/main/resources/org/antlr/codegen/templates/Java/ASTParser.stg
+index 39987ed..1c322b5 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Java/ASTParser.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Java/ASTParser.stg
+@@ -46,7 +46,7 @@ retval.tree = (<ASTLabelType>)adaptor.errorNode(input, retval.start, input.LT(-1
+// TOKEN AST STUFF
+
+/** ID and output=AST */
+-tokenRef(token,label,elementIndex,terminalOptions) ::= <<
++tokenRef(token,label,elementIndex,terminalOptions={}) ::= <<
+<super.tokenRef(...)>
+<if(!ruleDescriptor.isSynPred)>
+<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) {<endif>
+@@ -57,10 +57,10 @@ adaptor.addChild(root_0, <label>_tree);
+>>
+
+/** ID! and output=AST (same as plain tokenRef) */
+-tokenRefBang(token,label,elementIndex,terminalOptions) ::= "<super.tokenRef(...)>"
++tokenRefBang(token,label,elementIndex,terminalOptions={}) ::= "<super.tokenRef(...)>"
+
+/** ID^ and output=AST */
+-tokenRefRuleRoot(token,label,elementIndex,terminalOptions) ::= <<
++tokenRefRuleRoot(token,label,elementIndex,terminalOptions={}) ::= <<
+<super.tokenRef(...)>
+<if(!ruleDescriptor.isSynPred)>
+<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) {<endif>
+@@ -71,19 +71,19 @@ root_0 = (<ASTLabelType>)adaptor.becomeRoot(<label>_tree, root_0);
+>>
+
+/** ids+=ID! and output=AST */
+-tokenRefBangAndListLabel(token,label,elementIndex,terminalOptions) ::= <<
++tokenRefBangAndListLabel(token,label,elementIndex,terminalOptions={}) ::= <<
+<tokenRefBang(...)>
+<listLabel(elem=label, ...)>
+>>
+
+/** label+=TOKEN when output=AST but not rewrite alt */
+-tokenRefAndListLabel(token,label,elementIndex,terminalOptions) ::= <<
++tokenRefAndListLabel(token,label,elementIndex,terminalOptions={}) ::= <<
+<tokenRef(...)>
+<listLabel(elem=label, ...)>
+>>
+
+/** Match label+=TOKEN^ when output=AST but not rewrite alt */
+-tokenRefRuleRootAndListLabel(token,label,terminalOptions,elementIndex) ::= <<
++tokenRefRuleRootAndListLabel(token,label,elementIndex,terminalOptions={}) ::= <<
+<tokenRefRuleRoot(...)>
+<listLabel(elem=label, ...)>
+>>
+@@ -101,20 +101,20 @@ tokenRefRuleRootAndListLabel(token,label,terminalOptions,elementIndex) ::= <<
+// rather than just added on code.  Investigate that refactoring when
+// I have more time.
+
+-matchSet(s,label,terminalOptions,elementIndex,postmatchCode) ::= <%
++matchSet(s,label,elementIndex,postmatchCode,terminalOptions={}) ::= <%
+<super.matchSet(postmatchCode={<if(!ruleDescriptor.isSynPred)><if(backtracking)>if ( <actions.(actionScope).synpredgate> ) <endif>adaptor.addChild(root_0, <createNodeFromToken(...)>);<endif>}, ...)>
+%>
+
+-matchRuleBlockSet(s,label,terminalOptions,elementIndex,postmatchCode,treeLevel="0") ::= <<
++matchRuleBlockSet(s,label,elementIndex,postmatchCode,treeLevel="0",terminalOptions={}) ::= <<
+<matchSet(...)>
+>>
+
+-matchSetBang(s,label,elementIndex,terminalOptions,postmatchCode) ::= "<super.matchSet(...)>"
++matchSetBang(s,label,elementIndex,postmatchCode,terminalOptions={}) ::= "<super.matchSet(...)>"
+
+// note there is no matchSetTrack because -> rewrites force sets to be
+// plain old blocks of alts: (A|B|...|C)
+
+-matchSetRuleRoot(s,label,terminalOptions,elementIndex,debug) ::= <<
++matchSetRuleRoot(s,label,elementIndex,debug,terminalOptions={}) ::= <<
+<if(label)>
+<label>=(<labelType>)input.LT(1);
+<endif>
+@@ -160,7 +160,7 @@ ruleRefRuleRootAndListLabel(rule,label,elementIndex,args,scope) ::= <<
+
+// WILDCARD AST
+
+-wildcard(token,label,elementIndex,terminalOptions) ::= <<
++wildcard(token,label,elementIndex,terminalOptions={}) ::= <<
+<super.wildcard(...)>
+<if(!ruleDescriptor.isSynPred)>
+<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) {<endif>
+@@ -172,7 +172,7 @@ adaptor.addChild(root_0, <label>_tree);
+
+wildcardBang(label,elementIndex) ::= "<super.wildcard(token=[],...)>"
+
+-wildcardRuleRoot(token,label,elementIndex,terminalOptions) ::= <<
++wildcardRuleRoot(token,label,elementIndex,terminalOptions={}) ::= <<
+<super.wildcard(...)>
+<if(!ruleDescriptor.isSynPred)>
+<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) {<endif>
+@@ -182,7 +182,7 @@ root_0 = (<ASTLabelType>)adaptor.becomeRoot(<label>_tree, root_0);
+<endif>
+>>
+
+-createNodeFromToken(label,terminalOptions) ::= <<
++createNodeFromToken(label,terminalOptions={}) ::= <<
+<if(terminalOptions.node)>
+new <terminalOptions.node>(<label>) <! new MethodNode(IDLabel) !>
+<else>
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Java/ASTTreeParser.stg b/tool/src/main/resources/org/antlr/codegen/templates/Java/ASTTreeParser.stg
+index 8d485c7..a314f28 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Java/ASTTreeParser.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Java/ASTTreeParser.stg
+@@ -111,7 +111,7 @@ _last = _save_last_<treeLevel>;
+/** ID! and output=AST (same as plain tokenRef) 'cept add
+*  setting of _last
+*/
+-tokenRefBang(token,label,elementIndex,terminalOptions) ::= <<
++tokenRefBang(token,label,elementIndex,terminalOptions={}) ::= <<
+<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.tokenRef(...)>
+@@ -121,7 +121,7 @@ _last = (<ASTLabelType>)input.LT(1);
+>>
+
+/** ID auto construct */
+-tokenRef(token,label,elementIndex,terminalOptions) ::= <<
++tokenRef(token,label,elementIndex,terminalOptions={}) ::= <<
+<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.tokenRef(...)>
+@@ -144,7 +144,7 @@ if ( _first_<treeLevel>==null ) _first_<treeLevel> = <label>;
+>>
+
+/** label+=TOKEN auto construct */
+-tokenRefAndListLabel(token,label,elementIndex,terminalOptions) ::= <<
++tokenRefAndListLabel(token,label,elementIndex,terminalOptions={}) ::= <<
+<if(!ruleDescriptor.isSynPred)>
+<tokenRef(...)>
+<listLabel(elem=label,...)>
+@@ -154,7 +154,7 @@ tokenRefAndListLabel(token,label,elementIndex,terminalOptions) ::= <<
+>>
+
+/** ^(ID ...) auto construct */
+-tokenRefRuleRoot(token,label,elementIndex,terminalOptions) ::= <<
++tokenRefRuleRoot(token,label,elementIndex,terminalOptions={}) ::= <<
+<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.tokenRef(...)>
+@@ -174,7 +174,7 @@ root_<treeLevel> = (<ASTLabelType>)adaptor.becomeRoot(<label>_tree, root_<treeLe
+>>
+
+/** Match ^(label+=TOKEN ...) auto construct */
+-tokenRefRuleRootAndListLabel(token,label,elementIndex,terminalOptions) ::= <<
++tokenRefRuleRootAndListLabel(token,label,elementIndex,terminalOptions={}) ::= <<
+<if(!ruleDescriptor.isSynPred)>
+<tokenRefRuleRoot(...)>
+<listLabel(elem=label,...)>
+@@ -184,7 +184,7 @@ tokenRefRuleRootAndListLabel(token,label,elementIndex,terminalOptions) ::= <<
+>>
+
+/** Match . wildcard and auto dup the node/subtree */
+-wildcard(token,label,elementIndex,terminalOptions) ::= <<
++wildcard(token,label,elementIndex,terminalOptions={}) ::= <<
+<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.wildcard(...)>
+@@ -204,7 +204,7 @@ if ( _first_<treeLevel>==null ) _first_<treeLevel> = <label>;
+
+// SET AST
+
+-matchSet(s,label,terminalOptions,elementIndex,postmatchCode) ::= <<
++matchSet(s,label,elementIndex,postmatchCode,terminalOptions={}) ::= <<
+<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.matchSet(postmatchCode={
+@@ -225,7 +225,7 @@ adaptor.addChild(root_<treeLevel>, <label>_tree);
+<endif>
+>>
+
+-matchRuleBlockSet(s,label,terminalOptions,elementIndex,postmatchCode,treeLevel="0") ::= <<
++matchRuleBlockSet(s,label,elementIndex,postmatchCode,treeLevel="0",terminalOptions={}) ::= <<
+<if(!ruleDescriptor.isSynPred)>
+<matchSet(...)>
+<noRewrite(...)> <! set return tree !>
+@@ -234,7 +234,7 @@ matchRuleBlockSet(s,label,terminalOptions,elementIndex,postmatchCode,treeLevel="
+<endif>
+>>
+
+-matchSetBang(s,label,terminalOptions,elementIndex,postmatchCode) ::= <<
++matchSetBang(s,label,elementIndex,postmatchCode,terminalOptions={}) ::= <<
+<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.matchSet(...)>
+@@ -243,7 +243,7 @@ _last = (<ASTLabelType>)input.LT(1);
+<endif>
+>>
+
+-matchSetRuleRoot(s,label,terminalOptions,elementIndex,debug) ::= <<
++matchSetRuleRoot(s,label,elementIndex,debug,terminalOptions={}) ::= <<
+<if(!ruleDescriptor.isSynPred)>
+<super.matchSet(postmatchCode={
+<if(!rewriteMode)>
+@@ -353,7 +353,7 @@ _last = (<ASTLabelType>)input.LT(1);
+/** Streams for token refs are tree nodes now; override to
+*  change nextToken to nextNode.
+*/
+-createRewriteNodeFromElement(token,terminalOptions,args) ::= <<
++createRewriteNodeFromElement(token,args,terminalOptions={}) ::= <<
+<if(terminalOptions.node)>
+new <terminalOptions.node>(stream_<token>.nextNode())
+<else>
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg b/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
+index e75ed81..3a6e2ae 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
+@@ -683,12 +683,12 @@ element(e) ::= <<
+>>
+
+/** match a token optionally with a label in front */
+-tokenRef(token,label,elementIndex,terminalOptions) ::= <<
++tokenRef(token,label,elementIndex,terminalOptions={}) ::= <<
+<if(label)><label>=(<labelType>)<endif>match(input,<token>,FOLLOW_<token>_in_<ruleName><elementIndex>); <checkRuleBacktrackFailure()>
+>>
+
+/** ids+=ID */
+-tokenRefAndListLabel(token,label,elementIndex,terminalOptions) ::= <<
++tokenRefAndListLabel(token,label,elementIndex,terminalOptions={}) ::= <<
+<tokenRef(token,label,elementIndex,terminalOptions)>
+<listLabel(label, label)>
+>>
+@@ -715,7 +715,7 @@ matchRange(<a>,<b>); <checkRuleBacktrackFailure()>
+>>
+
+/** For now, sets are interval tests and must be tested inline */
+-matchSet(s,label,elementIndex,terminalOptions,postmatchCode="") ::= <<
++matchSet(s,label,elementIndex,postmatchCode="",terminalOptions={}) ::= <<
+<if(label)>
+<if(LEXER)>
+<label>= input.LA(1);
+@@ -769,14 +769,14 @@ match(<string>); <checkRuleBacktrackFailure()>
+<endif>
+>>
+
+-wildcard(token,label,elementIndex,terminalOptions) ::= <<
++wildcard(token,label,elementIndex,terminalOptions={}) ::= <<
+<if(label)>
+<label>=(<labelType>)input.LT(1);
+<endif>
+matchAny(input); <checkRuleBacktrackFailure()>
+>>
+
+-wildcardAndListLabel(token,label,elementIndex,terminalOptions) ::= <<
++wildcardAndListLabel(token,label,elementIndex,terminalOptions={}) ::= <<
+<wildcard(...)>
+<listLabel(label, label)>
+>>
+

@@ -1,0 +1,22 @@
+commit e94e4ab583e33fd3996164028c3cfbc8b194fd60
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Wed Dec 12 01:31:56 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Wed Dec 12 01:41:10 2012 -0600
+
+Fix template warning: could not pass through attribute 'rewriteBlockLevel'
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Java/ASTTreeParser.stg b/tool/src/main/resources/org/antlr/codegen/templates/Java/ASTTreeParser.stg
+index 46ffbec..8d485c7 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Java/ASTTreeParser.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Java/ASTTreeParser.stg
+@@ -50,7 +50,7 @@ ruleDeclarations() ::= <<
+/** What to emit when there is no rewrite rule.  For auto build
+*  mode, does nothing.
+*/
+-noRewrite(rewriteBlockLevel, treeLevel) ::= <<
++noRewrite(rewriteBlockLevel=false, treeLevel=false) ::= <<
+<if(!ruleDescriptor.isSynPred)>
+<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) {<endif>
+<if(rewriteMode)>
+

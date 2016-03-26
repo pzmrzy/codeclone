@@ -1,0 +1,30 @@
+commit a2a0eb5ff302476a43112d616de6747f44cbc644
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Wed Jan 30 14:52:52 2013 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Wed Jan 30 14:52:52 2013 -0600
+
+Remove old line from Antlr3.targets, update build task assembly reference version
+
+diff --git a/AntlrBuildTask/Antlr3.targets b/AntlrBuildTask/Antlr3.targets
+index 34cdc48..fb07c0d 100644
+--- a/AntlrBuildTask/Antlr3.targets
++++ b/AntlrBuildTask/Antlr3.targets
+@@ -28,7 +28,7 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<PropertyGroup>
+<BuildSystem>MSBuild</BuildSystem>
+-    <TaskVersion>3.3.0.7239</TaskVersion>
++    <TaskVersion>3.5.0.0</TaskVersion>
+<TaskKeyToken>eb42632606e9261f</TaskKeyToken>
+<AntlrBuildTaskAssemblyName Condition="'$(AntlrBuildTaskAssemblyName)'==''">AntlrBuildTask, Version=$(TaskVersion), Culture=neutral, PublicKeyToken=$(TaskKeyToken)</AntlrBuildTaskAssemblyName>
+</PropertyGroup>
+@@ -136,7 +136,6 @@
+ProfileGrammar="%(Antlr3.ProfileGrammar)">
+
+<Output ItemName="AntlrGeneratedCodeFiles" TaskParameter="GeneratedCodeFiles" />
+-      <!--<Output ItemName="Compile" TaskParameter="GeneratedCodeFiles" />-->
+</AntlrClassGenerationTask>
+
+<WriteLinesToFile
+

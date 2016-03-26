@@ -1,0 +1,28 @@
+commit 3a8e3eacba1c6d73e2bb629ecb13a5b23e9aa76f
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Fri Jul 29 17:37:27 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Fri Jul 29 17:37:27 2011 -0800
+
+(C# 3) Merge CL8839: Reset() for token stream didn't skip initial off-channel tokens
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8939]
+
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime/CommonTokenStream.cs b/runtime/CSharp3/Sources/Antlr3.Runtime/CommonTokenStream.cs
+index a1e4a29..28813cb 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime/CommonTokenStream.cs
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime/CommonTokenStream.cs
+@@ -166,6 +166,12 @@ namespace Antlr.Runtime
+return i;
+}
+
++        public override void Reset()
++        {
++            base.Reset();
++            _p = SkipOffTokenChannels(0);
++        }
++
+protected override void Setup()
+{
+_p = 0;
+

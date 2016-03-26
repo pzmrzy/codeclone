@@ -1,0 +1,11 @@
+commit 8c613273707943792e9f9a6de8672ff7c76b2e1c
+Merge: 9f16ccb 0b13f87
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Tue Mar 25 07:12:04 2014 -0500
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Tue Mar 25 07:12:04 2014 -0500
+
+Merge pull request #155 from sharwell/release/3.5.2
+
+Release/3.5.2
+

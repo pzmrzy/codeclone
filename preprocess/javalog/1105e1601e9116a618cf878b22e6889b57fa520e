@@ -1,0 +1,268 @@
+commit 1105e1601e9116a618cf878b22e6889b57fa520e
+Author:     Zannick <jokeserver@gmail.com>
+AuthorDate: Tue Jun 26 21:32:42 2012 -0700
+Commit:     Zannick <jokeserver@gmail.com>
+CommitDate: Tue Jun 26 23:09:33 2012 -0700
+
+Add LICENSE and update all the years to 2012.
+
+diff --git a/runtime/Python3/LICENSE b/runtime/Python3/LICENSE
+new file mode 100644
+index 0000000..66653dd
+--- /dev/null
++++ b/runtime/Python3/LICENSE
+@@ -0,0 +1,26 @@
++[The "BSD licence"]
++Copyright (c) 2003-2012 Terence Parr
++All rights reserved.
++
++Redistribution and use in source and binary forms, with or without
++modification, are permitted provided that the following conditions
++are met:
++
++ 1. Redistributions of source code must retain the above copyright
++    notice, this list of conditions and the following disclaimer.
++ 2. Redistributions in binary form must reproduce the above copyright
++    notice, this list of conditions and the following disclaimer in the
++    documentation and/or other materials provided with the distribution.
++ 3. The name of the author may not be used to endorse or promote products
++    derived from this software without specific prior written permission.
++
++THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+diff --git a/runtime/Python3/antlr3/__init__.py b/runtime/Python3/antlr3/__init__.py
+index b2458f2..73b215b 100644
+--- a/runtime/Python3/antlr3/__init__.py
++++ b/runtime/Python3/antlr3/__init__.py
+@@ -113,7 +113,7 @@ bug in your grammar, it can only be detected at runtime.
+# TokenSource
+
+# [The "BSD licence"]
+-# Copyright (c) 2005-2008 Terence Parr
++# Copyright (c) 2005-2012 Terence Parr
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+diff --git a/runtime/Python3/antlr3/constants.py b/runtime/Python3/antlr3/constants.py
+index 913c5ce..f0203ee 100644
+--- a/runtime/Python3/antlr3/constants.py
++++ b/runtime/Python3/antlr3/constants.py
+@@ -3,7 +3,7 @@
+# begin[licence]
+#
+# [The "BSD licence"]
+-# Copyright (c) 2005-2008 Terence Parr
++# Copyright (c) 2005-2012 Terence Parr
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+diff --git a/runtime/Python3/antlr3/debug.py b/runtime/Python3/antlr3/debug.py
+index 54ecf7c..c309a36 100644
+--- a/runtime/Python3/antlr3/debug.py
++++ b/runtime/Python3/antlr3/debug.py
+@@ -1,7 +1,7 @@
+# begin[licence]
+#
+#  [The "BSD licence"]
+-#  Copyright (c) 2005-2009 Terence Parr
++#  Copyright (c) 2005-2012 Terence Parr
+#  All rights reserved.
+
+#  Redistribution and use in source and binary forms, with or without
+diff --git a/runtime/Python3/antlr3/dfa.py b/runtime/Python3/antlr3/dfa.py
+index 07fdd5b..95ad15a 100644
+--- a/runtime/Python3/antlr3/dfa.py
++++ b/runtime/Python3/antlr3/dfa.py
+@@ -3,7 +3,7 @@
+# begin[licence]
+#
+# [The "BSD licence"]
+-# Copyright (c) 2005-2008 Terence Parr
++# Copyright (c) 2005-2012 Terence Parr
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+diff --git a/runtime/Python3/antlr3/exceptions.py b/runtime/Python3/antlr3/exceptions.py
+index 901b6e4..78ea441 100644
+--- a/runtime/Python3/antlr3/exceptions.py
++++ b/runtime/Python3/antlr3/exceptions.py
+@@ -3,7 +3,7 @@
+# begin[licence]
+#
+# [The "BSD licence"]
+-# Copyright (c) 2005-2008 Terence Parr
++# Copyright (c) 2005-2012 Terence Parr
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+diff --git a/runtime/Python3/antlr3/main.py b/runtime/Python3/antlr3/main.py
+index d474836..739726b 100644
+--- a/runtime/Python3/antlr3/main.py
++++ b/runtime/Python3/antlr3/main.py
+@@ -3,7 +3,7 @@
+# begin[licence]
+#
+# [The "BSD licence"]
+-# Copyright (c) 2005-2008 Terence Parr
++# Copyright (c) 2005-2012 Terence Parr
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+diff --git a/runtime/Python3/antlr3/recognizers.py b/runtime/Python3/antlr3/recognizers.py
+index 3bb5f7b..3fdb593 100644
+--- a/runtime/Python3/antlr3/recognizers.py
++++ b/runtime/Python3/antlr3/recognizers.py
+@@ -3,7 +3,7 @@
+# begin[licence]
+#
+# [The "BSD licence"]
+-# Copyright (c) 2005-2008 Terence Parr
++# Copyright (c) 2005-2012 Terence Parr
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+diff --git a/runtime/Python3/antlr3/streams.py b/runtime/Python3/antlr3/streams.py
+index e676967..069755b 100644
+--- a/runtime/Python3/antlr3/streams.py
++++ b/runtime/Python3/antlr3/streams.py
+@@ -3,7 +3,7 @@
+# begin[licence]
+#
+# [The "BSD licence"]
+-# Copyright (c) 2005-2008 Terence Parr
++# Copyright (c) 2005-2012 Terence Parr
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+diff --git a/runtime/Python3/antlr3/tokens.py b/runtime/Python3/antlr3/tokens.py
+index 11747af..31a2e93 100644
+--- a/runtime/Python3/antlr3/tokens.py
++++ b/runtime/Python3/antlr3/tokens.py
+@@ -3,7 +3,7 @@
+# begin[licence]
+#
+# [The "BSD licence"]
+-# Copyright (c) 2005-2008 Terence Parr
++# Copyright (c) 2005-2012 Terence Parr
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+diff --git a/runtime/Python3/antlr3/tree.py b/runtime/Python3/antlr3/tree.py
+index ca5754b..eb1509d 100644
+--- a/runtime/Python3/antlr3/tree.py
++++ b/runtime/Python3/antlr3/tree.py
+@@ -8,7 +8,7 @@ This module contains all support classes for AST construction and tree parsers.
+# begin[licence]
+#
+# [The "BSD licence"]
+-# Copyright (c) 2005-2008 Terence Parr
++# Copyright (c) 2005-2012 Terence Parr
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+diff --git a/runtime/Python3/antlr3/treewizard.py b/runtime/Python3/antlr3/treewizard.py
+index dec3a35..0fefe0f 100644
+--- a/runtime/Python3/antlr3/treewizard.py
++++ b/runtime/Python3/antlr3/treewizard.py
+@@ -9,7 +9,7 @@ See <http://www.antlr.org/wiki/display/~admin/2007/07/02/Exploring+Concept+of+Tr
+# begin[licence]
+#
+# [The "BSD licence"]
+-# Copyright (c) 2005-2008 Terence Parr
++# Copyright (c) 2005-2012 Terence Parr
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Python3/AST.stg b/tool/src/main/resources/org/antlr/codegen/templates/Python3/AST.stg
+index eb8537c..1fa9c0d 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Python3/AST.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Python3/AST.stg
+@@ -1,6 +1,6 @@
+/*
+[The "BSD license"]
+- Copyright (c) 2005-2006 Terence Parr
++ Copyright (c) 2005-2012 Terence Parr
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Python3/ASTDbg.stg b/tool/src/main/resources/org/antlr/codegen/templates/Python3/ASTDbg.stg
+index 6b37977..187db39 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Python3/ASTDbg.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Python3/ASTDbg.stg
+@@ -1,6 +1,6 @@
+/*
+[The "BSD license"]
+- Copyright (c) 2005-2009 Terence Parr
++ Copyright (c) 2005-2012 Terence Parr
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Python3/ASTParser.stg b/tool/src/main/resources/org/antlr/codegen/templates/Python3/ASTParser.stg
+index 64ffa68..355de61 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Python3/ASTParser.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Python3/ASTParser.stg
+@@ -1,6 +1,6 @@
+/*
+[The "BSD license"]
+- Copyright (c) 2005-2006 Terence Parr
++ Copyright (c) 2005-2012 Terence Parr
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Python3/ASTTreeParser.stg b/tool/src/main/resources/org/antlr/codegen/templates/Python3/ASTTreeParser.stg
+index 718a55f..258c4cf 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Python3/ASTTreeParser.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Python3/ASTTreeParser.stg
+@@ -1,6 +1,6 @@
+/*
+[The "BSD license"]
+- Copyright (c) 2005-2006 Terence Parr
++ Copyright (c) 2005-2012 Terence Parr
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Python3/Dbg.stg b/tool/src/main/resources/org/antlr/codegen/templates/Python3/Dbg.stg
+index b1e24c4..4892cf4 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Python3/Dbg.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Python3/Dbg.stg
+@@ -1,6 +1,6 @@
+/*
+[The "BSD license"]
+- Copyright (c) 2005-2009 Terence Parr
++ Copyright (c) 2005-2012 Terence Parr
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Python3/Python3.stg b/tool/src/main/resources/org/antlr/codegen/templates/Python3/Python3.stg
+index 108e2c9..97c35ab 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Python3/Python3.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Python3/Python3.stg
+@@ -1,6 +1,6 @@
+/*
+[The "BSD license"]
+- Copyright (c) 2005-2006 Terence Parr
++ Copyright (c) 2005-2012 Terence Parr
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Python3/ST.stg b/tool/src/main/resources/org/antlr/codegen/templates/Python3/ST.stg
+index 56c5e16..718a1bd 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Python3/ST.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Python3/ST.stg
+@@ -1,6 +1,6 @@
+/*
+[The "BSD license"]
+- Copyright (c) 2005-2006 Terence Parr
++ Copyright (c) 2005-2012 Terence Parr
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+

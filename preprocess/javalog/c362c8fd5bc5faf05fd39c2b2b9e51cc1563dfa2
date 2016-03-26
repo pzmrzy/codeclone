@@ -1,0 +1,24 @@
+commit c362c8fd5bc5faf05fd39c2b2b9e51cc1563dfa2
+Author:     Jim Idle <jimi@temporal-wave.com>
+AuthorDate: Fri Jan 27 12:30:07 2012 -0800
+Commit:     Jim Idle <jimi@temporal-wave.com>
+CommitDate: Fri Jan 27 12:30:07 2012 -0800
+
+Correct a typo when referencing global stack macros
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 9913]
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/C/C.stg b/tool/src/main/resources/org/antlr/codegen/templates/C/C.stg
+index 6f4dd0b..2d9cd4c 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/C/C.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/C/C.stg
+@@ -2733,7 +2733,7 @@ void
+// next too far so we don't want to keep freeing and allocating them
+//
+ctx-><scopeStack(sname=scope.name,...)>_limit--;
+-    SCOPE_TOP(<scope.name>) = (<scopeType(sname=scope.name)>)(ctx-><scopeStack(sname=scope.name,...)>->get(ctx-><bscopeStack(sname=scope.name,...)>, ctx-><scopeStack(sname=scope.name,...)>_limit - 1));
++    SCOPE_TOP(<scope.name>) = (<scopeType(sname=scope.name)>)(ctx-><scopeStack(sname=scope.name,...)>->get(ctx-><scopeStack(sname=scope.name,...)>, ctx-><scopeStack(sname=scope.name,...)>_limit - 1));
+}
+<endif>
+>>
+

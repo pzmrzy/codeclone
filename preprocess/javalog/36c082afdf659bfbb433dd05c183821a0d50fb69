@@ -1,0 +1,22 @@
+commit 36c082afdf659bfbb433dd05c183821a0d50fb69
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Tue Dec 4 15:33:36 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Tue Dec 4 15:33:36 2012 -0600
+
+Reference the RC 1 release now that it's synced to maven central
+
+diff --git a/tool/pom.xml b/tool/pom.xml
+index 588acde..bb4a02d 100644
+--- a/tool/pom.xml
++++ b/tool/pom.xml
+@@ -60,7 +60,7 @@
+<plugin>
+<groupId>org.antlr</groupId>
+<artifactId>antlr3-maven-plugin</artifactId>
+-                <version>3.4.1-SNAPSHOT</version>
++                <version>3.5-rc-1</version>
+<configuration>
+<libDirectory>target/generated-sources/antlr/org/antlr/grammar/v3</libDirectory>
+</configuration>
+

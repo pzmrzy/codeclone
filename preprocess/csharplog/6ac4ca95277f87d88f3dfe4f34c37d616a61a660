@@ -1,0 +1,25 @@
+commit 6ac4ca95277f87d88f3dfe4f34c37d616a61a660
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Nov 29 08:05:49 2010 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Nov 29 08:05:49 2010 -0800
+
+(C# 3) Fix synpreds not showing in comments in generated code
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7225]
+
+diff --git a/Antlr3/Grammars/ANTLRTreePrinterHelper.cs b/Antlr3/Grammars/ANTLRTreePrinterHelper.cs
+index b62cc83..a6ade19 100644
+--- a/Antlr3/Grammars/ANTLRTreePrinterHelper.cs
++++ b/Antlr3/Grammars/ANTLRTreePrinterHelper.cs
+@@ -47,7 +47,8 @@ namespace Antlr3.Grammars
+
+public ANTLRTreePrinter.block_return Block( GrammarAST t, bool forceParens )
+{
+-            ANTLRTreePrinter other = new ANTLRTreePrinter( new CommonTreeNodeStream( t ) );
++            ANTLRTreePrinter other = new ANTLRTreePrinter(new CommonTreeNodeStream(t));
++            other.buf = buf;
+return other.block( forceParens );
+}
+public int CountAltsForBlock(GrammarAST t)
+

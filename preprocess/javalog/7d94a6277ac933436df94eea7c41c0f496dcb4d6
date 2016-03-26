@@ -1,0 +1,111 @@
+commit 7d94a6277ac933436df94eea7c41c0f496dcb4d6
+Author:     parrt <parrt@antlr.org>
+AuthorDate: Tue Jun 21 11:03:40 2011 -0800
+Commit:     parrt <parrt@antlr.org>
+CommitDate: Tue Jun 21 11:03:40 2011 -0800
+
+GrammarAST.dupTreeNoActions wasn't stripping actions :O
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8689]
+
+diff --git a/tool/src/main/java/org/antlr/tool/GrammarAST.java b/tool/src/main/java/org/antlr/tool/GrammarAST.java
+index 023c824..420b3b7 100644
+--- a/tool/src/main/java/org/antlr/tool/GrammarAST.java
++++ b/tool/src/main/java/org/antlr/tool/GrammarAST.java
+@@ -471,25 +471,6 @@ public class GrammarAST extends CommonTree {
+return dup(this);
+}
+
+-    private static List<GrammarAST> getChildrenForDupTree(GrammarAST t) {
+-        List<GrammarAST> result = new ArrayList<GrammarAST>();
+-        for (int i = 0; i < t.getChildCount(); i++){
+-            GrammarAST child = (GrammarAST)t.getChild(i);
+-            int ttype = child.getType();
+-            if (ttype == ANTLRParser.REWRITE)
+-                continue;
+-
+-            if (ttype == ANTLRParser.BANG || ttype == ANTLRParser.ROOT) {
+-                for (GrammarAST subchild : getChildrenForDupTree(child))
+-                    result.add(subchild);
+-            } else {
+-                result.add(child);
+-            }
+-        }
+-
+-        return result;
+-    }
+-
+/**Duplicate a tree, assuming this is a root node of a tree--
+* duplicate that node and what's below; ignore siblings of root node.
+*/
+@@ -498,8 +479,29 @@ public class GrammarAST extends CommonTree {
+return null;
+}
+GrammarAST result = (GrammarAST)t.dupNode();
+-		for (GrammarAST subchild : getChildrenForDupTree(t))
++		for (GrammarAST subchild : getChildrenForDupTree(t)) {
+result.addChild(dupTreeNoActions(subchild, result));
++		}
++		return result;
++	}
++
++	private static List<GrammarAST> getChildrenForDupTree(GrammarAST t) {
++		List<GrammarAST> result = new ArrayList<GrammarAST>();
++		for (int i = 0; i < t.getChildCount(); i++){
++			GrammarAST child = (GrammarAST)t.getChild(i);
++			int ttype = child.getType();
++			if (ttype == ANTLRParser.REWRITE || ttype==ANTLRParser.ACTION) {
++				continue;
++			}
++
++			if (ttype == ANTLRParser.BANG || ttype == ANTLRParser.ROOT) {
++				for (GrammarAST subchild : getChildrenForDupTree(child))
++					result.add(subchild);
++			} else {
++				result.add(child);
++			}
++		}
++
+return result;
+}
+
+diff --git a/tool/src/test/java/org/antlr/test/TestAttributes.java b/tool/src/test/java/org/antlr/test/TestAttributes.java
+index 2a2b189..333c89e 100644
+--- a/tool/src/test/java/org/antlr/test/TestAttributes.java
++++ b/tool/src/test/java/org/antlr/test/TestAttributes.java
+@@ -466,6 +466,34 @@ public class TestAttributes extends BaseTest {
+assertEquals("unexpected errors: "+equeue, 0, equeue.errors.size());
+}
+
++	@Test public void testActionNotMovedToSynPred() throws Exception {
++		String action = "$b = true;";
++		String expecting = "retval.b = true;";
++
++		ErrorQueue equeue = new ErrorQueue();
++		ErrorManager.setErrorListener(equeue);
++		Grammar g = new Grammar(
++			"grammar t;\n"+
++			"options {output=AST;}\n" + // push b into retval struct
++			"a returns [boolean b]\n" +
++			"options {backtrack=true;}\n" +
++			"   : 'a' {"+action+"}\n" +
++			"   | 'a'\n" +
++			"   ;\n");
++		Tool antlr = newTool();
++		CodeGenerator generator = new CodeGenerator(antlr, g, "Java");
++		g.setCodeGenerator(generator);
++		generator.genRecognizer(); // forces load of templates
++		ActionTranslator translator =
++			new ActionTranslator(generator,
++				"a",
++				new CommonToken(ANTLRParser.ACTION,action),1);
++		String found =	translator.translate();
++		assertEquals(expecting, found);
++
++		assertEquals("unexpected errors: "+equeue, 0, equeue.errors.size());
++	}
++
+@Test public void testReturnValueWithNumber() throws Exception {
+String action = "$x.i1";
+String expecting = "x";
+

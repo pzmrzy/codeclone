@@ -1,0 +1,194 @@
+commit 58c51fff0d242a7f3fe028944980e2312197909d
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Tue Mar 17 11:16:20 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Tue Mar 17 11:16:20 2009 -0800
+
+C# Port:
+* Small optimizations
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 5908]
+
+diff --git a/Antlr3.StringTemplate/AutoIndentWriter.cs b/Antlr3.StringTemplate/AutoIndentWriter.cs
+index 2016c53..734fe0c 100644
+--- a/Antlr3.StringTemplate/AutoIndentWriter.cs
++++ b/Antlr3.StringTemplate/AutoIndentWriter.cs
+@@ -200,38 +200,66 @@ namespace Antlr3.ST
+/// <exception cref="System.IO.IOException" />
+public virtual int Write( string str )
+{
+-            int n = 0;
+-            int strLength = str.Length;
+-            int newlineLength = _newline.Length;
+-            for ( int i = 0; i < strLength; i++ )
++            if ( string.IsNullOrEmpty( str ) )
++            {
++                return 0;
++            }
++            else if ( str.Contains( '\n' ) || str.Contains( '\r' ) )
+{
+-                char c = str[i];
+-                // found \n or \r\n newline?
+-                if ( c == '\r' || c == '\n' )
++                str = str.Replace( "\r\n", "\n" );
++                str = str.Replace( '\r', '\n' );
++                if ( _indents.Count > 1 )
+{
+-                    _atStartOfLine = true;
+-                    n += newlineLength; // wrote n more char
+-                    _writer.Write( _newline );
+-                    _charPosition = 0;
+-                    // skip an extra char upon \r\n
+-                    if ( ( c == '\r' && ( i + 1 ) < strLength && str[i+1] == '\n' ) )
++                    string[] lines = str.Split( '\n' );
++                    string indent = null;
++                    for ( int i = 0; i < lines.Length; i++ )
++                    {
++                        if ( ( i > 0 || _charPosition == 0 ) && lines[i].Length > 0 )
++                        {
++                            if ( indent == null )
++                            {
++                                indent = string.Join( string.Empty, _indents.ToArray() );
++                                if ( indent.Length == 0 )
++                                    break;
++                            }
++
++                            lines[i] = indent + lines[i];
++                        }
++                    }
++
++                    if ( lines.Length == 1 )
++                    {
++                        str = lines[0];
++                        _charPosition += str.Length;
++                    }
++                    else
+{
+-                        i++; // loop iteration i++ takes care of skipping 2nd char
++                        str = string.Join( _newline, lines );
++                        _charPosition = lines[lines.Length - 1].Length;
+}
+-                    continue;
+}
+-                // normal character
+-                // check to see if we are at the start of a line; need indent if so
+-                if ( _atStartOfLine )
++                else
+{
+-                    n += Indent();
+-                    _atStartOfLine = false;
++                    if ( _newline != "\n" )
++                        str = str.Replace( "\n", _newline );
++                    _charPosition = str.Length - str.LastIndexOf( _newline[_newline.Length - 1] ) - 1;
+}
+-                n++;
+-                _writer.Write( c );
+-                _charPosition++;
+}
+-            return n;
++            else
++            {
++                if ( _charPosition == 0 && _indents.Count > 1 )
++                {
++                    string indent = string.Join( string.Empty, _indents.ToArray() );
++                    str = indent + str;
++                }
++
++                _charPosition += str.Length;
++            }
++
++            Writer.Write( str );
++
++            _atStartOfLine = ( _charPosition == 0 );
++            return str.Length;
+}
+
+/// <exception cref="System.ObjectDisposedException" />
+diff --git a/Antlr3.StringTemplate/Language/ASTExpr.cs b/Antlr3.StringTemplate/Language/ASTExpr.cs
+index a5dc0d6..ff4ad8d 100644
+--- a/Antlr3.StringTemplate/Language/ASTExpr.cs
++++ b/Antlr3.StringTemplate/Language/ASTExpr.cs
+@@ -1319,15 +1319,21 @@ namespace Antlr3.ST.Language
+return i;
+}
+
+-        public virtual object GetOption( string name )
++        public object GetOption( string name )
+{
+object value = null;
+if ( options != null )
+{
+-                value = options.get( name );
+-                if ( (value is string) && (string)value == EMPTY_OPTION )
++                if ( options.TryGetValue( name, out value ) )
+{
+-                    return defaultOptionValues.get( name );
++                    string s = value as string;
++                    if ( s != null && s == EMPTY_OPTION )
++                    {
++                        StringTemplateAST st;
++                        if ( defaultOptionValues.TryGetValue( name, out st ) )
++                            return st;
++                        return null;
++                    }
+}
+}
+return value;
+diff --git a/Antlr3.StringTemplate/StringTemplate.cs b/Antlr3.StringTemplate/StringTemplate.cs
+index 896bbe3..ad2170f 100644
+--- a/Antlr3.StringTemplate/StringTemplate.cs
++++ b/Antlr3.StringTemplate/StringTemplate.cs
+@@ -504,11 +504,11 @@ namespace Antlr3.ST
+{
+get
+{
+-                return GetIsRegion();
++                return _isRegion;
+}
+set
+{
+-                SetIsRegion( value );
++                _isRegion = value;
+}
+}
+
+@@ -1824,16 +1824,6 @@ namespace Antlr3.ST
+return "[" + string.Join( " ", names.ToArray() ) + "]";
+}
+
+-        public virtual bool GetIsRegion()
+-        {
+-            return _isRegion;
+-        }
+-
+-        public virtual void SetIsRegion( bool isRegion )
+-        {
+-            this._isRegion = isRegion;
+-        }
+-
+public virtual void AddRegionName( string name )
+{
+if ( _regions == null )
+diff --git a/Antlr3.StringTemplate/StringTemplateGroup.cs b/Antlr3.StringTemplate/StringTemplateGroup.cs
+index a3a08b6..63e960b 100644
+--- a/Antlr3.StringTemplate/StringTemplateGroup.cs
++++ b/Antlr3.StringTemplate/StringTemplateGroup.cs
+@@ -1043,7 +1043,7 @@ namespace Antlr3.ST
+string mangledName =
+GetMangledRegionName( enclosingTemplateName, regionName );
+StringTemplate regionST = DefineTemplate( mangledName, template );
+-            regionST.SetIsRegion( true );
++            regionST.IsRegion = true;
+regionST.SetRegionDefType( type );
+return regionST;
+}
+@@ -1118,7 +1118,7 @@ namespace Antlr3.ST
+StringTemplate st;
+if ( _templates.TryGetValue( name, out st ) && st != null )
+{
+-                if ( st.GetIsRegion() )
++                if ( st.IsRegion )
+{
+// don't allow redef of @t.r() ::= "..." or <@r>...<@end>
+if ( st.GetRegionDefType() == StringTemplate.REGION_IMPLICIT )
+

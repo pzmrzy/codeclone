@@ -1,0 +1,242 @@
+commit 6a06377decd196d81a66738c6c281ab68e76ab69
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Jan 20 13:35:30 2010 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Jan 20 13:35:30 2010 -0800
+
+C# Port:
+* Merge CL6436
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6580]
+
+diff --git a/Antlr3.Test/Antlr3.Test.csproj b/Antlr3.Test/Antlr3.Test.csproj
+index f97231f..5b28f3a 100644
+--- a/Antlr3.Test/Antlr3.Test.csproj
++++ b/Antlr3.Test/Antlr3.Test.csproj
+@@ -45,7 +45,6 @@
+<Compile Include="JavaRuntimeTestHarness.cs" />
+<Compile Include="Properties\AssemblyInfo.cs" />
+<Compile Include="RuntimeTestHarness.cs" />
+-    <Compile Include="ST4\ErrorBuffer.cs" />
+<Compile Include="ST4\StringTemplateTestBase.cs" />
+<Compile Include="ST4\TestCompiler.cs" />
+<Compile Include="ST4\TestCoreBasics.cs" />
+diff --git a/Antlr3.Test/ST4/ErrorBuffer.cs b/Antlr3.Test/ST4/ErrorBuffer.cs
+deleted file mode 100644
+index 92329f3..0000000
+--- a/Antlr3.Test/ST4/ErrorBuffer.cs
++++ /dev/null
+@@ -1,41 +0,0 @@
+-﻿namespace AntlrUnitTests.ST4
+-{
+-    using System.Collections.Generic;
+-    using StringTemplate;
+-    using StringBuilder = System.Text.StringBuilder;
+-
+-    public class ErrorBuffer : ITemplateErrorListener
+-    {
+-        private List<TemplateMessage> errors = new List<TemplateMessage>();
+-
+-        public void CompileTimeError(TemplateMessage msg)
+-        {
+-            errors.Add(msg);
+-        }
+-
+-        public void RuntimeError(TemplateMessage msg)
+-        {
+-            errors.Add(msg);
+-        }
+-
+-        public void IOError(TemplateMessage msg)
+-        {
+-            errors.Add(msg);
+-        }
+-
+-        public void InternalError(TemplateMessage msg)
+-        {
+-            errors.Add(msg);
+-        }
+-
+-        public override string ToString()
+-        {
+-            StringBuilder buf = new StringBuilder();
+-            foreach (TemplateMessage m in errors)
+-            {
+-                buf.Append(m.ToString());
+-            }
+-            return buf.ToString();
+-        }
+-    }
+-}
+diff --git a/STViz/TemplateVisualizer.xaml.cs b/STViz/TemplateVisualizer.xaml.cs
+index 0acccbd..912529c 100644
+--- a/STViz/TemplateVisualizer.xaml.cs
++++ b/STViz/TemplateVisualizer.xaml.cs
+@@ -46,15 +46,11 @@ namespace STViz
+public partial class TemplateVisualizer : Window
+{
+internal TemplateVisualizer()
+-            : this(CreateDefaultTemplate())
+-        {
+-        }
+-
+-        public TemplateVisualizer(DebugTemplate template)
+{
+InitializeComponent();
+
+StringWriter sw = new StringWriter();
++            var template = CreateDefaultTemplate();
+Interpreter interp = new Interpreter(template.groupThatCreatedThisInstance);
+interp.Exec(new AutoIndentWriter(sw), template);
+IList<InterpEvent> events = interp.Events;
+@@ -64,16 +60,24 @@ namespace STViz
+txtOutput.Document = new FlowDocument(new Paragraph(new Run(text)));
+}
+
++        public TemplateVisualizer(DebugTemplate template, string output, List<InterpEvent> allEvents, List<TemplateMessage> errors)
++        {
++            InitializeComponent();
++
++            templatesTree.Items.Add(new RootEvent(template, 0, output.Length));
++            txtOutput.Document = new FlowDocument(new Paragraph(new Run(output)));
++        }
++
+private static DebugTemplate CreateDefaultTemplate()
+{
+string templates =
+"method(type,name,args,stats) ::= <<\n" +
+-                "public <type> <name>(<args:{a| int <a>}; separator=\", \">) {\n" +
++                "public <type> <ick()> <name>(<args:{a| int <a>}; separator=\", \">) {\n" +
+"    <if(locals)>int locals[<locals>];<endif>\n" +
+"    <stats;separator=\"\\n\">\n" +
+"}\n" +
+">>\n" +
+-                "assign(a,b) ::= \"<a> = <b>;\"\n" +
++                "assign(a,b) ::= \"<a> = <b> <a,b:{foo}>;\"\n" +
+"return(x) ::= <<return <x>;>>\n" +
+"paren(x) ::= \"(<x>)\"\n";
+
+diff --git a/StringTemplate4/BlankTemplate.cs b/StringTemplate4/BlankTemplate.cs
+index 9d052a5..914b1f5 100644
+--- a/StringTemplate4/BlankTemplate.cs
++++ b/StringTemplate4/BlankTemplate.cs
+@@ -33,10 +33,13 @@
+namespace StringTemplate
+{
+using StringTemplate.Compiler;
++    using StringTemplate.Debug;
+using CultureInfo = System.Globalization.CultureInfo;
+
+-    public class BlankTemplate : Template
++    public class BlankTemplate : DebugTemplate
+{
++        // derive from DebugTemplate not just Template in case we're debugging
++
+public BlankTemplate()
+{
+code = new CompiledTemplate();
+diff --git a/StringTemplate4/Compiler/CompiledTemplate.cs b/StringTemplate4/Compiler/CompiledTemplate.cs
+index 6201a8f..97301c5 100644
+--- a/StringTemplate4/Compiler/CompiledTemplate.cs
++++ b/StringTemplate4/Compiler/CompiledTemplate.cs
+@@ -110,13 +110,8 @@ namespace StringTemplate.Compiler
+
+public bool IsSubtemplate
+{
+-            get
+-            {
+-                if (Name == null)
+-                    return false;
+-
+-                return Name.FullName.StartsWith(TemplateName.TemplateDirectorySeparator + StringTemplate.Template.SubtemplatePrefix);
+-            }
++            get;
++            set;
+}
+
+public virtual string Instructions()
+diff --git a/StringTemplate4/Compiler/TemplateCompiler.cs b/StringTemplate4/Compiler/TemplateCompiler.cs
+index f59ba7c..ca40ecb 100644
+--- a/StringTemplate4/Compiler/TemplateCompiler.cs
++++ b/StringTemplate4/Compiler/TemplateCompiler.cs
+@@ -34,11 +34,11 @@ namespace StringTemplate.Compiler
+{
+using System.Collections.Generic;
+using Antlr.Runtime;
++    using ArgumentException = System.ArgumentException;
++    using ArgumentNullException = System.ArgumentNullException;
+using Array = System.Array;
+using Console = System.Console;
+using Math = System.Math;
+-    using ArgumentException = System.ArgumentException;
+-    using ArgumentNullException = System.ArgumentNullException;
+
+/// <summary>
+/// A compiler for a single template
+@@ -261,6 +261,7 @@ namespace StringTemplate.Compiler
+TemplateCompiler c = new TemplateCompiler(templatePathPrefix, enclosingTemplateName);
+CompiledTemplate sub = c.Compile(input, state);
+sub.Name = name;
++            sub.IsSubtemplate = true;
+if (lexer != null)
+{
+stop = lexer.input.Index;
+diff --git a/StringTemplate4/ErrorBuffer.cs b/StringTemplate4/ErrorBuffer.cs
+new file mode 100644
+index 0000000..b9ec984
+--- /dev/null
++++ b/StringTemplate4/ErrorBuffer.cs
+@@ -0,0 +1,40 @@
++﻿namespace StringTemplate
++{
++    using System.Collections.Generic;
++    using StringBuilder = System.Text.StringBuilder;
++
++    public class ErrorBuffer : ITemplateErrorListener
++    {
++        private List<TemplateMessage> errors = new List<TemplateMessage>();
++
++        public void CompileTimeError(TemplateMessage msg)
++        {
++            errors.Add(msg);
++        }
++
++        public void RuntimeError(TemplateMessage msg)
++        {
++            errors.Add(msg);
++        }
++
++        public void IOError(TemplateMessage msg)
++        {
++            errors.Add(msg);
++        }
++
++        public void InternalError(TemplateMessage msg)
++        {
++            errors.Add(msg);
++        }
++
++        public override string ToString()
++        {
++            StringBuilder buf = new StringBuilder();
++            foreach (TemplateMessage m in errors)
++            {
++                buf.Append(m.ToString());
++            }
++            return buf.ToString();
++        }
++    }
++}
+diff --git a/StringTemplate4/StringTemplate4.csproj b/StringTemplate4/StringTemplate4.csproj
+index 5a2dce0..8f1546e 100644
+--- a/StringTemplate4/StringTemplate4.csproj
++++ b/StringTemplate4/StringTemplate4.csproj
+@@ -66,6 +66,7 @@
+<Compile Include="Debug\EvalExprEvent.cs" />
+<Compile Include="Debug\EvalTemplateEvent.cs" />
+<Compile Include="Debug\InterpEvent.cs" />
++    <Compile Include="ErrorBuffer.cs" />
+<Compile Include="ErrorManager.cs" />
+<Compile Include="Compiler\GroupLexerHelper.cs">
+<DependentUpon>Group.g3</DependentUpon>
+

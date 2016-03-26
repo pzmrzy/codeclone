@@ -1,0 +1,249 @@
+commit 9ecdfbe35e03d77d19dcd1442a44107beb70b9fd
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Dec 14 11:10:12 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Dec 14 11:10:12 2009 -0800
+
+C# Port:
+* Merge CL6402
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6511]
+
+diff --git a/Antlr3.Test/ST4/TestDebugEvents.cs b/Antlr3.Test/ST4/TestDebugEvents.cs
+index 7516403..187a05c 100644
+--- a/Antlr3.Test/ST4/TestDebugEvents.cs
++++ b/Antlr3.Test/ST4/TestDebugEvents.cs
+@@ -42,6 +42,8 @@ namespace AntlrUnitTests.ST4
+using STGroupFile = StringTemplate.TemplateGroupFile;
+using String = System.String;
+using StringWriter = System.IO.StringWriter;
++    using Antlr.Runtime.JavaExtensions;
++    using IList = System.Collections.IList;
+
+[TestClass]
+public class TestDebugEvents : StringTemplateTestBase
+@@ -55,14 +57,12 @@ namespace AntlrUnitTests.ST4
+WriteFile(tmpdir, "t.stg", templates);
+STGroup group = new STGroupFile(tmpdir + "/" + "t.stg");
+group.Debug = true;
+-            ST st = group.GetInstanceOf("t");
+-            st.code.Dump();
+-            StringWriter sw = new StringWriter();
+-            Interpreter interp = new Interpreter(group);
+-            interp.Exec(new AutoIndentWriter(sw), st);
+-            String expected = "";
+-            IList<InterpEvent> events = interp.Events;
+-            String result = events.ToString();
++            DebugTemplate template = (DebugTemplate)group.GetInstanceOf("t");
++            IList<InterpEvent> events = template.GetEvents();
++            String expected =
++                "[EvalExprEvent{self=t(),start=0,stop=2,expr=foo}," +
++                " EvalTemplateEvent{self=t(),start=0,stop=2}]";
++            String result = ((IList)events).ToElementString();
+Assert.AreEqual(expected, result);
+}
+
+@@ -75,15 +75,13 @@ namespace AntlrUnitTests.ST4
+WriteFile(tmpdir, "t.stg", templates);
+STGroup group = new STGroupFile(tmpdir + "/" + "t.stg");
+group.Debug = true;
+-            ST st = group.GetInstanceOf("t");
+-            st.code.Dump();
+-            st.Add("x", "foo");
+-            StringWriter sw = new StringWriter();
+-            Interpreter interp = new Interpreter(group);
+-            interp.Exec(new AutoIndentWriter(sw), st);
+-            String expected = "";
+-            IList<InterpEvent> events = interp.Events;
+-            String result = events.ToString();
++            DebugTemplate template = (DebugTemplate)group.GetInstanceOf("t");
++            IList<InterpEvent> events = template.GetEvents();
++            String expected =
++                "[EvalExprEvent{self=t(),start=0,stop=-1,expr=<x>}," +
++                " EvalExprEvent{self=t(),start=0,stop=0,expr= }," +
++                " EvalTemplateEvent{self=t(),start=0,stop=0}]";
++            String result = ((IList)events).ToElementString();
+Assert.AreEqual(expected, result);
+}
+
+@@ -97,15 +95,17 @@ namespace AntlrUnitTests.ST4
+WriteFile(tmpdir, "t.stg", templates);
+STGroup group = new STGroupFile(tmpdir + "/" + "t.stg");
+group.Debug = true;
+-            ST st = group.GetInstanceOf("t");
+-            st.code.Dump();
+-            st.Add("x", "foo");
+-            StringWriter sw = new StringWriter();
+-            Interpreter interp = new Interpreter(group);
+-            interp.Exec(new AutoIndentWriter(sw), st);
+-            String expected = "";
+-            IList<InterpEvent> events = interp.Events;
+-            String result = events.ToString();
++            DebugTemplate template = (DebugTemplate)group.GetInstanceOf("t");
++            IList<InterpEvent> events = template.GetEvents();
++            String expected =
++                "[EvalExprEvent{self=t(),start=0,stop=0,expr=[}," +
++                " EvalExprEvent{self=u(),start=1,stop=0,expr=<x>}," +
++                " EvalExprEvent{self=u(),start=1,stop=1,expr= }," +
++                " EvalTemplateEvent{self=u(),start=1,stop=1}," +
++                " EvalExprEvent{self=t(),start=1,stop=1,expr=<u()>}," +
++                " EvalExprEvent{self=t(),start=2,stop=2,expr=]}," +
++                " EvalTemplateEvent{self=t(),start=0,stop=2}]";
++            String result = ((IList)events).ToElementString();
+Assert.AreEqual(expected, result);
+}
+}
+diff --git a/Antlr3.vsmdi b/Antlr3.vsmdi
+index 504d302..d5d4c54 100644
+--- a/Antlr3.vsmdi
++++ b/Antlr3.vsmdi
+@@ -402,6 +402,13 @@
+<TestLink id="035d62d1-8c9e-2c14-bb45-b6e9f46036f6" name="TestNotTrueCond" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+</TestLinks>
+</TestList>
++  <TestList name="Debug events" id="32744eeb-e23b-4a91-948c-a18809949b64" parentListId="4adbb104-d28d-4362-8420-a9fefe69c167">
++    <TestLinks>
++      <TestLink id="e63126b6-f7f5-a35f-d4ba-f8d4331edd25" name="TestTemplateCall" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="9b6f3c9f-1015-9236-f758-fc8ec81db942" name="TestString" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="47fef3ad-ce99-dc4d-07f2-6bc975456b25" name="TestAttribute" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++    </TestLinks>
++  </TestList>
+<TestList name="DFA matching" id="3c885cce-ffa3-4ee4-baa8-8a9c03a14e0e" parentListId="8c43106b-9dc1-4907-a29f-aa66a61bf5b6">
+<TestLinks>
+<TestLink id="ce60fa3d-c350-a12f-5aa6-43189e37b763" name="TestSimpleLoops" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+diff --git a/StringTemplate4/Debug/AddAttributeEvent.cs b/StringTemplate4/Debug/AddAttributeEvent.cs
+index bf28d46..467fd70 100644
+--- a/StringTemplate4/Debug/AddAttributeEvent.cs
++++ b/StringTemplate4/Debug/AddAttributeEvent.cs
+@@ -45,11 +45,7 @@ namespace StringTemplate.Debug
+
+public override string ToString()
+{
+-            return "addEvent{" +
+-                ", name='" + name + '\'' +
+-                ", value=" + value +
+-                ", location=" + FileName + ":" + Line +
+-                '}';
++            return string.Format("{0}{{name='{1}',value='{2}',location={3}:{4}}}", GetType().Name, name, value, FileName, Line);
+}
+}
+}
+diff --git a/StringTemplate4/Debug/DebugTemplate.cs b/StringTemplate4/Debug/DebugTemplate.cs
+index 675677e..854bb72 100644
+--- a/StringTemplate4/Debug/DebugTemplate.cs
++++ b/StringTemplate4/Debug/DebugTemplate.cs
+@@ -33,6 +33,8 @@
+namespace StringTemplate.Debug
+{
+using System.Collections.Generic;
++    using CultureInfo = System.Globalization.CultureInfo;
++    using StringWriter = System.IO.StringWriter;
+
+public class DebugTemplate : Template
+{
+@@ -77,5 +79,30 @@ namespace StringTemplate.Debug
+
+base.Add(name, value);
+}
++
++        public IList<InterpEvent> GetEvents()
++        {
++            return GetEvents(CultureInfo.CurrentCulture, AutoIndentWriter.NoWrap);
++        }
++
++        public IList<InterpEvent> GetEvents(int lineWidth)
++        {
++            return GetEvents(CultureInfo.CurrentCulture, lineWidth);
++        }
++
++        public IList<InterpEvent> GetEvents(CultureInfo culture)
++        {
++            return GetEvents(CultureInfo.CurrentCulture, AutoIndentWriter.NoWrap);
++        }
++
++        public IList<InterpEvent> GetEvents(CultureInfo culture, int lineWidth)
++        {
++            StringWriter stream = new StringWriter();
++            ITemplateWriter writer = new AutoIndentWriter(stream);
++            writer.SetLineWidth(lineWidth);
++            Interpreter interp = new Interpreter(groupThatCreatedThisInstance, culture);
++            interp.Exec(writer, this);
++            return interp.Events;
++        }
+}
+}
+diff --git a/StringTemplate4/Debug/EvalExprEvent.cs b/StringTemplate4/Debug/EvalExprEvent.cs
+index 657e4ee..43d5e51 100644
+--- a/StringTemplate4/Debug/EvalExprEvent.cs
++++ b/StringTemplate4/Debug/EvalExprEvent.cs
+@@ -43,18 +43,13 @@ namespace StringTemplate.Debug
+{
+this.exprStart = exprStart;
+this.exprStop = exprStop;
+-            expr = self.code.template.Substring(exprStart, exprStop - exprStart + 2);
++            expr = self.code.template.Substring(exprStart, exprStop - exprStart + 1);
+}
+
+public override string ToString()
+{
+-            return GetType().Name + "{" +
+-                   "self=" + Template +
+-                   //", attr=" + Template.Attributes +
+-                   ", start=" + Start +
+-                   ", stop=" + Stop +
+-                   ", expr=" + expr +
+-                   '}';
++            return string.Format("{0}{{self={1},start={2},stop={3},expr={4}}}", GetType().Name, Template, Start, Stop, expr);
++
+}
+}
+}
+diff --git a/StringTemplate4/Interpreter.cs b/StringTemplate4/Interpreter.cs
+index 7c6f2b6..1e4e575 100644
+--- a/StringTemplate4/Interpreter.cs
++++ b/StringTemplate4/Interpreter.cs
+@@ -408,21 +408,20 @@ namespace StringTemplate
+
+protected int WriteObjectNoOptions(ITemplateWriter @out, Template self, object o, int exprStart, int exprStop)
+{
+-            //int start = @out.Index; // track char we're about to write
++            int start = @out.Index; // track char we're about to write
+int n = WriteObject(@out, self, o, null);
+
+-            //if (debug)
+-            //{
+-            //    events.Add(new EvalExprEvent(self, start, @out.Index - 1, exprStart, exprStop));
+-            //    //self.events.Add(new EvalExprEvent(self, start, @out.Index, exprStart, exprStop));
+-            //}
++            if (group.Debug)
++            {
++                events.Add(new EvalExprEvent((DebugTemplate)self, start, @out.Index - 1, exprStart, exprStop));
++            }
+
+return n;
+}
+
+protected int WriteObjectWithOptions(ITemplateWriter @out, Template self, object o, object[] options, int exprStart, int exprStop)
+{
+-            //int start = @out.Index; // track char we're about to write
++            int start = @out.Index; // track char we're about to write
+// precompute all option values (render all the way to strings)
+string[] optionStrings = null;
+if (options != null)
+@@ -442,11 +441,10 @@ namespace StringTemplate
+if (options != null && options[OPTION_ANCHOR] != null)
+@out.PopAnchorPoint();
+
+-            //if (debug)
+-            //{
+-            //    events.Add(new EvalTemplateEvent(self, start, @out.Index - 1));
+-            //    //self.events.Add(new EvalTemplateEvent(self, start, @out.Index));
+-            //}
++            if (group.Debug)
++            {
++                events.Add(new EvalTemplateEvent((DebugTemplate)self, start, @out.Index - 1));
++            }
+
+return n;
+}
+

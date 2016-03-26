@@ -1,0 +1,14 @@
+commit e225bc6325a20280ff15cc26ae516b6eadbd3072
+Author:     acondit <acondit@parrt.spork>
+AuthorDate: Wed May 11 11:01:27 2011 -0800
+Commit:     acondit <acondit@parrt.spork>
+CommitDate: Wed May 11 11:01:27 2011 -0800
+
+Zipped framework to match #8460 submit.
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8461]
+
+diff --git a/runtime/ObjC/ANTLR.framework.zip b/runtime/ObjC/ANTLR.framework.zip
+index f82b424..8340758 100644
+Binary files a/runtime/ObjC/ANTLR.framework.zip and b/runtime/ObjC/ANTLR.framework.zip differ
+

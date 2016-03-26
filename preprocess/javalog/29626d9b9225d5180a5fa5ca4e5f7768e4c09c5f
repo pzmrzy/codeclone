@@ -1,0 +1,37 @@
+commit 29626d9b9225d5180a5fa5ca4e5f7768e4c09c5f
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Thu Mar 8 20:33:53 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Thu Mar 8 20:33:53 2012 -0600
+
+Target Java 6
+
+diff --git a/antlr3-maven-plugin/pom.xml b/antlr3-maven-plugin/pom.xml
+index 98a7a34..8845651 100644
+--- a/antlr3-maven-plugin/pom.xml
++++ b/antlr3-maven-plugin/pom.xml
+@@ -316,7 +316,7 @@ Jim Idle - March 2009
+<version>2.0.2</version>
+<configuration>
+<source>1.6</source>
+-                    <target>jsr14</target>
++                    <target>1.6</target>
+</configuration>
+</plugin>
+
+diff --git a/gunit-maven-plugin/pom.xml b/gunit-maven-plugin/pom.xml
+index 65059ce..7b94e79 100644
+--- a/gunit-maven-plugin/pom.xml
++++ b/gunit-maven-plugin/pom.xml
+@@ -224,8 +224,8 @@
+<artifactId>maven-compiler-plugin</artifactId>
+<version>2.0.2</version>
+<configuration>
+-                    <source>1.5</source>
+-                    <target>jsr14</target>
++                    <source>1.6</source>
++                    <target>1.6</target>
+</configuration>
+</plugin>
+<plugin>
+

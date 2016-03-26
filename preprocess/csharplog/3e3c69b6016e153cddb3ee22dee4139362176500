@@ -1,0 +1,251 @@
+commit 3e3c69b6016e153cddb3ee22dee4139362176500
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Thu Aug 4 15:24:20 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Thu Aug 4 15:24:20 2011 -0800
+
+Updated assembly info for build 3.4.1.9004/4.0.5.9004
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 9006]
+
+diff --git a/Antlr3.Runtime.Visualizer/Properties/AssemblyInfo.cs b/Antlr3.Runtime.Visualizer/Properties/AssemblyInfo.cs
+index 0e929d2..8666dfc 100644
+--- a/Antlr3.Runtime.Visualizer/Properties/AssemblyInfo.cs
++++ b/Antlr3.Runtime.Visualizer/Properties/AssemblyInfo.cs
+@@ -83,5 +83,5 @@ using System.Windows;
+// You can specify all the values or you can default the Build and Revision Numbers
+// by using the '*' as shown below:
+// [assembly: AssemblyVersion("1.0.*")]
+-[assembly: AssemblyVersion("3.4.1.8995")]
+-[assembly: AssemblyFileVersion("3.4.1.8995")]
++[assembly: AssemblyVersion("3.4.1.9004")]
++[assembly: AssemblyFileVersion("3.4.1.9004")]
+diff --git a/Antlr3.StringTemplate/Properties/AssemblyInfo.cs b/Antlr3.StringTemplate/Properties/AssemblyInfo.cs
+index abbd264..74b6040 100644
+--- a/Antlr3.StringTemplate/Properties/AssemblyInfo.cs
++++ b/Antlr3.StringTemplate/Properties/AssemblyInfo.cs
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.4.1.8995")]
+-[assembly: AssemblyFileVersion("3.4.1.8995")]
++[assembly: AssemblyVersion("3.4.1.9004")]
++[assembly: AssemblyFileVersion("3.4.1.9004")]
+diff --git a/Antlr3.Targets/Antlr3.Targets.ActionScript/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.ActionScript/Properties/AssemblyInfo.cs
+index 6f45df0..ccd693b 100644
+--- a/Antlr3.Targets/Antlr3.Targets.ActionScript/Properties/AssemblyInfo.cs
++++ b/Antlr3.Targets/Antlr3.Targets.ActionScript/Properties/AssemblyInfo.cs
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.4.1.8995")]
+-[assembly: AssemblyFileVersion("3.4.1.8995")]
++[assembly: AssemblyVersion("3.4.1.9004")]
++[assembly: AssemblyFileVersion("3.4.1.9004")]
+diff --git a/Antlr3.Targets/Antlr3.Targets.C/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.C/Properties/AssemblyInfo.cs
+index d676d58..ea6f7de 100644
+--- a/Antlr3.Targets/Antlr3.Targets.C/Properties/AssemblyInfo.cs
++++ b/Antlr3.Targets/Antlr3.Targets.C/Properties/AssemblyInfo.cs
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.4.1.8995")]
+-[assembly: AssemblyFileVersion("3.4.1.8995")]
++[assembly: AssemblyVersion("3.4.1.9004")]
++[assembly: AssemblyFileVersion("3.4.1.9004")]
+diff --git a/Antlr3.Targets/Antlr3.Targets.CSharp2/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.CSharp2/Properties/AssemblyInfo.cs
+index 52e4704..a233b0b 100644
+--- a/Antlr3.Targets/Antlr3.Targets.CSharp2/Properties/AssemblyInfo.cs
++++ b/Antlr3.Targets/Antlr3.Targets.CSharp2/Properties/AssemblyInfo.cs
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.4.1.8995")]
+-[assembly: AssemblyFileVersion("3.4.1.8995")]
++[assembly: AssemblyVersion("3.4.1.9004")]
++[assembly: AssemblyFileVersion("3.4.1.9004")]
+diff --git a/Antlr3.Targets/Antlr3.Targets.CSharp3/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.CSharp3/Properties/AssemblyInfo.cs
+index 6c45143..36d63f6 100644
+--- a/Antlr3.Targets/Antlr3.Targets.CSharp3/Properties/AssemblyInfo.cs
++++ b/Antlr3.Targets/Antlr3.Targets.CSharp3/Properties/AssemblyInfo.cs
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.4.1.8995")]
+-[assembly: AssemblyFileVersion("3.4.1.8995")]
++[assembly: AssemblyVersion("3.4.1.9004")]
++[assembly: AssemblyFileVersion("3.4.1.9004")]
+diff --git a/Antlr3.Targets/Antlr3.Targets.Cpp/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.Cpp/Properties/AssemblyInfo.cs
+index 53243dd..16bc1ab 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Cpp/Properties/AssemblyInfo.cs
++++ b/Antlr3.Targets/Antlr3.Targets.Cpp/Properties/AssemblyInfo.cs
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.4.1.8995")]
+-[assembly: AssemblyFileVersion("3.4.1.8995")]
++[assembly: AssemblyVersion("3.4.1.9004")]
++[assembly: AssemblyFileVersion("3.4.1.9004")]
+diff --git a/Antlr3.Targets/Antlr3.Targets.Delphi/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.Delphi/Properties/AssemblyInfo.cs
+index cd8eb7a..6dec6a9 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Delphi/Properties/AssemblyInfo.cs
++++ b/Antlr3.Targets/Antlr3.Targets.Delphi/Properties/AssemblyInfo.cs
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.4.1.8995")]
+-[assembly: AssemblyFileVersion("3.4.1.8995")]
++[assembly: AssemblyVersion("3.4.1.9004")]
++[assembly: AssemblyFileVersion("3.4.1.9004")]
+diff --git a/Antlr3.Targets/Antlr3.Targets.Java/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.Java/Properties/AssemblyInfo.cs
+index 6e0489c..b635db1 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Java/Properties/AssemblyInfo.cs
++++ b/Antlr3.Targets/Antlr3.Targets.Java/Properties/AssemblyInfo.cs
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.4.1.8995")]
+-[assembly: AssemblyFileVersion("3.4.1.8995")]
++[assembly: AssemblyVersion("3.4.1.9004")]
++[assembly: AssemblyFileVersion("3.4.1.9004")]
+diff --git a/Antlr3.Targets/Antlr3.Targets.JavaScript/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.JavaScript/Properties/AssemblyInfo.cs
+index 889a163..aa52bef 100644
+--- a/Antlr3.Targets/Antlr3.Targets.JavaScript/Properties/AssemblyInfo.cs
++++ b/Antlr3.Targets/Antlr3.Targets.JavaScript/Properties/AssemblyInfo.cs
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.4.1.8995")]
+-[assembly: AssemblyFileVersion("3.4.1.8995")]
++[assembly: AssemblyVersion("3.4.1.9004")]
++[assembly: AssemblyFileVersion("3.4.1.9004")]
+diff --git a/Antlr3.Targets/Antlr3.Targets.ObjC/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.ObjC/Properties/AssemblyInfo.cs
+index 216bf59..c024c38 100644
+--- a/Antlr3.Targets/Antlr3.Targets.ObjC/Properties/AssemblyInfo.cs
++++ b/Antlr3.Targets/Antlr3.Targets.ObjC/Properties/AssemblyInfo.cs
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.4.1.8995")]
+-[assembly: AssemblyFileVersion("3.4.1.8995")]
++[assembly: AssemblyVersion("3.4.1.9004")]
++[assembly: AssemblyFileVersion("3.4.1.9004")]
+diff --git a/Antlr3.Targets/Antlr3.Targets.Perl5/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.Perl5/Properties/AssemblyInfo.cs
+index 99942f4..2f45c83 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Perl5/Properties/AssemblyInfo.cs
++++ b/Antlr3.Targets/Antlr3.Targets.Perl5/Properties/AssemblyInfo.cs
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.4.1.8995")]
+-[assembly: AssemblyFileVersion("3.4.1.8995")]
++[assembly: AssemblyVersion("3.4.1.9004")]
++[assembly: AssemblyFileVersion("3.4.1.9004")]
+diff --git a/Antlr3.Targets/Antlr3.Targets.Python/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.Python/Properties/AssemblyInfo.cs
+index 7f6cdc6..ba93f11 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Python/Properties/AssemblyInfo.cs
++++ b/Antlr3.Targets/Antlr3.Targets.Python/Properties/AssemblyInfo.cs
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.4.1.8995")]
+-[assembly: AssemblyFileVersion("3.4.1.8995")]
++[assembly: AssemblyVersion("3.4.1.9004")]
++[assembly: AssemblyFileVersion("3.4.1.9004")]
+diff --git a/Antlr3.Targets/Antlr3.Targets.Ruby/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.Ruby/Properties/AssemblyInfo.cs
+index 4b40a9c..a1906de 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Ruby/Properties/AssemblyInfo.cs
++++ b/Antlr3.Targets/Antlr3.Targets.Ruby/Properties/AssemblyInfo.cs
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.4.1.8995")]
+-[assembly: AssemblyFileVersion("3.4.1.8995")]
++[assembly: AssemblyVersion("3.4.1.9004")]
++[assembly: AssemblyFileVersion("3.4.1.9004")]
+diff --git a/Antlr3.Test/Properties/AssemblyInfo.cs b/Antlr3.Test/Properties/AssemblyInfo.cs
+index 2049d4a..4df99ce 100644
+--- a/Antlr3.Test/Properties/AssemblyInfo.cs
++++ b/Antlr3.Test/Properties/AssemblyInfo.cs
+@@ -63,5 +63,5 @@ using System.Runtime.InteropServices;
+//
+// You can specify all the values or you can default the Revision and Build Numbers
+// by using the '*' as shown below:
+-[assembly: AssemblyVersion("3.4.1.8995")]
+-[assembly: AssemblyFileVersion("3.4.1.8995")]
++[assembly: AssemblyVersion("3.4.1.9004")]
++[assembly: AssemblyFileVersion("3.4.1.9004")]
+diff --git a/Antlr3/Properties/AssemblyInfo.cs b/Antlr3/Properties/AssemblyInfo.cs
+index fd6c8b2..a4b720d 100644
+--- a/Antlr3/Properties/AssemblyInfo.cs
++++ b/Antlr3/Properties/AssemblyInfo.cs
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.4.1.8995")]
+-[assembly: AssemblyFileVersion("3.4.1.8995")]
++[assembly: AssemblyVersion("3.4.1.9004")]
++[assembly: AssemblyFileVersion("3.4.1.9004")]
+diff --git a/Antlr4.StringTemplate.Visualizer/Properties/AssemblyInfo.cs b/Antlr4.StringTemplate.Visualizer/Properties/AssemblyInfo.cs
+index 6a26b5d..6e7a414 100644
+--- a/Antlr4.StringTemplate.Visualizer/Properties/AssemblyInfo.cs
++++ b/Antlr4.StringTemplate.Visualizer/Properties/AssemblyInfo.cs
+@@ -83,5 +83,5 @@ using System.Windows;
+// You can specify all the values or you can default the Build and Revision Numbers
+// by using the '*' as shown below:
+// [assembly: AssemblyVersion("1.0.*")]
+-[assembly: AssemblyVersion("4.0.5.8995")]
+-[assembly: AssemblyFileVersion("4.0.5.8995")]
++[assembly: AssemblyVersion("4.0.6.9004")]
++[assembly: AssemblyFileVersion("4.0.6.9004")]
+diff --git a/Antlr4.StringTemplate/Properties/AssemblyInfo.cs b/Antlr4.StringTemplate/Properties/AssemblyInfo.cs
+index 8b7a4b2..1bebde3 100644
+--- a/Antlr4.StringTemplate/Properties/AssemblyInfo.cs
++++ b/Antlr4.StringTemplate/Properties/AssemblyInfo.cs
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("4.0.5.8995")]
+-[assembly: AssemblyFileVersion("4.0.5.8995")]
++[assembly: AssemblyVersion("4.0.6.9004")]
++[assembly: AssemblyFileVersion("4.0.6.9004")]
+diff --git a/Antlr4.Test.StringTemplate/Properties/AssemblyInfo.cs b/Antlr4.Test.StringTemplate/Properties/AssemblyInfo.cs
+index e867a17..55e640d 100644
+--- a/Antlr4.Test.StringTemplate/Properties/AssemblyInfo.cs
++++ b/Antlr4.Test.StringTemplate/Properties/AssemblyInfo.cs
+@@ -64,5 +64,5 @@ using System.Runtime.InteropServices;
+//
+// You can specify all the values or you can default the Build and Revision Numbers
+// by using the '*' as shown below:
+-[assembly: AssemblyVersion("4.0.5.8995")]
+-[assembly: AssemblyFileVersion("4.0.5.8995")]
++[assembly: AssemblyVersion("4.0.6.9004")]
++[assembly: AssemblyFileVersion("4.0.6.9004")]
+diff --git a/AntlrBuildTask/Properties/AssemblyInfo.cs b/AntlrBuildTask/Properties/AssemblyInfo.cs
+index de22f42..412569b 100644
+--- a/AntlrBuildTask/Properties/AssemblyInfo.cs
++++ b/AntlrBuildTask/Properties/AssemblyInfo.cs
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.4.1.8995")]
+-[assembly: AssemblyFileVersion("3.4.1.8995")]
++[assembly: AssemblyVersion("3.4.1.9004")]
++[assembly: AssemblyFileVersion("3.4.1.9004")]
+

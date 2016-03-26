@@ -1,0 +1,38 @@
+commit 58b33beb1120b963acfaf26da55a11420b58c0e5
+Author:     parrt <parrt@antlr.org>
+AuthorDate: Sun Jun 19 09:43:39 2011 -0800
+Commit:     parrt <parrt@antlr.org>
+CommitDate: Sun Jun 19 09:43:39 2011 -0800
+
+Udo noticed that Parser.getMissingSymbol() didn't set invented token's input
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8669]
+
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/Parser.java b/runtime/Java/src/main/java/org/antlr/runtime/Parser.java
+index 9cf937a..170bc3c 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/Parser.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/Parser.java
+@@ -70,6 +70,7 @@ public class Parser extends BaseRecognizer {
+t.line = current.getLine();
+t.charPositionInLine = current.getCharPositionInLine();
+t.channel = DEFAULT_TOKEN_CHANNEL;
++		t.input = (CharStream)input;
+return t;
+}
+
+diff --git a/tool/CHANGES.txt b/tool/CHANGES.txt
+index ad81900..6784a5e 100644
+--- a/tool/CHANGES.txt
++++ b/tool/CHANGES.txt
+@@ -7,6 +7,10 @@ University of San Francisco
+
+CHANGES
+
++June 19, 2011
++
++* Udo noticed that Parser.getMissingSymbol() didn't set invented token's input
++
+June 8, 2011
+
+* Added inContext(String context) back into TreeParser.
+

@@ -1,0 +1,183 @@
+commit c79e94cea0388a8aee2e5e668f91565560144178
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Mon Dec 3 16:01:17 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Mon Dec 3 16:01:17 2012 -0600
+
+Updated use of generics in Maven plugins for ANTLR 3 and gUnit
+
+diff --git a/antlr3-maven-plugin/pom.xml b/antlr3-maven-plugin/pom.xml
+index dfe3302..5837709 100644
+--- a/antlr3-maven-plugin/pom.xml
++++ b/antlr3-maven-plugin/pom.xml
+@@ -176,7 +176,7 @@ Jim Idle - March 2009
+<dependency>
+<groupId>org.codehaus.plexus</groupId>
+<artifactId>plexus-compiler-api</artifactId>
+-            <version>1.5.3</version>
++            <version>2.0</version>
+</dependency>
+
+<!--
+diff --git a/antlr3-maven-plugin/src/main/java/org/antlr/mojo/antlr3/Antlr3Mojo.java b/antlr3-maven-plugin/src/main/java/org/antlr/mojo/antlr3/Antlr3Mojo.java
+index 4d3fed4..a1c572c 100644
+--- a/antlr3-maven-plugin/src/main/java/org/antlr/mojo/antlr3/Antlr3Mojo.java
++++ b/antlr3-maven-plugin/src/main/java/org/antlr/mojo/antlr3/Antlr3Mojo.java
+@@ -172,7 +172,7 @@ public class Antlr3Mojo
+*
+* @parameter
+*/
+-    protected Set includes = new HashSet();
++    protected Set<String> includes = new HashSet<String>();
+/**
+* Provides an explicit list of any grammars that should be excluded from
+* the generate phase of the plugin. Files listed here will not be sent for
+@@ -180,7 +180,7 @@ public class Antlr3Mojo
+*
+* @parameter
+*/
+-    protected Set excludes = new HashSet();
++    protected Set<String> excludes = new HashSet<String>();
+/**
+* @parameter expression="${project}"
+* @required
+@@ -254,15 +254,13 @@ public class Antlr3Mojo
+
+// Excludes
+//
+-            for (String e : (Set<String>) excludes) {
+-
++            for (String e : excludes) {
+log.debug("ANTLR: Exclude: " + e);
+}
+
+// Includes
+//
+-            for (String e : (Set<String>) includes) {
+-
++            for (String e : includes) {
+log.debug("ANTLR: Include: " + e);
+}
+
+@@ -411,11 +409,11 @@ public class Antlr3Mojo
+throws TokenStreamException, RecognitionException, IOException, InclusionScanException {
+// Which files under the source set should we be looking for as grammar files
+//
+-        SourceMapping mapping = new SuffixMapping("g", Collections.EMPTY_SET);
++        SourceMapping mapping = new SuffixMapping("g", Collections.<String>emptySet());
+
+// What are the sets of includes (defaulted or otherwise).
+//
+-        Set includes = getIncludesPatterns();
++        Set<String> includes = getIncludesPatterns();
+
+// Now, to the excludes, we need to add the imports directory
+// as this is autoscanned for importd grammars and so is auto-excluded from the
+@@ -426,7 +424,7 @@ public class Antlr3Mojo
+SourceInclusionScanner scan = new SimpleSourceInclusionScanner(includes, excludes);
+
+scan.addSourceMapping(mapping);
+-        Set grammarFiles = scan.getIncludedSources(sourceDirectory, null);
++        Set<File> grammarFiles = scan.getIncludedSources(sourceDirectory, null);
+
+if (grammarFiles.isEmpty()) {
+if (getLog().isInfoEnabled()) {
+@@ -441,7 +439,7 @@ public class Antlr3Mojo
+// Iterate each grammar file we were given and add it into the tool's list of
+// grammars to process.
+//
+-            for (File grammar : (Set<File>) grammarFiles) {
++            for (File grammar : grammarFiles) {
+
+if (getLog().isDebugEnabled()) {
+getLog().debug("Grammar file '" + grammar.getPath() + "' detected.");
+@@ -462,7 +460,7 @@ public class Antlr3Mojo
+
+}
+
+-    public Set getIncludesPatterns() {
++    public Set<String> getIncludesPatterns() {
+if (includes == null || includes.isEmpty()) {
+return Collections.singleton("**/*.g");
+}
+diff --git a/gunit-maven-plugin/pom.xml b/gunit-maven-plugin/pom.xml
+index f852e99..c47eca1 100644
+--- a/gunit-maven-plugin/pom.xml
++++ b/gunit-maven-plugin/pom.xml
+@@ -92,7 +92,7 @@
+<dependency>
+<groupId>org.codehaus.plexus</groupId>
+<artifactId>plexus-compiler-api</artifactId>
+-            <version>1.5.3</version>
++            <version>2.0</version>
+</dependency>
+
+<!--
+diff --git a/gunit-maven-plugin/src/main/java/org/antlr/mojo/antlr3/GUnitExecuteMojo.java b/gunit-maven-plugin/src/main/java/org/antlr/mojo/antlr3/GUnitExecuteMojo.java
+index db3f569..fbee5f7 100644
+--- a/gunit-maven-plugin/src/main/java/org/antlr/mojo/antlr3/GUnitExecuteMojo.java
++++ b/gunit-maven-plugin/src/main/java/org/antlr/mojo/antlr3/GUnitExecuteMojo.java
+@@ -85,14 +85,14 @@ public class GUnitExecuteMojo extends AbstractMojo {
+*
+* @parameter
+*/
+-    private Set includes;
++    private Set<String> includes;
+
+/**
+* A set of exclude patterns.
+*
+* @parameter
+*/
+-    private Set excludes;
++    private Set<String> excludes;
+
+/**
+* Specifies directory to which gUnit reports should get written.
+@@ -111,15 +111,15 @@ public class GUnitExecuteMojo extends AbstractMojo {
+*/
+private boolean skip;
+
+-	public Set getIncludePatterns() {
++	public Set<String> getIncludePatterns() {
+return includes == null || includes.isEmpty()
+? Collections.singleton( "**/*.testsuite" )
+: includes;
+}
+
+-	public Set getExcludePatterns() {
++	public Set<String> getExcludePatterns() {
+return excludes == null
+-				? Collections.emptySet()
++				? Collections.<String>emptySet()
+: excludes;
+}
+
+@@ -346,24 +346,11 @@ public class GUnitExecuteMojo extends AbstractMojo {
+}
+
+private Set<File> collectIncludedSourceGrammars() throws MojoExecutionException {
+-		SourceMapping mapping = new SuffixMapping( "g", Collections.EMPTY_SET );
++		SourceMapping mapping = new SuffixMapping( "g", Collections.<String>emptySet() );
+SourceInclusionScanner scan = new SimpleSourceInclusionScanner( getIncludePatterns(), getExcludePatterns() );
+scan.addSourceMapping( mapping );
+try {
+-			Set scanResults = scan.getIncludedSources( sourceDirectory, null );
+-			Set<File> results = new HashSet<File>();
+-			for ( Object result : scanResults ) {
+-				if ( result instanceof File ) {
+-					results.add( ( File ) result );
+-				}
+-				else if ( result instanceof String ) {
+-					results.add( new File( ( String ) result ) );
+-				}
+-				else {
+-					throw new MojoExecutionException( "Unexpected result type from scanning [" + result.getClass().getName() + "]" );
+-				}
+-			}
+-			return results;
++			return scan.getIncludedSources( sourceDirectory, null );
+}
+catch ( InclusionScanException e ) {
+throw new MojoExecutionException( "Error determining gUnit sources", e );
+

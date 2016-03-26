@@ -1,0 +1,654 @@
+commit 25c13e2b4743228dc7ed8193af4bf31b368a5307
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Tue Feb 15 16:15:45 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Tue Feb 15 16:15:45 2011 -0800
+
+(C# 3) Merge CL7680
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7705]
+
+diff --git a/Antlr4.StringTemplate/Compiler/Bytecode.cs b/Antlr4.StringTemplate/Compiler/Bytecode.cs
+index 3663570..72b59c8 100644
+--- a/Antlr4.StringTemplate/Compiler/Bytecode.cs
++++ b/Antlr4.StringTemplate/Compiler/Bytecode.cs
+@@ -86,5 +86,10 @@ namespace Antlr4.StringTemplate.Compiler
+INSTR_NULL = 42, // push null value
+INSTR_TRUE = 43, // push true
+INSTR_FALSE = 44,
++
++        // Combined instructions
++
++        INSTR_WRITE_STR = 45,
++        INSTR_WRITE_LOCAL = 46,
+}
+}
+diff --git a/Antlr4.StringTemplate/Compiler/CodeGenerator.g3 b/Antlr4.StringTemplate/Compiler/CodeGenerator.g3
+index c3bb89d..f75f394 100644
+--- a/Antlr4.StringTemplate/Compiler/CodeGenerator.g3
++++ b/Antlr4.StringTemplate/Compiler/CodeGenerator.g3
+@@ -84,10 +84,7 @@ singleElement
+|	TEXT
+{
+if ($TEXT.text.Length > 0)
+-		{
+-			emit1($TEXT,Bytecode.INSTR_LOAD_STR, $TEXT.text);
+-			emit($TEXT,Bytecode.INSTR_WRITE);
+-		}
++			emit1($TEXT,Bytecode.INSTR_WRITE_STR, $TEXT.text);
+}
+|	NEWLINE {emit(Bytecode.INSTR_NEWLINE);}
+;
+diff --git a/Antlr4.StringTemplate/Compiler/CompiledTemplate.cs b/Antlr4.StringTemplate/Compiler/CompiledTemplate.cs
+index 3f989d6..76a2c10 100644
+--- a/Antlr4.StringTemplate/Compiler/CompiledTemplate.cs
++++ b/Antlr4.StringTemplate/Compiler/CompiledTemplate.cs
+@@ -63,13 +63,15 @@ namespace Antlr4.StringTemplate.Compiler
+public CommonTree ast;
+
+/** Must be non null map if !noFormalArgs */
+-        public List<FormalArgument> formalArguments;
++        private List<FormalArgument> formalArguments;
+
+public bool hasFormalArgs;
+
+/** A list of all regions and subtemplates */
+public List<CompiledTemplate> implicitlyDefinedTemplates;
+
++        private int _numberOfArgsWithDefaultValues;
++
+/** The group that physically defines this Template definition.  We use it to initiate
+*  interpretation via Template.ToString().  From there, it becomes field 'group'
+*  in interpreter and is fixed until rendering completes.
+@@ -105,6 +107,20 @@ namespace Antlr4.StringTemplate.Compiler
+template = string.Empty;
+}
+
++        public List<FormalArgument> FormalArguments
++        {
++            get
++            {
++                return formalArguments;
++            }
++
++            set
++            {
++                formalArguments = value;
++                _numberOfArgsWithDefaultValues = (formalArguments != null) ? formalArguments.Count(i => i.DefaultValueToken != null) : 0;
++            }
++        }
++
+public virtual TemplateGroup NativeGroup
+{
+get
+@@ -157,11 +173,7 @@ namespace Antlr4.StringTemplate.Compiler
+{
+get
+{
+-                if (formalArguments == null)
+-                    return 0;
+-
+-                int n = formalArguments.Count(i => i.DefaultValueToken != null);
+-                return n;
++                return _numberOfArgsWithDefaultValues;
+}
+}
+
+@@ -169,10 +181,10 @@ namespace Antlr4.StringTemplate.Compiler
+{
+if (name == null)
+throw new ArgumentNullException("name");
+-            if (formalArguments == null)
++            if (FormalArguments == null)
+return null;
+
+-            return formalArguments.FirstOrDefault(i => i.Name == name);
++            return FormalArguments.FirstOrDefault(i => i.Name == name);
+}
+
+public virtual void AddImplicitlyDefinedTemplate(CompiledTemplate sub)
+@@ -185,10 +197,10 @@ namespace Antlr4.StringTemplate.Compiler
+
+public virtual void DefineArgumentDefaultValueTemplates(TemplateGroup group)
+{
+-            if (formalArguments == null)
++            if (FormalArguments == null)
+return;
+
+-            foreach (FormalArgument fa in formalArguments)
++            foreach (FormalArgument fa in FormalArguments)
+{
+if (fa.DefaultValueToken != null)
+{
+@@ -219,7 +231,7 @@ namespace Antlr4.StringTemplate.Compiler
+hasFormalArgs = true; // even if no args; it's formally defined
+if (args == null)
+{
+-                formalArguments = null;
++                FormalArguments = null;
+}
+else
+{
+@@ -231,11 +243,13 @@ namespace Antlr4.StringTemplate.Compiler
+/** Used by Template.Add() to Add args one by one w/o turning on full formal args definition signal */
+public virtual void AddArgument(FormalArgument a)
+{
+-            if (formalArguments == null)
+-                formalArguments = new List<FormalArgument>();
++            if (FormalArguments == null)
++                FormalArguments = new List<FormalArgument>();
+
+-            a.Index = formalArguments.Count;
+-            formalArguments.Add(a);
++            a.Index = FormalArguments.Count;
++            FormalArguments.Add(a);
++            if (a.DefaultValueToken != null)
++                _numberOfArgsWithDefaultValues++;
+}
+
+public virtual void DefineImplicitlyDefinedTemplates(TemplateGroup group)
+diff --git a/Antlr4.StringTemplate/Compiler/Instruction.cs b/Antlr4.StringTemplate/Compiler/Instruction.cs
+index 3e1deb9..99115d9 100644
+--- a/Antlr4.StringTemplate/Compiler/Instruction.cs
++++ b/Antlr4.StringTemplate/Compiler/Instruction.cs
+@@ -69,6 +69,8 @@
+instructions[(int)Bytecode.INSTR_NULL] = new Instruction("null");
+instructions[(int)Bytecode.INSTR_TRUE] = new Instruction("true");
+instructions[(int)Bytecode.INSTR_FALSE] = new Instruction("false");
++            instructions[(int)Bytecode.INSTR_WRITE_STR] = new Instruction("write_str", OperandType.String);
++            instructions[(int)Bytecode.INSTR_WRITE_LOCAL] = new Instruction("write_local", OperandType.Int);
+}
+
+public Instruction(string name)
+diff --git a/Antlr4.StringTemplate/Interpreter.cs b/Antlr4.StringTemplate/Interpreter.cs
+index fef1370..5634537 100644
+--- a/Antlr4.StringTemplate/Interpreter.cs
++++ b/Antlr4.StringTemplate/Interpreter.cs
+@@ -493,13 +493,36 @@ namespace Antlr4.StringTemplate
+operands[++sp] = false;
+break;
+
++                case Bytecode.INSTR_WRITE_STR:
++                    strIndex = GetShort(code, ip);
++                    ip += Instruction.OperandSizeInBytes;
++                    o = self.impl.strings[strIndex];
++                    n1 = WriteObjectNoOptions(@out, self, o);
++                    n += n1;
++                    nwline += n1;
++                    break;
++
++                case Bytecode.INSTR_WRITE_LOCAL:
++                    valueIndex = GetShort(code, ip);
++                    ip += Instruction.OperandSizeInBytes;
++                    o = self.locals[valueIndex];
++                    if (o == Template.EmptyAttribute)
++                        o = null;
++
++                    n1 = WriteObjectNoOptions(@out, self, o);
++                    n += n1;
++                    nwline += n1;
++                    break;
++
+default:
+errMgr.InternalError(self, "invalid bytecode @ " + (ip - 1) + ": " + opcode, null);
+self.impl.Dump();
+break;
+}
++
+prevOpcode = opcode;
+}
++
+if (group.Debug)
+{
+EvalTemplateEvent e = new EvalTemplateEvent((DebugTemplate)self, Interval.FromBounds(start, @out.Index));
+@@ -568,8 +591,8 @@ namespace Antlr4.StringTemplate
+internal virtual void StoreArguments(Template self, IDictionary<string, object> attrs, Template st)
+{
+int nformalArgs = 0;
+-            if (st.impl.formalArguments != null)
+-                nformalArgs = st.impl.formalArguments.Count;
++            if (st.impl.FormalArguments != null)
++                nformalArgs = st.impl.FormalArguments.Count;
+int nargs = 0;
+if (attrs != null)
+nargs = attrs.Count;
+@@ -587,7 +610,7 @@ namespace Antlr4.StringTemplate
+foreach (string argName in attrs.Keys)
+{
+// don't let it throw an exception in RawSetAttribute
+-                if (st.impl.formalArguments == null || !st.impl.formalArguments.Any(i => i.Name == argName))
++                if (st.impl.FormalArguments == null || !st.impl.FormalArguments.Any(i => i.Name == argName))
+{
+errMgr.RuntimeError(self, current_ip, ErrorType.NO_SUCH_ATTRIBUTE, argName);
+continue;
+@@ -601,8 +624,8 @@ namespace Antlr4.StringTemplate
+internal virtual void StoreArguments(Template self, int nargs, Template st)
+{
+int nformalArgs = 0;
+-            if (st.impl.formalArguments != null)
+-                nformalArgs = st.impl.formalArguments.Count;
++            if (st.impl.FormalArguments != null)
++                nformalArgs = st.impl.FormalArguments.Count;
+int firstArg = sp - (nargs - 1);
+int numToStore = Math.Min(nargs, nformalArgs);
+if (st.impl.isAnonSubtemplate)
+@@ -619,13 +642,13 @@ namespace Antlr4.StringTemplate
+nformalArgs);
+}
+
+-            if (st.impl.formalArguments == null)
++            if (st.impl.FormalArguments == null)
+return;
+
+for (int i = 0; i < numToStore; i++)
+{
+object o = operands[firstArg + i];
+-                string argName = st.impl.formalArguments[i].Name;
++                string argName = st.impl.FormalArguments[i].Name;
+st.RawSetAttribute(argName, o);
+}
+}
+@@ -812,40 +835,15 @@ namespace Antlr4.StringTemplate
+return;
+}
+attr = ConvertAnythingIteratableToIterator(attr);
+-            if (attr is Iterator)
++            Iterator iterator = attr as Iterator;
++            if (iterator != null)
+{
+-                List<Template> mapped = new List<Template>();
+-                Iterator iter = (Iterator)attr;
+-                int i0 = 0;
+-                int i = 1;
+-                int ti = 0;
+-                while (iter.hasNext())
+-                {
+-                    object iterValue = iter.next();
+-                    if (iterValue == null)
+-                    {
+-                        mapped.Add(null);
+-                        continue;
+-                    }
+-
+-                    int templateIndex = ti % prototypes.Count; // rotate through
+-                    ti++;
+-                    Template proto = prototypes[templateIndex];
+-                    Template st = group.CreateStringTemplate(proto);
+-                    SetFirstArgument(self, st, iterValue);
+-                    if (st.impl.isAnonSubtemplate)
+-                    {
+-                        st.RawSetAttribute("i0", i0);
+-                        st.RawSetAttribute("i", i);
+-                    }
+-                    mapped.Add(st);
+-                    i0++;
+-                    i++;
+-                }
++                List<Template> mapped = RotateMapIterator(self, iterator, prototypes);
+operands[++sp] = mapped;
+}
+else
+-            { // if only single value, just apply first template to sole value
++            {
++                // if only single value, just apply first template to sole value
+Template proto = prototypes[0];
+Template st = group.CreateStringTemplate(proto);
+if (st != null)
+@@ -856,6 +854,7 @@ namespace Antlr4.StringTemplate
+st.RawSetAttribute("i0", 0);
+st.RawSetAttribute("i", 1);
+}
++
+operands[++sp] = st;
+}
+else
+@@ -865,6 +864,40 @@ namespace Antlr4.StringTemplate
+}
+}
+
++        protected virtual List<Template> RotateMapIterator(Template self, Iterator iterator, List<Template> prototypes)
++        {
++            List<Template> mapped = new List<Template>();
++            int i0 = 0;
++            int i = 1;
++            int ti = 0;
++            while (iterator.hasNext())
++            {
++                object iterValue = iterator.next();
++                if (iterValue == null)
++                {
++                    mapped.Add(null);
++                    continue;
++                }
++
++                int templateIndex = ti % prototypes.Count; // rotate through
++                ti++;
++                Template proto = prototypes[templateIndex];
++                Template st = group.CreateStringTemplate(proto);
++                SetFirstArgument(self, st, iterValue);
++                if (st.impl.isAnonSubtemplate)
++                {
++                    st.RawSetAttribute("i0", i0);
++                    st.RawSetAttribute("i", i);
++                }
++
++                mapped.Add(st);
++                i0++;
++                i++;
++            }
++
++            return mapped;
++        }
++
+// <names,phones:{n,p | ...}> or <a,b:t()>
+// todo: i, i0 not set unless mentioned? map:{k,v | ..}?
+protected virtual Template.AttributeList ZipMap(Template self, List<object> exprs, Template prototype)
+@@ -884,7 +917,7 @@ namespace Antlr4.StringTemplate
+// ensure arguments line up
+int numExprs = exprs.Count;
+CompiledTemplate code = prototype.impl;
+-            List<FormalArgument> formalArguments = code.formalArguments;
++            List<FormalArgument> formalArguments = code.FormalArguments;
+if (!code.hasFormalArgs || formalArguments == null)
+{
+errMgr.RuntimeError(self, current_ip, ErrorType.MISSING_FORMAL_ARGUMENTS);
+@@ -944,7 +977,7 @@ namespace Antlr4.StringTemplate
+
+protected virtual void SetFirstArgument(Template self, Template st, object attr)
+{
+-            if (st.impl.formalArguments == null)
++            if (st.impl.FormalArguments == null)
+{
+errMgr.RuntimeError(self, current_ip, ErrorType.ARGUMENT_COUNT_MISMATCH, 1, st.impl.name, 0);
+return;
+@@ -1294,10 +1327,10 @@ namespace Antlr4.StringTemplate
+*/
+public virtual void SetDefaultArguments(Template invokedST)
+{
+-            if (invokedST.impl.formalArguments == null)
++            if (invokedST.impl.FormalArguments == null || invokedST.impl.NumberOfArgsWithDefaultValues == 0)
+return;
+
+-            foreach (FormalArgument arg in invokedST.impl.formalArguments)
++            foreach (FormalArgument arg in invokedST.impl.FormalArguments)
+{
+// if no value for attribute and default arg, inject default arg into self
+if (invokedST.locals[arg.Index] != Template.EmptyAttribute || arg.DefaultValueToken == null)
+diff --git a/Antlr4.StringTemplate/Misc/TemplateDump.cs b/Antlr4.StringTemplate/Misc/TemplateDump.cs
+index 136c546..cc1f817 100644
+--- a/Antlr4.StringTemplate/Misc/TemplateDump.cs
++++ b/Antlr4.StringTemplate/Misc/TemplateDump.cs
+@@ -131,8 +131,8 @@ namespace Antlr4.StringTemplate.Misc
+buf.Append("<");
+buf.Append(self.Name);
+buf.Append("(");
+-            if (self.impl.formalArguments != null)
+-                buf.Append(string.Join(",", self.impl.formalArguments.Select(i => i.Name).ToArray()));
++            if (self.impl.FormalArguments != null)
++                buf.Append(string.Join(",", self.impl.FormalArguments.Select(i => i.Name).ToArray()));
+buf.Append(")@");
+buf.Append(GetHashCode());
+buf.Append(">");
+diff --git a/Antlr4.StringTemplate/Template.cs b/Antlr4.StringTemplate/Template.cs
+index 44b0eec..41b7e82 100644
+--- a/Antlr4.StringTemplate/Template.cs
++++ b/Antlr4.StringTemplate/Template.cs
+@@ -224,7 +224,7 @@ namespace Antlr4.StringTemplate
+if (locals == null)
+locals = new object[1];
+else
+-                        Array.Resize(ref locals, impl.formalArguments.Count);
++                        Array.Resize(ref locals, impl.FormalArguments.Count);
+
+locals[arg.Index] = EmptyAttribute;
+}
+@@ -260,7 +260,7 @@ namespace Antlr4.StringTemplate
+/** Remove an attribute value entirely (can't Remove attribute definitions). */
+public virtual void Remove(string name)
+{
+-            if (impl.formalArguments == null)
++            if (impl.FormalArguments == null)
+{
+if (impl.hasFormalArgs)
+throw new ArgumentException("no such attribute: " + name);
+@@ -281,7 +281,7 @@ namespace Antlr4.StringTemplate
+*/
+protected internal virtual void RawSetAttribute(string name, object value)
+{
+-            if (impl.formalArguments == null)
++            if (impl.FormalArguments == null)
+throw new ArgumentException("no such attribute: " + name);
+
+FormalArgument arg = impl.TryGetFormalArgument(name);
+@@ -322,11 +322,11 @@ namespace Antlr4.StringTemplate
+
+public virtual IDictionary<string, object> GetAttributes()
+{
+-            if (impl.formalArguments == null)
++            if (impl.FormalArguments == null)
+return null;
+
+IDictionary<string, object> attributes = new Dictionary<string, object>();
+-            foreach (FormalArgument a in impl.formalArguments)
++            foreach (FormalArgument a in impl.FormalArguments)
+{
+object o = locals[a.Index];
+if (o == Template.EmptyAttribute)
+@@ -506,8 +506,8 @@ namespace Antlr4.StringTemplate
+return "bad-template()";
+
+string args = string.Empty;
+-            if (impl.formalArguments != null)
+-                args = string.Join(",", impl.formalArguments.Select(i => i.Name).ToArray());
++            if (impl.FormalArguments != null)
++                args = string.Join(",", impl.FormalArguments.Select(i => i.Name).ToArray());
+
+return string.Format("{0}({1})", Name, args);
+}
+diff --git a/Antlr4.StringTemplate/TemplateGroup.cs b/Antlr4.StringTemplate/TemplateGroup.cs
+index c6f9ac0..2938e17 100644
+--- a/Antlr4.StringTemplate/TemplateGroup.cs
++++ b/Antlr4.StringTemplate/TemplateGroup.cs
+@@ -205,9 +205,9 @@ namespace Antlr4.StringTemplate
+Template instanceST = CreateStringTemplate();
+instanceST.groupThatCreatedThisInstance = this;
+instanceST.impl = c;
+-                if (instanceST.impl.formalArguments != null)
++                if (instanceST.impl.FormalArguments != null)
+{
+-                    instanceST.locals = new object[instanceST.impl.formalArguments.Count];
++                    instanceST.locals = new object[instanceST.impl.FormalArguments.Count];
+for (int i = 0; i < instanceST.locals.Length; i++)
+instanceST.locals[i] = Template.EmptyAttribute;
+}
+@@ -693,8 +693,8 @@ namespace Antlr4.StringTemplate
+name = name.Substring(slash + 1, name.Length - slash - 1);
+buf.Append(name);
+buf.Append('(');
+-                if (c.formalArguments != null)
+-                    buf.Append(string.Join(",", c.formalArguments.Select(i => i.ToString()).ToArray()));
++                if (c.FormalArguments != null)
++                    buf.Append(string.Join(",", c.FormalArguments.Select(i => i.ToString()).ToArray()));
+
+buf.Append(')');
+buf.Append(" ::= <<" + Environment.NewLine);
+diff --git a/Antlr4.Test.StringTemplate/TestCompiler.cs b/Antlr4.Test.StringTemplate/TestCompiler.cs
+index f1d37ea..c6c3d84 100644
+--- a/Antlr4.Test.StringTemplate/TestCompiler.cs
++++ b/Antlr4.Test.StringTemplate/TestCompiler.cs
+@@ -53,8 +53,7 @@ namespace Antlr4.Test.StringTemplate
+string template = "hi <name>";
+CompiledTemplate code = new TemplateCompiler(new TemplateGroup()).Compile(template);
+string asmExpected =
+-                "load_str 0, " +
+-                "write, " +
++                "write_str 0, " +
+"load_attr 1, " +
+"write";
+string asmResult = code.GetInstructions();
+@@ -70,7 +69,7 @@ namespace Antlr4.Test.StringTemplate
+string template = "hi <foo()>";
+CompiledTemplate code = new TemplateCompiler(new TemplateGroup()).Compile(template);
+string asmExpected =
+-                "load_str 0, write, new 1 0, write";
++                "write_str 0, new 1 0, write";
+string asmResult = code.GetInstructions();
+Assert.AreEqual(asmExpected, asmResult);
+string stringsExpected = "[hi , foo]";
+@@ -127,7 +126,7 @@ namespace Antlr4.Test.StringTemplate
+string template = "hi <foo(a,b)>";
+CompiledTemplate code = new TemplateCompiler(new TemplateGroup()).Compile(template);
+string asmExpected =
+-                "load_str 0, write, load_attr 1, load_attr 2, new 3 2, write";
++                "write_str 0, load_attr 1, load_attr 2, new 3 2, write";
+string asmResult = code.GetInstructions();
+Assert.AreEqual(asmExpected, asmResult);
+string stringsExpected = "[hi , a, b, foo]";
+@@ -194,7 +193,7 @@ namespace Antlr4.Test.StringTemplate
+string template = "hi <(foo)(a,b)>";
+CompiledTemplate code = new TemplateCompiler(new TemplateGroup()).Compile(template);
+string asmExpected =
+-                "load_str 0, write, load_attr 1, tostr, load_attr 2, load_attr 3, new_ind 2, write";
++                "write_str 0, load_attr 1, tostr, load_attr 2, load_attr 3, new_ind 2, write";
+string asmResult = code.GetInstructions();
+Assert.AreEqual(asmExpected, asmResult);
+string stringsExpected = "[hi , foo, a, b]";
+@@ -208,7 +207,7 @@ namespace Antlr4.Test.StringTemplate
+string template = "hi <a.b>";
+CompiledTemplate code = new TemplateCompiler(new TemplateGroup()).Compile(template);
+string asmExpected =
+-                "load_str 0, write, load_attr 1, load_prop 2, write";
++                "write_str 0, load_attr 1, load_prop 2, write";
+string asmResult = code.GetInstructions();
+Assert.AreEqual(asmExpected, asmResult);
+string stringsExpected = "[hi , a, b]";
+@@ -222,7 +221,7 @@ namespace Antlr4.Test.StringTemplate
+string template = "<u.id>: <u.name>";
+CompiledTemplate code = new TemplateCompiler(new TemplateGroup()).Compile(template);
+string asmExpected =
+-                "load_attr 0, load_prop 1, write, load_str 2, write, " +
++                "load_attr 0, load_prop 1, write, write_str 2, " +
+"load_attr 0, load_prop 3, write";
+string asmResult = code.GetInstructions();
+Assert.AreEqual(asmExpected, asmResult);
+@@ -407,7 +406,7 @@ namespace Antlr4.Test.StringTemplate
+string template = "go: <if(name)>hi, foo<endif>";
+CompiledTemplate code = new TemplateCompiler(new TemplateGroup()).Compile(template);
+string asmExpected =
+-                "load_str 0, write, load_attr 1, brf 14, load_str 2, write";
++                "write_str 0, load_attr 1, brf 12, write_str 2";
+string asmResult = code.GetInstructions();
+Assert.AreEqual(asmExpected, asmResult);
+string stringsExpected = "[go: , name, hi, foo]";
+@@ -421,15 +420,12 @@ namespace Antlr4.Test.StringTemplate
+string template = "go: <if(name)>hi, foo<else>bye<endif>";
+CompiledTemplate code = new TemplateCompiler(new TemplateGroup()).Compile(template);
+string asmExpected =
+-                "load_str 0, " +
+-                "write, " +
++                "write_str 0, " +
+"load_attr 1, " +
+-                "brf 17, " +
+-                "load_str 2, " +
+-                "write, " +
+-                "br 21, " +
+-                "load_str 3, " +
+-                "write";
++                "brf 15, " +
++                "write_str 2, " +
++                "br 18, " +
++                "write_str 3";
+string asmResult = code.GetInstructions();
+Assert.AreEqual(asmExpected, asmResult);
+string stringsExpected = "[go: , name, hi, foo, bye]";
+@@ -443,17 +439,14 @@ namespace Antlr4.Test.StringTemplate
+string template = "go: <if(name)>hi, foo<elseif(user)>a user<endif>";
+CompiledTemplate code = new TemplateCompiler(new TemplateGroup()).Compile(template);
+string asmExpected =
+-                "load_str 0, " +
+-                "write, " +
++                "write_str 0, " +
+"load_attr 1, " +
+-                "brf 17, " +
+-                "load_str 2, " +
+-                "write, " +
+-                "br 27, " +
++                "brf 15, " +
++                "write_str 2, " +
++                "br 24, " +
+"load_attr 3, " +
+-                "brf 27, " +
+-                "load_str 4, " +
+-                "write";
++                "brf 24, " +
++                "write_str 4";
+string asmResult = code.GetInstructions();
+Assert.AreEqual(asmExpected, asmResult);
+string stringsExpected = "[go: , name, hi, foo, user, a user]";
+@@ -467,20 +460,16 @@ namespace Antlr4.Test.StringTemplate
+string template = "go: <if(name)>hi, foo<elseif(user)>a user<else>bye<endif>";
+CompiledTemplate code = new TemplateCompiler(new TemplateGroup()).Compile(template);
+string asmExpected =
+-                "load_str 0, " +
+-                "write, " +
++                "write_str 0, " +
+"load_attr 1, " +
+-                "brf 17, " +
+-                "load_str 2, " +
+-                "write, " +
+-                "br 34, " +
++                "brf 15, " +
++                "write_str 2, " +
++                "br 30, " +
+"load_attr 3, " +
+-                "brf 30, " +
+-                "load_str 4, " +
+-                "write, " +
+-                "br 34, " +
+-                "load_str 5, " +
+-                "write";
++                "brf 27, " +
++                "write_str 4, " +
++                "br 30, " +
++                "write_str 5";
+string asmResult = code.GetInstructions();
+Assert.AreEqual(asmExpected, asmResult);
+string stringsExpected = "[go: , name, hi, foo, user, a user, bye]";
+@@ -494,7 +483,7 @@ namespace Antlr4.Test.StringTemplate
+string template = "hi <name; separator=\"x\">";
+CompiledTemplate code = new TemplateCompiler(new TemplateGroup()).Compile(template);
+string asmExpected =
+-                "load_str 0, write, load_attr 1, options, load_str 2, store_option 3, write_opt";
++                "write_str 0, load_attr 1, options, load_str 2, store_option 3, write_opt";
+string asmResult = code.GetInstructions();
+Assert.AreEqual(asmExpected, asmResult);
+string stringsExpected = "[hi , name, x]";
+@@ -508,7 +497,7 @@ namespace Antlr4.Test.StringTemplate
+string template = "hi <name; separator={, }>";
+CompiledTemplate code = new TemplateCompiler(new TemplateGroup()).Compile(template);
+string asmExpected =
+-                "load_str 0, write, load_attr 1, options, new 2 0, store_option 3, write_opt";
++                "write_str 0, load_attr 1, options, new 2 0, store_option 3, write_opt";
+string asmResult = code.GetInstructions();
+Assert.AreEqual(asmExpected, asmResult);
+string stringsExpected = "[hi , name, _sub1]";
+@@ -522,8 +511,7 @@ namespace Antlr4.Test.StringTemplate
+string template = "hi <name; anchor, wrap=foo(), separator=\", \">";
+CompiledTemplate code = new TemplateCompiler(new TemplateGroup()).Compile(template);
+string asmExpected =
+-                "load_str 0, " +
+-                "write, " +
++                "write_str 0, " +
+"load_attr 1, " +
+"options, " +
+"load_str 2, " +
+@@ -589,7 +577,7 @@ namespace Antlr4.Test.StringTemplate
+// compile as if in root dir and in template 'a'
+CompiledTemplate code = new TemplateCompiler(new TemplateGroup('<', '>')).Compile("a", template);
+string asmExpected =
+-                "load_str 0, write, new 1 0, write";
++                "write_str 0, new 1 0, write";
+string asmResult = code.GetInstructions();
+Assert.AreEqual(asmExpected, asmResult);
+string stringsExpected = "[x:, region__a__r]";
+

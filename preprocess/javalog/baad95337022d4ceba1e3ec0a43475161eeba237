@@ -1,0 +1,32 @@
+commit baad95337022d4ceba1e3ec0a43475161eeba237
+Author:     Ivan Brezina <ibre5041@ibrezina.net>
+AuthorDate: Thu Jun 20 16:55:47 2013 +0200
+Commit:     Ivan Brezina <ibre5041@ibrezina.net>
+CommitDate: Mon Sep 9 11:12:32 2013 +0200
+
+.gitignore fixes in tests directory
+
+diff --git a/runtime/Cpp/tests/.gitignore b/runtime/Cpp/tests/.gitignore
+index b3a82e2..dadd82c 100644
+--- a/runtime/Cpp/tests/.gitignore
++++ b/runtime/Cpp/tests/.gitignore
+@@ -1,13 +1,13 @@
+# Windows test files
+-t[0-9][0-9][0-9].exe
++[st][0-9][0-9][0-9].exe
+
+# Unix test files
+-t[0-9][0-9][0-9]
++[st[0-9][0-9][0-9]
+
+# ANTLR generated files
+-t[0-9][0-9][0-9]?*.cpp
+-t[0-9][0-9][0-9]?*.hpp
+-t[0-9][0-9][0-9]*.tokens
++[st][0-9][0-9][0-9]?*.cpp
++[st][0-9][0-9][0-9]?*.hpp
++[st][0-9][0-9][0-9]*.tokens
+
+# MSVC files
+*.vcxproj
+

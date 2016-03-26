@@ -1,0 +1,42 @@
+commit 958c224417478a85f0a3caf4b83d2eb452acf006
+Author:     parrt <parrt@antlr.org>
+AuthorDate: Sat Jul 30 11:48:57 2011 -0800
+Commit:     parrt <parrt@antlr.org>
+CommitDate: Sat Jul 30 11:48:57 2011 -0800
+
+added range check to BaseTree.insertChild()
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8960]
+
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTree.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTree.java
+index 34dd050..8b16f39 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTree.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTree.java
+@@ -156,7 +156,10 @@ public abstract class BaseTree implements Tree {
+but does NOT collapse nil-rooted t's that come in here like addChild.
+*/
+public void insertChild(int i, Object t) {
+-		if ( children==null ) return;
++		if (i < 0 || i >= getChildCount()) {
++			throw new IndexOutOfBoundsException(i+" out or range");
++		}
++
+children.add(i, t);
+// walk others to increment their child indexes
+// set index, parent of this one too
+diff --git a/tool/CHANGES.txt b/tool/CHANGES.txt
+index f7415f0..ac09ef0 100644
+--- a/tool/CHANGES.txt
++++ b/tool/CHANGES.txt
+@@ -7,6 +7,10 @@ University of San Francisco
+
+CHANGES
+
++July 30, 2011
++
++* added range check to BaseTree.insertChild()
++
+July 18, 2011 -- release 3.4
+
+* Added tree method insertChild(int i, Object t).
+

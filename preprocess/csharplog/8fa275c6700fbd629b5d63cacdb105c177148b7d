@@ -1,0 +1,53 @@
+commit 8fa275c6700fbd629b5d63cacdb105c177148b7d
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Mar 30 07:47:21 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Mar 30 07:47:21 2011 -0800
+
+(C# 3) Enable additional unit tests
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7983]
+
+diff --git a/Antlr3.Test/DebugTestAutoAST.cs b/Antlr3.Test/DebugTestAutoAST.cs
+index 2d127ae..ae7dc4e 100644
+--- a/Antlr3.Test/DebugTestAutoAST.cs
++++ b/Antlr3.Test/DebugTestAutoAST.cs
+@@ -32,6 +32,9 @@
+
+namespace AntlrUnitTests
+{
++    using Microsoft.VisualStudio.TestTools.UnitTesting;
++
++    [TestClass]
+public class DebugTestAutoAST : TestAutoAST
+{
+public DebugTestAutoAST()
+diff --git a/Antlr3.Test/DebugTestCompositeGrammars.cs b/Antlr3.Test/DebugTestCompositeGrammars.cs
+index c294b08..0b9c38c 100644
+--- a/Antlr3.Test/DebugTestCompositeGrammars.cs
++++ b/Antlr3.Test/DebugTestCompositeGrammars.cs
+@@ -32,6 +32,9 @@
+
+namespace AntlrUnitTests
+{
++    using Microsoft.VisualStudio.TestTools.UnitTesting;
++
++    [TestClass]
+public class DebugTestCompositeGrammars : TestCompositeGrammars
+{
+public DebugTestCompositeGrammars()
+diff --git a/Antlr3.Test/DebugTestRewriteAST.cs b/Antlr3.Test/DebugTestRewriteAST.cs
+index 0aa6d44..e5dcbc3 100644
+--- a/Antlr3.Test/DebugTestRewriteAST.cs
++++ b/Antlr3.Test/DebugTestRewriteAST.cs
+@@ -32,6 +32,9 @@
+
+namespace AntlrUnitTests
+{
++    using Microsoft.VisualStudio.TestTools.UnitTesting;
++
++    [TestClass]
+public class DebugTestRewriteAST : TestRewriteAST
+{
+public DebugTestRewriteAST()
+

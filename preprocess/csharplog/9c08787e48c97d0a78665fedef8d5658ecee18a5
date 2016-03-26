@@ -1,0 +1,2221 @@
+commit 9c08787e48c97d0a78665fedef8d5658ecee18a5
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Fri Apr 10 12:26:41 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Fri Apr 10 12:26:41 2009 -0800
+
+C# Port:
+* Rebuild grammars to save a few KB of code with the EvaluatePredicate synpred simplification
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6025]
+
+diff --git a/Antlr3.StringTemplate/Language/ActionLexer.cs b/Antlr3.StringTemplate/Language/ActionLexer.cs
+index 2540faa..cbd5fb3 100644
+--- a/Antlr3.StringTemplate/Language/ActionLexer.cs
++++ b/Antlr3.StringTemplate/Language/ActionLexer.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Language\\Action.g3 2009-03-23 20:30:08
++// $ANTLR 3.1.2 Language\\Action.g3 2009-04-10 15:18:38
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -580,7 +580,7 @@ public partial class ActionLexer : Lexer
+{
+int LA4_1 = input.LA(2);
+
+-					if ( (synpred2_Action()) )
++					if ( (EvaluatePredicate(synpred2_Action_fragment)) )
+{
+alt4=1;
+}
+@@ -1822,103 +1822,14 @@ public partial class ActionLexer : Lexer
+}
+// $ANTLR end synpred6_Action
+
+-	public bool synpred2_Action()
++	#region Synpreds
++	bool EvaluatePredicate( System.Action fragment )
+{
+state.backtracking++;
+int start = input.Mark();
+try
+{
+-			synpred2_Action_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred1_Action()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred1_Action_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred3_Action()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred3_Action_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred4_Action()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred4_Action_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred5_Action()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred5_Action_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred6_Action()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred6_Action_fragment(); // can never throw exception
++			fragment();
+}
+catch ( RecognitionException re )
+{
+@@ -1930,6 +1841,7 @@ public partial class ActionLexer : Lexer
+state.failed=false;
+return success;
+}
++	#endregion Synpreds
+
+
+#region DFA
+@@ -2120,7 +2032,7 @@ public partial class ActionLexer : Lexer
+int index5_7 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (synpred1_Action()) ) {s = 10;}
++				if ( (EvaluatePredicate(synpred1_Action_fragment)) ) {s = 10;}
+
+else if ( (true) ) {s = 3;}
+
+@@ -2299,7 +2211,7 @@ public partial class ActionLexer : Lexer
+int index6_5 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (synpred3_Action()) ) {s = 8;}
++				if ( (EvaluatePredicate(synpred3_Action_fragment)) ) {s = 8;}
+
+else if ( (true) ) {s = 7;}
+
+@@ -2315,7 +2227,7 @@ public partial class ActionLexer : Lexer
+int index6_6 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (synpred4_Action()) ) {s = 9;}
++				if ( (EvaluatePredicate(synpred4_Action_fragment)) ) {s = 9;}
+
+else if ( (true) ) {s = 7;}
+
+@@ -2436,7 +2348,7 @@ public partial class ActionLexer : Lexer
+int index12_5 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (synpred5_Action()) ) {s = 8;}
++				if ( (EvaluatePredicate(synpred5_Action_fragment)) ) {s = 8;}
+
+else if ( (true) ) {s = 7;}
+
+@@ -2452,7 +2364,7 @@ public partial class ActionLexer : Lexer
+int index12_6 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (synpred6_Action()) ) {s = 9;}
++				if ( (EvaluatePredicate(synpred6_Action_fragment)) ) {s = 9;}
+
+else if ( (true) ) {s = 7;}
+
+diff --git a/Antlr3.StringTemplate/Language/ActionParser.cs b/Antlr3.StringTemplate/Language/ActionParser.cs
+index c646077..ed52b0e 100644
+--- a/Antlr3.StringTemplate/Language/ActionParser.cs
++++ b/Antlr3.StringTemplate/Language/ActionParser.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Language\\Action.g3 2009-03-23 20:30:07
++// $ANTLR 3.1.2 Language\\Action.g3 2009-04-10 15:18:38
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -3605,13 +3605,13 @@ public partial class ActionParser : Parser
+#endregion Rules
+
+#region Synpreds
+-	public bool synpred1_Action()
++	bool EvaluatePredicate( System.Action fragment )
+{
+state.backtracking++;
+int start = input.Mark();
+try
+{
+-			synpred1_Action_fragment(); // can never throw exception
++			fragment();
+}
+catch ( RecognitionException re )
+{
+@@ -3623,9 +3623,9 @@ public partial class ActionParser : Parser
+state.failed=false;
+return success;
+}
+-
+#endregion Synpreds
+
++
+#region DFA
+DFA15 dfa15;
+
+@@ -3721,7 +3721,7 @@ public partial class ActionParser : Parser
+s = -1;
+if ( (LA15_0==ID) ) {s = 1;}
+
+-				else if ( (LA15_0==SUPER) && (synpred1_Action())) {s = 2;}
++				else if ( (LA15_0==SUPER) && (EvaluatePredicate(synpred1_Action_fragment))) {s = 2;}
+
+else if ( (LA15_0==LPAREN) ) {s = 3;}
+
+@@ -3743,7 +3743,7 @@ public partial class ActionParser : Parser
+int index15_1 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (synpred1_Action()) ) {s = 2;}
++				if ( (EvaluatePredicate(synpred1_Action_fragment)) ) {s = 2;}
+
+else if ( (true) ) {s = 4;}
+
+@@ -3759,7 +3759,7 @@ public partial class ActionParser : Parser
+int index15_3 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (synpred1_Action()) ) {s = 2;}
++				if ( (EvaluatePredicate(synpred1_Action_fragment)) ) {s = 2;}
+
+else if ( (true) ) {s = 12;}
+
+diff --git a/Antlr3.StringTemplate/Language/AngleBracketTemplateLexer.cs b/Antlr3.StringTemplate/Language/AngleBracketTemplateLexer.cs
+index db48cec..0fe27d3 100644
+--- a/Antlr3.StringTemplate/Language/AngleBracketTemplateLexer.cs
++++ b/Antlr3.StringTemplate/Language/AngleBracketTemplateLexer.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Language\\AngleBracketTemplateLexer.g3 2009-03-23 17:53:05
++// $ANTLR 3.1.2 Language\\AngleBracketTemplateLexer.g3 2009-04-10 15:18:31
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -162,11 +162,11 @@ public partial class AngleBracketTemplateLexer : Lexer
+{
+int LA26_1 = input.LA(2);
+
+-				if ( (synpred1_AngleBracketTemplateLexer()) )
++				if ( (EvaluatePredicate(synpred1_AngleBracketTemplateLexer_fragment)) )
+{
+alt26=1;
+}
+-				else if ( (synpred2_AngleBracketTemplateLexer()) )
++				else if ( (EvaluatePredicate(synpred2_AngleBracketTemplateLexer_fragment)) )
+{
+alt26=2;
+}
+@@ -278,23 +278,23 @@ public partial class AngleBracketTemplateLexer : Lexer
+{
+int LA25_1 = input.LA(2);
+
+-					if ( (synpred3_AngleBracketTemplateLexer()) )
++					if ( (EvaluatePredicate(synpred3_AngleBracketTemplateLexer_fragment)) )
+{
+alt25=1;
+}
+-					else if ( (synpred4_AngleBracketTemplateLexer()) )
++					else if ( (EvaluatePredicate(synpred4_AngleBracketTemplateLexer_fragment)) )
+{
+alt25=2;
+}
+-					else if ( (synpred5_AngleBracketTemplateLexer()) )
++					else if ( (EvaluatePredicate(synpred5_AngleBracketTemplateLexer_fragment)) )
+{
+alt25=3;
+}
+-					else if ( (synpred6_AngleBracketTemplateLexer()) )
++					else if ( (EvaluatePredicate(synpred6_AngleBracketTemplateLexer_fragment)) )
+{
+alt25=4;
+}
+-					else if ( (synpred7_AngleBracketTemplateLexer()) )
++					else if ( (EvaluatePredicate(synpred7_AngleBracketTemplateLexer_fragment)) )
+{
+alt25=5;
+}
+@@ -739,7 +739,7 @@ public partial class AngleBracketTemplateLexer : Lexer
+{
+int LA15_4 = input.LA(3);
+
+-								if ( (synpred8_AngleBracketTemplateLexer()) )
++								if ( (EvaluatePredicate(synpred8_AngleBracketTemplateLexer_fragment)) )
+{
+alt15=1;
+}
+@@ -749,7 +749,7 @@ public partial class AngleBracketTemplateLexer : Lexer
+{
+int LA15_2 = input.LA(2);
+
+-							if ( (synpred8_AngleBracketTemplateLexer()) )
++							if ( (EvaluatePredicate(synpred8_AngleBracketTemplateLexer_fragment)) )
+{
+alt15=1;
+}
+@@ -817,7 +817,7 @@ public partial class AngleBracketTemplateLexer : Lexer
+{
+int LA17_1 = input.LA(2);
+
+-									if ( (synpred9_AngleBracketTemplateLexer()) )
++									if ( (EvaluatePredicate(synpred9_AngleBracketTemplateLexer_fragment)) )
+{
+alt17=1;
+}
+@@ -837,7 +837,7 @@ public partial class AngleBracketTemplateLexer : Lexer
+{
+int LA17_2 = input.LA(2);
+
+-									if ( (synpred9_AngleBracketTemplateLexer()) )
++									if ( (EvaluatePredicate(synpred9_AngleBracketTemplateLexer_fragment)) )
+{
+alt17=1;
+}
+@@ -947,11 +947,11 @@ public partial class AngleBracketTemplateLexer : Lexer
+{
+int LA20_4 = input.LA(3);
+
+-								if ( (LA20_4=='<') && (synpred10_AngleBracketTemplateLexer()))
++								if ( (LA20_4=='<') && (EvaluatePredicate(synpred10_AngleBracketTemplateLexer_fragment)))
+{
+alt20=1;
+}
+-								else if ( ((LA20_4>='\u0000' && LA20_4<=';')||(LA20_4>='=' && LA20_4<='\uFFFF')) && (synpred10_AngleBracketTemplateLexer()))
++								else if ( ((LA20_4>='\u0000' && LA20_4<=';')||(LA20_4>='=' && LA20_4<='\uFFFF')) && (EvaluatePredicate(synpred10_AngleBracketTemplateLexer_fragment)))
+{
+alt20=1;
+}
+@@ -961,7 +961,7 @@ public partial class AngleBracketTemplateLexer : Lexer
+{
+int LA20_2 = input.LA(2);
+
+-							if ( (LA20_2=='<') && (synpred10_AngleBracketTemplateLexer()))
++							if ( (LA20_2=='<') && (EvaluatePredicate(synpred10_AngleBracketTemplateLexer_fragment)))
+{
+alt20=1;
+}
+@@ -969,7 +969,7 @@ public partial class AngleBracketTemplateLexer : Lexer
+{
+int LA20_6 = input.LA(3);
+
+-								if ( (synpred10_AngleBracketTemplateLexer()) )
++								if ( (EvaluatePredicate(synpred10_AngleBracketTemplateLexer_fragment)) )
+{
+alt20=1;
+}
+@@ -978,12 +978,12 @@ public partial class AngleBracketTemplateLexer : Lexer
+{
+int LA20_7 = input.LA(3);
+
+-								if ( (synpred10_AngleBracketTemplateLexer()) )
++								if ( (EvaluatePredicate(synpred10_AngleBracketTemplateLexer_fragment)) )
+{
+alt20=1;
+}
+}
+-							else if ( ((LA20_2>='\u0000' && LA20_2<='\t')||(LA20_2>='\u000B' && LA20_2<='\f')||(LA20_2>='\u000E' && LA20_2<=';')||(LA20_2>='=' && LA20_2<='\uFFFF')) && (synpred10_AngleBracketTemplateLexer()))
++							else if ( ((LA20_2>='\u0000' && LA20_2<='\t')||(LA20_2>='\u000B' && LA20_2<='\f')||(LA20_2>='\u000E' && LA20_2<=';')||(LA20_2>='=' && LA20_2<='\uFFFF')) && (EvaluatePredicate(synpred10_AngleBracketTemplateLexer_fragment)))
+{
+alt20=1;
+}
+@@ -1798,7 +1798,7 @@ public partial class AngleBracketTemplateLexer : Lexer
+{
+int LA35_2 = input.LA(3);
+
+-						if ( (synpred11_AngleBracketTemplateLexer()) )
++						if ( (EvaluatePredicate(synpred11_AngleBracketTemplateLexer_fragment)) )
+{
+alt35=1;
+}
+@@ -1808,7 +1808,7 @@ public partial class AngleBracketTemplateLexer : Lexer
+{
+int LA35_2 = input.LA(2);
+
+-					if ( (synpred11_AngleBracketTemplateLexer()) )
++					if ( (EvaluatePredicate(synpred11_AngleBracketTemplateLexer_fragment)) )
+{
+alt35=1;
+}
+@@ -2805,229 +2805,14 @@ public partial class AngleBracketTemplateLexer : Lexer
+}
+// $ANTLR end synpred9_AngleBracketTemplateLexer
+
+-	public bool synpred8_AngleBracketTemplateLexer()
++	#region Synpreds
++	bool EvaluatePredicate( System.Action fragment )
+{
+state.backtracking++;
+int start = input.Mark();
+try
+{
+-			synpred8_AngleBracketTemplateLexer_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred9_AngleBracketTemplateLexer()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred9_AngleBracketTemplateLexer_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred10_AngleBracketTemplateLexer()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred10_AngleBracketTemplateLexer_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred3_AngleBracketTemplateLexer()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred3_AngleBracketTemplateLexer_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred4_AngleBracketTemplateLexer()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred4_AngleBracketTemplateLexer_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred5_AngleBracketTemplateLexer()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred5_AngleBracketTemplateLexer_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred6_AngleBracketTemplateLexer()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred6_AngleBracketTemplateLexer_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred7_AngleBracketTemplateLexer()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred7_AngleBracketTemplateLexer_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred1_AngleBracketTemplateLexer()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred1_AngleBracketTemplateLexer_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred2_AngleBracketTemplateLexer()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred2_AngleBracketTemplateLexer_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred11_AngleBracketTemplateLexer()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred11_AngleBracketTemplateLexer_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred12_AngleBracketTemplateLexer()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred12_AngleBracketTemplateLexer_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred13_AngleBracketTemplateLexer()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred13_AngleBracketTemplateLexer_fragment(); // can never throw exception
++			fragment();
+}
+catch ( RecognitionException re )
+{
+@@ -3039,6 +2824,7 @@ public partial class AngleBracketTemplateLexer : Lexer
+state.failed=false;
+return success;
+}
++	#endregion Synpreds
+
+
+#region DFA
+@@ -3430,7 +3216,7 @@ public partial class AngleBracketTemplateLexer : Lexer
+
+else if ( (LA37_0=='\n') ) {s = 3;}
+
+-				else if ( ((LA37_0>='\u0000' && LA37_0<='\t')||(LA37_0>='\u000B' && LA37_0<='\f')||(LA37_0>='\u000E' && LA37_0<='=')||(LA37_0>='?' && LA37_0<='\uFFFF')) && (synpred13_AngleBracketTemplateLexer())) {s = 4;}
++				else if ( ((LA37_0>='\u0000' && LA37_0<='\t')||(LA37_0>='\u000B' && LA37_0<='\f')||(LA37_0>='\u000E' && LA37_0<='=')||(LA37_0>='?' && LA37_0<='\uFFFF')) && (EvaluatePredicate(synpred13_AngleBracketTemplateLexer_fragment))) {s = 4;}
+
+
+input.Seek(index37_0);
+@@ -3446,11 +3232,11 @@ public partial class AngleBracketTemplateLexer : Lexer
+s = -1;
+if ( (LA37_1=='>') ) {s = 5;}
+
+-				else if ( (LA37_1=='\r') && (synpred13_AngleBracketTemplateLexer())) {s = 6;}
++				else if ( (LA37_1=='\r') && (EvaluatePredicate(synpred13_AngleBracketTemplateLexer_fragment))) {s = 6;}
+
+-				else if ( (LA37_1=='\n') && (synpred13_AngleBracketTemplateLexer())) {s = 7;}
++				else if ( (LA37_1=='\n') && (EvaluatePredicate(synpred13_AngleBracketTemplateLexer_fragment))) {s = 7;}
+
+-				else if ( ((LA37_1>='\u0000' && LA37_1<='\t')||(LA37_1>='\u000B' && LA37_1<='\f')||(LA37_1>='\u000E' && LA37_1<='=')||(LA37_1>='?' && LA37_1<='\uFFFF')) && (synpred13_AngleBracketTemplateLexer())) {s = 8;}
++				else if ( ((LA37_1>='\u0000' && LA37_1<='\t')||(LA37_1>='\u000B' && LA37_1<='\f')||(LA37_1>='\u000E' && LA37_1<='=')||(LA37_1>='?' && LA37_1<='\uFFFF')) && (EvaluatePredicate(synpred13_AngleBracketTemplateLexer_fragment))) {s = 8;}
+
+
+input.Seek(index37_1);
+@@ -3464,9 +3250,9 @@ public partial class AngleBracketTemplateLexer : Lexer
+int index37_2 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (synpred12_AngleBracketTemplateLexer()) ) {s = 13;}
++				if ( (EvaluatePredicate(synpred12_AngleBracketTemplateLexer_fragment)) ) {s = 13;}
+
+-				else if ( (synpred13_AngleBracketTemplateLexer()) ) {s = 8;}
++				else if ( (EvaluatePredicate(synpred13_AngleBracketTemplateLexer_fragment)) ) {s = 8;}
+
+
+input.Seek(index37_2);
+@@ -3480,9 +3266,9 @@ public partial class AngleBracketTemplateLexer : Lexer
+int index37_3 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (synpred12_AngleBracketTemplateLexer()) ) {s = 13;}
++				if ( (EvaluatePredicate(synpred12_AngleBracketTemplateLexer_fragment)) ) {s = 13;}
+
+-				else if ( (synpred13_AngleBracketTemplateLexer()) ) {s = 8;}
++				else if ( (EvaluatePredicate(synpred13_AngleBracketTemplateLexer_fragment)) ) {s = 8;}
+
+
+input.Seek(index37_3);
+@@ -3496,7 +3282,7 @@ public partial class AngleBracketTemplateLexer : Lexer
+int index37_5 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (synpred13_AngleBracketTemplateLexer()) ) {s = 8;}
++				if ( (EvaluatePredicate(synpred13_AngleBracketTemplateLexer_fragment)) ) {s = 8;}
+
+else if ( (true) ) {s = 18;}
+
+diff --git a/Antlr3.StringTemplate/Language/TemplateLexer.cs b/Antlr3.StringTemplate/Language/TemplateLexer.cs
+index 54ec8ca..014a80b 100644
+--- a/Antlr3.StringTemplate/Language/TemplateLexer.cs
++++ b/Antlr3.StringTemplate/Language/TemplateLexer.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Language\\Template.g3 2009-03-23 18:21:53
++// $ANTLR 3.1.2 Language\\Template.g3 2009-04-10 15:18:33
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -277,11 +277,11 @@ public partial class TemplateLexer : Lexer
+{
+int LA26_1 = input.LA(2);
+
+-				if ( (synpred1_Template()) )
++				if ( (EvaluatePredicate(synpred1_Template_fragment)) )
+{
+alt26=1;
+}
+-				else if ( (synpred2_Template()) )
++				else if ( (EvaluatePredicate(synpred2_Template_fragment)) )
+{
+alt26=2;
+}
+@@ -386,23 +386,23 @@ public partial class TemplateLexer : Lexer
+{
+int LA25_1 = input.LA(2);
+
+-					if ( (synpred3_Template()) )
++					if ( (EvaluatePredicate(synpred3_Template_fragment)) )
+{
+alt25=1;
+}
+-					else if ( (synpred4_Template()) )
++					else if ( (EvaluatePredicate(synpred4_Template_fragment)) )
+{
+alt25=2;
+}
+-					else if ( (synpred5_Template()) )
++					else if ( (EvaluatePredicate(synpred5_Template_fragment)) )
+{
+alt25=3;
+}
+-					else if ( (synpred6_Template()) )
++					else if ( (EvaluatePredicate(synpred6_Template_fragment)) )
+{
+alt25=4;
+}
+-					else if ( (synpred7_Template()) )
++					else if ( (EvaluatePredicate(synpred7_Template_fragment)) )
+{
+alt25=5;
+}
+@@ -847,7 +847,7 @@ public partial class TemplateLexer : Lexer
+{
+int LA15_4 = input.LA(3);
+
+-								if ( (synpred8_Template()) )
++								if ( (EvaluatePredicate(synpred8_Template_fragment)) )
+{
+alt15=1;
+}
+@@ -857,7 +857,7 @@ public partial class TemplateLexer : Lexer
+{
+int LA15_2 = input.LA(2);
+
+-							if ( (synpred8_Template()) )
++							if ( (EvaluatePredicate(synpred8_Template_fragment)) )
+{
+alt15=1;
+}
+@@ -923,7 +923,7 @@ public partial class TemplateLexer : Lexer
+{
+int LA17_1 = input.LA(2);
+
+-									if ( (synpred9_Template()) )
++									if ( (EvaluatePredicate(synpred9_Template_fragment)) )
+{
+alt17=1;
+}
+@@ -943,7 +943,7 @@ public partial class TemplateLexer : Lexer
+{
+int LA17_2 = input.LA(2);
+
+-									if ( (synpred9_Template()) )
++									if ( (EvaluatePredicate(synpred9_Template_fragment)) )
+{
+alt17=1;
+}
+@@ -1053,11 +1053,11 @@ public partial class TemplateLexer : Lexer
+{
+int LA20_4 = input.LA(3);
+
+-								if ( (LA20_4=='$') && (synpred10_Template()))
++								if ( (LA20_4=='$') && (EvaluatePredicate(synpred10_Template_fragment)))
+{
+alt20=1;
+}
+-								else if ( ((LA20_4>='\u0000' && LA20_4<='#')||(LA20_4>='%' && LA20_4<='\uFFFF')) && (synpred10_Template()))
++								else if ( ((LA20_4>='\u0000' && LA20_4<='#')||(LA20_4>='%' && LA20_4<='\uFFFF')) && (EvaluatePredicate(synpred10_Template_fragment)))
+{
+alt20=1;
+}
+@@ -1067,7 +1067,7 @@ public partial class TemplateLexer : Lexer
+{
+int LA20_2 = input.LA(2);
+
+-							if ( (LA20_2=='$') && (synpred10_Template()))
++							if ( (LA20_2=='$') && (EvaluatePredicate(synpred10_Template_fragment)))
+{
+alt20=1;
+}
+@@ -1075,7 +1075,7 @@ public partial class TemplateLexer : Lexer
+{
+int LA20_6 = input.LA(3);
+
+-								if ( (synpred10_Template()) )
++								if ( (EvaluatePredicate(synpred10_Template_fragment)) )
+{
+alt20=1;
+}
+@@ -1084,12 +1084,12 @@ public partial class TemplateLexer : Lexer
+{
+int LA20_7 = input.LA(3);
+
+-								if ( (synpred10_Template()) )
++								if ( (EvaluatePredicate(synpred10_Template_fragment)) )
+{
+alt20=1;
+}
+}
+-							else if ( ((LA20_2>='\u0000' && LA20_2<='\t')||(LA20_2>='\u000B' && LA20_2<='\f')||(LA20_2>='\u000E' && LA20_2<='#')||(LA20_2>='%' && LA20_2<='\uFFFF')) && (synpred10_Template()))
++							else if ( ((LA20_2>='\u0000' && LA20_2<='\t')||(LA20_2>='\u000B' && LA20_2<='\f')||(LA20_2>='\u000E' && LA20_2<='#')||(LA20_2>='%' && LA20_2<='\uFFFF')) && (EvaluatePredicate(synpred10_Template_fragment)))
+{
+alt20=1;
+}
+@@ -1139,7 +1139,7 @@ public partial class TemplateLexer : Lexer
+{
+int LA21_1 = input.LA(2);
+
+-							if ( (LA21_1=='@') && (synpred11_Template()))
++							if ( (LA21_1=='@') && (EvaluatePredicate(synpred11_Template_fragment)))
+{
+alt21=1;
+}
+@@ -1831,7 +1831,7 @@ public partial class TemplateLexer : Lexer
+{
+int LA34_2 = input.LA(3);
+
+-						if ( (synpred12_Template()) )
++						if ( (EvaluatePredicate(synpred12_Template_fragment)) )
+{
+alt34=1;
+}
+@@ -1841,7 +1841,7 @@ public partial class TemplateLexer : Lexer
+{
+int LA34_2 = input.LA(2);
+
+-					if ( (synpred12_Template()) )
++					if ( (EvaluatePredicate(synpred12_Template_fragment)) )
+{
+alt34=1;
+}
+@@ -1911,7 +1911,7 @@ public partial class TemplateLexer : Lexer
+{
+int LA36_2 = input.LA(2);
+
+-						if ( (synpred13_Template()) )
++						if ( (EvaluatePredicate(synpred13_Template_fragment)) )
+{
+alt36=1;
+}
+@@ -1926,7 +1926,7 @@ public partial class TemplateLexer : Lexer
+{
+int LA36_3 = input.LA(2);
+
+-						if ( (synpred13_Template()) )
++						if ( (EvaluatePredicate(synpred13_Template_fragment)) )
+{
+alt36=1;
+}
+@@ -2933,229 +2933,14 @@ public partial class TemplateLexer : Lexer
+}
+// $ANTLR end synpred9_Template
+
+-	public bool synpred8_Template()
++	#region Synpreds
++	bool EvaluatePredicate( System.Action fragment )
+{
+state.backtracking++;
+int start = input.Mark();
+try
+{
+-			synpred8_Template_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred9_Template()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred9_Template_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred10_Template()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred10_Template_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred11_Template()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred11_Template_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred3_Template()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred3_Template_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred4_Template()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred4_Template_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred5_Template()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred5_Template_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred6_Template()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred6_Template_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred7_Template()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred7_Template_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred1_Template()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred1_Template_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred2_Template()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred2_Template_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred12_Template()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred12_Template_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred13_Template()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred13_Template_fragment(); // can never throw exception
++			fragment();
+}
+catch ( RecognitionException re )
+{
+@@ -3167,6 +2952,7 @@ public partial class TemplateLexer : Lexer
+state.failed=false;
+return success;
+}
++	#endregion Synpreds
+
+
+#region DFA
+diff --git a/Antlr3/Grammars/ANTLRLexer.cs b/Antlr3/Grammars/ANTLRLexer.cs
+index 90b5db1..40de780 100644
+--- a/Antlr3/Grammars/ANTLRLexer.cs
++++ b/Antlr3/Grammars/ANTLRLexer.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Grammars\\ANTLR.g3 2009-03-23 17:53:58
++// $ANTLR 3.1.2 Grammars\\ANTLR.g3 2009-04-10 15:22:15
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -1717,7 +1717,7 @@ public partial class ANTLRLexer : Lexer
+{
+int LA12_2 = input.LA(2);
+
+-					if ( (LA12_2=='\"') && (synpred2_ANTLR()))
++					if ( (LA12_2=='\"') && (EvaluatePredicate(synpred2_ANTLR_fragment)))
+{
+alt12=1;
+}
+@@ -2085,7 +2085,7 @@ public partial class ANTLRLexer : Lexer
+{
+int LA15_2 = input.LA(2);
+
+-					if ( (LA15_2==']') && (synpred3_ANTLR()))
++					if ( (LA15_2==']') && (EvaluatePredicate(synpred3_ANTLR_fragment)))
+{
+alt15=1;
+}
+@@ -2296,7 +2296,7 @@ public partial class ANTLRLexer : Lexer
+{
+int LA17_4 = input.LA(2);
+
+-					if ( (synpred4_ANTLR()) )
++					if ( (EvaluatePredicate(synpred4_ANTLR_fragment)) )
+{
+alt17=3;
+}
+@@ -3362,67 +3362,14 @@ public partial class ANTLRLexer : Lexer
+}}
+// $ANTLR end synpred4_ANTLR
+
+-	public bool synpred1_ANTLR()
++	#region Synpreds
++	bool EvaluatePredicate( System.Action fragment )
+{
+state.backtracking++;
+int start = input.Mark();
+try
+{
+-			synpred1_ANTLR_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred2_ANTLR()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred2_ANTLR_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred3_ANTLR()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred3_ANTLR_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred4_ANTLR()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred4_ANTLR_fragment(); // can never throw exception
++			fragment();
+}
+catch ( RecognitionException re )
+{
+@@ -3434,6 +3381,7 @@ public partial class ANTLRLexer : Lexer
+state.failed=false;
+return success;
+}
++	#endregion Synpreds
+
+
+#region DFA
+@@ -3590,13 +3538,13 @@ public partial class ANTLRLexer : Lexer
+int index9_16 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (LA9_16=='\"') && (synpred1_ANTLR())) {s = 25;}
++				if ( (LA9_16=='\"') && (EvaluatePredicate(synpred1_ANTLR_fragment))) {s = 25;}
+
+-				else if ( (LA9_16=='\\') && (synpred1_ANTLR())) {s = 26;}
++				else if ( (LA9_16=='\\') && (EvaluatePredicate(synpred1_ANTLR_fragment))) {s = 26;}
+
+else if ( (LA9_16=='\n') ) {s = 18;}
+
+-				else if ( ((LA9_16>='\u0000' && LA9_16<='\t')||(LA9_16>='\u000B' && LA9_16<='!')||(LA9_16>='#' && LA9_16<='[')||(LA9_16>=']' && LA9_16<='\uFFFF')) && (synpred1_ANTLR())) {s = 27;}
++				else if ( ((LA9_16>='\u0000' && LA9_16<='\t')||(LA9_16>='\u000B' && LA9_16<='!')||(LA9_16>='#' && LA9_16<='[')||(LA9_16>=']' && LA9_16<='\uFFFF')) && (EvaluatePredicate(synpred1_ANTLR_fragment))) {s = 27;}
+
+
+input.Seek(index9_16);
+@@ -3610,11 +3558,11 @@ public partial class ANTLRLexer : Lexer
+int index9_18 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (LA9_18=='\"') && (synpred1_ANTLR())) {s = 25;}
++				if ( (LA9_18=='\"') && (EvaluatePredicate(synpred1_ANTLR_fragment))) {s = 25;}
+
+-				else if ( (LA9_18=='\\') && (synpred1_ANTLR())) {s = 26;}
++				else if ( (LA9_18=='\\') && (EvaluatePredicate(synpred1_ANTLR_fragment))) {s = 26;}
+
+-				else if ( ((LA9_18>='\u0000' && LA9_18<='!')||(LA9_18>='#' && LA9_18<='[')||(LA9_18>=']' && LA9_18<='\uFFFF')) && (synpred1_ANTLR())) {s = 27;}
++				else if ( ((LA9_18>='\u0000' && LA9_18<='!')||(LA9_18>='#' && LA9_18<='[')||(LA9_18>=']' && LA9_18<='\uFFFF')) && (EvaluatePredicate(synpred1_ANTLR_fragment))) {s = 27;}
+
+else s = 2;
+
+@@ -3687,13 +3635,13 @@ public partial class ANTLRLexer : Lexer
+int index9_22 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (LA9_22=='\"') && (synpred1_ANTLR())) {s = 25;}
++				if ( (LA9_22=='\"') && (EvaluatePredicate(synpred1_ANTLR_fragment))) {s = 25;}
+
+-				else if ( (LA9_22=='\\') && (synpred1_ANTLR())) {s = 26;}
++				else if ( (LA9_22=='\\') && (EvaluatePredicate(synpred1_ANTLR_fragment))) {s = 26;}
+
+else if ( (LA9_22=='\n') ) {s = 18;}
+
+-				else if ( ((LA9_22>='\u0000' && LA9_22<='\t')||(LA9_22>='\u000B' && LA9_22<='!')||(LA9_22>='#' && LA9_22<='[')||(LA9_22>=']' && LA9_22<='\uFFFF')) && (synpred1_ANTLR())) {s = 27;}
++				else if ( ((LA9_22>='\u0000' && LA9_22<='\t')||(LA9_22>='\u000B' && LA9_22<='!')||(LA9_22>='#' && LA9_22<='[')||(LA9_22>=']' && LA9_22<='\uFFFF')) && (EvaluatePredicate(synpred1_ANTLR_fragment))) {s = 27;}
+
+
+input.Seek(index9_22);
+@@ -3707,11 +3655,11 @@ public partial class ANTLRLexer : Lexer
+int index9_23 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (LA9_23=='\"') && (synpred1_ANTLR())) {s = 25;}
++				if ( (LA9_23=='\"') && (EvaluatePredicate(synpred1_ANTLR_fragment))) {s = 25;}
+
+-				else if ( (LA9_23=='\\') && (synpred1_ANTLR())) {s = 26;}
++				else if ( (LA9_23=='\\') && (EvaluatePredicate(synpred1_ANTLR_fragment))) {s = 26;}
+
+-				else if ( ((LA9_23>='\u0000' && LA9_23<='!')||(LA9_23>='#' && LA9_23<='[')||(LA9_23>=']' && LA9_23<='\uFFFF')) && (synpred1_ANTLR())) {s = 27;}
++				else if ( ((LA9_23>='\u0000' && LA9_23<='!')||(LA9_23>='#' && LA9_23<='[')||(LA9_23>=']' && LA9_23<='\uFFFF')) && (EvaluatePredicate(synpred1_ANTLR_fragment))) {s = 27;}
+
+else s = 2;
+
+@@ -3746,7 +3694,7 @@ public partial class ANTLRLexer : Lexer
+int index9_29 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (synpred1_ANTLR()) ) {s = 27;}
++				if ( (EvaluatePredicate(synpred1_ANTLR_fragment)) ) {s = 27;}
+
+else if ( (true) ) {s = 2;}
+
+diff --git a/Antlr3/Grammars/ANTLRParser.cs b/Antlr3/Grammars/ANTLRParser.cs
+index eea1aca..533efac 100644
+--- a/Antlr3/Grammars/ANTLRParser.cs
++++ b/Antlr3/Grammars/ANTLRParser.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Grammars\\ANTLR.g3 2009-03-20 14:32:46
++// $ANTLR 3.1.2 Grammars\\ANTLR.g3 2009-04-10 15:22:14
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -10367,13 +10367,13 @@ public partial class ANTLRParser : Parser
+#endregion Rules
+
+#region Synpreds
+-	public bool synpred1_ANTLR()
++	bool EvaluatePredicate( System.Action fragment )
+{
+state.backtracking++;
+int start = input.Mark();
+try
+{
+-			synpred1_ANTLR_fragment(); // can never throw exception
++			fragment();
+}
+catch ( RecognitionException re )
+{
+@@ -10385,9 +10385,9 @@ public partial class ANTLRParser : Parser
+state.failed=false;
+return success;
+}
+-
+#endregion Synpreds
+
++
+#region DFA
+DFA49 dfa49;
+DFA52 dfa52;
+@@ -10576,7 +10576,7 @@ public partial class ANTLRParser : Parser
+int index52_7 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (synpred1_ANTLR()) ) {s = 17;}
++				if ( (EvaluatePredicate(synpred1_ANTLR_fragment)) ) {s = 17;}
+
+else if ( (true) ) {s = 3;}
+
+@@ -10592,7 +10592,7 @@ public partial class ANTLRParser : Parser
+int index52_8 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (synpred1_ANTLR()) ) {s = 17;}
++				if ( (EvaluatePredicate(synpred1_ANTLR_fragment)) ) {s = 17;}
+
+else if ( (true) ) {s = 3;}
+
+@@ -10608,7 +10608,7 @@ public partial class ANTLRParser : Parser
+int index52_9 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (synpred1_ANTLR()) ) {s = 17;}
++				if ( (EvaluatePredicate(synpred1_ANTLR_fragment)) ) {s = 17;}
+
+else if ( (true) ) {s = 3;}
+
+@@ -10624,7 +10624,7 @@ public partial class ANTLRParser : Parser
+int index52_10 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (synpred1_ANTLR()) ) {s = 17;}
++				if ( (EvaluatePredicate(synpred1_ANTLR_fragment)) ) {s = 17;}
+
+else if ( (true) ) {s = 3;}
+
+@@ -10640,7 +10640,7 @@ public partial class ANTLRParser : Parser
+int index52_11 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (synpred1_ANTLR()) ) {s = 17;}
++				if ( (EvaluatePredicate(synpred1_ANTLR_fragment)) ) {s = 17;}
+
+else if ( (true) ) {s = 3;}
+
+@@ -10656,7 +10656,7 @@ public partial class ANTLRParser : Parser
+int index52_12 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (synpred1_ANTLR()) ) {s = 17;}
++				if ( (EvaluatePredicate(synpred1_ANTLR_fragment)) ) {s = 17;}
+
+else if ( (true) ) {s = 6;}
+
+@@ -10672,7 +10672,7 @@ public partial class ANTLRParser : Parser
+int index52_13 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (synpred1_ANTLR()) ) {s = 17;}
++				if ( (EvaluatePredicate(synpred1_ANTLR_fragment)) ) {s = 17;}
+
+else if ( (true) ) {s = 6;}
+
+@@ -10688,7 +10688,7 @@ public partial class ANTLRParser : Parser
+int index52_14 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (synpred1_ANTLR()) ) {s = 17;}
++				if ( (EvaluatePredicate(synpred1_ANTLR_fragment)) ) {s = 17;}
+
+else if ( (true) ) {s = 6;}
+
+@@ -10704,7 +10704,7 @@ public partial class ANTLRParser : Parser
+int index52_15 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (synpred1_ANTLR()) ) {s = 17;}
++				if ( (EvaluatePredicate(synpred1_ANTLR_fragment)) ) {s = 17;}
+
+else if ( (true) ) {s = 6;}
+
+@@ -10720,7 +10720,7 @@ public partial class ANTLRParser : Parser
+int index52_16 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (synpred1_ANTLR()) ) {s = 17;}
++				if ( (EvaluatePredicate(synpred1_ANTLR_fragment)) ) {s = 17;}
+
+else if ( (true) ) {s = 6;}
+
+diff --git a/Antlr3/Grammars/ActionAnalysisLexer.cs b/Antlr3/Grammars/ActionAnalysisLexer.cs
+index 784c87d..0572016 100644
+--- a/Antlr3/Grammars/ActionAnalysisLexer.cs
++++ b/Antlr3/Grammars/ActionAnalysisLexer.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Grammars\\ActionAnalysisLexer.g3 2009-03-23 17:53:56
++// $ANTLR 3.1.2 Grammars\\ActionAnalysisLexer.g3 2009-04-10 15:22:12
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -370,11 +370,11 @@ public partial class ActionAnalysisLexer : Lexer
+{
+int LA2_1 = input.LA(2);
+
+-			if ( (synpred1_ActionAnalysisLexer()) )
++			if ( (EvaluatePredicate(synpred1_ActionAnalysisLexer_fragment)) )
+{
+alt2=1;
+}
+-			else if ( (synpred2_ActionAnalysisLexer()) )
++			else if ( (EvaluatePredicate(synpred2_ActionAnalysisLexer_fragment)) )
+{
+alt2=2;
+}
+@@ -451,31 +451,14 @@ public partial class ActionAnalysisLexer : Lexer
+}
+// $ANTLR end synpred2_ActionAnalysisLexer
+
+-	public bool synpred1_ActionAnalysisLexer()
++	#region Synpreds
++	bool EvaluatePredicate( System.Action fragment )
+{
+state.backtracking++;
+int start = input.Mark();
+try
+{
+-			synpred1_ActionAnalysisLexer_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred2_ActionAnalysisLexer()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred2_ActionAnalysisLexer_fragment(); // can never throw exception
++			fragment();
+}
+catch ( RecognitionException re )
+{
+@@ -487,6 +470,7 @@ public partial class ActionAnalysisLexer : Lexer
+state.failed=false;
+return success;
+}
++	#endregion Synpreds
+
+
+#region DFA
+diff --git a/Antlr3/Grammars/ActionTranslator.cs b/Antlr3/Grammars/ActionTranslator.cs
+index 7ab5050..e0a1f60 100644
+--- a/Antlr3/Grammars/ActionTranslator.cs
++++ b/Antlr3/Grammars/ActionTranslator.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Grammars\\ActionTranslator.g3 2009-03-23 17:53:53
++// $ANTLR 3.1.2 Grammars\\ActionTranslator.g3 2009-04-10 15:22:09
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -3089,445 +3089,14 @@ public partial class ActionTranslator : Lexer
+}
+// $ANTLR end synpred9_ActionTranslator
+
+-	public bool synpred1_ActionTranslator()
++	#region Synpreds
++	bool EvaluatePredicate( System.Action fragment )
+{
+state.backtracking++;
+int start = input.Mark();
+try
+{
+-			synpred1_ActionTranslator_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred2_ActionTranslator()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred2_ActionTranslator_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred3_ActionTranslator()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred3_ActionTranslator_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred4_ActionTranslator()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred4_ActionTranslator_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred5_ActionTranslator()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred5_ActionTranslator_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred6_ActionTranslator()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred6_ActionTranslator_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred7_ActionTranslator()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred7_ActionTranslator_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred8_ActionTranslator()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred8_ActionTranslator_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred9_ActionTranslator()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred9_ActionTranslator_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred10_ActionTranslator()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred10_ActionTranslator_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred11_ActionTranslator()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred11_ActionTranslator_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred12_ActionTranslator()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred12_ActionTranslator_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred13_ActionTranslator()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred13_ActionTranslator_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred14_ActionTranslator()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred14_ActionTranslator_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred15_ActionTranslator()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred15_ActionTranslator_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred16_ActionTranslator()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred16_ActionTranslator_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred17_ActionTranslator()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred17_ActionTranslator_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred24_ActionTranslator()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred24_ActionTranslator_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred25_ActionTranslator()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred25_ActionTranslator_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred26_ActionTranslator()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred26_ActionTranslator_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred18_ActionTranslator()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred18_ActionTranslator_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred19_ActionTranslator()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred19_ActionTranslator_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred20_ActionTranslator()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred20_ActionTranslator_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred21_ActionTranslator()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred21_ActionTranslator_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-	public bool synpred22_ActionTranslator()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred22_ActionTranslator_fragment(); // can never throw exception
++			fragment();
+}
+catch ( RecognitionException re )
+{
+@@ -3539,6 +3108,7 @@ public partial class ActionTranslator : Lexer
+state.failed=false;
+return success;
+}
++	#endregion Synpreds
+
+
+#region DFA
+@@ -3734,45 +3304,45 @@ public partial class ActionTranslator : Lexer
+int index28_1 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (synpred1_ActionTranslator()) ) {s = 2;}
++				if ( (EvaluatePredicate(synpred1_ActionTranslator_fragment)) ) {s = 2;}
+
+-				else if ( (synpred2_ActionTranslator()) ) {s = 3;}
++				else if ( (EvaluatePredicate(synpred2_ActionTranslator_fragment)) ) {s = 3;}
+
+-				else if ( (synpred3_ActionTranslator()) ) {s = 4;}
++				else if ( (EvaluatePredicate(synpred3_ActionTranslator_fragment)) ) {s = 4;}
+
+-				else if ( (synpred4_ActionTranslator()) ) {s = 5;}
++				else if ( (EvaluatePredicate(synpred4_ActionTranslator_fragment)) ) {s = 5;}
+
+-				else if ( (synpred5_ActionTranslator()) ) {s = 6;}
++				else if ( (EvaluatePredicate(synpred5_ActionTranslator_fragment)) ) {s = 6;}
+
+-				else if ( (synpred6_ActionTranslator()) ) {s = 7;}
++				else if ( (EvaluatePredicate(synpred6_ActionTranslator_fragment)) ) {s = 7;}
+
+-				else if ( (synpred7_ActionTranslator()) ) {s = 8;}
++				else if ( (EvaluatePredicate(synpred7_ActionTranslator_fragment)) ) {s = 8;}
+
+-				else if ( (synpred8_ActionTranslator()) ) {s = 9;}
++				else if ( (EvaluatePredicate(synpred8_ActionTranslator_fragment)) ) {s = 9;}
+
+-				else if ( (synpred9_ActionTranslator()) ) {s = 10;}
++				else if ( (EvaluatePredicate(synpred9_ActionTranslator_fragment)) ) {s = 10;}
+
+-				else if ( (synpred10_ActionTranslator()) ) {s = 11;}
++				else if ( (EvaluatePredicate(synpred10_ActionTranslator_fragment)) ) {s = 11;}
+
+-				else if ( (synpred11_ActionTranslator()) ) {s = 12;}
++				else if ( (EvaluatePredicate(synpred11_ActionTranslator_fragment)) ) {s = 12;}
+
+-				else if ( (synpred12_ActionTranslator()) ) {s = 13;}
++				else if ( (EvaluatePredicate(synpred12_ActionTranslator_fragment)) ) {s = 13;}
+
+-				else if ( (synpred13_ActionTranslator()) ) {s = 14;}
++				else if ( (EvaluatePredicate(synpred13_ActionTranslator_fragment)) ) {s = 14;}
+
+-				else if ( (synpred14_ActionTranslator()) ) {s = 15;}
++				else if ( (EvaluatePredicate(synpred14_ActionTranslator_fragment)) ) {s = 15;}
+
+-				else if ( (synpred15_ActionTranslator()) ) {s = 16;}
++				else if ( (EvaluatePredicate(synpred15_ActionTranslator_fragment)) ) {s = 16;}
+
+-				else if ( (synpred16_ActionTranslator()) ) {s = 17;}
++				else if ( (EvaluatePredicate(synpred16_ActionTranslator_fragment)) ) {s = 17;}
+
+-				else if ( (synpred17_ActionTranslator()) ) {s = 18;}
++				else if ( (EvaluatePredicate(synpred17_ActionTranslator_fragment)) ) {s = 18;}
+
+-				else if ( (synpred24_ActionTranslator()) ) {s = 19;}
++				else if ( (EvaluatePredicate(synpred24_ActionTranslator_fragment)) ) {s = 19;}
+
+-				else if ( (synpred25_ActionTranslator()) ) {s = 20;}
++				else if ( (EvaluatePredicate(synpred25_ActionTranslator_fragment)) ) {s = 20;}
+
+-				else if ( (synpred26_ActionTranslator()) ) {s = 21;}
++				else if ( (EvaluatePredicate(synpred26_ActionTranslator_fragment)) ) {s = 21;}
+
+
+input.Seek(index28_1);
+@@ -3786,17 +3356,17 @@ public partial class ActionTranslator : Lexer
+int index28_22 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (synpred18_ActionTranslator()) ) {s = 23;}
++				if ( (EvaluatePredicate(synpred18_ActionTranslator_fragment)) ) {s = 23;}
+
+-				else if ( (synpred19_ActionTranslator()) ) {s = 24;}
++				else if ( (EvaluatePredicate(synpred19_ActionTranslator_fragment)) ) {s = 24;}
+
+-				else if ( (synpred20_ActionTranslator()) ) {s = 25;}
++				else if ( (EvaluatePredicate(synpred20_ActionTranslator_fragment)) ) {s = 25;}
+
+-				else if ( (synpred21_ActionTranslator()) ) {s = 26;}
++				else if ( (EvaluatePredicate(synpred21_ActionTranslator_fragment)) ) {s = 26;}
+
+-				else if ( (synpred22_ActionTranslator()) ) {s = 27;}
++				else if ( (EvaluatePredicate(synpred22_ActionTranslator_fragment)) ) {s = 27;}
+
+-				else if ( (synpred26_ActionTranslator()) ) {s = 21;}
++				else if ( (EvaluatePredicate(synpred26_ActionTranslator_fragment)) ) {s = 21;}
+
+
+input.Seek(index28_22);
+diff --git a/Antlr3/Grammars/CodeGenTreeWalker.cs b/Antlr3/Grammars/CodeGenTreeWalker.cs
+index 8661fd1..32f9169 100644
+--- a/Antlr3/Grammars/CodeGenTreeWalker.cs
++++ b/Antlr3/Grammars/CodeGenTreeWalker.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Grammars\\CodeGenTreeWalker.g3 2009-03-23 17:53:55
++// $ANTLR 3.1.2 Grammars\\CodeGenTreeWalker.g3 2009-04-10 15:22:10
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -3468,7 +3468,7 @@ public partial class CodeGenTreeWalker : TreeParser
+{
+int LA50_2 = input.LA(2);
+
+-					if ( (synpred2_CodeGenTreeWalker()) )
++					if ( (EvaluatePredicate(synpred2_CodeGenTreeWalker_fragment)) )
+{
+alt50=1;
+}
+@@ -3479,7 +3479,7 @@ public partial class CodeGenTreeWalker : TreeParser
+{
+int LA50_3 = input.LA(2);
+
+-					if ( (synpred2_CodeGenTreeWalker()) )
++					if ( (EvaluatePredicate(synpred2_CodeGenTreeWalker_fragment)) )
+{
+alt50=1;
+}
+@@ -5776,13 +5776,13 @@ public partial class CodeGenTreeWalker : TreeParser
+#endregion Rules
+
+#region Synpreds
+-	public bool synpred1_CodeGenTreeWalker()
++	bool EvaluatePredicate( System.Action fragment )
+{
+state.backtracking++;
+int start = input.Mark();
+try
+{
+-			synpred1_CodeGenTreeWalker_fragment(); // can never throw exception
++			fragment();
+}
+catch ( RecognitionException re )
+{
+@@ -5794,27 +5794,9 @@ public partial class CodeGenTreeWalker : TreeParser
+state.failed=false;
+return success;
+}
+-	public bool synpred2_CodeGenTreeWalker()
+-	{
+-		state.backtracking++;
+-		int start = input.Mark();
+-		try
+-		{
+-			synpred2_CodeGenTreeWalker_fragment(); // can never throw exception
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			System.Console.Error.WriteLine("impossible: "+re);
+-		}
+-		bool success = !state.failed;
+-		input.Rewind(start);
+-		state.backtracking--;
+-		state.failed=false;
+-		return success;
+-	}
+-
+#endregion Synpreds
+
++
+#region DFA
+DFA45 dfa45;
+
+@@ -5938,11 +5920,11 @@ public partial class CodeGenTreeWalker : TreeParser
+
+else if ( (LA45_0==BLOCK) ) {s = 7;}
+
+-				else if ( (LA45_0==OPTIONAL) && (synpred1_CodeGenTreeWalker())) {s = 8;}
++				else if ( (LA45_0==OPTIONAL) && (EvaluatePredicate(synpred1_CodeGenTreeWalker_fragment))) {s = 8;}
+
+-				else if ( (LA45_0==CLOSURE) && (synpred1_CodeGenTreeWalker())) {s = 9;}
++				else if ( (LA45_0==CLOSURE) && (EvaluatePredicate(synpred1_CodeGenTreeWalker_fragment))) {s = 9;}
+
+-				else if ( (LA45_0==POSITIVE_CLOSURE) && (synpred1_CodeGenTreeWalker())) {s = 10;}
++				else if ( (LA45_0==POSITIVE_CLOSURE) && (EvaluatePredicate(synpred1_CodeGenTreeWalker_fragment))) {s = 10;}
+
+else if ( (LA45_0==CHAR_LITERAL||LA45_0==DOT||LA45_0==RULE_REF||LA45_0==STRING_LITERAL||LA45_0==TOKEN_REF||LA45_0==WILDCARD) ) {s = 11;}
+
+@@ -5972,7 +5954,7 @@ public partial class CodeGenTreeWalker : TreeParser
+int index45_7 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (synpred1_CodeGenTreeWalker()) ) {s = 10;}
++				if ( (EvaluatePredicate(synpred1_CodeGenTreeWalker_fragment)) ) {s = 10;}
+
+else if ( (true) ) {s = 11;}
+
+diff --git a/Antlr3/Grammars/DefineGrammarItemsWalker.cs b/Antlr3/Grammars/DefineGrammarItemsWalker.cs
+index 4ce36da..5303a97 100644
+--- a/Antlr3/Grammars/DefineGrammarItemsWalker.cs
++++ b/Antlr3/Grammars/DefineGrammarItemsWalker.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Grammars\\DefineGrammarItemsWalker.g3 2009-03-23 17:54:02
++// $ANTLR 3.1.2 Grammars\\DefineGrammarItemsWalker.g3 2009-04-10 15:22:19
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -4431,13 +4431,13 @@ public partial class DefineGrammarItemsWalker : TreeParser
+#endregion Rules
+
+#region Synpreds
+-	public bool synpred1_DefineGrammarItemsWalker()
++	bool EvaluatePredicate( System.Action fragment )
+{
+state.backtracking++;
+int start = input.Mark();
+try
+{
+-			synpred1_DefineGrammarItemsWalker_fragment(); // can never throw exception
++			fragment();
+}
+catch ( RecognitionException re )
+{
+@@ -4449,9 +4449,9 @@ public partial class DefineGrammarItemsWalker : TreeParser
+state.failed=false;
+return success;
+}
+-
+#endregion Synpreds
+
++
+#region DFA
+DFA36 dfa36;
+DFA37 dfa37;
+@@ -4657,7 +4657,7 @@ public partial class DefineGrammarItemsWalker : TreeParser
+int index37_27 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (synpred1_DefineGrammarItemsWalker()) ) {s = 29;}
++				if ( (EvaluatePredicate(synpred1_DefineGrammarItemsWalker_fragment)) ) {s = 29;}
+
+else if ( (true) ) {s = 12;}
+
+@@ -4673,7 +4673,7 @@ public partial class DefineGrammarItemsWalker : TreeParser
+int index37_28 = input.Index;
+input.Rewind();
+s = -1;
+-				if ( (synpred1_DefineGrammarItemsWalker()) ) {s = 29;}
++				if ( (EvaluatePredicate(synpred1_DefineGrammarItemsWalker_fragment)) ) {s = 29;}
+
+else if ( (true) ) {s = 14;}
+
+

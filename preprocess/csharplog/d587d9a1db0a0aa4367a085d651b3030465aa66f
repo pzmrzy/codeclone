@@ -1,0 +1,98 @@
+commit d587d9a1db0a0aa4367a085d651b3030465aa66f
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Wed Jan 30 14:37:43 2013 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Wed Jan 30 14:37:43 2013 -0600
+
+Fix build for Antlr3.Runtime.Test assembly
+
+diff --git a/Antlr3.Runtime.Test/Antlr3.Runtime.Test.csproj b/Antlr3.Runtime.Test/Antlr3.Runtime.Test.csproj
+index e1e3228..a28e0c8 100644
+--- a/Antlr3.Runtime.Test/Antlr3.Runtime.Test.csproj
++++ b/Antlr3.Runtime.Test/Antlr3.Runtime.Test.csproj
+@@ -37,7 +37,7 @@
+<Reference Include="System.Core">
+<RequiredTargetFramework>3.5</RequiredTargetFramework>
+</Reference>
+-    <Reference Include="vjslib" />
++    <Reference Include="System.Numerics" />
+</ItemGroup>
+<ItemGroup>
+<ProjectReference Include="..\..\..\..\..\antlrcs\Antlr3.StringTemplate\Antlr3.StringTemplate.csproj">
+@@ -64,9 +64,9 @@
+<Antlr3 Include="FastSimpleExpression.g3">
+<Generator>MSBuild:Compile</Generator>
+</Antlr3>
+-    <Antlr3 Include="JavaCompat\Expr.g3">
++    <None Include="JavaCompat\Expr.g3">
+<Generator>MSBuild:Compile</Generator>
+-    </Antlr3>
++    </None>
+<Antlr3 Include="BuildOptions\DebugGrammar.g3">
+<!--<GrammarOptions>-debug</GrammarOptions>-->
+<Generator>MSBuild:Compile</Generator>
+diff --git a/Antlr3.Runtime.Test/BuildOptions/DebugTreeGrammar.g3 b/Antlr3.Runtime.Test/BuildOptions/DebugTreeGrammar.g3
+index c9bbdf4..40ee359 100644
+--- a/Antlr3.Runtime.Test/BuildOptions/DebugTreeGrammar.g3
++++ b/Antlr3.Runtime.Test/BuildOptions/DebugTreeGrammar.g3
+@@ -44,7 +44,7 @@ options
+{
+//import java.util.Map;
+//import java.util.HashMap;
+-using BigInteger = java.math.BigInteger;
++using BigInteger = System.Numerics.BigInteger;
+using Console = System.Console;
+}
+// END:members
+@@ -63,13 +63,13 @@ stat:   expr                       { string result = $expr.value.ToString();
+;
+
+expr returns [BigInteger value]
+-    :   ^('+' a=expr b=expr)       { $value = $a.value.add($b.value); }
+-    |   ^('-' a=expr b=expr)       { $value = $a.value.subtract($b.value); }
+-    |   ^('*' a=expr b=expr)       { $value = $a.value.multiply($b.value); }
+-    |   ^('/' a=expr b=expr)       { $value = $a.value.divide($b.value); }
+-    |   ^('%' a=expr b=expr)       { $value = $a.value.remainder($b.value); }
++    :   ^('+' a=expr b=expr)       { $value = $a.value + $b.value; }
++    |   ^('-' a=expr b=expr)       { $value = $a.value - $b.value; }
++    |   ^('*' a=expr b=expr)       { $value = $a.value * $b.value; }
++    |   ^('/' a=expr b=expr)       { $value = $a.value / $b.value; }
++    |   ^('%' a=expr b=expr)       { $value = $a.value \% $b.value; }
+|   ID                         { $value = getValue($ID.text); }
+-    |   INT                        { $value = new BigInteger($INT.text); }
++    |   INT                        { $value = BigInteger.Parse($INT.text); }
+|   call                       { $value = $call.value; }
+;
+
+diff --git a/Antlr3.Runtime.Test/BuildOptions/DebugTreeGrammarHelper.cs b/Antlr3.Runtime.Test/BuildOptions/DebugTreeGrammarHelper.cs
+index 51c95fe..c139aff 100644
+--- a/Antlr3.Runtime.Test/BuildOptions/DebugTreeGrammarHelper.cs
++++ b/Antlr3.Runtime.Test/BuildOptions/DebugTreeGrammarHelper.cs
+@@ -35,7 +35,7 @@ namespace Antlr3.Runtime.Test.BuildOptions
+using System.Collections.Generic;
+using Antlr.Runtime.Tree;
+
+-    using BigInteger = java.math.BigInteger;
++    using BigInteger = System.Numerics.BigInteger;
+using Console = System.Console;
+
+partial class DebugTreeGrammar
+@@ -87,7 +87,7 @@ namespace Antlr3.Runtime.Test.BuildOptions
+// Check whether parameter matches
+CommonTree formalPar = (CommonTree)f.GetChild(1);
+if (formalPar.Token.Type == INT
+-                        && !new BigInteger(formalPar.Token.Text).Equals(paramValue))
++                        && !BigInteger.Parse(formalPar.Token.Text).Equals(paramValue))
+{
+// Constant in formalPar list does not match actual value -> no match.
+continue;
+@@ -113,7 +113,7 @@ namespace Antlr3.Runtime.Test.BuildOptions
+}
+// not found in local memory or global memory
+Console.Error.WriteLine("undefined variable " + name);
+-            return new BigInteger("0");
++            return BigInteger.Zero;
+}
+}
+}
+

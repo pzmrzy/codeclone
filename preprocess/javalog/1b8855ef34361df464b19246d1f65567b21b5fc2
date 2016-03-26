@@ -1,0 +1,24 @@
+commit 1b8855ef34361df464b19246d1f65567b21b5fc2
+Author:     muggins <acondit@ipns.com>
+AuthorDate: Thu Feb 16 13:46:53 2012 -0800
+Commit:     muggins <acondit@ipns.com>
+CommitDate: Thu Feb 16 13:46:53 2012 -0800
+
+Update runtime/ObjC/README
+
+diff --git a/runtime/ObjC/README b/runtime/ObjC/README
+index 702bf9c..1244bc3 100644
+--- a/runtime/ObjC/README
++++ b/runtime/ObjC/README
+@@ -23,4 +23,7 @@ There is also a java file ObjCTarget.java that goes in <
+antlr-3.2/tool/src/main/java/org/antlr/codegen/ObjCTarget/Java>.
+
+If you are using Antlr3.3 the code from here is included with the Antlr tarball. You just need
+-to copy the ANTLR.framework to /Library/Frameworks.
+\ No newline at end of file
++to copy the ANTLR.framework to /Library/Frameworks.
++
++Feb. 16, 2012 -- I just uploaded (to dev) a new binary(zipped) copy of the ANTLR.framework that has all of the
++renaming changes that I did to match the Java source names and fixes to the DFA transitions. This is antlr-3.4.1.
+\ No newline at end of file
+

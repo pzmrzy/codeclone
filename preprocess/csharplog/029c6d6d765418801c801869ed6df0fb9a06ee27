@@ -1,0 +1,1860 @@
+commit 029c6d6d765418801c801869ed6df0fb9a06ee27
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Thu Dec 10 20:32:11 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Thu Dec 10 20:32:11 2009 -0800
+
+C# Port:
+* Merge CL6344
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6475]
+
+diff --git a/Antlr3.Test/ST4/TestCompiler.cs b/Antlr3.Test/ST4/TestCompiler.cs
+index a5acaa4..a327eba 100644
+--- a/Antlr3.Test/ST4/TestCompiler.cs
++++ b/Antlr3.Test/ST4/TestCompiler.cs
+@@ -38,7 +38,7 @@
+"load_str 0, write, new 1, write";
+string asmResult = code.Instructions();
+Assert.AreEqual(asmExpected, asmResult);
+-            string stringsExpected = "[hi , foo]";
++            string stringsExpected = "[hi , /foo]";
+string stringsResult = Arrays.toString(code.strings);
+Assert.AreEqual(stringsExpected, stringsResult);
+}
+@@ -81,7 +81,7 @@
+"load_str 0, write, load_attr 1, load_str 2, map, write";
+string asmResult = code.Instructions();
+Assert.AreEqual(asmExpected, asmResult);
+-            string stringsExpected = "[hi , name, bold]";
++            string stringsExpected = "[hi , name, /bold]";
+string stringsResult = Arrays.toString(code.strings);
+Assert.AreEqual(stringsExpected, stringsResult);
+}
+@@ -102,7 +102,7 @@
+"write";
+string asmResult = code.Instructions();
+Assert.AreEqual(asmExpected, asmResult);
+-            string stringsExpected = "[hi , name, bold, italics]";
++            string stringsExpected = "[hi , name, /bold, /italics]";
+string stringsResult = Arrays.toString(code.strings);
+Assert.AreEqual(stringsExpected, stringsResult);
+}
+@@ -116,7 +116,7 @@
+"load_str 0, write, load_attr 1, load_str 2, load_str 3, rot_map 2, write";
+string asmResult = code.Instructions();
+Assert.AreEqual(asmExpected, asmResult);
+-            string stringsExpected = "[hi , name, bold, italics]";
++            string stringsExpected = "[hi , name, /bold, /italics]";
+string stringsResult = Arrays.toString(code.strings);
+Assert.AreEqual(stringsExpected, stringsResult);
+}
+@@ -130,7 +130,7 @@
+"load_str 0, write, load_attr 1, load_str 2, map, write";
+string asmResult = code.Instructions();
+Assert.AreEqual(asmExpected, asmResult);
+-            string stringsExpected = "[hi , name, _sub1]";
++            string stringsExpected = "[hi , name, /_sub1]";
+string stringsResult = Arrays.toString(code.strings);
+Assert.AreEqual(stringsExpected, stringsResult);
+}
+@@ -245,7 +245,7 @@
+"load_str 0, write, load_attr 1, options, new 2, store_option 3, write_opt";
+string asmResult = code.Instructions();
+Assert.AreEqual(asmExpected, asmResult);
+-            string stringsExpected = "[hi , name, _sub1]";
++            string stringsExpected = "[hi , name, /_sub1]";
+string stringsResult = Arrays.toString(code.strings);
+Assert.AreEqual(stringsExpected, stringsResult);
+}
+@@ -260,7 +260,7 @@
+"store_option 0, new 3, store_option 4, load_str 4, " +
+"store_option 3, write_opt";
+string stringsExpected = // the ", , ," is the ", " separator string
+-                "[hi , name, true, foo, , ]";
++                "[hi , name, true, /foo, , ]";
+string stringsResult = Arrays.toString(code.strings);
+Assert.AreEqual(stringsExpected, stringsResult);
+string asmResult = code.Instructions();
+diff --git a/Antlr3.Test/ST4/TestGroups.cs b/Antlr3.Test/ST4/TestGroups.cs
+index 3eb83cc..555a099 100644
+--- a/Antlr3.Test/ST4/TestGroups.cs
++++ b/Antlr3.Test/ST4/TestGroups.cs
+@@ -98,6 +98,25 @@ namespace AntlrUnitTests.ST4
+}
+
+[TestMethod]
++        public void TestAbsoluteTemplateRef()
++        {
++            // /randomdir/a and /randomdir/subdir/b
++            string dir = GetRandomDir();
++            string a =
++                "a(x) ::= << </subdir/b()> >>\n";
++            WriteFile(dir, "a.st", a);
++            string b =
++                "b() ::= <<bar>>\n";
++            WriteFile(dir + "/subdir", "b.st", b);
++            TemplateGroup group = new TemplateGroupDirectory(dir);
++            Template st = group.GetInstanceOf("a");
++            st.code.Dump();
++            string expected = " bar ";
++            string result = st.Render();
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
+public void TestGroupFileInDir()
+{
+// /randomdir/a and /randomdir/group.stg with b and c templates
+@@ -165,116 +184,6 @@ namespace AntlrUnitTests.ST4
+}
+
+[TestMethod]
+-        public void TestAttemptToAccessTemplateUnderGroupFile()
+-        {
+-            string dir = GetRandomDir();
+-            string groupFile =
+-                "a() ::= \"bar\"\n";
+-            WriteFile(dir, "group.stg", groupFile);
+-            TemplateGroup group = new TemplateGroupFile(Path.Combine(dir, "group.stg"));
+-            string error = null;
+-            try
+-            {
+-                group.GetInstanceOf("sub/b"); // can't have sub under group file
+-            }
+-            catch (ArgumentException iae)
+-            {
+-                error = iae.Message;
+-            }
+-            string expected = "can't use relative template name sub/b";
+-            string result = error;
+-            Assert.AreEqual(expected, result);
+-        }
+-
+-        [TestMethod]
+-        public void TestAttemptToUseWrongGroupFileNameFromRoot()
+-        {
+-            string dir = GetRandomDir();
+-            string groupFile =
+-                "a() ::= \"bar\"\n";
+-            WriteFile(dir, "group.stg", groupFile);
+-            TemplateGroup group = new TemplateGroupFile(Path.Combine(dir, "group.stg"));
+-            string error = null;
+-            try
+-            {
+-                group.GetInstanceOf("/sub/a"); // can't have sub under group file
+-            }
+-            catch (ArgumentException iae)
+-            {
+-                error = iae.Message;
+-            }
+-            string expected = "name must be of form /templatename: /sub/a";
+-            string result = error;
+-            Assert.AreEqual(expected, result);
+-        }
+-
+-        [TestMethod]
+-        public void TestAttemptToGoTooDeepUsingGroupFileNameFromRoot()
+-        {
+-            string dir = GetRandomDir();
+-            string groupFile =
+-                "a() ::= \"bar\"\n";
+-            WriteFile(dir, "group.stg", groupFile);
+-            TemplateGroup group = new TemplateGroupFile(Path.Combine(dir, "group.stg"));
+-            string error = null;
+-            try
+-            {
+-                group.GetInstanceOf("/group/b/b"); // can't have sub under group file
+-            }
+-            catch (ArgumentException iae)
+-            {
+-                error = iae.Message;
+-            }
+-            string expected = "name must be of form /templatename: /group/b/b";
+-            string result = error;
+-            Assert.AreEqual(expected, result);
+-        }
+-
+-        [TestMethod]
+-        public void TestAttemptToAccessDirWithSameNameAsTemplate()
+-        {
+-            string dir = GetRandomDir();
+-            string a =
+-                "a(x) ::= <<foo>>\n";
+-            WriteFile(dir, "a.st", a);
+-            TemplateGroup group = new TemplateGroupDirectory(dir);
+-            string error = null;
+-            try
+-            {
+-                group.GetInstanceOf("a/b"); // 'a' is a template
+-            }
+-            catch (ArgumentException iae)
+-            {
+-                error = iae.Message;
+-            }
+-            string expected = "a is a template not a dir or group file";
+-            string result = error;
+-            Assert.AreEqual(expected, result);
+-        }
+-
+-        [TestMethod]
+-        public void TestAttemptToAccessSubDirWithWrongRootName()
+-        {
+-            string dir = GetRandomDir();
+-            string a =
+-                "a(x) ::= <<foo>>\n";
+-            WriteFile(dir + "/subdir", "a.st", a);
+-            TemplateGroup group = new TemplateGroupDirectory(Path.Combine(dir, "subdir"));
+-            string error = null;
+-            try
+-            {
+-                group.GetInstanceOf("/x/b"); // name is subdir not x
+-            }
+-            catch (ArgumentException iae)
+-            {
+-                error = iae.Message;
+-            }
+-            string expected = "no such subdirectory or group file: x";
+-            string result = error;
+-            Assert.AreEqual(expected, result);
+-        }
+-
+-        [TestMethod]
+public void TestRefToAnotherTemplateInSameGroup()
+{
+string dir = GetRandomDir();
+@@ -300,6 +209,7 @@ namespace AntlrUnitTests.ST4
+WriteFile(dir + "/subdir", "b.st", b);
+TemplateGroup group = new TemplateGroupDirectory(dir);
+Template st = group.GetInstanceOf("subdir/a");
++            st.code.Dump();
+string expected = " bar ";
+string result = st.Render();
+Assert.AreEqual(expected, result);
+@@ -337,17 +247,18 @@ namespace AntlrUnitTests.ST4
+{
+string dir = GetRandomDir();
+string a = "a() ::= << <b()> >>\n";
+-            WriteFile(dir, "a.st", a);
++            WriteFile(dir, "x/a.st", a);
+
+string groupFile =
+"b() ::= \"group file b\"\n" +
+"c() ::= \"group file c\"\n";
+-            WriteFile(dir, "group.stg", groupFile);
++            WriteFile(dir, "y/group.stg", groupFile);
+
+-            TemplateGroup group1 = new TemplateGroupDirectory(dir);
+-            TemplateGroup group2 = new TemplateGroupFile(dir + "/group.stg");
++            TemplateGroup group1 = new TemplateGroupDirectory(Path.Combine(dir, "x"));
++            TemplateGroup group2 = new TemplateGroupFile(Path.Combine(Path.Combine(dir, "y"), "group.stg"));
+group1.ImportTemplates(group2);
+-            Template st = group1.GetInstanceOf("a");
++            Template st = group1.GetInstanceOf("/a");
++            st.code.Dump();
+string expected = " group file b ";
+string result = st.Render();
+Assert.AreEqual(expected, result);
+@@ -358,7 +269,7 @@ namespace AntlrUnitTests.ST4
+{
+string dir = GetRandomDir();
+string a = "a() ::= <<dir1 a>>\n";
+-            WriteFile(dir, "a.st", a);
++            WriteFile(dir, "group/a.st", a);
+
+string groupFile =
+"b() ::= \"<a()>\"\n";
+@@ -367,7 +278,7 @@ namespace AntlrUnitTests.ST4
+TemplateGroup group1 = new TemplateGroupDirectory(dir);
+TemplateGroup group2 = new TemplateGroupFile(dir + "/group.stg");
+group2.ImportTemplates(group1);
+-            Template st = group2.GetInstanceOf("b");
++            Template st = group2.GetInstanceOf("/group/b");
+string expected = "dir1 a";
+string result = st.Render();
+Assert.AreEqual(expected, result);
+@@ -380,17 +291,17 @@ namespace AntlrUnitTests.ST4
+string groupFile =
+"a() ::= \"g1 a\"\n" +
+"b() ::= \"<c()>\"\n";
+-            WriteFile(dir, "group1.stg", groupFile);
++            WriteFile(dir, "x/group.stg", groupFile);
+
+groupFile =
+"b() ::= \"g2 b\"\n" +
+"c() ::= \"g2 c\"\n";
+-            WriteFile(dir, "group2.stg", groupFile);
++            WriteFile(dir, "y/group.stg", groupFile);
+
+-            TemplateGroup group1 = new TemplateGroupFile(dir + "/group1.stg");
+-            TemplateGroup group2 = new TemplateGroupFile(dir + "/group2.stg");
++            TemplateGroup group1 = new TemplateGroupFile(Path.Combine(Path.Combine(dir, "x"), "group.stg"));
++            TemplateGroup group2 = new TemplateGroupFile(Path.Combine(Path.Combine(dir, "y"), "group.stg"));
+group1.ImportTemplates(group2);
+-            Template st = group1.GetInstanceOf("b");
++            Template st = group1.GetInstanceOf("/b");
+string expected = "g2 c";
+string result = st.Render();
+Assert.AreEqual(expected, result);
+@@ -436,5 +347,34 @@ namespace AntlrUnitTests.ST4
+string result = st.Render();
+Assert.AreEqual(expected, result);
+}
++
++        [TestMethod]
++        public void testPolymorphicTemplateReference()
++        {
++            string dir1 = GetRandomDir();
++            string b = "b() ::= <<dir1 b>>\n";
++            WriteFile(dir1, "b.st", b);
++            string dir2 = GetRandomDir();
++            string a = "a() ::= << <b()> >>\n";
++            b = "b() ::= <<dir2 b>>\n";
++            WriteFile(dir2, "a.st", a);
++            WriteFile(dir2, "b.st", b);
++
++            TemplateGroup group1 = new TemplateGroupDirectory(dir1);
++            TemplateGroup group2 = new TemplateGroupDirectory(dir2);
++            group1.ImportTemplates(group2);
++
++            // normal lookup; a created from dir2 calls dir2.b
++            Template st = group2.GetInstanceOf("a");
++            string expected = " dir2 b ";
++            string result = st.Render();
++            Assert.AreEqual(expected, result);
++
++            // polymorphic lookup; a created from dir1 calls dir2.a which calls dir1.b
++            st = group1.GetInstanceOf("a");
++            expected = " dir1 b ";
++            result = st.Render();
++            Assert.AreEqual(expected, result);
++        }
+}
+}
+diff --git a/Antlr3.Test/ST4/TestIndentation.cs b/Antlr3.Test/ST4/TestIndentation.cs
+index 30bbcaa..21a97e8 100644
+--- a/Antlr3.Test/ST4/TestIndentation.cs
++++ b/Antlr3.Test/ST4/TestIndentation.cs
+@@ -53,8 +53,6 @@ namespace AntlrUnitTests.ST4
+
+WriteFile(tmpdir, "t.stg", templates);
+STGroup group = new STGroupFile(Path.Combine(tmpdir, "t.stg"));
+-            STErrorListener errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
+Template t = group.GetInstanceOf("list");
+t.Add("names", "Terence");
+t.Add("names", "Jim");
+@@ -75,8 +73,6 @@ namespace AntlrUnitTests.ST4
+">>" + newline;
+WriteFile(tmpdir, "t.stg", templates);
+STGroup group = new STGroupFile(Path.Combine(tmpdir, "t.stg"));
+-            STErrorListener errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
+Template t = group.GetInstanceOf("list");
+t.Add("names", "Terence\nis\na\nmaniac");
+t.Add("names", "Jim");
+@@ -102,8 +98,6 @@ namespace AntlrUnitTests.ST4
+">>" + newline;
+WriteFile(tmpdir, "t.stg", templates);
+STGroup group = new STGroupFile(Path.Combine(tmpdir, "t.stg"));
+-            STErrorListener errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
+Template t = group.GetInstanceOf("list");
+t.Add("names", "Terence\n\nis a maniac");
+String expecting =
+@@ -124,8 +118,6 @@ namespace AntlrUnitTests.ST4
+">>" + newline;
+WriteFile(tmpdir, "t.stg", templates);
+STGroup group = new STGroupFile(Path.Combine(tmpdir, "t.stg"));
+-            STErrorListener errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
+Template t = group.GetInstanceOf("list");
+t.Add("names", "Terence");
+t.Add("names", "Jim");
+@@ -157,9 +149,6 @@ namespace AntlrUnitTests.ST4
+;
+WriteFile(tmpdir, "t.stg", templates);
+STGroup group = new STGroupFile(Path.Combine(tmpdir, "t.stg"));
+-            STErrorListener errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
+-
+Template t = group.GetInstanceOf("method");
+t.Add("name", "foo");
+Template s1 = group.GetInstanceOf("assign");
+@@ -191,11 +180,7 @@ namespace AntlrUnitTests.ST4
+[TestMethod]
+public void TestIndentedIFWithValueExpr()
+{
+-            STGroup group =
+-                    new STGroup();
+-            STErrorListener errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
+-            Template t = new Template(group,
++            Template t = new Template(
+"begin" + newline +
+"    <if(x)>foo<endif>" + newline +
+"end" + newline);
+@@ -208,11 +193,7 @@ namespace AntlrUnitTests.ST4
+[TestMethod]
+public void TestIFWithIndentOnMultipleLines()
+{
+-            STGroup group =
+-                    new STGroup();
+-            STErrorListener errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
+-            Template t = new Template(group,
++            Template t = new Template(
+"begin" + newline +
+"   <if(x)>" + newline +
+"   foo" + newline +
+@@ -228,11 +209,7 @@ namespace AntlrUnitTests.ST4
+[TestMethod]
+public void TestIFWithIndentAndExprOnMultipleLines()
+{
+-            STGroup group =
+-                    new STGroup();
+-            STErrorListener errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
+-            Template t = new Template(group,
++            Template t = new Template(
+"begin" + newline +
+"   <if(x)>" + newline +
+"   <x>" + newline +
+@@ -249,11 +226,7 @@ namespace AntlrUnitTests.ST4
+[TestMethod]
+public void TestIFWithIndentAndExprWithIndentOnMultipleLines()
+{
+-            STGroup group =
+-                    new STGroup();
+-            STErrorListener errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
+-            Template t = new Template(group,
++            Template t = new Template(
+"begin" + newline +
+"   <if(x)>" + newline +
+"     <x>" + newline +
+@@ -270,11 +243,7 @@ namespace AntlrUnitTests.ST4
+[TestMethod]
+public void TestNestedIFWithIndentOnMultipleLines()
+{
+-            STGroup group =
+-                    new STGroup();
+-            STErrorListener errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
+-            Template t = new Template(group,
++            Template t = new Template(
+"begin" + newline +
+"   <if(x)>" + newline +
+"      <if(y)>" + newline +
+@@ -296,10 +265,7 @@ namespace AntlrUnitTests.ST4
+[TestMethod]
+public void TestIFInSubtemplate()
+{
+-            STGroup group = new STGroup();
+-            STErrorListener errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
+-            Template t = new Template(group,
++            Template t = new Template(
+"<names:{n |" + newline +
+"   <if(x)>" + newline +
+"   <x>" + newline +
+diff --git a/Antlr3.Test/ST4/TestLists.cs b/Antlr3.Test/ST4/TestLists.cs
+index 32a9216..284db6b 100644
+--- a/Antlr3.Test/ST4/TestLists.cs
++++ b/Antlr3.Test/ST4/TestLists.cs
+@@ -177,11 +177,7 @@ namespace AntlrUnitTests.ST4
+[TestMethod]
+public void TestNullListGetsNoOutput()
+{
+-            STGroup group =
+-                    new STGroup();
+-            STErrorListener errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
+-            ST t = new ST(group,
++            ST t = new ST(
+"begin\n" +
+"$users:{name: $it$}; separator=\", \"$\n" +
+"end\n");
+@@ -194,11 +190,7 @@ namespace AntlrUnitTests.ST4
+[TestMethod]
+public void TestEmptyListGetsNoOutput()
+{
+-            STGroup group =
+-                    new STGroup();
+-            STErrorListener errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
+-            ST t = new ST(group,
++            ST t = new ST(
+"begin\n" +
+"$users:{name: $it$}; separator=\", \"$\n" +
+"end\n");
+@@ -211,11 +203,7 @@ namespace AntlrUnitTests.ST4
+[TestMethod]
+public void TestEmptyListNoIteratorGetsNoOutput()
+{
+-            STGroup group =
+-                    new STGroup();
+-            STErrorListener errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
+-            ST t = new ST(group,
++            ST t = new ST(
+"begin\n" +
+"$users; separator=\", \"$\n" +
+"end\n");
+diff --git a/Antlr3.Test/ST4/TestNullAndEmptyValues.cs b/Antlr3.Test/ST4/TestNullAndEmptyValues.cs
+index e012b3f..8962123 100644
+--- a/Antlr3.Test/ST4/TestNullAndEmptyValues.cs
++++ b/Antlr3.Test/ST4/TestNullAndEmptyValues.cs
+@@ -104,8 +104,6 @@ namespace AntlrUnitTests.ST4
+public void TestSizeZeroButNonNullListGetsNoOutput()
+{
+STGroup group = new STGroup();
+-            STErrorListener errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
+group.DefineTemplate("test",
+"begin\n" +
+"<users>\n" +
+@@ -121,8 +119,6 @@ namespace AntlrUnitTests.ST4
+public void TestNullListGetsNoOutput()
+{
+STGroup group = new STGroup();
+-            STErrorListener errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
+group.DefineTemplate("test",
+"begin\n" +
+"<users:{name: <it>}; separator=\", \">\n" +
+@@ -138,8 +134,6 @@ namespace AntlrUnitTests.ST4
+public void TestEmptyListGetsNoOutput()
+{
+STGroup group = new STGroup();
+-            STErrorListener errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
+group.DefineTemplate("test",
+"begin\n" +
+"<users:{name: <it>}; separator=\", \">\n" +
+diff --git a/Antlr3.Test/ST4/TestWhitespace.cs b/Antlr3.Test/ST4/TestWhitespace.cs
+index 17f9d2d..6421641 100644
+--- a/Antlr3.Test/ST4/TestWhitespace.cs
++++ b/Antlr3.Test/ST4/TestWhitespace.cs
+@@ -105,11 +105,7 @@ namespace AntlrUnitTests.ST4
+[TestMethod]
+public void TestEmptyExprAsFirstLineGetsNoOutput()
+{
+-            STGroup group =
+-                    new STGroup();
+-            STErrorListener errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
+-            ST t = new ST(group,
++            ST t = new ST(
+"<users>\n" +
+"end\n");
+String expecting = "end" + newline;
+@@ -120,11 +116,7 @@ namespace AntlrUnitTests.ST4
+[TestMethod]
+public void TestEmptyLineWithIndent()
+{
+-            STGroup group =
+-                    new STGroup();
+-            STErrorListener errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
+-            ST t = new ST(group,
++            ST t = new ST(
+"begin\n" +
+"    \n" +
+"end\n");
+@@ -136,11 +128,7 @@ namespace AntlrUnitTests.ST4
+[TestMethod]
+public void TestSizeZeroOnLineByItselfGetsNoOutput()
+{
+-            STGroup group =
+-                    new STGroup();
+-            STErrorListener errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
+-            ST t = new ST(group,
++            ST t = new ST(
+"begin\n" +
+"<name>\n" +
+"<users>\n" +
+@@ -154,11 +142,7 @@ namespace AntlrUnitTests.ST4
+[TestMethod]
+public void TestSizeZeroOnLineWithIndentGetsNoOutput()
+{
+-            STGroup group =
+-                    new STGroup();
+-            STErrorListener errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
+-            ST t = new ST(group,
++            ST t = new ST(
+"begin\n" +
+"  <name>\n" +
+"	<users>\n" +
+@@ -172,11 +156,7 @@ namespace AntlrUnitTests.ST4
+[TestMethod]
+public void TestSizeZeroOnLineWithMultipleExpr()
+{
+-            STGroup group =
+-                    new STGroup();
+-            STErrorListener errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
+-            ST t = new ST(group,
++            ST t = new ST(
+"begin\n" +
+"  <name>\n" +
+"	<users><users>\n" +
+@@ -189,11 +169,7 @@ namespace AntlrUnitTests.ST4
+[TestMethod]
+public void TestIFExpr()
+{
+-            STGroup group =
+-                    new STGroup();
+-            STErrorListener errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
+-            ST t = new ST(group,
++            ST t = new ST(
+"begin\n" +
+"<if(x)><endif>\n" +
+"end\n");
+@@ -205,11 +181,7 @@ namespace AntlrUnitTests.ST4
+[TestMethod]
+public void TestIndentedIFExpr()
+{
+-            STGroup group =
+-                    new STGroup();
+-            STErrorListener errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
+-            ST t = new ST(group,
++            ST t = new ST(
+"begin\n" +
+"    <if(x)><endif>\n" +
+"end\n");
+@@ -221,11 +193,7 @@ namespace AntlrUnitTests.ST4
+[TestMethod]
+public void TestIFElseExpr()
+{
+-            STGroup group =
+-                    new STGroup();
+-            STErrorListener errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
+-            ST t = new ST(group,
++            ST t = new ST(
+"begin\n" +
+"<if(users)><else><endif>\n" +
+"end\n");
+@@ -237,11 +205,7 @@ namespace AntlrUnitTests.ST4
+[TestMethod]
+public void TestIFOnMultipleLines()
+{
+-            STGroup group =
+-                    new STGroup();
+-            STErrorListener errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
+-            ST t = new ST(group,
++            ST t = new ST(
+"begin\n" +
+"<if(users)>\n" +
+"foo\n" +
+@@ -257,11 +221,7 @@ namespace AntlrUnitTests.ST4
+[TestMethod]
+public void TestNestedIFOnMultipleLines()
+{
+-            STGroup group =
+-                    new STGroup();
+-            STErrorListener errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
+-            ST t = new ST(group,
++            ST t = new ST(
+"begin\n" +
+"<if(x)>\n" +
+"<if(y)>\n" +
+diff --git a/Antlr3.vsmdi b/Antlr3.vsmdi
+index 093c021..78d017f 100644
+--- a/Antlr3.vsmdi
++++ b/Antlr3.vsmdi
+@@ -311,17 +311,22 @@
+</TestList>
+<TestList name="Groups" id="2b84a5ba-a6b2-44f6-842f-39aeaec2d3f0" parentListId="4adbb104-d28d-4362-8420-a9fefe69c167">
+<TestLinks>
+-      <TestLink id="fbc52c3e-b252-7a44-8373-828d34f8579f" name="TestSubSubdir" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="4525c5bd-4e40-09f7-8caa-d28ebdcb5afe" name="TestAttemptToUseWrongGroupFileNameFromRoot" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="886e22c9-55ef-ffcd-e897-b713618255dd" name="TestAttemptToAccessTemplateUnderGroupFile" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="abe7d041-f0a5-435e-7a11-f89e8b4428f2" name="TestGroupWithTwoTemplates" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="3b16b5d0-42ca-01df-6bce-9503a824ccbb" name="TestAttemptToAccessDirWithSameNameAsTemplate" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="7b00b426-de9c-96ee-c01a-5fac492b9305" name="TestSimpleGroup" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="d3bc884e-5f0e-9372-e196-55138171c9f1" name="TestAttemptToAccessSubDirWithWrongRootName" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="1b8ffefd-d094-896e-1275-b11bcf4ea1c2" name="TestGroupFileInSubDir" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="08e0d019-b06b-0380-a8b7-e7a0d2997e53" name="TestRefToAnotherTemplateInSameGroup" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="d12a6648-2bc5-99df-5126-bd7375cd095b" name="TestAbsoluteTemplateRef" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="c6270e4e-41cf-69d0-0dd6-ed68cdb24ff4" name="TestSubdir" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="6dc4520e-945b-e470-4947-6d60453e7be1" name="testPolymorphicTemplateReference" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="b6b3f33a-4c20-63d1-c250-ee552d1b90b7" name="TestImportTemplateInGroupFileFromGroupFile" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="c393b543-c4f8-80cf-21ea-682b87b460ec" name="TestGroupFileInDir" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="e02664f7-ffc4-18b6-7e26-65265552d836" name="TestAttemptToGoTooDeepUsingGroupFileNameFromRoot" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="abe7d041-f0a5-435e-7a11-f89e8b4428f2" name="TestGroupWithTwoTemplates" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="fbc52c3e-b252-7a44-8373-828d34f8579f" name="TestSubSubdir" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="93ee4343-09bf-86f9-8535-9e18a7e13780" name="TestImportTemplate" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="79c131f1-4735-8a9b-7f59-e08ac05fd503" name="TestImportTemplateInDirFromGroupFile" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="bad5f17e-eb43-13b5-b03b-c9fb5a41e449" name="TestImportTemplateFromGroupFile" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="48162e6d-8cdc-6ad7-8a8a-9471ed22f7e5" name="TestRefToAnotherTemplateInSameSubdir" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="57638d34-22fc-12e3-82f3-8979f1c85ade" name="TestImportTemplateFromSubdir" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="61bba200-8549-30e6-977c-6321b41d8827" name="TestImportTemplateInGroupFileFromDir" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="1b8ffefd-d094-896e-1275-b11bcf4ea1c2" name="TestGroupFileInSubDir" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+</TestLinks>
+</TestList>
+<TestList name="Rewrite templates" id="2dbc20ec-9234-470e-a9b4-82226d3db427" parentListId="8c43106b-9dc1-4907-a29f-aa66a61bf5b6">
+diff --git a/StringTemplate4/Compiler.cs b/StringTemplate4/Compiler.cs
+index 9e20d31..0653dcf 100644
+--- a/StringTemplate4/Compiler.cs
++++ b/StringTemplate4/Compiler.cs
+@@ -38,6 +38,7 @@ namespace StringTemplate
+using Console = System.Console;
+using IList = System.Collections.IList;
+using Math = System.Math;
++    using Path = System.IO.Path;
+
+public class Compiler : ICodeGenerator
+{
+@@ -50,13 +51,13 @@ namespace StringTemplate
+
+public static readonly IDictionary<string, int> supportedOptions =
+new Dictionary<string, int>()
+-        {
+-            {        "anchor",       Interpreter.OPTION_ANCHOR},
+-            {        "format",       Interpreter.OPTION_FORMAT},
+-            {        "null",         Interpreter.OPTION_NULL},
+-            {       "separator",    Interpreter.OPTION_SEPARATOR},
+-            {"wrap",         Interpreter.OPTION_WRAP}
+-        };
++            {
++                { "anchor",    Interpreter.OPTION_ANCHOR},
++                { "format",    Interpreter.OPTION_FORMAT},
++                { "null",      Interpreter.OPTION_NULL},
++                { "separator", Interpreter.OPTION_SEPARATOR},
++                { "wrap",      Interpreter.OPTION_WRAP}
++            };
+
+public static readonly int NUM_OPTIONS = supportedOptions.Count;
+
+@@ -86,10 +87,27 @@ namespace StringTemplate
+int ip = 0;
+CompiledTemplate code = new CompiledTemplate();
+
++        // subdir context -- template reference prefix
++        private string prefix;
++
+public static int subtemplateCount = 0; // public for testing access
+
+public Compiler()
++            : this("/")
++        {
++        }
++
++        public Compiler(string prefix)
++        {
++            this.prefix = prefix;
++        }
++
++        public string TemplateReferencePrefix
+{
++            get
++            {
++                return this.prefix;
++            }
+}
+
+public CompiledTemplate Compile(string template)
+@@ -190,8 +208,8 @@ namespace StringTemplate
+RecognizerSharedState state)
+{
+subtemplateCount++;
+-            string name = "_sub" + subtemplateCount;
+-            Compiler c = new Compiler();
++            string name = prefix + "_sub" + subtemplateCount;
++            Compiler c = new Compiler(prefix);
+CompiledTemplate sub = c.Compile(input, state);
+sub.name = name;
+if (ids != null)
+diff --git a/StringTemplate4/Group.g3 b/StringTemplate4/Group.g3
+index f999659..3874be4 100644
+--- a/StringTemplate4/Group.g3
++++ b/StringTemplate4/Group.g3
+@@ -62,20 +62,16 @@ using Console = System.Console;
+}
+
+public
+-group[TemplateGroup group]
++group[TemplateGroup group, string prefix]
+@init {
+-this._group = $group;
+GroupLexer lexer = (GroupLexer)input.TokenSource;
+-lexer._group = $group;
++this._group = lexer._group = $group;
+}
+-	:	//'group' name=ID {$group.name = $name.text;}
+-		//( ':' s=ID {$group.supergroup = $s.text;} )?
+-	    //';'
+-	    ( templateDef | dictDef )+
++	:	( templateDef[prefix] | dictDef )+
+;
+
+public
+-templateDef
++templateDef[string prefix]
+@init {
+string template=null;
+int n=0; // num char to strip from left, right of template def
+@@ -94,7 +90,7 @@ templateDef
+template = Misc.TrimOneStartingWS(template);
+}
+try {
+-		    this._group.DefineTemplate($name.text, $formalArgs.args, template);
++		    this._group.DefineTemplate(prefix, $name.text, $formalArgs.args, template);
+}
+catch (TemplateRecognitionException e) {
+RecognitionException re = (RecognitionException)e.InnerException;
+@@ -166,8 +162,8 @@ keyValuePair[IDictionary<string,object> mapping]
+;
+
+keyValue returns [object value]
+-	:	BIGSTRING			{$value = new Template(this._group, Misc.Strip($BIGSTRING.text,2));}
+-	|	ANONYMOUS_TEMPLATE	{$value = new Template(this._group, Misc.Strip($ANONYMOUS_TEMPLATE.text,1));}
++	:	BIGSTRING			{$value = new Template(Misc.Strip($BIGSTRING.text,2));}
++	|	ANONYMOUS_TEMPLATE	{$value = new Template(Misc.Strip($ANONYMOUS_TEMPLATE.text,1));}
+|	STRING				{$value = Misc.Strip($STRING.text, 1);}
+|	{input.LT(1).Text.Equals("key")}?=> ID
+{$value = TemplateGroup.DICT_KEY;}
+diff --git a/StringTemplate4/ICodeGenerator.cs b/StringTemplate4/ICodeGenerator.cs
+index 19ac35b..b2ee58e 100644
+--- a/StringTemplate4/ICodeGenerator.cs
++++ b/StringTemplate4/ICodeGenerator.cs
+@@ -37,12 +37,21 @@ namespace StringTemplate
+
+public interface ICodeGenerator
+{
++        /// <summary>
++        /// If we're compiling templates in subdir or group file under root, what's the prefix to add?
++        /// </summary>
++        string TemplateReferencePrefix
++        {
++            get;
++        }
++
+void Emit(short opcode);
+void Emit(short opcode, int arg);
+void Emit(short opcode, string s);
+void Write(int addr, short value);
+/** Return address where next instruction will be written */
+int Address();
++
+string CompileAnonTemplate(ITokenStream input,
+IList ids,
+RecognizerSharedState state);
+diff --git a/StringTemplate4/StringTemplate4.csproj b/StringTemplate4/StringTemplate4.csproj
+index 59c0da4..01df53f 100644
+--- a/StringTemplate4/StringTemplate4.csproj
++++ b/StringTemplate4/StringTemplate4.csproj
+@@ -70,6 +70,7 @@
+<Compile Include="TemplateLexer.cs" />
+<Compile Include="TemplateParserHelper.cs" />
+<Compile Include="TemplateRecognitionException.cs" />
++    <Compile Include="TemplateTree.cs" />
+</ItemGroup>
+<ItemGroup>
+<None Include="..\Antlr3\Key.snk">
+diff --git a/StringTemplate4/Template.cs b/StringTemplate4/Template.cs
+index fc5d849..3761377 100644
+--- a/StringTemplate4/Template.cs
++++ b/StringTemplate4/Template.cs
+@@ -53,13 +53,16 @@ namespace StringTemplate
+*/
+public CompiledTemplate code; // TODO: is this the right name?
+
+-        public static readonly Template Blank = new BlankTemplate();
+-
+-        /** The group that holds this ST definition.  We use it to initiate
+-         *  interpretation via ST.toString().  From there, it becomes group field
+-         *  in interpreter and is fixed until rendering completes.
++        /** Created as instance of which group? We need this to init interpreter
++         *  via render.  So, we create st and then it needs to know which
++         *  group created it for sake of polymorphism:
++         *
++         *  st = skin1.getInstanceOf("searchbox");
++         *  result = st.render(); // knows skin1 created it
+*/
+-        //public STGroup nativeGroup = STGroup.defaultGroup;
++        public TemplateGroup groupThatCreatedThisInstance;
++
++        public static readonly Template Blank = new BlankTemplate();
+
+/** Map an attribute name to its value(s). */
+protected internal IDictionary<string, object> attributes;
+@@ -113,22 +116,14 @@ namespace StringTemplate
+}
+
+public Template(string template)
++            : this(TemplateGroup.defaultGroup, template)
+{
+-            code = TemplateGroup.defaultGroup.DefineTemplate(UnknownName, template);
+-            /*
+-                    try {
+-                        code = group.defineTemplate(UNKNOWN_NAME, template);
+-                    }
+-                    catch (STRecognitionException e) {
+-                        int i = group.getCharPositionInLine(null, e);
+-                        group.listener.error(e.msg, null);
+-                    }
+-                     */
+}
+
+public Template(TemplateGroup nativeGroup, string template)
+{
+code = nativeGroup.DefineTemplate(UnknownName, template);
++            groupThatCreatedThisInstance = nativeGroup;
+}
+
+public IDictionary<string, object> Attributes
+@@ -320,7 +315,7 @@ namespace StringTemplate
+
+public virtual int Write(ITemplateWriter @out)
+{
+-            Interpreter interp = new Interpreter(code.nativeGroup);
++            Interpreter interp = new Interpreter(groupThatCreatedThisInstance);
+return interp.Exec(@out, this);
+}
+
+diff --git a/StringTemplate4/TemplateGroup.cs b/StringTemplate4/TemplateGroup.cs
+index adf9987..7a8cb2a 100644
+--- a/StringTemplate4/TemplateGroup.cs
++++ b/StringTemplate4/TemplateGroup.cs
+@@ -36,10 +36,12 @@ namespace StringTemplate
+using System.Linq;
+using ArgumentException = System.ArgumentException;
+using Console = System.Console;
++    using Directory = System.IO.Directory;
+using Encoding = System.Text.Encoding;
+using Exception = System.Exception;
+using Path = System.IO.Path;
+using StringBuilder = System.Text.StringBuilder;
++    using Antlr.Runtime;
+
+public class TemplateGroup
+{
+@@ -72,9 +74,9 @@ namespace StringTemplate
+/** The topmost group of templates in the template tree.
+*  Point to yourself if group is root; but parent will be null.
+*/
+-        public TemplateGroup root;
++        //public TemplateGroup root;
+
+-        public TemplateGroupDirectory parent; // Are we a subdir or group file in dir?
++        //public TemplateGroupDirectory parent; // Are we a subdir or group file in dir?
+
+public string fullyQualifiedRootDirName; // if we're root
+
+@@ -117,24 +119,14 @@ namespace StringTemplate
+{
+}
+
+-        public virtual string AbsoluteTemplatePath
++#if false
++        public TemplateGroup(string fullyQualifiedRootDirName)
+{
+-            get
+-            {
+-                //Console.WriteLine("GetTemplatePathFromRoot root=" + (root != null ? root.GetName() : null) + " this=" + this.GetName());
+-                IList<string> elems = new List<string>();
+-                TemplateGroup p = this;
+-                while (p != root)
+-                {
+-                    elems.Insert(0, p.Name);
+-                    p = p.parent;
+-                }
+-
+-                string s = "/" + string.Join("/", elems.ToArray());
+-                //Console.WriteLine("; template path=" + s);
+-                return s;
+-            }
++            this.fullyQualifiedRootDirName = fullyQualifiedRootDirName;
++            if (Directory.Exists(fullyQualifiedRootDirName))
++                throw new ArgumentException("No such directory: " + fullyQualifiedRootDirName);
+}
++#endif
+
+public virtual string Name
+{
+@@ -144,22 +136,20 @@ namespace StringTemplate
+}
+}
+
+-        // TODO: for dirs, should this load everything in dir and below?
+-        public virtual void Load()
+-        {
+-        } // nothing to do unless it's a group file
+-
+/** The primary means of getting an instance of a template from this
+-         *  group.
++         *  group. Must be absolute name like /a/b
+*/
+public virtual Template GetInstanceOf(string name)
+{
+-            //Console.WriteLine("GetInstanceOf(" + name + ") resolves to " + AbsoluteTemplatePath + "/" + name);
++            if (name[0] != '/')
++                name = '/' + name;
++
++            //Console.WriteLine("GetInstanceOf(" + name + ")");
+CompiledTemplate c = LookupTemplate(name);
+if (c != null)
+{
+Template instanceST = CreateStringTemplate();
+-                //instanceST.group = this;  leave it as nativeGroup
++                instanceST.groupThatCreatedThisInstance = this;
+instanceST.name = name;
+instanceST.code = c;
+return instanceST;
+@@ -181,23 +171,22 @@ namespace StringTemplate
+
+public virtual CompiledTemplate LookupTemplate(string name)
+{
+-            CompiledTemplate template;
+-            if (!templates.TryGetValue(name, out template))
+-                return null;
++            if (!alreadyLoaded)
++                Load();
++
++            CompiledTemplate code;
++            if (!templates.TryGetValue(name, out code))
++            {
++                code = LookupImportedTemplate(name);
++            }
+
+-            return template;
++            return code;
+}
+
+protected CompiledTemplate LookupImportedTemplate(string name)
+{
+Console.WriteLine("look for " + name + " in " + imports);
+-            if (this != root)
+-            {
+-                // look for absolute template name from root
+-                return root.LookupImportedTemplate(GetAbsoluteTemplateName(name));
+-            }
+
+-            // if we're the root, look for name in imports
+if (imports == null)
+return null;
+
+@@ -214,7 +203,7 @@ namespace StringTemplate
+// TODO: send in start/stop char or line/col so errors can be relative
+public CompiledTemplate DefineTemplate(string name, string template)
+{
+-            return DefineTemplate(name, (IDictionary<string, FormalArgument>)null, template);
++            return DefineTemplate("/", name, (IDictionary<string, FormalArgument>)null, template);
+}
+
+public virtual CompiledTemplate DefineTemplate(string name,
+@@ -225,7 +214,7 @@ namespace StringTemplate
+new Dictionary<string, FormalArgument>();
+foreach (string a in args)
+margs[a] = new FormalArgument(a);
+-            return DefineTemplate(name, margs, template);
++            return DefineTemplate("/", name, margs, template);
+}
+
+public virtual CompiledTemplate DefineTemplate(string name,
+@@ -236,24 +225,22 @@ namespace StringTemplate
+new Dictionary<string, FormalArgument>();
+foreach (string a in args)
+margs[a] = new FormalArgument(a);
+-            return DefineTemplate(name, margs, template);
++            return DefineTemplate("/", name, margs, template);
+}
+
+// can't trap recog errors here; don't know where in file template is defined
+-        public virtual CompiledTemplate DefineTemplate(string name,
+-                                         IDictionary<string, FormalArgument> args,
+-                                         string template)
++        public virtual CompiledTemplate DefineTemplate(string prefix, string name, IDictionary<string, FormalArgument> args, string template)
+{
+if (name != null && (name.Length == 0 || name.IndexOf('.') >= 0))
+{
+throw new ArgumentException("cannot have '.' in template names");
+}
+-            Compiler c = new Compiler();
++            Compiler c = new Compiler(prefix);
+CompiledTemplate code = c.Compile(template);
+code.name = name;
+code.formalArguments = args;
+code.nativeGroup = this;
+-            templates[name] = code;
++            templates[prefix + name] = code;
+if (args != null)
+{ // compile any default args
+foreach (string a in args.Keys)
+@@ -261,7 +248,7 @@ namespace StringTemplate
+FormalArgument fa = args[a];
+if (fa.defaultValue != null)
+{
+-                        Compiler c2 = new Compiler();
++                        Compiler c2 = new Compiler(prefix);
+fa.compiledDefaultValue = c2.Compile(template);
+}
+}
+@@ -306,6 +293,82 @@ namespace StringTemplate
+imports.Add(g);
+}
+
++        public virtual void Load()
++        {
++        }
++
++        public virtual void LoadGroupFile(string prefix, string fileName)
++        {
++            string absoluteFileName = Path.Combine(fullyQualifiedRootDirName, fileName);
++            Console.WriteLine("load group file " + absoluteFileName);
++            try
++            {
++                ANTLRFileStream fs = new ANTLRFileStream(absoluteFileName, encoding);
++                GroupLexer lexer = new GroupLexer(fs);
++                UnbufferedTokenStream tokens = new UnbufferedTokenStream(lexer);
++                GroupParser parser = new GroupParser(tokens);
++                parser.group(this, prefix);
++            }
++            catch (Exception e)
++            {
++                listener.Error("can't load group file: " + absoluteFileName, e);
++            }
++        }
++
++#if false
++        protected virtual void _load(string prefix)
++        {
++            // walk dir and all subdir to load templates, group files
++            string dir = Path.Combine(fullyQualifiedRootDirName, prefix);
++            Console.WriteLine("load dir '" + prefix + "' under " + fullyQualifiedRootDirName);
++
++            foreach (var d in Directory.GetDirectories(dir))
++            {
++                _load(prefix + Path.GetFileName(d) + "/");
++            }
++
++            foreach (var f in Directory.GetFiles(dir))
++            {
++                if (Path.GetExtension(f).Equals(".st", System.StringComparison.OrdinalIgnoreCase))
++                    loadTemplateFile(prefix, Path.GetFileName(f));
++                else if (Path.GetExtension(f).Equals(".stg", System.StringComparison.OrdinalIgnoreCase))
++                    LoadGroupFile(Path.Combine(prefix, Path.GetFileNameWithoutExtension(f)) + Path.DirectorySeparatorChar);
++            }
++        }
++
++        public virtual CompiledTemplate loadTemplateFile(string prefix, string fileName)
++        {
++            // load from disk
++            string absoluteFileName = Path.Combine(Path.Combine(fullyQualifiedRootDirName, prefix), fileName);
++            Console.WriteLine("load " + absoluteFileName);
++            if (!File.Exists(absoluteFileName))
++            { // TODO: add tolerance check here
++                return null;
++            }
++            try
++            {
++                ANTLRFileStream fs = new ANTLRFileStream(absoluteFileName, encoding);
++                GroupLexer lexer = new GroupLexer(fs);
++                UnbufferedTokenStream tokens = new UnbufferedTokenStream(lexer);
++                GroupParser parser = new GroupParser(tokens);
++                parser._group = this;
++                parser.templateDef(prefix);
++
++                CompiledTemplate code;
++                if (!templates.TryGetValue("/" + Path.Combine(prefix, Path.GetFileNameWithoutExtension(fileName)), out code))
++                    return null;
++
++                return code;
++            }
++            catch (Exception e)
++            {
++                Console.Error.WriteLine("can't load template file: " + absoluteFileName);
++                Console.Error.WriteLine(e.StackTrace);
++            }
++            return null;
++        }
++#endif
++
+/// <summary>
+/// StringTemplate object factory; each group can have its own.
+/// </summary>
+@@ -315,15 +378,6 @@ namespace StringTemplate
+return st;
+}
+
+-        public string GetAbsoluteTemplateName(string name)
+-        {
+-            string p = AbsoluteTemplatePath;
+-            if (p.Equals("/"))
+-                return "/" + name;
+-
+-            return Path.Combine(p, name);
+-        }
+-
+public override bool Equals(object obj)
+{
+TemplateGroup group = obj as TemplateGroup;
+@@ -349,10 +403,12 @@ namespace StringTemplate
+//if ( supergroup!=null ) buf.append(" : "+supergroup);
+foreach (string name in templates.Keys)
+{
+-                if (name.StartsWith("_"))
++                if (name.StartsWith("/_sub"))
+continue;
+CompiledTemplate c = templates[name];
+-                buf.Append(name);
++                int slash = name.LastIndexOfAny(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
++                string effectiveName = name.Substring(slash + 1);
++                buf.Append(effectiveName);
+buf.Append('(');
+if (c.formalArguments != null)
+{
+diff --git a/StringTemplate4/TemplateGroupDirectory.cs b/StringTemplate4/TemplateGroupDirectory.cs
+index 048cbe0..5a98709 100644
+--- a/StringTemplate4/TemplateGroupDirectory.cs
++++ b/StringTemplate4/TemplateGroupDirectory.cs
+@@ -51,8 +51,6 @@ namespace StringTemplate
+
+public TemplateGroupDirectory(string fullyQualifiedRootDirName)
+{
+-            this.parent = null;
+-            this.root = this;
+this.fullyQualifiedRootDirName = fullyQualifiedRootDirName;
+this.dirName = "/"; // it's the root
+if (!Directory.Exists(fullyQualifiedRootDirName))
+@@ -61,25 +59,8 @@ namespace StringTemplate
+}
+}
+
+-        public TemplateGroupDirectory(TemplateGroupDirectory parent, string relativeDirName)
+-        {
+-            if (parent == null)
+-                throw new ArgumentNullException("parent", "Relative dir " + relativeDirName + " can't have a null parent.");
+-
+-            // doubly-link this node; we point at the parent and it has us as child
+-            this.parent = parent;
+-            parent.AddChild(this);
+-            this.root = parent.root;
+-            this.dirName = relativeDirName;
+-            string absoluteDirName = Path.Combine(root.fullyQualifiedRootDirName, AbsoluteTemplatePath.Substring(1));
+-            if (!Directory.Exists(absoluteDirName))
+-            {
+-                throw new ArgumentException("No such directory: " + absoluteDirName);
+-            }
+-        }
+-
+-        public TemplateGroupDirectory(TemplateGroupDirectory parent, string dirName, Encoding encoding)
+-            : this(parent, dirName)
++        public TemplateGroupDirectory(string fullyQualifiedRootDirName, Encoding encoding)
++            : this(fullyQualifiedRootDirName)
+{
+this.encoding = encoding;
+}
+@@ -88,146 +69,70 @@ namespace StringTemplate
+{
+get
+{
+-                if (parent == null)
+-                    return "/";
+-
+return dirName;
+}
+}
+
+-        public override CompiledTemplate LookupTemplate(string name)
++        public override void Load()
+{
+-            if (name.Length > 0 && (name[0] == Path.DirectorySeparatorChar || name[0] == Path.AltDirectorySeparatorChar))
+-            {
+-                if (this != root)
+-                    return root.LookupTemplate(name);
+-
+-                // we're the root; strip '/' and try again
+-                name = name.Substring(1);
+-            }
+-
+-            if (name.IndexOfAny(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }) >= 0)
+-                return LookupQualifiedTemplate(name);
+-
+-            // else plain old template name, check if already here
+-            CompiledTemplate code;
+-            if (templates.TryGetValue(name, out code))
+-                return code;
+-
+-            code = LookupTemplateFile(name); // try to load then
+-            if (code == null)
+-            {
+-                code = LookupImportedTemplate(name);
+-                if (code == null)
+-                {
+-                    // TODO: tolerance?
+-                    throw new ArgumentException("no such template: " + GetAbsoluteTemplateName(name));
+-                }
+-            }
+-
+-            return code;
++            // walk dir and all subdir to load templates, group files
++            _load("/");
++            alreadyLoaded = true;
+}
+
+-        /** Look up template name with '/' anywhere but first char */
+-        protected virtual CompiledTemplate LookupQualifiedTemplate(string name)
++        protected void _load(string prefix)
+{
+-            // TODO: slow to load a template!
+-            string absoluteDirName = Path.Combine(root.fullyQualifiedRootDirName, AbsoluteTemplatePath.Substring(1));
+-            string[] names = name.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+-            string templateFile = Path.Combine(absoluteDirName, names[0] + ".st");
+-            if (templates.ContainsKey(names[0]) || File.Exists(templateFile))
+-            {
+-                throw new ArgumentException(names[0] + " is a template not a dir or group file");
+-            }
+-            // look for a directory or group file called names[0]
+-            TemplateGroup sub = null;
+-            string group = Path.Combine(absoluteDirName, names[0]);
+-            if (Directory.Exists(group))
++            // walk dir and all subdir to load templates, group files
++            string dir = Path.Combine(fullyQualifiedRootDirName, prefix);
++            Console.WriteLine("load dir '" + prefix + "' under " + fullyQualifiedRootDirName);
++
++            foreach (var d in Directory.GetDirectories(dir))
+{
+-                sub = new TemplateGroupDirectory(this, names[0]);
++                _load(Path.Combine(prefix, Path.GetFileName(d)) + "/");
+}
+-            else if (File.Exists(Path.Combine(absoluteDirName, names[0] + ".stg")))
+-            {
+-                try
+-                {
+-                    sub = new TemplateGroupFile(this, names[0] + ".stg");
+-                    if (children == null)
+-                        children = new List<TemplateGroup>();
+
+-                    children.Add(sub);
+-                }
+-                catch (Exception e)
+-                {
+-                    listener.Error("can't load group file: " + names[0] + ".stg", e);
+-                }
+-            }
+-            else
++            foreach (var f in Directory.GetFiles(dir))
+{
+-                throw new ArgumentException("no such subdirectory or group file: " + names[0]);
++                if (Path.GetExtension(f).Equals(".st", System.StringComparison.OrdinalIgnoreCase))
++                    LoadTemplateFile(prefix, Path.GetFileName(f));
++                else if (Path.GetExtension(f).Equals(".stg", System.StringComparison.OrdinalIgnoreCase))
++                    LoadGroupFile(Path.Combine(prefix, Path.GetFileNameWithoutExtension(f)) + "/", Path.Combine(prefix, Path.GetFileName(f)));
+}
+-            string allButFirstName = string.Join(Path.DirectorySeparatorChar.ToString(), names.Skip(1).ToArray());
+-            return sub.LookupTemplate(allButFirstName);
+}
+
+-        // load from disk
+-        public virtual CompiledTemplate LookupTemplateFile(string name)
++        public virtual CompiledTemplate LoadTemplateFile(string prefix, string fileName)
+{
+-            string absoluteDirName = Path.Combine(root.fullyQualifiedRootDirName, AbsoluteTemplatePath.Substring(1));
+-            string f = Path.Combine(absoluteDirName, name + ".st");
+-            if (!File.Exists(f))
++            // load from disk
++            string absoluteFileName = Path.Combine(Path.Combine(fullyQualifiedRootDirName, prefix), fileName);
++            Console.WriteLine("load " + absoluteFileName);
++            if (!File.Exists(absoluteFileName))
+{
+// TODO: add tolerance check here
+return null;
+}
+try
+{
+-                ANTLRFileStream fs = new ANTLRFileStream(f, encoding);
++                ANTLRFileStream fs = new ANTLRFileStream(absoluteFileName, encoding);
+GroupLexer lexer = new GroupLexer(fs);
+UnbufferedTokenStream tokens = new UnbufferedTokenStream(lexer);
+GroupParser parser = new GroupParser(tokens);
+parser._group = this;
+-                parser.templateDef();
+-                return templates[name];
++                parser.templateDef(prefix);
++
++                CompiledTemplate code;
++                if (!templates.TryGetValue("/" + Path.Combine(prefix, Path.GetFileNameWithoutExtension(fileName)), out code))
++                    return null;
++
++                return code;
+}
+catch (Exception e)
+{
+-                listener.Error("can't load template file: " + Path.Combine(Path.GetFullPath(f), name), e);
++                Console.Error.WriteLine("can't load template file: " + absoluteFileName);
++                Console.Error.WriteLine(e.StackTrace);
+}
+return null;
+}
+
+-        /// <summary>
+-        /// Make this group import tempaltes/dictionaries from <paramref name="g"/>.
+-        /// If this group has children, make them import stuff from the children of
+-        /// <paramref name="g"/>.
+-        /// </summary>
+-        public override void ImportTemplates(TemplateGroup g)
+-        {
+-            if (g == null)
+-                return;
+-
+-            if (imports == null)
+-                imports = new List<TemplateGroup>();
+-
+-            imports.Add(g);
+-
+-            // now, hook up children. if this has group called x, then look for x in
+-            // g's children. if found, then make our x import from g's x.
+-#if false
+-            TemplateGroupDirectory groupDir = g as TemplateGroupDirectory;
+-            if (groupDir != null)
+-            {
+-                foreach (TemplateGroup child in groupDir)
+-                {
+-                    CompiledTemplate importedTemplate = groupDir.LookupTemplate(child.Name);
+-                    int i = groupDir.children.IndexOf(child);
+-                    if (i >= 0)
+-                        child.ImportTemplates(groupDir.children[i]);
+-                }
+-            }
+-#endif
+-        }
+-
+public void AddChild(TemplateGroup g)
+{
+if (children == null)
+diff --git a/StringTemplate4/TemplateGroupFile.cs b/StringTemplate4/TemplateGroupFile.cs
+index b9e5dca..4782e24 100644
+--- a/StringTemplate4/TemplateGroupFile.cs
++++ b/StringTemplate4/TemplateGroupFile.cs
+@@ -52,8 +52,6 @@ namespace StringTemplate
+
+this.fullyQualifiedRootDirName = Path.GetFullPath(Path.GetDirectoryName(fullyQualifiedFileName));
+this.fileName = Path.GetFileName(fullyQualifiedFileName);
+-            this.parent = null;
+-            this.root = this;
+}
+
+public TemplateGroupFile(TemplateGroupDirectory parent, string fileName)
+@@ -65,9 +63,7 @@ namespace StringTemplate
+
+this.fileName = fileName;
+// doubly-link this node; we point at parent and it has us as child
+-            this.parent = parent;
+parent.AddChild(this);
+-            this.root = parent.root;
+}
+
+public TemplateGroupFile(TemplateGroupDirectory parent, string fileName, Encoding encoding)
+@@ -76,29 +72,35 @@ namespace StringTemplate
+this.encoding = encoding;
+}
+
+-        // /group if this is root, else /dir1/dir2/group if in subdir of TemplateGroupDirectory
+-        public override string AbsoluteTemplatePath
++        public override string Name
+{
+get
+{
+-                return base.AbsoluteTemplatePath;
++                return Path.GetFileNameWithoutExtension(fileName);
+}
+}
+
+-        public override string Name
++#if false
++        public override Template GetInstanceOf(string name)
+{
+-            get
+-            {
+-                return Path.GetFileNameWithoutExtension(fileName);
+-            }
++            if (name[0] != '/')
++                name = "/" + name;
++
++            return base.GetInstanceOf(name);
++        }
++#endif
++
++        public override void Load()
++        {
++            LoadGroupFile("/", fileName);
++            alreadyLoaded = true;
+}
+
++#if false
+public override CompiledTemplate LookupTemplate(string name)
+{
+if (name.Length > 0 && (name[0] == Path.DirectorySeparatorChar || name[0] == Path.AltDirectorySeparatorChar))
+{
+-                if (this != root)
+-                    return root.LookupTemplate(name);
+// if no root, name must be "/groupfile/templatename"
+string[] names = name.Substring(1).Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+if (names.Length > 1)
+@@ -129,37 +131,13 @@ namespace StringTemplate
+
+return code;
+}
+-
+-        public override void Load()
+-        {
+-            if (alreadyLoaded)
+-                return;
+-
+-            string absoluteFileName = Path.Combine(root.fullyQualifiedRootDirName, fileName);
+-            if (this != root)
+-            {
+-                absoluteFileName = Path.Combine(root.fullyQualifiedRootDirName, AbsoluteTemplatePath.Substring(1) + ".stg");
+-            }
+-
+-            try
+-            {
+-                ANTLRFileStream fs = new ANTLRFileStream(absoluteFileName, encoding);
+-                GroupLexer lexer = new GroupLexer(fs);
+-                UnbufferedTokenStream tokens = new UnbufferedTokenStream(lexer);
+-                GroupParser parser = new GroupParser(tokens);
+-                parser.group(this);
+-                alreadyLoaded = true;
+-            }
+-            catch (Exception e)
+-            {
+-                listener.Error("can't load group file: " + absoluteFileName, e);
+-            }
+-        }
++#endif
+
+public override string Show()
+{
+if (!alreadyLoaded)
+Load();
++
+return base.Show();
+}
+}
+diff --git a/StringTemplate4/TemplateLexer.cs b/StringTemplate4/TemplateLexer.cs
+index 28a89be..318dcd6 100644
+--- a/StringTemplate4/TemplateLexer.cs
++++ b/StringTemplate4/TemplateLexer.cs
+@@ -463,7 +463,7 @@ namespace StringTemplate
+return NewToken(TEXT);
+}
+
+-        /** ID  :   ('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'/')* ; */
++        /** ID  :   ('a'..'z'|'A'..'Z'|'_'|'/') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'/')* ; */
+private IToken mID()
+{
+// called from subTemplate; so keep resetting position during speculation
+@@ -552,12 +552,12 @@ namespace StringTemplate
+
+public static bool IsIDStartLetter(char c)
+{
+-            return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z';
++            return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c == '/';
+}
+
+public static bool IsIDLetter(char c)
+{
+-            return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9';
++            return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '/';
+}
+
+public static bool IsWS(char c)
+diff --git a/StringTemplate4/TemplateParser.g3 b/StringTemplate4/TemplateParser.g3
+index 9d4d0c3..0c32bdf 100644
+--- a/StringTemplate4/TemplateParser.g3
++++ b/StringTemplate4/TemplateParser.g3
+@@ -259,7 +259,7 @@ callExpr
+options {k=2;} // prevent full LL(*) which fails, falling back on k=1; need k=2
+:	{Compiler.funcs.ContainsKey(input.LT(1).Text)}?
+ID '(' expr ')' {Func($ID);}
+-	|	ID {gen.Emit(Bytecode.INSTR_NEW, $ID.text);} '(' args? ')'
++	|	ID {gen.Emit(Bytecode.INSTR_NEW, PrefixedName($ID.text));} '(' args? ')'
+|	primary
+;
+
+@@ -270,7 +270,7 @@ primary
+|	'.' '(' mapExpr ')' {gen.Emit(Bytecode.INSTR_LOAD_PROP_IND);}
+)*
+*/
+-	|	STRING    {gen.Emit(Bytecode.INSTR_LOAD_STR, Strip($STRING.text,1));}
++	|	STRING    {gen.Emit(Bytecode.INSTR_LOAD_STR, Misc.Strip($STRING.text,1));}
+|	list
+|	'(' expr ')' {gen.Emit(Bytecode.INSTR_TOSTR);}
+( {gen.Emit(Bytecode.INSTR_NEW_IND);} '(' args? ')' )? // indirect call
+@@ -284,8 +284,8 @@ arg :	ID '=' exprNoComma {gen.Emit(Bytecode.INSTR_STORE_ATTR, $ID.text);}
+;
+
+templateRef
+-	:	ID			{gen.Emit(Bytecode.INSTR_LOAD_STR, $ID.text);}
+-	|	subtemplate {gen.Emit(Bytecode.INSTR_LOAD_STR, $subtemplate.name);}
++	:	ID			{gen.Emit(Bytecode.INSTR_LOAD_STR, PrefixedName($ID.text));}
++	|	subtemplate {gen.Emit(Bytecode.INSTR_LOAD_STR, PrefixedName($subtemplate.name));}
+|	'(' mapExpr ')' {gen.Emit(Bytecode.INSTR_TOSTR);}
+;
+
+diff --git a/StringTemplate4/TemplateParserHelper.cs b/StringTemplate4/TemplateParserHelper.cs
+index 2990a8d..eb614f3 100644
+--- a/StringTemplate4/TemplateParserHelper.cs
++++ b/StringTemplate4/TemplateParserHelper.cs
+@@ -61,9 +61,12 @@ namespace StringTemplate
+throw new MismatchedTokenException(ttype, input);
+}
+
+-        public static string Strip(string s, int n)
++        public string PrefixedName(string t)
+{
+-            return s.Substring(n, s.Length - 2 * n);
++            if (t != null && t[0] == '/')
++                return gen.TemplateReferencePrefix + t.Substring(1);
++
++            return gen.TemplateReferencePrefix + t;
+}
+
+public void RefAttr(IToken id)
+@@ -141,6 +144,14 @@ namespace StringTemplate
+
+private sealed class CodeGenerator : ICodeGenerator
+{
++            public string TemplateReferencePrefix
++            {
++                get
++                {
++                    return null;
++                }
++            }
++
+public void Emit(short opcode)
+{
+}
+diff --git a/StringTemplate4/TemplateTree.cs b/StringTemplate4/TemplateTree.cs
+new file mode 100644
+index 0000000..120bfce
+--- /dev/null
++++ b/StringTemplate4/TemplateTree.cs
+@@ -0,0 +1,215 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace StringTemplate
++{
++    using System.Collections.Generic;
++    using ArgumentException = System.ArgumentException;
++    using Directory = System.IO.Directory;
++    using File = System.IO.File;
++    using Path = System.IO.Path;
++    using Encoding = System.Text.Encoding;
++    using Exception = System.Exception;
++    using Console = System.Console;
++    using Antlr.Runtime;
++
++    public class TemplateTree
++    {
++        public string fullyQualifiedRootDirName; // if we're root
++
++        /** Load files using what encoding? */
++        public Encoding encoding;
++
++        /** Every group can import templates/dictionaries from other groups */
++        protected IList<TemplateGroup> imports;
++
++        /** Maps template name to StringTemplate object */
++        protected IDictionary<string, CompiledTemplate> templates =
++            new Dictionary<string, CompiledTemplate>();
++
++        public char delimiterStartChar = '<'; // Use <expr> by default
++        public char delimiterStopChar = '>';
++
++        protected bool alreadyLoaded = false;
++
++        public TemplateTree(string fullyQualifiedRootDirName)
++        {
++            this.fullyQualifiedRootDirName = fullyQualifiedRootDirName;
++            if (!Directory.Exists(fullyQualifiedRootDirName))
++            {
++                throw new ArgumentException("No such directory: " + fullyQualifiedRootDirName);
++            }
++        }
++
++        /** The primary means of getting an instance of a template from this
++         *  group. name must be fully qualified, absolute like "/a/b".
++         */
++        public Template GetInstanceOf(string name)
++        {
++            CompiledTemplate c = LookupTemplate(name);
++            if (c != null)
++            {
++                Template instanceST = CreateStringTemplate();
++                //instanceST.groupThatCreatedThisInstance = this;
++                instanceST.name = name;
++                instanceST.code = c;
++                return instanceST;
++            }
++            return null;
++        }
++
++        public Template GetEmbeddedInstanceOf(Template enclosingInstance, string name)
++        {
++            Template st = GetInstanceOf(name);
++            if (st == null)
++            {
++                Console.Error.WriteLine("no such template: " + name);
++                return Template.Blank;
++            }
++            st.enclosingInstance = enclosingInstance;
++            return st;
++        }
++
++        // can't trap recog errors here; don't know where in file template is defined
++        public CompiledTemplate DefineTemplate(string name,
++                                         IDictionary<string, FormalArgument> args,
++                                         string template)
++        {
++            if (name != null && (name.Length == 0 || name.IndexOf('.') >= 0))
++            {
++                throw new ArgumentException("cannot have '.' in template names");
++            }
++            Compiler c = new Compiler();
++            CompiledTemplate code = c.Compile(template);
++            code.name = name;
++            code.formalArguments = args;
++            //code.nativeGroup = this;
++            templates[name] = code;
++            if (args != null)
++            { // compile any default args
++                foreach (var pair in args)
++                {
++                    FormalArgument fa = pair.Value;
++                    if (fa.defaultValue != null)
++                    {
++                        Compiler c2 = new Compiler();
++                        fa.compiledDefaultValue = c2.Compile(template);
++                    }
++                }
++            }
++            // define any anonymous subtemplates
++            DefineAnonSubtemplates(code);
++
++            return code;
++        }
++
++        public void DefineAnonSubtemplates(CompiledTemplate code)
++        {
++            if (code.compiledSubtemplates != null)
++            {
++                foreach (CompiledTemplate sub in code.compiledSubtemplates)
++                {
++                    templates[sub.name] = sub;
++                    DefineAnonSubtemplates(sub);
++                }
++            }
++        }
++
++        public CompiledTemplate LookupTemplate(string name)
++        {
++            if (!alreadyLoaded)
++                Load();
++
++            CompiledTemplate code;
++            if (!templates.TryGetValue(name, out code))
++                return null;
++
++            return code;
++        }
++
++        public void Load()
++        {
++            // walk dir and all subdir to load templates, group files
++            _Load("");
++            alreadyLoaded = true;
++        }
++
++        protected void _Load(string prefix)
++        {
++            // walk dir and all subdir to load templates, group files
++            string dir = Path.Combine(fullyQualifiedRootDirName, prefix);
++            foreach (var d in Directory.GetDirectories(dir))
++            {
++                _Load(Path.Combine(prefix, Path.GetFileName(d)));
++            }
++
++            foreach (var f in Directory.GetFiles(dir))
++            {
++                if (Path.GetExtension(f).Equals(".st", System.StringComparison.OrdinalIgnoreCase))
++                    LoadTemplateFile(prefix, Path.GetFileName(f));
++            }
++        }
++
++        public CompiledTemplate LoadTemplateFile(string prefix, string fileName)
++        {
++            // load from disk
++            string absoluteFileName = Path.Combine(Path.Combine(fullyQualifiedRootDirName, prefix), fileName);
++            if (!File.Exists(absoluteFileName))
++            {
++                // TODO: add tolerance check here
++                return null;
++            }
++            try
++            {
++                ANTLRFileStream fs = new ANTLRFileStream(absoluteFileName, encoding);
++                GroupLexer lexer = new GroupLexer(fs);
++                UnbufferedTokenStream tokens = new UnbufferedTokenStream(lexer);
++                GroupParser parser = new GroupParser(tokens);
++                //parser.group = this;
++                //parser.templateDef();
++                return LookupTemplate("/" + Path.Combine(prefix, Path.GetFileNameWithoutExtension(fileName)));
++            }
++            catch (Exception)
++            {
++                Console.Error.WriteLine("can't load template file: " + absoluteFileName);
++            }
++            return null;
++        }
++
++        /** StringTemplate object factory; each group can have its own. */
++        public virtual Template CreateStringTemplate()
++        {
++            Template st = new Template();
++            return st;
++        }
++    }
++}
+

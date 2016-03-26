@@ -1,0 +1,22 @@
+commit f7d15a79bf1372577d8dcc61db5383eb1c77c1d1
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Fri Nov 30 12:04:26 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Fri Nov 30 12:04:26 2012 -0600
+
+Use the Maven plugin 3.4.1-SNAPSHOT to build the tool's grammars prior to the 3.5.1 release.
+
+diff --git a/tool/pom.xml b/tool/pom.xml
+index e6f398c..4a85301 100644
+--- a/tool/pom.xml
++++ b/tool/pom.xml
+@@ -86,7 +86,7 @@
+
+<groupId>org.antlr</groupId>
+<artifactId>antlr3-maven-plugin</artifactId>
+-                <version>3.4</version>
++                <version>3.4.1-SNAPSHOT</version>
+<configuration>
+<libDirectory>target/generated-sources/antlr/org/antlr/grammar/v3</libDirectory>
+</configuration>
+

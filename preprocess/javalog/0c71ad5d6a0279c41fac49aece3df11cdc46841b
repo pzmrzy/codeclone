@@ -1,0 +1,38 @@
+commit 0c71ad5d6a0279c41fac49aece3df11cdc46841b
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Mon Feb 27 09:56:47 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Fri Mar 23 08:41:28 2012 -0500
+
+Update .gitignore for various IDEs in use
+
+diff --git a/.gitignore b/.gitignore
+index f779560..f4a74b6 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,6 +1,17 @@
+-/runtime/Java/target/
+-/tool/target/
+-/antlr3-maven-plugin/target/
+-/gunit/target/
+-/gunit-maven-plugin/target/
+-/antlr3-maven-archetype/target/
+\ No newline at end of file
++# Maven build folders
++target/
++
++# IntelliJ project files
++*.iml
++*.ipr
++*.iws
++.idea/
++
++# Eclipse project files
++.project
++.classpath
++.settings/
++
++# NetBeans user configuration
++nbactions.xml
++nb-configuration.xml
+

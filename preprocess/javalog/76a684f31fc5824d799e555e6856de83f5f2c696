@@ -1,0 +1,126 @@
+commit 76a684f31fc5824d799e555e6856de83f5f2c696
+Author:     Martin Traverso <martint@fb.com>
+AuthorDate: Sat May 26 16:53:57 2012 -0700
+Commit:     Martin Traverso <martint@fb.com>
+CommitDate: Sat Sep 15 15:49:18 2012 -0700
+
+Fix issue where LookaheadStream index gets out of sync
+
+This can happen under certain usage patterns because the stream index is not properly updated when seeking and rewinding. See test case for an example.
+
+diff --git a/runtime/Java/pom.xml b/runtime/Java/pom.xml
+index 0f08c59..6588747 100644
+--- a/runtime/Java/pom.xml
++++ b/runtime/Java/pom.xml
+@@ -84,7 +84,12 @@
+<version>3.2.1</version>
+<scope>compile</scope>
+</dependency>
+-
++
++    <dependency>
++      <groupId>junit</groupId>
++      <artifactId>junit</artifactId>
++    </dependency>
++
+</dependencies>
+
+<build>
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/misc/LookaheadStream.java b/runtime/Java/src/main/java/org/antlr/runtime/misc/LookaheadStream.java
+index 586cef7..0d303c7 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/misc/LookaheadStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/misc/LookaheadStream.java
+@@ -138,14 +138,18 @@ public abstract class LookaheadStream<T> extends FastQueue<T> {
+}
+
+public void rewind(int marker) {
+-        markDepth--;
+-        seek(marker); // assume marker is top
+-        // release(marker); // waste of call; it does nothing in this class
+-    }
+-
+-	public void rewind() {
+-        seek(lastMarker); // rewind but do not release marker
+-    }
++    markDepth--;
++    int delta = p - marker;
++    currentElementIndex -= delta;
++    p = marker;
++  }
++
++  public void rewind() {
++    // rewind but do not release marker
++    int delta = p - lastMarker;
++    currentElementIndex -= delta;
++    p = lastMarker;
++  }
+
+/** Seek to a 0-indexed position within data buffer.  Can't handle
+*  case where you seek beyond end of existing buffer.  Normally used
+@@ -153,7 +157,16 @@ public abstract class LookaheadStream<T> extends FastQueue<T> {
+*  Doesn't see to absolute position in input stream since this stream
+*  is unbuffered. Seeks only into our moving window of elements.
+*/
+-    public void seek(int index) { p = index; }
++  public void seek(int index) {
++    int delta = currentElementIndex - index;
++    p -= delta;
++
++    if (p < 0) {
++      throw new IllegalArgumentException("Can't seek past the beginning of this stream's buffer");
++    }
++
++    currentElementIndex = index;
++  }
+
+protected T LB(int k) {
+if ( k==1 ) return prevElement;
+diff --git a/runtime/Java/src/test/java/org/antlr/runtime/TestLookaheadStream.java b/runtime/Java/src/test/java/org/antlr/runtime/TestLookaheadStream.java
+new file mode 100644
+index 0000000..8891ace
+--- /dev/null
++++ b/runtime/Java/src/test/java/org/antlr/runtime/TestLookaheadStream.java
+@@ -0,0 +1,42 @@
++package org.antlr.runtime;
++
++import junit.framework.TestCase;
++
++public class TestLookaheadStream extends TestCase {
++
++  public void testSeek() {
++    UnbufferedTokenStream stream = new UnbufferedTokenStream(createTokenSource());
++
++    stream.consume();
++    assertEquals(1, stream.LA(1));
++
++    stream.mark();
++
++    stream.consume();
++    assertEquals(2, stream.LA(1));
++
++    int index = stream.index();
++    stream.rewind();
++    assertEquals(1, stream.LA(1));
++
++    stream.seek(index);
++    assertEquals(2, stream.LA(1));
++  }
++
++  private TokenSource createTokenSource() {
++    return new TokenSource() {
++      int count = 0;
++
++      @Override
++      public Token nextToken() {
++        return new CommonToken(count++);
++      }
++
++      @Override
++      public String getSourceName() {
++        return "test";
++      }
++    };
++
++  }
++}
+

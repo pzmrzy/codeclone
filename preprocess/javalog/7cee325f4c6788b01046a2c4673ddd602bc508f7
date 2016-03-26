@@ -1,0 +1,25 @@
+commit 7cee325f4c6788b01046a2c4673ddd602bc508f7
+Author:     Terence Parr <parrt@cs.usfca.edu>
+AuthorDate: Tue Mar 25 09:19:25 2014 -0700
+Commit:     Terence Parr <parrt@cs.usfca.edu>
+CommitDate: Tue Mar 25 09:19:25 2014 -0700
+
+Update CHANGES.txt
+
+diff --git a/tool/CHANGES.txt b/tool/CHANGES.txt
+index 0770dcb..c8f55da 100644
+--- a/tool/CHANGES.txt
++++ b/tool/CHANGES.txt
+@@ -1,3 +1,11 @@
++****************************************************************************
++As of ANTLR 3.5.2, March 25 2014, we are no longer updating this file. Instead,
++we are using the github release mechanism. For example, here is
++3.5.2 release notes:
++
++https://github.com/antlr/antlr3/releases/tag/3.5.2
++****************************************************************************
++
+ANTLR 3.5 Release
+January 4, 2012
+
+

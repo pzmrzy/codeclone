@@ -1,0 +1,649 @@
+commit e38c6cf878b43acf8166f5c8e6cef6bae2212f31
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Dec 14 11:36:37 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Dec 14 11:36:37 2009 -0800
+
+C# Port:
+* Merge 6404 (Part 2)
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6514]
+
+diff --git a/Antlr3.Test/ST4/StringTemplateTestBase.cs b/Antlr3.Test/ST4/StringTemplateTestBase.cs
+index 4eff855..369912e 100644
+--- a/Antlr3.Test/ST4/StringTemplateTestBase.cs
++++ b/Antlr3.Test/ST4/StringTemplateTestBase.cs
+@@ -10,6 +10,7 @@
+using Path = System.IO.Path;
+using Random = System.Random;
+using StringBuilder = System.Text.StringBuilder;
++    using StringTemplate.Compiler;
+
+public abstract class StringTemplateTestBase
+{
+diff --git a/Antlr3.Test/ST4/TestCompiler.cs b/Antlr3.Test/ST4/TestCompiler.cs
+index ca81cd1..ccdcc8b 100644
+--- a/Antlr3.Test/ST4/TestCompiler.cs
++++ b/Antlr3.Test/ST4/TestCompiler.cs
+@@ -3,6 +3,7 @@
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using StringTemplate;
+using Antlr.Runtime.JavaExtensions;
++    using StringTemplate.Compiler;
+
+[TestClass]
+public class TestCompiler : StringTemplateTestBase
+@@ -10,14 +11,14 @@
+[TestInitialize]
+public void setUp()
+{
+-            Compiler.subtemplateCount = 0;
++            TemplateCompiler.subtemplateCount = 0;
+}
+
+[TestMethod]
+public void TestAttr()
+{
+string template = "hi <name>";
+-            CompiledTemplate code = new Compiler().Compile(template);
++            CompiledTemplate code = new TemplateCompiler().Compile(template);
+string asmExpected =
+"load_str 0, " +
+"write 0 2, " +
+@@ -34,7 +35,7 @@
+public void TestInclude()
+{
+string template = "hi <foo()>";
+-            CompiledTemplate code = new Compiler().Compile(template);
++            CompiledTemplate code = new TemplateCompiler().Compile(template);
+string asmExpected =
+"load_str 0, write 0 2, new 1, write 3 9";
+string asmResult = code.Instructions();
+@@ -48,7 +49,7 @@
+public void TestProp()
+{
+string template = "hi <a.b>";
+-            CompiledTemplate code = new Compiler().Compile(template);
++            CompiledTemplate code = new TemplateCompiler().Compile(template);
+string asmExpected =
+"load_str 0, write 0 2, load_attr 1, load_prop 2, write 3 7";
+string asmResult = code.Instructions();
+@@ -62,7 +63,7 @@
+public void TestProp2()
+{
+string template = "<u.id>: <u.name>";
+-            CompiledTemplate code = new Compiler().Compile(template);
++            CompiledTemplate code = new TemplateCompiler().Compile(template);
+string asmExpected =
+"load_attr 0, load_prop 1, write 0 5, load_str 2, write 6 7, " +
+"load_attr 0, load_prop 3, write 8 15";
+@@ -77,7 +78,7 @@
+public void TestMap()
+{
+string template = "hi <name:bold>";
+-            CompiledTemplate code = new Compiler().Compile(template);
++            CompiledTemplate code = new TemplateCompiler().Compile(template);
+string asmExpected =
+"load_str 0, write 0 2, load_attr 1, load_str 2, map, write 3 13";
+string asmResult = code.Instructions();
+@@ -91,7 +92,7 @@
+public void TestRepeatedMap()
+{
+string template = "hi <name:bold:italics>";
+-            CompiledTemplate code = new Compiler().Compile(template);
++            CompiledTemplate code = new TemplateCompiler().Compile(template);
+string asmExpected =
+"load_str 0, " +
+"write 0 2, " +
+@@ -112,7 +113,7 @@
+public void TestRotMap()
+{
+string template = "hi <name:bold,italics>";
+-            CompiledTemplate code = new Compiler().Compile(template);
++            CompiledTemplate code = new TemplateCompiler().Compile(template);
+string asmExpected =
+"load_str 0, write 0 2, load_attr 1, load_str 2, load_str 3, rot_map 2, write 3 21";
+string asmResult = code.Instructions();
+@@ -126,7 +127,7 @@
+public void TestAnonMap()
+{
+string template = "hi <name:{n | <n>}>";
+-            CompiledTemplate code = new Compiler().Compile(template);
++            CompiledTemplate code = new TemplateCompiler().Compile(template);
+string asmExpected =
+"load_str 0, write 0 2, load_attr 1, load_str 2, map, write 3 18";
+string asmResult = code.Instructions();
+@@ -140,7 +141,7 @@
+public void TestIf()
+{
+string template = "go: <if(name)>hi, foo<endif>";
+-            CompiledTemplate code = new Compiler().Compile(template);
++            CompiledTemplate code = new TemplateCompiler().Compile(template);
+string asmExpected =
+"load_str 0, write 0 3, load_attr 1, brf 22, load_str 2, write 14 20";
+string asmResult = code.Instructions();
+@@ -154,7 +155,7 @@
+public void TestIfElse()
+{
+string template = "go: <if(name)>hi, foo<else>bye<endif>";
+-            CompiledTemplate code = new Compiler().Compile(template);
++            CompiledTemplate code = new TemplateCompiler().Compile(template);
+string asmExpected =
+"load_str 0, " +
+"write 0 3, " +
+@@ -176,7 +177,7 @@
+public void TestElseIf()
+{
+string template = "go: <if(name)>hi, foo<elseif(user)>a user<endif>";
+-            CompiledTemplate code = new Compiler().Compile(template);
++            CompiledTemplate code = new TemplateCompiler().Compile(template);
+string asmExpected =
+"load_str 0, " +
+"write 0 3, " +
+@@ -200,7 +201,7 @@
+public void TestElseIfElse()
+{
+string template = "go: <if(name)>hi, foo<elseif(user)>a user<else>bye<endif>";
+-            CompiledTemplate code = new Compiler().Compile(template);
++            CompiledTemplate code = new TemplateCompiler().Compile(template);
+string asmExpected =
+"load_str 0, " +
+"write 0 3, " +
+@@ -227,7 +228,7 @@
+public void TestOption()
+{
+string template = "hi <name; separator=\"x\">";
+-            CompiledTemplate code = new Compiler().Compile(template);
++            CompiledTemplate code = new TemplateCompiler().Compile(template);
+string asmExpected =
+"load_str 0, write 0 2, load_attr 1, options, load_str 2, store_option 3, write_opt 3 23";
+string asmResult = code.Instructions();
+@@ -241,7 +242,7 @@
+public void TestOptionAsTemplate()
+{
+string template = "hi <name; separator={, }>";
+-            CompiledTemplate code = new Compiler().Compile(template);
++            CompiledTemplate code = new TemplateCompiler().Compile(template);
+string asmExpected =
+"load_str 0, write 0 2, load_attr 1, options, new 2, store_option 3, write_opt 3 24";
+string asmResult = code.Instructions();
+@@ -255,7 +256,7 @@
+public void TestOptions()
+{
+string template = "hi <name; anchor, wrap=foo(), separator=\", \">";
+-            CompiledTemplate code = new Compiler().Compile(template);
++            CompiledTemplate code = new TemplateCompiler().Compile(template);
+string asmExpected =
+"load_str 0, " +
+"write 0 2, " +
+@@ -280,7 +281,7 @@
+public void TestEmptyList()
+{
+string template = "<[]>";
+-            CompiledTemplate code = new Compiler().Compile(template);
++            CompiledTemplate code = new TemplateCompiler().Compile(template);
+string asmExpected = "list, write 0 3";
+string asmResult = code.Instructions();
+Assert.AreEqual(asmExpected, asmResult);
+@@ -293,7 +294,7 @@
+public void TestList()
+{
+string template = "<[a,b]>";
+-            CompiledTemplate code = new Compiler().Compile(template);
++            CompiledTemplate code = new TemplateCompiler().Compile(template);
+string asmExpected = "list, load_attr 0, add, load_attr 1, add, write 0 6";
+string asmResult = code.Instructions();
+Assert.AreEqual(asmExpected, asmResult);
+@@ -307,7 +308,7 @@
+{
+string template = "<@r>foo<@end>";
+// compile as if in root dir and in template 'a'
+-            CompiledTemplate code = new Compiler("/", "a").Compile(template);
++            CompiledTemplate code = new TemplateCompiler("/", "a").Compile(template);
+string asmExpected =
+"new 0, write 0 12";
+string asmResult = code.Instructions();
+@@ -322,7 +323,7 @@
+{
+string template = "x:<@r()>";
+// compile as if in root dir and in template 'a'
+-            CompiledTemplate code = new Compiler("/", "a").Compile(template);
++            CompiledTemplate code = new TemplateCompiler("/", "a").Compile(template);
+string asmExpected =
+"load_str 0, write 0 1, new 1, write 2 7";
+string asmResult = code.Instructions();
+diff --git a/StringTemplate4/BlankTemplate.cs b/StringTemplate4/BlankTemplate.cs
+index 90ded38..9d052a5 100644
+--- a/StringTemplate4/BlankTemplate.cs
++++ b/StringTemplate4/BlankTemplate.cs
+@@ -32,6 +32,7 @@
+
+namespace StringTemplate
+{
++    using StringTemplate.Compiler;
+using CultureInfo = System.Globalization.CultureInfo;
+
+public class BlankTemplate : Template
+diff --git a/StringTemplate4/Compiler/Bytecode.cs b/StringTemplate4/Compiler/Bytecode.cs
+index a939ddc..c840fc9 100644
+--- a/StringTemplate4/Compiler/Bytecode.cs
++++ b/StringTemplate4/Compiler/Bytecode.cs
+@@ -30,7 +30,7 @@
+* THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+-namespace StringTemplate
++namespace StringTemplate.Compiler
+{
+public class Bytecode
+{
+diff --git a/StringTemplate4/Compiler/BytecodeDisassembler.cs b/StringTemplate4/Compiler/BytecodeDisassembler.cs
+index 6bddbc0..3d39df0 100644
+--- a/StringTemplate4/Compiler/BytecodeDisassembler.cs
++++ b/StringTemplate4/Compiler/BytecodeDisassembler.cs
+@@ -30,7 +30,7 @@
+* THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+-namespace StringTemplate
++namespace StringTemplate.Compiler
+{
+using System.Collections.Generic;
+using ArgumentException = System.ArgumentException;
+diff --git a/StringTemplate4/Compiler/CompiledTemplate.cs b/StringTemplate4/Compiler/CompiledTemplate.cs
+index 5ba91bb..eda42f4 100644
+--- a/StringTemplate4/Compiler/CompiledTemplate.cs
++++ b/StringTemplate4/Compiler/CompiledTemplate.cs
+@@ -30,7 +30,7 @@
+* THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+-namespace StringTemplate
++namespace StringTemplate.Compiler
+{
+using System.Collections.Generic;
+using System.Diagnostics;
+diff --git a/StringTemplate4/Compiler/Compiler.cs b/StringTemplate4/Compiler/Compiler.cs
+index 334593e..f6268d5 100644
+--- a/StringTemplate4/Compiler/Compiler.cs
++++ b/StringTemplate4/Compiler/Compiler.cs
+@@ -30,20 +30,18 @@
+* THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+-namespace StringTemplate
++namespace StringTemplate.Compiler
+{
+using System.Collections.Generic;
+using Antlr.Runtime;
+using Array = System.Array;
+using Console = System.Console;
+-    using IList = System.Collections.IList;
+using Math = System.Math;
+-    using Path = System.IO.Path;
+
+/// <summary>
+/// A compiler for a single template
+/// </summary>
+-    public class Compiler : ICodeGenerator
++    public class TemplateCompiler : ICodeGenerator
+{
+/** Given a template of length n, how much code will result?
+*  For now, let's assume n/5. Later, we can test in practice.
+@@ -99,12 +97,12 @@ namespace StringTemplate
+
+public static int subtemplateCount = 0; // public for testing access
+
+-        public Compiler()
++        public TemplateCompiler()
+: this("/", "<unknown>")
+{
+}
+
+-        public Compiler(string templatePathPrefix, string enclosingTemplateName)
++        public TemplateCompiler(string templatePathPrefix, string enclosingTemplateName)
+{
+this.templatePathPrefix = templatePathPrefix;
+this.enclosingTemplateName = enclosingTemplateName;
+@@ -232,7 +230,7 @@ namespace StringTemplate
+int stop = -1;
+if (tokenSource != null)
+start = lexer.input.Index;
+-            Compiler c = new Compiler(templatePathPrefix, enclosingTemplateName);
++            TemplateCompiler c = new TemplateCompiler(templatePathPrefix, enclosingTemplateName);
+CompiledTemplate sub = c.Compile(input, state);
+sub.name = name;
+if (lexer != null)
+@@ -264,7 +262,7 @@ namespace StringTemplate
+ITokenStream input,
+RecognizerSharedState state)
+{
+-            Compiler c = new Compiler(templatePathPrefix, enclosingTemplateName);
++            TemplateCompiler c = new TemplateCompiler(templatePathPrefix, enclosingTemplateName);
+CompiledTemplate sub = c.Compile(input, state);
+string fullName = templatePathPrefix + TemplateGroup.GetMangledRegionName(enclosingTemplateName, regionName);
+sub.name = fullName;
+diff --git a/StringTemplate4/Compiler/FormalArgument.cs b/StringTemplate4/Compiler/FormalArgument.cs
+index 321e3db..beb9d30 100644
+--- a/StringTemplate4/Compiler/FormalArgument.cs
++++ b/StringTemplate4/Compiler/FormalArgument.cs
+@@ -30,7 +30,7 @@
+* THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+-namespace StringTemplate
++namespace StringTemplate.Compiler
+{
+using Antlr.Runtime;
+
+diff --git a/StringTemplate4/Compiler/Group.g3 b/StringTemplate4/Compiler/Group.g3
+index 4a77d4f..3e9ba9b 100644
+--- a/StringTemplate4/Compiler/Group.g3
++++ b/StringTemplate4/Compiler/Group.g3
+@@ -53,8 +53,8 @@ options {
+language=CSharp3;
+}
+
+-@lexer::namespace{StringTemplate}
+-@parser::namespace{StringTemplate}
++@lexer::namespace{StringTemplate.Compiler}
++@parser::namespace{StringTemplate.Compiler}
+
+@header
+{
+diff --git a/StringTemplate4/Compiler/GroupLexerHelper.cs b/StringTemplate4/Compiler/GroupLexerHelper.cs
+index af29d5e..eba507d 100644
+--- a/StringTemplate4/Compiler/GroupLexerHelper.cs
++++ b/StringTemplate4/Compiler/GroupLexerHelper.cs
+@@ -30,7 +30,7 @@
+* THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+-namespace StringTemplate
++namespace StringTemplate.Compiler
+{
+partial class GroupLexer
+{
+diff --git a/StringTemplate4/Compiler/GroupParserHelper.cs b/StringTemplate4/Compiler/GroupParserHelper.cs
+index a26063f..1741b29 100644
+--- a/StringTemplate4/Compiler/GroupParserHelper.cs
++++ b/StringTemplate4/Compiler/GroupParserHelper.cs
+@@ -30,7 +30,7 @@
+* THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+-namespace StringTemplate
++namespace StringTemplate.Compiler
+{
+partial class GroupParser
+{
+diff --git a/StringTemplate4/Compiler/ICodeGenerator.cs b/StringTemplate4/Compiler/ICodeGenerator.cs
+index dedd189..bdf7b02 100644
+--- a/StringTemplate4/Compiler/ICodeGenerator.cs
++++ b/StringTemplate4/Compiler/ICodeGenerator.cs
+@@ -30,11 +30,10 @@
+* THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+-namespace StringTemplate
++namespace StringTemplate.Compiler
+{
+using System.Collections.Generic;
+using Antlr.Runtime;
+-    using IList = System.Collections.IList;
+
+// TODO: maybe rename; more than code gen now; break into two interfaces?
+public interface ICodeGenerator
+diff --git a/StringTemplate4/Compiler/StringTable.cs b/StringTemplate4/Compiler/StringTable.cs
+index 7b13278..cd34595 100644
+--- a/StringTemplate4/Compiler/StringTable.cs
++++ b/StringTemplate4/Compiler/StringTable.cs
+@@ -30,7 +30,7 @@
+* THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+-namespace StringTemplate
++namespace StringTemplate.Compiler
+{
+using System.Collections.Generic;
+using System.Linq;
+diff --git a/StringTemplate4/Compiler/TemplateLexer.cs b/StringTemplate4/Compiler/TemplateLexer.cs
+index 09767be..3cfa463 100644
+--- a/StringTemplate4/Compiler/TemplateLexer.cs
++++ b/StringTemplate4/Compiler/TemplateLexer.cs
+@@ -30,7 +30,7 @@
+* THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+-namespace StringTemplate
++namespace StringTemplate.Compiler
+{
+using System.Collections.Generic;
+using Antlr.Runtime;
+diff --git a/StringTemplate4/Compiler/TemplateParser.g3 b/StringTemplate4/Compiler/TemplateParser.g3
+index e3606eb..6656ea0 100644
+--- a/StringTemplate4/Compiler/TemplateParser.g3
++++ b/StringTemplate4/Compiler/TemplateParser.g3
+@@ -35,7 +35,7 @@ options {
+TokenLabelType=CommonToken;
+}
+
+-@namespace{StringTemplate}
++@namespace{StringTemplate.Compiler}
+@header{using System.Linq;}
+
+@rulecatch {
+@@ -292,7 +292,7 @@ memberExpr
+
+callExpr
+options {k=2;} // prevent full LL(*), which fails, falling back on k=1; need k=2
+-	:	{Compiler.funcs.ContainsKey(input.LT(1).Text)}?
++	:	{TemplateCompiler.funcs.ContainsKey(input.LT(1).Text)}?
+ID '(' expr ')' {Func($ID);}
+|	(s='super' '.')? ID
+{gen.Emit($s!=null?Bytecode.INSTR_SUPER_NEW:Bytecode.INSTR_NEW, PrefixedName($ID.text));}
+diff --git a/StringTemplate4/Compiler/TemplateParserHelper.cs b/StringTemplate4/Compiler/TemplateParserHelper.cs
+index 9140e26..0ae6052 100644
+--- a/StringTemplate4/Compiler/TemplateParserHelper.cs
++++ b/StringTemplate4/Compiler/TemplateParserHelper.cs
+@@ -30,12 +30,11 @@
+* THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+-namespace StringTemplate
++namespace StringTemplate.Compiler
+{
+using System.Collections.Generic;
+using Antlr.Runtime;
+using Console = System.Console;
+-    using IList = System.Collections.IList;
+
+partial class TemplateParser
+{
+@@ -91,7 +90,7 @@ namespace StringTemplate
+public void SetOption(IToken id)
+{
+int i;
+-            if (!Compiler.supportedOptions.TryGetValue(id.Text, out i))
++            if (!TemplateCompiler.supportedOptions.TryGetValue(id.Text, out i))
+{
+Console.Error.WriteLine("no such option: " + id.Text);
+return;
+@@ -103,7 +102,7 @@ namespace StringTemplate
+public void DefaultOption(IToken id)
+{
+string v;
+-            if (!Compiler.defaultOptionValues.TryGetValue(id.Text, out v))
++            if (!TemplateCompiler.defaultOptionValues.TryGetValue(id.Text, out v))
+{
+Console.Error.WriteLine("no def value for " + id.Text);
+return;
+@@ -115,7 +114,7 @@ namespace StringTemplate
+public void Func(IToken id)
+{
+short funcBytecode;
+-            if (!Compiler.funcs.TryGetValue(id.Text, out funcBytecode))
++            if (!TemplateCompiler.funcs.TryGetValue(id.Text, out funcBytecode))
+{
+Console.Error.WriteLine("no such fun: " + id);
+gen.Emit(Bytecode.INSTR_NOOP);
+@@ -170,14 +169,14 @@ namespace StringTemplate
+
+public string CompileAnonTemplate(string enclosingTemplateName, ITokenStream input, IList<IToken> ids, RecognizerSharedState state)
+{
+-                Compiler c = new Compiler();
++                TemplateCompiler c = new TemplateCompiler();
+c.Compile(input, state);
+return null;
+}
+
+public string CompileRegion(string enclosingTemplateName, string regionName, ITokenStream input, RecognizerSharedState state)
+{
+-                Compiler c = new Compiler();
++                TemplateCompiler c = new TemplateCompiler();
+c.Compile(input, state);
+return null;
+}
+diff --git a/StringTemplate4/Compiler/TemplateRecognitionException.cs b/StringTemplate4/Compiler/TemplateRecognitionException.cs
+index 4fc3043..0c3a59a 100644
+--- a/StringTemplate4/Compiler/TemplateRecognitionException.cs
++++ b/StringTemplate4/Compiler/TemplateRecognitionException.cs
+@@ -30,7 +30,7 @@
+* THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+-namespace StringTemplate
++namespace StringTemplate.Compiler
+{
+using Antlr.Runtime;
+
+diff --git a/StringTemplate4/Interpreter.cs b/StringTemplate4/Interpreter.cs
+index 1e4e575..3786cc1 100644
+--- a/StringTemplate4/Interpreter.cs
++++ b/StringTemplate4/Interpreter.cs
+@@ -34,6 +34,8 @@ namespace StringTemplate
+{
+using System.Collections.Generic;
+using System.Linq;
++    using StringTemplate.Compiler;
++    using StringTemplate.Debug;
+using Array = System.Array;
+using ArrayList = System.Collections.ArrayList;
+using Console = System.Console;
+@@ -50,7 +52,6 @@ namespace StringTemplate
+using StringBuilder = System.Text.StringBuilder;
+using StringWriter = System.IO.StringWriter;
+using Type = System.Type;
+-    using StringTemplate.Debug;
+
+public class Interpreter
+{
+@@ -293,7 +294,7 @@ namespace StringTemplate
+ip = addr; // jump
+break;
+case Bytecode.INSTR_OPTIONS:
+-                    operands[++sp] = new object[Compiler.NUM_OPTIONS];
++                    operands[++sp] = new object[TemplateCompiler.NUM_OPTIONS];
+break;
+case Bytecode.INSTR_LIST:
+operands[++sp] = new List<object>();
+@@ -427,7 +428,7 @@ namespace StringTemplate
+if (options != null)
+{
+optionStrings = new string[options.Length];
+-                for (int i = 0; i < Compiler.NUM_OPTIONS; i++)
++                for (int i = 0; i < TemplateCompiler.NUM_OPTIONS; i++)
+{
+optionStrings[i] = ToString(self, options[i]);
+}
+diff --git a/StringTemplate4/Template.cs b/StringTemplate4/Template.cs
+index 121c587..afe2a33 100644
+--- a/StringTemplate4/Template.cs
++++ b/StringTemplate4/Template.cs
+@@ -33,17 +33,14 @@
+namespace StringTemplate
+{
+using System.Collections.Generic;
++    using System.Diagnostics;
++    using StringTemplate.Compiler;
+using ArgumentException = System.ArgumentException;
+using ArrayList = System.Collections.ArrayList;
+-    using Console = System.Console;
+using CultureInfo = System.Globalization.CultureInfo;
+-    using Exception = System.Exception;
+using IList = System.Collections.IList;
+-    using IOException = System.IO.IOException;
+using StringBuilder = System.Text.StringBuilder;
+using StringWriter = System.IO.StringWriter;
+-    using System.Diagnostics;
+-    using StringTemplate.Debug;
+
+public class Template
+{
+diff --git a/StringTemplate4/TemplateGroup.cs b/StringTemplate4/TemplateGroup.cs
+index fba15e7..ce65190 100644
+--- a/StringTemplate4/TemplateGroup.cs
++++ b/StringTemplate4/TemplateGroup.cs
+@@ -34,17 +34,16 @@ namespace StringTemplate
+{
+using System.Collections.Generic;
+using System.Linq;
++    using Antlr.Runtime;
++    using StringTemplate.Compiler;
++    using StringTemplate.Debug;
+using ArgumentException = System.ArgumentException;
+using Console = System.Console;
+-    using Directory = System.IO.Directory;
+using Encoding = System.Text.Encoding;
+using Exception = System.Exception;
+using Path = System.IO.Path;
+using StringBuilder = System.Text.StringBuilder;
+using Type = System.Type;
+-    using Antlr.Runtime;
+-    using TextWriter = System.IO.TextWriter;
+-    using StringTemplate.Debug;
+
+/** A directory or directory tree of .st template files and/or group files.
+*  Individual template files contain formal template definitions. In a sense,
+@@ -263,7 +262,7 @@ namespace StringTemplate
+FormalArgument fa = args[a];
+if (fa.defaultValueToken != null)
+{
+-                        Compiler c2 = new Compiler(prefix, name);
++                        TemplateCompiler c2 = new TemplateCompiler(prefix, name);
+fa.compiledDefaultValue = c2.Compile(template);
+}
+}
+@@ -326,7 +325,7 @@ namespace StringTemplate
+
+protected CompiledTemplate Compile(string prefix, string enclosingTemplateName, string template)
+{
+-            Compiler c = new Compiler(prefix, enclosingTemplateName);
++            TemplateCompiler c = new TemplateCompiler(prefix, enclosingTemplateName);
+CompiledTemplate code = c.Compile(template);
+code.nativeGroup = this;
+code.template = template;
+diff --git a/StringTemplate4/TemplateGroupDirectory.cs b/StringTemplate4/TemplateGroupDirectory.cs
+index 5f5033a..a181645 100644
+--- a/StringTemplate4/TemplateGroupDirectory.cs
++++ b/StringTemplate4/TemplateGroupDirectory.cs
+@@ -32,17 +32,15 @@
+
+namespace StringTemplate
+{
+-    using System.Linq;
+using Antlr.Runtime;
++    using StringTemplate.Compiler;
+using ArgumentException = System.ArgumentException;
+-    using ArgumentNullException = System.ArgumentNullException;
+using Console = System.Console;
+using Directory = System.IO.Directory;
+using Encoding = System.Text.Encoding;
+using Exception = System.Exception;
+using File = System.IO.File;
+using Path = System.IO.Path;
+-    using System.Collections.Generic;
+
+public class TemplateGroupDirectory : TemplateGroup
+{
+

@@ -1,0 +1,125 @@
+commit 89304ee43a0c464016969b36169f009ec254ad13
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Fri Oct 23 10:29:36 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Fri Oct 23 10:29:36 2009 -0800
+
+C# Port:
+* Improved detection of JavaHome for unit testing
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6260]
+
+diff --git a/Antlr3.Test/BaseTest.cs b/Antlr3.Test/BaseTest.cs
+index a787a1a..5d0f21e 100644
+--- a/Antlr3.Test/BaseTest.cs
++++ b/Antlr3.Test/BaseTest.cs
+@@ -40,6 +40,8 @@ namespace AntlrUnitTests
+
+using AntlrTool = Antlr3.AntlrTool;
+using BindingFlags = System.Reflection.BindingFlags;
++    using Debugger = System.Diagnostics.Debugger;
++    using Directory = System.IO.Directory;
+using ErrorManager = Antlr3.Tool.ErrorManager;
+using FieldInfo = System.Reflection.FieldInfo;
+using GrammarSemanticsMessage = Antlr3.Tool.GrammarSemanticsMessage;
+@@ -49,10 +51,12 @@ namespace AntlrUnitTests
+using Label = Antlr3.Analysis.Label;
+using Message = Antlr3.Tool.Message;
+using Path = System.IO.Path;
++    using Registry = Microsoft.Win32.Registry;
++    using RegistryKey = Microsoft.Win32.RegistryKey;
++    using RegistryValueOptions = Microsoft.Win32.RegistryValueOptions;
+using StringBuilder = System.Text.StringBuilder;
+using StringTemplate = Antlr3.ST.StringTemplate;
+using StringTemplateGroup = Antlr3.ST.StringTemplateGroup;
+-    using StringTemplateGroupInterface = Antlr3.ST.StringTemplateGroupInterface;
+
+public abstract class BaseTest
+{
+@@ -62,6 +66,8 @@ namespace AntlrUnitTests
+public readonly string Runtime2Jar = Path.Combine( Environment.CurrentDirectory, @"..\..\antlr-2.7.7.jar" );
+public readonly string StringTemplateJar = Path.Combine( Environment.CurrentDirectory, @"..\..\stringtemplate-3.1b1.jar" );
+
++        private static string javaHome;
++
+public string tmpdir;
+
+public TestContext TestContext
+@@ -175,28 +181,66 @@ namespace AntlrUnitTests
+}
+}
+
+-        protected AntlrTool newTool( string[] args )
++        protected AntlrTool newTool(params string[] args)
+{
+-            AntlrTool tool = new AntlrTool( args );
++            AntlrTool tool = (args == null || args.Length == 0) ? new AntlrTool() : new AntlrTool(args);
+tool.SetOutputDirectory( tmpdir );
+tool.TestMode = true;
+return tool;
+}
+
+-        protected AntlrTool newTool()
++        protected static string JavaHome
+{
+-            AntlrTool tool = new AntlrTool();
+-            tool.SetOutputDirectory( tmpdir );
+-            tool.TestMode = true;
+-            return tool;
++            get
++            {
++                string home = javaHome;
++                bool debugger = Debugger.IsAttached;
++                if (home == null || debugger)
++                {
++                    home = Environment.GetEnvironmentVariable("JAVA_HOME");
++                    if (string.IsNullOrEmpty(home) || !Directory.Exists(home))
++                    {
++                        home = CheckForJavaHome(Registry.CurrentUser);
++                        if (home == null)
++                            home = CheckForJavaHome(Registry.LocalMachine);
++                    }
++
++                    if (home != null && !Directory.Exists(home))
++                        home = null;
++
++                    if (!debugger)
++                    {
++                        javaHome = home;
++                    }
++                }
++
++                return home;
++            }
+}
+
+-        protected string JavaHome
++        protected static string CheckForJavaHome(RegistryKey key)
+{
+-            get
++            using (RegistryKey subkey = key.OpenSubKey(@"SOFTWARE\JavaSoft\Java Development Kit"))
+{
+-                return Environment.GetEnvironmentVariable( "JAVA_HOME" );
++                if (subkey == null)
++                    return null;
++
++                object value = subkey.GetValue("CurrentVersion", null, RegistryValueOptions.None);
++                if (value != null)
++                {
++                    using (RegistryKey currentHomeKey = subkey.OpenSubKey(value.ToString()))
++                    {
++                        if (currentHomeKey == null)
++                            return null;
++
++                        value = currentHomeKey.GetValue("JavaHome", null, RegistryValueOptions.None);
++                        if (value != null)
++                            return value.ToString();
++                    }
++                }
+}
++
++            return null;
+}
+
+protected string ClassPath
+

@@ -1,0 +1,32 @@
+commit b057d0e915bc8bb032fc73dae5df9e2d7cc97e35
+Author:     parrt <parrt@antlr.org>
+AuthorDate: Tue Jun 28 11:19:29 2011 -0800
+Commit:     parrt <parrt@antlr.org>
+CommitDate: Tue Jun 28 11:19:29 2011 -0800
+
+rewrites could have single REWRITE node
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8784]
+
+diff --git a/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLRTreePrinter.g b/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLRTreePrinter.g
+index d809407..0fbbfa0 100644
+--- a/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLRTreePrinter.g
++++ b/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLRTreePrinter.g
+@@ -337,6 +337,7 @@ finallyClause
+
+rewrite
+:	^(REWRITES single_rewrite+)
++	|	REWRITES
+|
+;
+
+@@ -432,7 +433,7 @@ atom
+(rarg=ARG_ACTION	{out("["+$rarg.toString()+"]");})?
+(ast_suffix)?
+)
+-		|	^(	TOKEN_REF		{out($start.toString());}
++		|	^(	TOKEN_REF		{out($start.toString());}
+(targ=ARG_ACTION	{out("["+$targ.toString()+"]");} )?
+(ast_suffix)?
+)
+

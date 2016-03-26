@@ -1,0 +1,24 @@
+commit 80ac36c2bbb3baeeb23d02cefa1885cb27cfe268
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Mar 30 07:40:33 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Mar 30 07:40:33 2011 -0800
+
+(C# 3) Fix reference to TreeRewriter (was TreeRewriter<T>)
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 7978]
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg
+index e07f8fa..093df43 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg
+@@ -385,7 +385,7 @@ parser(grammar, name, scopes, tokens, tokenNames, rules, numRules, bitsets,
+*/
+treeParser(grammar, name, scopes, tokens, tokenNames, globalAction, rules,
+numRules, bitsets, labelType={<ASTLabelType>}, ASTLabelType="object",
+-           superClass={<if(actions.(actionScope).superClass)><actions.(actionScope).superClass><else>Antlr.Runtime.Tree.<if(filterMode)><if(buildAST)>TreeRewriter\<<labelType>\><else>TreeFilter<endif><else>TreeParser<endif><endif>},
++           superClass={<if(actions.(actionScope).superClass)><actions.(actionScope).superClass><else>Antlr.Runtime.Tree.<if(filterMode)><if(buildAST)>TreeRewriter<else>TreeFilter<endif><else>TreeParser<endif><endif>},
+members={<actions.treeparser.members>},
+filterMode) ::= <<
+<genericParser(inputStreamType="ITreeNodeStream", rewriteElementType="Node", ...)>
+

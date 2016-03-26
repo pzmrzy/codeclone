@@ -1,0 +1,68 @@
+commit 9070ff3db0140105bba0ee857ccd7a1312c687c6
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Thu Oct 27 09:20:42 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Thu Oct 27 09:20:42 2011 -0800
+
+Back out changelist 9207
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 9212]
+
+diff --git a/tool/CHANGES.txt b/tool/CHANGES.txt
+index 650f537..5f00e69 100644
+--- a/tool/CHANGES.txt
++++ b/tool/CHANGES.txt
+@@ -7,12 +7,6 @@ University of San Francisco
+
+CHANGES
+
+-October 27, 2011
+-
+-* Dieter Habelitz reported bug in java code gen with synpreds. labels were
+-  being carried from grammar into synpreds but weren't typed properly (they
+-  were "void x=null;" for x=ruleref labels)
+-
+October 25, 2011
+
+* (Sam) Rule.setOption didn't do memoize option right.
+diff --git a/tool/src/main/java/org/antlr/tool/GrammarAST.java b/tool/src/main/java/org/antlr/tool/GrammarAST.java
+index d2c6a88..3d36cc8 100644
+--- a/tool/src/main/java/org/antlr/tool/GrammarAST.java
++++ b/tool/src/main/java/org/antlr/tool/GrammarAST.java
+@@ -490,31 +490,14 @@ public class GrammarAST extends CommonTree {
+for (int i = 0; i < t.getChildCount(); i++){
+GrammarAST child = (GrammarAST)t.getChild(i);
+int ttype = child.getType();
+-			if ( ttype == ANTLRParser.REWRITES ||
+-				 ttype == ANTLRParser.REWRITE ||
+-				 ttype==ANTLRParser.ACTION )
+-			{
++			if (ttype == ANTLRParser.REWRITES || ttype == ANTLRParser.REWRITE || ttype==ANTLRParser.ACTION) {
+continue;
+}
+
+-			// strip labels
+-			if ( ttype == ANTLRParser.ASSIGN ||
+-				 ttype == ANTLRParser.PLUS_ASSIGN )
+-			{
+-				// get element from (= x element)
+-				result.add((GrammarAST)child.getChild(1));
+-			}
+-			// strip ast opts
+-			else if ( ttype == ANTLRParser.BANG ||
+-				 ttype == ANTLRParser.ROOT ||
+-				 ttype == ANTLRParser.ASSIGN ||
+-				 ttype == ANTLRParser.PLUS_ASSIGN )
+-			{
+-				for (GrammarAST subchild : getChildrenForDupTree(child)) {
++			if (ttype == ANTLRParser.BANG || ttype == ANTLRParser.ROOT) {
++				for (GrammarAST subchild : getChildrenForDupTree(child))
+result.add(subchild);
+-				}
+-			}
+-			else {
++			} else {
+result.add(child);
+}
+}
+

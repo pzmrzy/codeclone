@@ -1,0 +1,38 @@
+commit 1d4835f568a3c3b272b555c81aafc89e386b00bd
+Author:     parrt <parrt@antlr.org>
+AuthorDate: Thu Oct 27 10:02:43 2011 -0800
+Commit:     parrt <parrt@antlr.org>
+CommitDate: Thu Oct 27 10:02:43 2011 -0800
+
+add test
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 9217]
+
+diff --git a/tool/src/test/java/org/antlr/test/TestSyntacticPredicateEvaluation.java b/tool/src/test/java/org/antlr/test/TestSyntacticPredicateEvaluation.java
+index 9080726..478194c 100644
+--- a/tool/src/test/java/org/antlr/test/TestSyntacticPredicateEvaluation.java
++++ b/tool/src/test/java/org/antlr/test/TestSyntacticPredicateEvaluation.java
+@@ -417,4 +417,22 @@ public class TestSyntacticPredicateEvaluation extends BaseTest {
+assertEquals("alt1\n", found);
+}
+
++	@Test public void testSynPredWithSemPredReferencingLabeledRule() throws Exception {
++		String grammar =
++			"grammar T;\n" +
++			"options {\n" +
++			"    backtrack = true; \n" +
++			"}\n" +
++			"// if b is rule ref, gens bad void x=null code\n" +
++			"a : x=b {Object o = $x; System.out.println(\"alt1\");}\n" +
++			"  | y=b\n" +
++			"  ;\n" +
++			"\n" +
++			"b : 'a' ;\n" ;
++		String found = execParser("T.g", grammar, "TParser", "TLexer",
++				    "a", "a", false);
++
++		assertEquals("alt1\n", found);
++	}
++
+}
+

@@ -1,0 +1,26 @@
+commit 068c7106f586523a733e508a2b5c61b51076f97f
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sun May 15 13:27:14 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sun May 15 13:27:14 2011 -0800
+
+(C# 3) Mark fields readonly
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8514]
+
+diff --git a/Antlr4.StringTemplate/Compiler/TemplateParser.g3.cs b/Antlr4.StringTemplate/Compiler/TemplateParser.g3.cs
+index 58c08f6..c0d403e 100644
+--- a/Antlr4.StringTemplate/Compiler/TemplateParser.g3.cs
++++ b/Antlr4.StringTemplate/Compiler/TemplateParser.g3.cs
+@@ -37,8 +37,8 @@ namespace Antlr4.StringTemplate.Compiler
+
+partial class TemplateParser
+{
+-        ErrorManager errMgr;
+-        IToken templateToken;
++        private readonly ErrorManager errMgr;
++        private readonly IToken templateToken;
+
+public TemplateParser(ITokenStream input, ErrorManager errMgr, IToken templateToken)
+: this(input)
+

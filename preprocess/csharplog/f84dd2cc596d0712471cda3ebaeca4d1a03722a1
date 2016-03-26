@@ -1,0 +1,312 @@
+commit f84dd2cc596d0712471cda3ebaeca4d1a03722a1
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Fri Apr 10 09:10:26 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Fri Apr 10 09:10:26 2009 -0800
+
+C# Port:
+* Sign Antlr3.Targets.* assemblies
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6005]
+
+diff --git a/Antlr3.Targets/Antlr3.Targets.ActionScript/Antlr3.Targets.ActionScript.csproj b/Antlr3.Targets/Antlr3.Targets.ActionScript/Antlr3.Targets.ActionScript.csproj
+index c17cf28..eefd608 100644
+--- a/Antlr3.Targets/Antlr3.Targets.ActionScript/Antlr3.Targets.ActionScript.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.ActionScript/Antlr3.Targets.ActionScript.csproj
+@@ -18,6 +18,8 @@
+<SccLocalPath>SAK</SccLocalPath>
+<SccAuxPath>SAK</SccAuxPath>
+<SccProvider>SAK</SccProvider>
++    <SignAssembly>true</SignAssembly>
++    <AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+@@ -51,6 +53,9 @@
+</ProjectReference>
+</ItemGroup>
+<ItemGroup>
++    <None Include="..\..\Antlr3\Key.snk">
++      <Link>Key.snk</Link>
++    </None>
+<None Include="app.config" />
+</ItemGroup>
+<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+diff --git a/Antlr3.Targets/Antlr3.Targets.C/Antlr3.Targets.C.csproj b/Antlr3.Targets/Antlr3.Targets.C/Antlr3.Targets.C.csproj
+index 4d563ac..4df561c 100644
+--- a/Antlr3.Targets/Antlr3.Targets.C/Antlr3.Targets.C.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.C/Antlr3.Targets.C.csproj
+@@ -18,6 +18,8 @@
+<SccLocalPath>SAK</SccLocalPath>
+<SccAuxPath>SAK</SccAuxPath>
+<SccProvider>SAK</SccProvider>
++    <SignAssembly>true</SignAssembly>
++    <AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+@@ -56,6 +58,9 @@
+</ProjectReference>
+</ItemGroup>
+<ItemGroup>
++    <None Include="..\..\Antlr3\Key.snk">
++      <Link>Key.snk</Link>
++    </None>
+<None Include="app.config" />
+</ItemGroup>
+<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+diff --git a/Antlr3.Targets/Antlr3.Targets.CSharp/Antlr3.Targets.CSharp.csproj b/Antlr3.Targets/Antlr3.Targets.CSharp/Antlr3.Targets.CSharp.csproj
+index dc2614f..8b43ac0 100644
+--- a/Antlr3.Targets/Antlr3.Targets.CSharp/Antlr3.Targets.CSharp.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.CSharp/Antlr3.Targets.CSharp.csproj
+@@ -18,6 +18,8 @@
+<SccLocalPath>SAK</SccLocalPath>
+<SccAuxPath>SAK</SccAuxPath>
+<SccProvider>SAK</SccProvider>
++    <SignAssembly>true</SignAssembly>
++    <AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+@@ -51,6 +53,9 @@
+</ProjectReference>
+</ItemGroup>
+<ItemGroup>
++    <None Include="..\..\Antlr3\Key.snk">
++      <Link>Key.snk</Link>
++    </None>
+<None Include="app.config" />
+</ItemGroup>
+<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+diff --git a/Antlr3.Targets/Antlr3.Targets.CSharp2/Antlr3.Targets.CSharp2.csproj b/Antlr3.Targets/Antlr3.Targets.CSharp2/Antlr3.Targets.CSharp2.csproj
+index 5b653c4..ecb60ff 100644
+--- a/Antlr3.Targets/Antlr3.Targets.CSharp2/Antlr3.Targets.CSharp2.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.CSharp2/Antlr3.Targets.CSharp2.csproj
+@@ -18,6 +18,8 @@
+<SccLocalPath>SAK</SccLocalPath>
+<SccAuxPath>SAK</SccAuxPath>
+<SccProvider>SAK</SccProvider>
++    <SignAssembly>true</SignAssembly>
++    <AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+@@ -51,6 +53,9 @@
+</ProjectReference>
+</ItemGroup>
+<ItemGroup>
++    <None Include="..\..\Antlr3\Key.snk">
++      <Link>Key.snk</Link>
++    </None>
+<None Include="app.config" />
+</ItemGroup>
+<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+diff --git a/Antlr3.Targets/Antlr3.Targets.CSharp3/Antlr3.Targets.CSharp3.csproj b/Antlr3.Targets/Antlr3.Targets.CSharp3/Antlr3.Targets.CSharp3.csproj
+index 77a9776..3f1f5d6 100644
+--- a/Antlr3.Targets/Antlr3.Targets.CSharp3/Antlr3.Targets.CSharp3.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.CSharp3/Antlr3.Targets.CSharp3.csproj
+@@ -18,6 +18,9 @@
+<SccLocalPath>SAK</SccLocalPath>
+<SccAuxPath>SAK</SccAuxPath>
+<SccProvider>SAK</SccProvider>
++    <SignAssembly>true</SignAssembly>
++    <DelaySign>false</DelaySign>
++    <AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+@@ -51,6 +54,9 @@
+</ProjectReference>
+</ItemGroup>
+<ItemGroup>
++    <None Include="..\..\Antlr3\Key.snk">
++      <Link>Key.snk</Link>
++    </None>
+<None Include="app.config" />
+</ItemGroup>
+<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+diff --git a/Antlr3.Targets/Antlr3.Targets.Cpp/Antlr3.Targets.Cpp.csproj b/Antlr3.Targets/Antlr3.Targets.Cpp/Antlr3.Targets.Cpp.csproj
+index ec2fdfb..29b97dc 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Cpp/Antlr3.Targets.Cpp.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.Cpp/Antlr3.Targets.Cpp.csproj
+@@ -18,6 +18,8 @@
+<SccLocalPath>SAK</SccLocalPath>
+<SccAuxPath>SAK</SccAuxPath>
+<SccProvider>SAK</SccProvider>
++    <SignAssembly>true</SignAssembly>
++    <AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+@@ -56,6 +58,9 @@
+</ProjectReference>
+</ItemGroup>
+<ItemGroup>
++    <None Include="..\..\Antlr3\Key.snk">
++      <Link>Key.snk</Link>
++    </None>
+<None Include="app.config" />
+</ItemGroup>
+<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+diff --git a/Antlr3.Targets/Antlr3.Targets.Delphi/Antlr3.Targets.Delphi.csproj b/Antlr3.Targets/Antlr3.Targets.Delphi/Antlr3.Targets.Delphi.csproj
+index 32c88cf..499433f 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Delphi/Antlr3.Targets.Delphi.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.Delphi/Antlr3.Targets.Delphi.csproj
+@@ -18,6 +18,8 @@
+<SccLocalPath>SAK</SccLocalPath>
+<SccAuxPath>SAK</SccAuxPath>
+<SccProvider>SAK</SccProvider>
++    <SignAssembly>true</SignAssembly>
++    <AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+@@ -51,6 +53,9 @@
+</ProjectReference>
+</ItemGroup>
+<ItemGroup>
++    <None Include="..\..\Antlr3\Key.snk">
++      <Link>Key.snk</Link>
++    </None>
+<None Include="app.config" />
+</ItemGroup>
+<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+diff --git a/Antlr3.Targets/Antlr3.Targets.Java/Antlr3.Targets.Java.csproj b/Antlr3.Targets/Antlr3.Targets.Java/Antlr3.Targets.Java.csproj
+index 6ad7999..1a1093e 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Java/Antlr3.Targets.Java.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.Java/Antlr3.Targets.Java.csproj
+@@ -18,6 +18,8 @@
+<SccLocalPath>SAK</SccLocalPath>
+<SccAuxPath>SAK</SccAuxPath>
+<SccProvider>SAK</SccProvider>
++    <SignAssembly>true</SignAssembly>
++    <AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+@@ -51,6 +53,9 @@
+</ProjectReference>
+</ItemGroup>
+<ItemGroup>
++    <None Include="..\..\Antlr3\Key.snk">
++      <Link>Key.snk</Link>
++    </None>
+<None Include="app.config" />
+</ItemGroup>
+<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+diff --git a/Antlr3.Targets/Antlr3.Targets.JavaScript/Antlr3.Targets.JavaScript.csproj b/Antlr3.Targets/Antlr3.Targets.JavaScript/Antlr3.Targets.JavaScript.csproj
+index 37e2a1a..05e595b 100644
+--- a/Antlr3.Targets/Antlr3.Targets.JavaScript/Antlr3.Targets.JavaScript.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.JavaScript/Antlr3.Targets.JavaScript.csproj
+@@ -18,6 +18,8 @@
+<SccLocalPath>SAK</SccLocalPath>
+<SccAuxPath>SAK</SccAuxPath>
+<SccProvider>SAK</SccProvider>
++    <SignAssembly>true</SignAssembly>
++    <AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+@@ -51,6 +53,9 @@
+</ProjectReference>
+</ItemGroup>
+<ItemGroup>
++    <None Include="..\..\Antlr3\Key.snk">
++      <Link>Key.snk</Link>
++    </None>
+<None Include="app.config" />
+</ItemGroup>
+<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+diff --git a/Antlr3.Targets/Antlr3.Targets.ObjC/Antlr3.Targets.ObjC.csproj b/Antlr3.Targets/Antlr3.Targets.ObjC/Antlr3.Targets.ObjC.csproj
+index 9c11268..9650ac8 100644
+--- a/Antlr3.Targets/Antlr3.Targets.ObjC/Antlr3.Targets.ObjC.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.ObjC/Antlr3.Targets.ObjC.csproj
+@@ -18,6 +18,8 @@
+<SccLocalPath>SAK</SccLocalPath>
+<SccAuxPath>SAK</SccAuxPath>
+<SccProvider>SAK</SccProvider>
++    <SignAssembly>true</SignAssembly>
++    <AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+@@ -56,6 +58,9 @@
+</ProjectReference>
+</ItemGroup>
+<ItemGroup>
++    <None Include="..\..\Antlr3\Key.snk">
++      <Link>Key.snk</Link>
++    </None>
+<None Include="app.config" />
+</ItemGroup>
+<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+diff --git a/Antlr3.Targets/Antlr3.Targets.Perl5/Antlr3.Targets.Perl5.csproj b/Antlr3.Targets/Antlr3.Targets.Perl5/Antlr3.Targets.Perl5.csproj
+index a4d2c4c..c21e5f1 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Perl5/Antlr3.Targets.Perl5.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.Perl5/Antlr3.Targets.Perl5.csproj
+@@ -18,6 +18,8 @@
+<SccLocalPath>SAK</SccLocalPath>
+<SccAuxPath>SAK</SccAuxPath>
+<SccProvider>SAK</SccProvider>
++    <SignAssembly>true</SignAssembly>
++    <AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+@@ -51,6 +53,9 @@
+</ProjectReference>
+</ItemGroup>
+<ItemGroup>
++    <None Include="..\..\Antlr3\Key.snk">
++      <Link>Key.snk</Link>
++    </None>
+<None Include="app.config" />
+</ItemGroup>
+<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+diff --git a/Antlr3.Targets/Antlr3.Targets.Python/Antlr3.Targets.Python.csproj b/Antlr3.Targets/Antlr3.Targets.Python/Antlr3.Targets.Python.csproj
+index 0762c87..ff008e5 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Python/Antlr3.Targets.Python.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.Python/Antlr3.Targets.Python.csproj
+@@ -18,6 +18,8 @@
+<SccLocalPath>SAK</SccLocalPath>
+<SccAuxPath>SAK</SccAuxPath>
+<SccProvider>SAK</SccProvider>
++    <SignAssembly>true</SignAssembly>
++    <AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+@@ -44,6 +46,9 @@
+<Compile Include="PythonTarget.cs" />
+</ItemGroup>
+<ItemGroup>
++    <None Include="..\..\Antlr3\Key.snk">
++      <Link>Key.snk</Link>
++    </None>
+<None Include="app.config" />
+</ItemGroup>
+<ItemGroup>
+diff --git a/Antlr3.Targets/Antlr3.Targets.Ruby/Antlr3.Targets.Ruby.csproj b/Antlr3.Targets/Antlr3.Targets.Ruby/Antlr3.Targets.Ruby.csproj
+index f052320..5f646f8 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Ruby/Antlr3.Targets.Ruby.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.Ruby/Antlr3.Targets.Ruby.csproj
+@@ -18,6 +18,8 @@
+<SccLocalPath>SAK</SccLocalPath>
+<SccAuxPath>SAK</SccAuxPath>
+<SccProvider>SAK</SccProvider>
++    <SignAssembly>true</SignAssembly>
++    <AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+@@ -51,6 +53,9 @@
+</ProjectReference>
+</ItemGroup>
+<ItemGroup>
++    <None Include="..\..\Antlr3\Key.snk">
++      <Link>Key.snk</Link>
++    </None>
+<None Include="app.config" />
+</ItemGroup>
+<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+

@@ -1,0 +1,53 @@
+commit 34f3727ec52bd60092786faa6e2015b7e8f3f530
+Author:     parrt <parrt@antlr.org>
+AuthorDate: Wed Jul 6 15:51:01 2011 -0800
+Commit:     parrt <parrt@antlr.org>
+CommitDate: Wed Jul 6 15:51:01 2011 -0800
+
+reset() for token stream didn't skip initial off-channel tokens.
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8839]
+
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/CommonTokenStream.java b/runtime/Java/src/main/java/org/antlr/runtime/CommonTokenStream.java
+index 28135a6..2bea7ec 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/CommonTokenStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/CommonTokenStream.java
+@@ -99,7 +99,7 @@ public class CommonTokenStream extends BufferedTokenStream {
+i = skipOffTokenChannels(i+1);
+n++;
+}
+-		if ( i>range ) range = i;
++		if ( i>range ) range = i;
+return tokens.get(i);
+}
+
+@@ -122,7 +122,12 @@ public class CommonTokenStream extends BufferedTokenStream {
+return i;
+}
+
+-    protected void setup() {
++	public void reset() {
++		super.reset();
++		p = skipOffTokenChannels(0);
++	}
++
++	protected void setup() {
+p = 0;
+sync(0);
+int i = 0;
+diff --git a/tool/CHANGES.txt b/tool/CHANGES.txt
+index 9f10cec..c680f57 100644
+--- a/tool/CHANGES.txt
++++ b/tool/CHANGES.txt
+@@ -7,6 +7,10 @@ University of San Francisco
+
+CHANGES
+
++July 6, 2011
++
++* reset() for token stream didn't skip initial off-channel tokens.
++
+July 5, 2011
+
+* Sam fixes rare infinite loop upon error in nextToken().
+

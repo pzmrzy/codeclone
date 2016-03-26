@@ -1,0 +1,24 @@
+commit bfacd14463bec12ebf9174e0b310446462e569a0
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sun Nov 21 00:31:55 2010 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sun Nov 21 00:31:55 2010 -0800
+
+Fix a nasty bug with global scopes
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7085]
+
+diff --git a/Antlr3/Grammars/ANTLR.g3 b/Antlr3/Grammars/ANTLR.g3
+index 00bb8c6..13db663 100644
+--- a/Antlr3/Grammars/ANTLR.g3
++++ b/Antlr3/Grammars/ANTLR.g3
+@@ -348,7 +348,7 @@ rule
+^(RET["RET"] $rt?)
+throwsSpec?
+optionsSpec?
+-				^($scopes)
++				$scopes
+ruleActions?
+altList
+$ex?
+

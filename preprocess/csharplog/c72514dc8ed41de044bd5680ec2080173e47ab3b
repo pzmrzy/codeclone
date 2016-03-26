@@ -1,0 +1,2090 @@
+commit c72514dc8ed41de044bd5680ec2080173e47ab3b
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Mar 30 07:43:01 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Mar 30 07:43:01 2011 -0800
+
+(C# 3) Use properties instead of field access
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7981]
+
+diff --git a/Antlr3/Analysis/DFA.cs b/Antlr3/Analysis/DFA.cs
+index 9e83f49..89c7bc8 100644
+--- a/Antlr3/Analysis/DFA.cs
++++ b/Antlr3/Analysis/DFA.cs
+@@ -492,7 +492,7 @@ namespace Antlr3.Analysis
+if (!t.IsSemanticPredicate)
+{
+// if pure pred not gated, it must target stop state; don't count
+-                    DFAState edgeTarget = (DFAState)t.target;
++                    DFAState edgeTarget = (DFAState)t.Target;
+int m = CalculateMaxLookaheadDepth(edgeTarget, depth + 1);
+max = Math.Max(max, m);
+}
+@@ -538,7 +538,7 @@ namespace Antlr3.Analysis
+Transition t = d.Transition(i);
+if (t.IsSemanticPredicate)
+{
+-                    SemanticContext ctx = t.label.SemanticContext;
++                    SemanticContext ctx = t.Label.SemanticContext;
+//				if ( ctx.toString().indexOf("synpred")>=0 ) {
+//					System.out.println("has pred "+ctx.toString()+" "+ctx.isSyntacticPredicate());
+//					System.out.println(((SemanticContext.Predicate)ctx).predicateAST.token);
+@@ -546,7 +546,7 @@ namespace Antlr3.Analysis
+if (ctx.IsSyntacticPredicate)
+return true;
+}
+-                DFAState edgeTarget = (DFAState)t.target;
++                DFAState edgeTarget = (DFAState)t.Target;
+if (!busy.Contains(edgeTarget) &&CalculateHasSynPred(edgeTarget, busy))
+return true;
+}
+@@ -571,11 +571,11 @@ namespace Antlr3.Analysis
+Transition t = d.Transition(i);
+if (t.IsSemanticPredicate)
+{
+-                    SemanticContext ctx = t.label.SemanticContext;
++                    SemanticContext ctx = t.Label.SemanticContext;
+if (ctx.HasUserSemanticPredicate)
+return true;
+}
+-                DFAState edgeTarget = (DFAState)t.target;
++                DFAState edgeTarget = (DFAState)t.Target;
+if (!busy.Contains(edgeTarget) && CalculateHasSemPred(edgeTarget, busy))
+return true;
+}
+@@ -599,7 +599,7 @@ namespace Antlr3.Analysis
+for (int i = 0; i < d.NumberOfTransitions; i++)
+{
+Transition t = d.Transition(i);
+-                DFAState target = (DFAState)t.target;
++                DFAState target = (DFAState)t.Target;
+int cond;
+if (!busy.TryGetValue(target, out cond))
+cond = CYCLIC_UNKNOWN;
+@@ -652,11 +652,11 @@ namespace Antlr3.Analysis
+// states[50] will point to DFAState with s50 in it but
+// states[103] might also point at this same DFAState.  Since
+// 50 < 103 then it's already been renumbered as it points downwards.
+-                bool alreadyRenumbered = s.stateNumber < i;
++                bool alreadyRenumbered = s.StateNumber < i;
+if ( !alreadyRenumbered )
+{
+// state i is a valid state, reset it's state number
+-                    s.stateNumber = snum; // rewrite state numbers to be 0..n-1
++                    s.StateNumber = snum; // rewrite state numbers to be 0..n-1
+snum++;
+}
+}
+@@ -824,7 +824,7 @@ namespace Antlr3.Analysis
+if ( s.IsAcceptState )
+{
+// can't compute min,max,special,transition on accepts
+-                    _accept[s.stateNumber] = s.GetUniquelyPredictedAlt();
++                    _accept[s.StateNumber] = s.GetUniquelyPredictedAlt();
+}
+else
+{
+@@ -903,7 +903,7 @@ namespace Antlr3.Analysis
+for ( int j = 0; j < s.NumberOfTransitions; j++ )
+{
+Transition edge = (Transition)s.Transition( j );
+-                Label label = edge.label;
++                Label label = edge.Label;
+if ( label.IsAtom )
+{
+if ( label.Atom >= Label.MIN_CHAR_VALUE )
+@@ -941,8 +941,8 @@ namespace Antlr3.Analysis
+smax = Label.MIN_CHAR_VALUE;
+}
+
+-            _min[s.stateNumber] = (char)smin;
+-            _max[s.stateNumber] = (char)smax;
++            _min[s.StateNumber] = (char)smin;
++            _max[s.StateNumber] = (char)smax;
+
+if ( smax < 0 || smin > Label.MAX_CHAR_VALUE || smin < 0 )
+{
+@@ -956,22 +956,22 @@ namespace Antlr3.Analysis
+JSystem.@out.println("createTransitionTableEntryForState s"+s.stateNumber+
+" dec "+s.dfa.decisionNumber+" cyclic="+s.dfa.isCyclic());
+*/
+-            int smax = _max[s.stateNumber];
+-            int smin = _min[s.stateNumber];
++            int smax = _max[s.StateNumber];
++            int smin = _min[s.StateNumber];
+
+int[] stateTransitions = new int[smax - smin + 1];
+for ( int i = 0; i < stateTransitions.Length; i++ )
+stateTransitions[i] = EmptyValue;
+
+-            _transition[s.stateNumber] = stateTransitions;
++            _transition[s.StateNumber] = stateTransitions;
+for ( int j = 0; j < s.NumberOfTransitions; j++ )
+{
+Transition edge = s.Transition( j );
+-                Label label = edge.label;
++                Label label = edge.Label;
+if ( label.IsAtom && label.Atom >= Label.MIN_CHAR_VALUE )
+{
+int labelIndex = label.Atom - smin; // offset from 0
+-                    stateTransitions[labelIndex] = edge.target.stateNumber;
++                    stateTransitions[labelIndex] = edge.Target.StateNumber;
+}
+else if ( label.IsSet )
+{
+@@ -979,7 +979,7 @@ namespace Antlr3.Analysis
+{
+for ( int i = Math.Max( interval.a, Label.MIN_CHAR_VALUE ); i <= interval.b; i++ )
+{
+-                            stateTransitions[i - smin] = edge.target.stateNumber;
++                            stateTransitions[i - smin] = edge.Target.StateNumber;
+}
+}
+}
+@@ -989,12 +989,12 @@ namespace Antlr3.Analysis
+if ( _edgeTransitionClassMap.TryGetValue( stateTransitions, out edgeClass ) && edgeClass != null )
+{
+//JSystem.@out.println("we've seen this array before; size="+stateTransitions.size());
+-                _transitionEdgeTables[s.stateNumber] = edgeClass;
++                _transitionEdgeTables[s.StateNumber] = edgeClass;
+}
+else
+{
+edgeClass = _edgeTransitionClass;
+-                _transitionEdgeTables[s.stateNumber] = edgeClass;
++                _transitionEdgeTables[s.StateNumber] = edgeClass;
+_edgeTransitionClassMap[stateTransitions] = edgeClass;
+_edgeTransitionClass++;
+}
+@@ -1008,30 +1008,30 @@ namespace Antlr3.Analysis
+for ( int j = 0; j < s.NumberOfTransitions; j++ )
+{
+Transition edge = s.Transition( j );
+-                Label label = edge.label;
++                Label label = edge.Label;
+if ( label.IsAtom )
+{
+if ( label.Atom == Label.EOT )
+{
+// eot[s] points to accept state
+-                        _eot[s.stateNumber] = edge.target.stateNumber;
++                        _eot[s.StateNumber] = edge.Target.StateNumber;
+}
+else if ( label.Atom == Label.EOF )
+{
+// eof[s] points to accept state
+-                        _eof[s.stateNumber] = edge.target.stateNumber;
++                        _eof[s.StateNumber] = edge.Target.StateNumber;
+}
+}
+else if ( label.IsSet )
+{
+if ( label.Set.Contains( Label.EOT ) )
+{
+-                        _eot[s.stateNumber] = edge.target.stateNumber;
++                        _eot[s.StateNumber] = edge.Target.StateNumber;
+}
+
+if ( label.Set.Contains( Label.EOF ) )
+{
+-                        _eof[s.stateNumber] = edge.target.stateNumber;
++                        _eof[s.StateNumber] = edge.Target.StateNumber;
+}
+}
+}
+@@ -1046,28 +1046,28 @@ namespace Antlr3.Analysis
+for ( int j = 0; j < s.NumberOfTransitions; j++ )
+{
+Transition edge = (Transition)s.Transition( j );
+-                Label label = edge.label;
++                Label label = edge.Label;
+// can't do a switch if the edges have preds or are going to
+// require gated predicates
+if ( label.IsSemanticPredicate ||
+-                     ( (DFAState)edge.target ).GetGatedPredicatesInNFAConfigurations() != null )
++                     ( (DFAState)edge.Target ).GetGatedPredicatesInNFAConfigurations() != null )
+{
+hasSemPred = true;
+break;
+}
+}
+// if has pred or too big for table, make it special
+-            int smax = _max[s.stateNumber];
+-            int smin = _min[s.stateNumber];
++            int smax = _max[s.StateNumber];
++            int smin = _min[s.StateNumber];
+if ( hasSemPred || smax - smin > MAX_STATE_TRANSITIONS_FOR_TABLE )
+{
+-                _special[s.stateNumber] = _uniqueCompressedSpecialStateNum;
++                _special[s.StateNumber] = _uniqueCompressedSpecialStateNum;
+_uniqueCompressedSpecialStateNum++;
+_specialStates.Add( s );
+}
+else
+{
+-                _special[s.stateNumber] = EmptyValue; // not special
++                _special[s.StateNumber] = EmptyValue; // not special
+}
+}
+
+@@ -1143,7 +1143,7 @@ namespace Antlr3.Analysis
+Rule r = nfa.grammar.GetLocallyDefinedRule( Grammar.ArtificialTokensRuleName );
+NFAState TokensRuleStart = r.startState;
+NFAState TokensDecisionStart =
+-                (NFAState)TokensRuleStart.transition[0].target;
++                (NFAState)TokensRuleStart.transition[0].Target;
+return nfaStart == TokensDecisionStart;
+}
+
+@@ -1223,7 +1223,7 @@ namespace Antlr3.Analysis
+for ( int i = 0; i < d.NumberOfTransitions; i++ )
+{
+Transition t = d.Transition( i );
+-                DFAState edgeTarget = (DFAState)t.target;
++                DFAState edgeTarget = (DFAState)t.Target;
+int targetStatus = edgeTarget.AcceptStateReachable;
+if ( targetStatus == REACHABLE_BUSY )
+{ // avoid cycles; they say nothing
+@@ -1335,7 +1335,7 @@ namespace Antlr3.Analysis
+}
+}
+
+-            buf.Append( "\n" );
++            buf.AppendLine();
+return buf.ToString();
+}
+
+@@ -1354,10 +1354,10 @@ namespace Antlr3.Analysis
+public virtual DFAState NewState()
+{
+DFAState n = new DFAState( this );
+-            n.stateNumber = _stateCounter;
++            n.StateNumber = _stateCounter;
+_stateCounter++;
+-            _states.setSize( n.stateNumber + 1 );
+-            _states[n.stateNumber] = n; // track state num to state
++            _states.setSize( n.StateNumber + 1 );
++            _states[n.StateNumber] = n; // track state num to state
+return n;
+}
+
+diff --git a/Antlr3/Analysis/DFAOptimizer.cs b/Antlr3/Analysis/DFAOptimizer.cs
+index ce899bb..ee98e13 100644
+--- a/Antlr3/Analysis/DFAOptimizer.cs
++++ b/Antlr3/Analysis/DFAOptimizer.cs
+@@ -192,7 +192,7 @@ namespace Antlr3.Analysis
+
+protected virtual void OptimizeExitBranches( DFAState d )
+{
+-            int sI = d.stateNumber;
++            int sI = d.StateNumber;
+if ( _visited.Contains( sI ) )
+{
+return; // already visited
+@@ -202,7 +202,7 @@ namespace Antlr3.Analysis
+for ( int i = 0; i < d.NumberOfTransitions; i++ )
+{
+Transition edge = (Transition)d.Transition( i );
+-                DFAState edgeTarget = ( (DFAState)edge.target );
++                DFAState edgeTarget = ( (DFAState)edge.Target );
+/*
+JSystem.@out.println(d.stateNumber+"-"+
+edge.label.toString(d.dfa.nfa.grammar)+"->"+
+@@ -225,7 +225,7 @@ namespace Antlr3.Analysis
+
+protected virtual void OptimizeEOTBranches( DFAState d )
+{
+-            int sI = d.stateNumber;
++            int sI = d.StateNumber;
+if ( _visited.Contains( sI ) )
+{
+return; // already visited
+@@ -234,7 +234,7 @@ namespace Antlr3.Analysis
+for ( int i = 0; i < d.NumberOfTransitions; i++ )
+{
+Transition edge = (Transition)d.Transition( i );
+-                DFAState edgeTarget = ( (DFAState)edge.target );
++                DFAState edgeTarget = ( (DFAState)edge.Target );
+/*
+JSystem.@out.println(d.stateNumber+"-"+
+edge.label.toString(d.dfa.nfa.grammar)+"->"+
+@@ -244,8 +244,8 @@ namespace Antlr3.Analysis
+if ( PRUNE_TOKENS_RULE_SUPERFLUOUS_EOT_EDGES &&
+edgeTarget.IsAcceptState &&
+d.NumberOfTransitions == 1 &&
+-                    edge.label.IsAtom &&
+-                    edge.label.Atom == Label.EOT )
++                    edge.Label.IsAtom &&
++                    edge.Label.Atom == Label.EOT )
+{
+//JSystem.@out.println("state "+d+" can be pruned");
+// remove the superfluous EOT edge
+diff --git a/Antlr3/Analysis/DFAState.cs b/Antlr3/Analysis/DFAState.cs
+index f0f6656..a8790f8 100644
+--- a/Antlr3/Analysis/DFAState.cs
++++ b/Antlr3/Analysis/DFAState.cs
+@@ -335,7 +335,7 @@ namespace Antlr3.Analysis
+// We're adding an NFA state; check to see if it has a non-epsilon edge
+if ( state.transition[0] != null )
+{
+-                Label label = state.transition[0].label;
++                Label label = state.transition[0].Label;
+if ( !( label.IsEpsilon || label.IsSemanticPredicate ) )
+{
+// this NFA state has a non-epsilon edge, track for fast
+@@ -357,7 +357,7 @@ namespace Antlr3.Analysis
+NFAContext context,
+SemanticContext semanticContext )
+{
+-            NFAConfiguration c = new NFAConfiguration( state.stateNumber,
++            NFAConfiguration c = new NFAConfiguration( state.StateNumber,
+alt,
+context,
+semanticContext );
+@@ -901,7 +901,7 @@ namespace Antlr3.Analysis
+public override String ToString()
+{
+StringBuilder buf = new StringBuilder();
+-            buf.Append( stateNumber + ":{" );
++            buf.Append( StateNumber + ":{" );
+for ( int i = 0; i < nfaConfigurations.Size(); i++ )
+{
+NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations.Get( i );
+diff --git a/Antlr3/Analysis/DecisionProbe.cs b/Antlr3/Analysis/DecisionProbe.cs
+index ed0aef2..0c98272 100644
+--- a/Antlr3/Analysis/DecisionProbe.cs
++++ b/Antlr3/Analysis/DecisionProbe.cs
+@@ -356,7 +356,7 @@ namespace Antlr3.Analysis
+*/
+public virtual void RemoveRecursiveOverflowState( DFAState d )
+{
+-            _stateToRecursionOverflowConfigurationsMap.Remove( d.stateNumber );
++            _stateToRecursionOverflowConfigurationsMap.Remove( d.StateNumber );
+}
+
+/** Return a IList<Label> indicating an input sequence that can be matched
+@@ -446,7 +446,7 @@ namespace Antlr3.Analysis
+
+// add first state of actual alt
+NFAState altStart = dfa.nfa.grammar.GetNFAStateForAltOfDecision( nfaStart, alt );
+-            NFAState isolatedAltStart = (NFAState)altStart.transition[0].target;
++            NFAState isolatedAltStart = (NFAState)altStart.transition[0].Target;
+path.Add( isolatedAltStart );
+
+// add the actual path now
+@@ -671,7 +671,7 @@ namespace Antlr3.Analysis
+NFAState ruleInvocationState = dfa.nfa.GetState( c.state );
+Transition transition0 = ruleInvocationState.transition[0];
+RuleClosureTransition @ref = (RuleClosureTransition)transition0;
+-                    String targetRule = ( (NFAState)@ref.target ).enclosingRule.Name;
++                    String targetRule = ( (NFAState)@ref.Target ).enclosingRule.Name;
+int altI = c.alt;
+IDictionary<string, ICollection<NFAState>> targetToCallSiteMap =
+altToTargetToCallSitesMap.get( altI );
+@@ -703,7 +703,7 @@ namespace Antlr3.Analysis
+foreach ( int stateI in dfaStatesWithRecursionProblems )
+{
+DFAState d = dfa.GetState( stateI );
+-                dfaStatesUnaliased.Add( d.stateNumber );
++                dfaStatesUnaliased.Add( d.StateNumber );
+}
+return dfaStatesUnaliased;
+}
+@@ -744,9 +744,9 @@ namespace Antlr3.Analysis
+// call resolveNondeterminism() on the start state (it would
+// not look k=1 to get min single token lookahead), we must
+// prevent errors derived from this state.  Avoid start state
+-            if ( d.stateNumber > 0 )
++            if ( d.StateNumber > 0 )
+{
+-                int stateI = d.stateNumber;
++                int stateI = d.StateNumber;
+_stateToRecursionOverflowConfigurationsMap.Map( stateI, recursionNFAConfiguration );
+}
+}
+@@ -816,13 +816,13 @@ namespace Antlr3.Analysis
+{
+states.Add( targetState );
+//JSystem.@out.println("found target DFA state "+targetState.getStateNumber());
+-                _stateReachable[startState.stateNumber] = REACHABLE_YES;
++                _stateReachable[startState.StateNumber] = REACHABLE_YES;
+return true;
+}
+
+DFAState s = startState;
+// avoid infinite loops
+-            _stateReachable[s.stateNumber] = REACHABLE_BUSY;
++            _stateReachable[s.StateNumber] = REACHABLE_BUSY;
+
+// look for a path to targetState among transitions for this state
+// stop when you find the first one; I'm pretty sure there is
+@@ -830,10 +830,10 @@ namespace Antlr3.Analysis
+for ( int i = 0; i < s.NumberOfTransitions; i++ )
+{
+Transition t = s.Transition( i );
+-                DFAState edgeTarget = (DFAState)t.target;
++                DFAState edgeTarget = (DFAState)t.Target;
+
+int targetStatus; //= stateReachable.get( edgeTarget.stateNumber );
+-                if ( _stateReachable.TryGetValue( edgeTarget.stateNumber, out targetStatus ) )
++                if ( _stateReachable.TryGetValue( edgeTarget.StateNumber, out targetStatus ) )
+{
+if ( targetStatus == REACHABLE_BUSY )
+{ // avoid cycles; they say nothing
+@@ -841,7 +841,7 @@ namespace Antlr3.Analysis
+}
+if ( targetStatus == REACHABLE_YES )
+{ // return success!
+-                        _stateReachable[s.stateNumber] = REACHABLE_YES;
++                        _stateReachable[s.StateNumber] = REACHABLE_YES;
+return true;
+}
+if ( targetStatus == REACHABLE_NO )
+@@ -854,12 +854,12 @@ namespace Antlr3.Analysis
+if ( ReachesState( edgeTarget, targetState, states ) )
+{
+states.Add( s );
+-                    _stateReachable[s.stateNumber] = REACHABLE_YES;
++                    _stateReachable[s.StateNumber] = REACHABLE_YES;
+return true;
+}
+}
+
+-            _stateReachable[s.stateNumber] = REACHABLE_NO;
++            _stateReachable[s.StateNumber] = REACHABLE_NO;
+return false; // no path to targetState found.
+}
+
+@@ -889,17 +889,17 @@ namespace Antlr3.Analysis
+HashSet<object> states,
+IList<Label> labels )
+{
+-            _statesVisitedDuringSampleSequence.Add( startState.stateNumber );
++            _statesVisitedDuringSampleSequence.Add( startState.StateNumber );
+
+// pick the first edge in states as the one to traverse
+for ( int i = 0; i < startState.NumberOfTransitions; i++ )
+{
+Transition t = startState.GetTransition( i );
+-                DFAState edgeTarget = (DFAState)t.target;
++                DFAState edgeTarget = (DFAState)t.Target;
+if ( states.Contains( edgeTarget ) &&
+-                     !_statesVisitedDuringSampleSequence.Contains( edgeTarget.stateNumber ) )
++                     !_statesVisitedDuringSampleSequence.Contains( edgeTarget.StateNumber ) )
+{
+-                    labels.Add( t.label ); // traverse edge and track label
++                    labels.Add( t.Label ); // traverse edge and track label
+if ( edgeTarget != targetState )
+{
+// get more labels if not at target
+@@ -931,7 +931,7 @@ namespace Antlr3.Analysis
+IList<NFAState> path )      // output list of NFA states
+{
+// track a visit to state s at input index labelIndex if not seen
+-            String thisStateKey = GetStateLabelIndexKey( s.stateNumber, labelIndex );
++            String thisStateKey = GetStateLabelIndexKey( s.StateNumber, labelIndex );
+if ( _statesVisitedAtInputDepth.Contains( thisStateKey ) )
+{
+/*
+@@ -952,7 +952,7 @@ namespace Antlr3.Analysis
+for ( int i = 0; i < s.NumberOfTransitions; i++ )
+{
+Transition t = s.transition[i];
+-                NFAState edgeTarget = (NFAState)t.target;
++                NFAState edgeTarget = (NFAState)t.Target;
+Label label = (Label)labels[labelIndex];
+/*
+JSystem.@out.println(s.stateNumber+"-"+
+@@ -960,7 +960,7 @@ namespace Antlr3.Analysis
+edgeTarget.stateNumber+" =="+
+label.toString(dfa.nfa.grammar)+"?");
+*/
+-                if ( t.label.IsEpsilon || t.label.IsSemanticPredicate )
++                if ( t.Label.IsEpsilon || t.Label.IsSemanticPredicate )
+{
+// nondeterministically backtrack down epsilon edges
+path.Add( edgeTarget );
+@@ -974,7 +974,7 @@ namespace Antlr3.Analysis
+path.RemoveAt( path.Count - 1 ); // remove; didn't work out
+continue; // look at the next edge
+}
+-                if ( t.label.Matches( label ) )
++                if ( t.Label.Matches( label ) )
+{
+path.Add( edgeTarget );
+/*
+@@ -1027,10 +1027,10 @@ namespace Antlr3.Analysis
+NFAState decisionState = dfa.NFADecisionStartState;
+NFAState altState =
+dfa.nfa.grammar.GetNFAStateForAltOfDecision( decisionState, alt );
+-            NFAState decisionLeft = (NFAState)altState.transition[0].target;
++            NFAState decisionLeft = (NFAState)altState.transition[0].Target;
+RuleClosureTransition ruleCallEdge =
+(RuleClosureTransition)decisionLeft.transition[0];
+-            NFAState ruleStartState = (NFAState)ruleCallEdge.target;
++            NFAState ruleStartState = (NFAState)ruleCallEdge.Target;
+//JSystem.@out.println("alt = "+decisionLeft.getEnclosingRule());
+return ruleStartState.enclosingRule.Name;
+}
+diff --git a/Antlr3/Analysis/LL1Analyzer.cs b/Antlr3/Analysis/LL1Analyzer.cs
+index 5832c40..bc4a920 100644
+--- a/Antlr3/Analysis/LL1Analyzer.cs
++++ b/Antlr3/Analysis/LL1Analyzer.cs
+@@ -244,14 +244,14 @@ namespace Antlr3.Analysis
+return null;
+}
+
+-            if ( transition0.label.IsAtom )
++            if ( transition0.Label.IsAtom )
+{
+-                int atom = transition0.label.Atom;
++                int atom = transition0.Label.Atom;
+return new LookaheadSet( atom );
+}
+-            if ( transition0.label.IsSet )
++            if ( transition0.Label.IsSet )
+{
+-                IIntSet sl = transition0.label.Set;
++                IIntSet sl = transition0.Label.Set;
+return new LookaheadSet( sl );
+}
+
+@@ -260,17 +260,17 @@ namespace Antlr3.Analysis
+// if transition 0 is a rule call and we don't want FOLLOW, check cache
+if ( !chaseFollowTransitions && transition0 is RuleClosureTransition )
+{
+-                tset = _firstCache.get( (NFAState)transition0.target );
++                tset = _firstCache.get( (NFAState)transition0.Target );
+}
+
+// if not in cache, must compute
+if ( tset == null )
+{
+-                tset = FirstCore( (NFAState)transition0.target, chaseFollowTransitions );
++                tset = FirstCore( (NFAState)transition0.Target, chaseFollowTransitions );
+// save FIRST cache for transition 0 if rule call
+if ( !chaseFollowTransitions && transition0 is RuleClosureTransition )
+{
+-                    _firstCache[(NFAState)transition0.target] = tset;
++                    _firstCache[(NFAState)transition0.Target] = tset;
+}
+}
+
+@@ -302,7 +302,7 @@ namespace Antlr3.Analysis
+if ( transition1 != null )
+{
+LookaheadSet tset1 =
+-                    FirstCore( (NFAState)transition1.target, chaseFollowTransitions );
++                    FirstCore( (NFAState)transition1.Target, chaseFollowTransitions );
+tset1.OrInPlace( tset ); // tset cached; or into new set
+tset = tset1;
+}
+@@ -353,16 +353,16 @@ namespace Antlr3.Analysis
+return DETECT_PRED_NOT_FOUND;
+}
+
+-            if ( !( transition0.label.IsSemanticPredicate ||
+-                   transition0.label.IsEpsilon ) )
++            if ( !( transition0.Label.IsSemanticPredicate ||
++                   transition0.Label.IsEpsilon ) )
+{
+return DETECT_PRED_NOT_FOUND;
+}
+
+-            if ( transition0.label.IsSemanticPredicate )
++            if ( transition0.Label.IsSemanticPredicate )
+{
+//JSystem.@out.println("pred "+transition0.label);
+-                SemanticContext ctx = transition0.label.SemanticContext;
++                SemanticContext ctx = transition0.Label.SemanticContext;
+SemanticContext.Predicate p = (SemanticContext.Predicate)ctx;
+if ( p.predicateAST.Type != ANTLRParser.BACKTRACK_SEMPRED )
+{
+@@ -385,7 +385,7 @@ namespace Antlr3.Analysis
+}
+*/
+
+-            int result = DetectConfoundingPredicatesCore( (NFAState)transition0.target,
++            int result = DetectConfoundingPredicatesCore( (NFAState)transition0.Target,
+enclosingRule,
+chaseFollowTransitions );
+if ( result == DETECT_PRED_FOUND )
+@@ -420,7 +420,7 @@ namespace Antlr3.Analysis
+if ( transition1 != null )
+{
+int t1Result =
+-                    DetectConfoundingPredicatesCore( (NFAState)transition1.target,
++                    DetectConfoundingPredicatesCore( (NFAState)transition1.Target,
+enclosingRule,
+chaseFollowTransitions );
+if ( t1Result == DETECT_PRED_FOUND )
+@@ -465,8 +465,8 @@ namespace Antlr3.Analysis
+}
+
+// not a predicate and not even an epsilon
+-            if ( !( transition0.label.IsSemanticPredicate ||
+-                   transition0.label.IsEpsilon ) )
++            if ( !( transition0.Label.IsSemanticPredicate ||
++                   transition0.Label.IsEpsilon ) )
+{
+return null;
+}
+@@ -474,27 +474,27 @@ namespace Antlr3.Analysis
+SemanticContext p = null;
+SemanticContext p0 = null;
+SemanticContext p1 = null;
+-            if ( transition0.label.IsSemanticPredicate )
++            if ( transition0.Label.IsSemanticPredicate )
+{
+//JSystem.@out.println("pred "+transition0.label);
+-                p = transition0.label.SemanticContext;
++                p = transition0.Label.SemanticContext;
+// ignore backtracking preds not on left edge for this decision
+if ( ( (SemanticContext.Predicate)p ).predicateAST.Type ==
+ANTLRParser.BACKTRACK_SEMPRED &&
+-                     s == altStartState.transition[0].target )
++                     s == altStartState.transition[0].Target )
+{
+p = null; // don't count
+}
+}
+
+// get preds from beyond this state
+-            p0 = GetPredicatesCore( (NFAState)transition0.target, altStartState );
++            p0 = GetPredicatesCore( (NFAState)transition0.Target, altStartState );
+
+// get preds from other transition
+Transition transition1 = s.transition[1];
+if ( transition1 != null )
+{
+-                p1 = GetPredicatesCore( (NFAState)transition1.target, altStartState );
++                p1 = GetPredicatesCore( (NFAState)transition1.Target, altStartState );
+}
+
+// join this&following-right|following-down
+diff --git a/Antlr3/Analysis/LL1DFA.cs b/Antlr3/Analysis/LL1DFA.cs
+index 48d8784..a555456 100644
+--- a/Antlr3/Analysis/LL1DFA.cs
++++ b/Antlr3/Analysis/LL1DFA.cs
+@@ -173,11 +173,11 @@ namespace Antlr3.Analysis
+decisionStartState.TranslateDisplayAltToWalkAlt( alt );
+NFAState altLeftEdge =
+nfa.grammar.GetNFAStateForAltOfDecision( decisionStartState, walkAlt );
+-            NFAState altStartState = (NFAState)altLeftEdge.transition[0].target;
++            NFAState altStartState = (NFAState)altLeftEdge.transition[0].Target;
+//JSystem.@out.println("alt "+alt+" start state = "+altStartState.stateNumber);
+if ( altStartState.transition[0].IsSemanticPredicate )
+{
+-                SemanticContext ctx = altStartState.transition[0].label.SemanticContext;
++                SemanticContext ctx = altStartState.transition[0].Label.SemanticContext;
+if ( ctx.IsSyntacticPredicate )
+{
+SemanticContext.Predicate p = (SemanticContext.Predicate)ctx;
+@@ -191,7 +191,7 @@ namespace Antlr3.Analysis
+{
+nfa.grammar.SynPredUsedInDFA( this, ctx );
+}
+-                        return (SemanticContext.Predicate)altStartState.transition[0].label.SemanticContext;
++                        return (SemanticContext.Predicate)altStartState.transition[0].Label.SemanticContext;
+}
+}
+}
+diff --git a/Antlr3/Analysis/Label.cs b/Antlr3/Analysis/Label.cs
+index bc30653..e9db325 100644
+--- a/Antlr3/Analysis/Label.cs
++++ b/Antlr3/Analysis/Label.cs
+@@ -129,7 +129,7 @@ namespace Antlr3.Analysis
+
+/** A set of token types or character codes if label==SET */
+// TODO: try IntervalSet for everything
+-        IIntSet _labelSet;
++        private IIntSet _labelSet;
+
+public Label( int label )
+{
+@@ -156,7 +156,6 @@ namespace Antlr3.Analysis
+this._labelSet = labelSet;
+}
+
+-        #region Properties
+/** return the single atom label or INVALID if not a single atom */
+public virtual int Atom
+{
+@@ -169,6 +168,7 @@ namespace Antlr3.Analysis
+return INVALID;
+}
+}
++
+public virtual bool IsAction
+{
+get
+@@ -176,6 +176,7 @@ namespace Antlr3.Analysis
+return false;
+}
+}
++
+public virtual bool IsAtom
+{
+get
+@@ -183,6 +184,7 @@ namespace Antlr3.Analysis
+return label >= MIN_ATOM_VALUE;
+}
+}
++
+public virtual bool IsEpsilon
+{
+get
+@@ -190,6 +192,7 @@ namespace Antlr3.Analysis
+return label == EPSILON;
+}
+}
++
+public virtual bool IsSemanticPredicate
+{
+get
+@@ -197,6 +200,7 @@ namespace Antlr3.Analysis
+return false;
+}
+}
++
+public virtual bool IsSet
+{
+get
+@@ -204,6 +208,7 @@ namespace Antlr3.Analysis
+return label == SET;
+}
+}
++
+public virtual SemanticContext SemanticContext
+{
+get
+@@ -211,6 +216,7 @@ namespace Antlr3.Analysis
+return null;
+}
+}
++
+[CLSCompliant(false)]
+public virtual IIntSet Set
+{
+@@ -229,7 +235,6 @@ namespace Antlr3.Analysis
+_labelSet = value;
+}
+}
+-        #endregion
+
+public virtual object Clone()
+{
+diff --git a/Antlr3/Analysis/MachineProbe.cs b/Antlr3/Analysis/MachineProbe.cs
+index 5400b5e..4e2d9e0 100644
+--- a/Antlr3/Analysis/MachineProbe.cs
++++ b/Antlr3/Analysis/MachineProbe.cs
+@@ -68,7 +68,7 @@ namespace Antlr3.Analysis
+Transition e = startState.GetTransition(i);
+if (!visited.Contains((DFAState)e.Target))
+{
+-                    List<DFAState> path = GetAnyDFAPathToTarget((DFAState)e.target, targetState, visited);
++                    List<DFAState> path = GetAnyDFAPathToTarget((DFAState)e.Target, targetState, visited);
+if (path != null)
+{ // found path, we're done
+dfaStates.Add(startState);
+@@ -93,9 +93,9 @@ namespace Antlr3.Analysis
+for (int j = 0; j < d.NumberOfTransitions; j++)
+{
+Transition e = d.GetTransition(j);
+-                    if (e.target.stateNumber == nextState.stateNumber)
++                    if (e.Target.StateNumber == nextState.StateNumber)
+{
+-                        labels.Add(e.label.Set);
++                        labels.Add(e.Label.Set);
+}
+}
+}
+@@ -137,7 +137,7 @@ namespace Antlr3.Analysis
+for (int j = 0; j < p.NumberOfTransitions; j++)
+{
+Transition t = p.transition[j];
+-                        if (!t.IsEpsilon && !t.label.Set.And(label).IsNil && next.Contains((NFAState)t.target))
++                        if (!t.IsEpsilon && !t.Label.Set.And(label).IsNil && next.Contains((NFAState)t.Target))
+{
+if (p.associatedASTNode != null)
+{
+diff --git a/Antlr3/Analysis/NFAContext.cs b/Antlr3/Analysis/NFAContext.cs
+index 256be5e..f576510 100644
+--- a/Antlr3/Analysis/NFAContext.cs
++++ b/Antlr3/Analysis/NFAContext.cs
+@@ -130,7 +130,7 @@ namespace Antlr3.Analysis
+this.invokingState = invokingState;
+if ( invokingState != null )
+{
+-                this._cachedHashCode = invokingState.stateNumber;
++                this._cachedHashCode = invokingState.StateNumber;
+}
+if ( parent != null )
+{
+@@ -292,7 +292,7 @@ namespace Antlr3.Analysis
+//JSystem.@out.println("this.context is "+sp);
+while ( sp.parent != null )
+{
+-                if ( sp.invokingState.stateNumber == state )
++                if ( sp.invokingState.StateNumber == state )
+{
+n++;
+}
+@@ -322,7 +322,7 @@ namespace Antlr3.Analysis
+buf.Append( "[" );
+while ( sp.parent != null )
+{
+-                buf.Append( sp.invokingState.stateNumber );
++                buf.Append( sp.invokingState.StateNumber );
+buf.Append( " " );
+sp = sp.parent;
+}
+diff --git a/Antlr3/Analysis/NFAState.cs b/Antlr3/Analysis/NFAState.cs
+index eb67ef5..a3f8e4a 100644
+--- a/Antlr3/Analysis/NFAState.cs
++++ b/Antlr3/Analysis/NFAState.cs
+@@ -185,14 +185,14 @@ namespace Antlr3.Analysis
+_numTransitions++;
+// Set the "back pointer" of the target state so that it
+// knows about the label of the incoming edge.
+-                Label label = e.label;
++                Label label = e.Label;
+if ( label.IsAtom || label.IsSet )
+{
+-                    if ( ( (NFAState)e.target ).incidentEdgeLabel != null )
++                    if ( ( (NFAState)e.Target ).incidentEdgeLabel != null )
+{
+ErrorManager.InternalError( "Clobbered incident edge" );
+}
+-                    ( (NFAState)e.target ).incidentEdgeLabel = e.label;
++                    ( (NFAState)e.Target ).incidentEdgeLabel = e.Label;
+}
+}
+}
+@@ -296,7 +296,7 @@ namespace Antlr3.Analysis
+
+public override string ToString()
+{
+-            return stateNumber.ToString();
++            return StateNumber.ToString();
+}
+
+}
+diff --git a/Antlr3/Analysis/NFAtoDFAConverter.cs b/Antlr3/Analysis/NFAtoDFAConverter.cs
+index 8a35afb..803f4cc 100644
+--- a/Antlr3/Analysis/NFAtoDFAConverter.cs
++++ b/Antlr3/Analysis/NFAtoDFAConverter.cs
+@@ -98,7 +98,7 @@ namespace Antlr3.Analysis
+DFAState d = (DFAState)_work.Peek();
+if ( _dfa.nfa.grammar.composite.watchNFAConversion )
+{
+-                    Console.Out.WriteLine( "convert DFA state " + d.stateNumber +
++                    Console.Out.WriteLine( "convert DFA state " + d.StateNumber +
+" (" + d.nfaConfigurations.Size() + " nfa states)" );
+}
+int k = _dfa.UserMaxLookahead;
+@@ -175,7 +175,7 @@ namespace Antlr3.Analysis
+int numAltsIncludingExitBranch = _dfa.nfa.grammar
+.GetNumberOfAltsForDecisionNFA( _dfa.NFADecisionStartState );
+altNum = numAltsIncludingExitBranch;
+-                    Closure( (NFAState)alt.transition[0].target,
++                    Closure( (NFAState)alt.transition[0].Target,
+altNum,
+initialContext,
+SemanticContext.EmptySemanticContext,
+@@ -186,7 +186,7 @@ namespace Antlr3.Analysis
+}
+else
+{
+-                    Closure( (NFAState)alt.transition[0].target,
++                    Closure( (NFAState)alt.transition[0].Target,
+altNum,
+initialContext,
+SemanticContext.EmptySemanticContext,
+@@ -202,7 +202,7 @@ namespace Antlr3.Analysis
+{
+break;
+}
+-                alt = (NFAState)alt.transition[1].target;
++                alt = (NFAState)alt.transition[1].Target;
+}
+
+// now DFA start state has the complete closure for the decision
+@@ -445,7 +445,7 @@ namespace Antlr3.Analysis
+if ( DFAOptimizer.COLLAPSE_ALL_PARALLEL_EDGES )
+{
+// track which targets we've hit
+-                int tI = targetState.stateNumber;
++                int tI = targetState.StateNumber;
+Transition oldTransition = (Transition)targetToLabelMap.get( tI );
+if ( oldTransition != null )
+{
+@@ -455,15 +455,15 @@ namespace Antlr3.Analysis
+if ( label.Atom == Label.EOT )
+{
+// merge with EOT means old edge can go away
+-                        oldTransition.label = new Label( Label.EOT );
++                        oldTransition.Label = new Label( Label.EOT );
+}
+else
+{
+// don't add anything to EOT, it's essentially the wildcard
+-                        if ( oldTransition.label.Atom != Label.EOT )
++                        if ( oldTransition.Label.Atom != Label.EOT )
+{
+// ok, not EOT, add in this label to old label
+-                            oldTransition.label.Add( label );
++                            oldTransition.Label.Add( label );
+}
+//JSystem.@out.println("label updated to be "+oldTransition.label.toString(dfa.nfa.grammar));
+}
+@@ -638,8 +638,8 @@ namespace Antlr3.Analysis
+{
+if ( debug )
+{
+-                Console.Out.WriteLine( "closure at " + p.enclosingRule.Name + " state " + p.stateNumber + "|" +
+-                                   alt + " filling DFA state " + d.stateNumber + " with context " + context
++                Console.Out.WriteLine( "closure at " + p.enclosingRule.Name + " state " + p.StateNumber + "|" +
++                                   alt + " filling DFA state " + d.StateNumber + " with context " + context
+);
+}
+
+@@ -652,7 +652,7 @@ namespace Antlr3.Analysis
+//}
+
+NFAConfiguration proposedNFAConfiguration =
+-                    new NFAConfiguration( p.stateNumber,
++                    new NFAConfiguration( p.StateNumber,
+alt,
+context,
+semanticContext );
+@@ -664,7 +664,7 @@ namespace Antlr3.Analysis
+{
+Console.Out.WriteLine( "avoid visiting exact closure computation NFA config: " +
+proposedNFAConfiguration + " in " + p.enclosingRule.Name );
+-                    Console.Out.WriteLine( "state is " + d.dfa.decisionNumber + "." + d.stateNumber );
++                    Console.Out.WriteLine( "state is " + d.dfa.decisionNumber + "." + d.StateNumber );
+}
+return;
+}
+@@ -679,7 +679,7 @@ namespace Antlr3.Analysis
+Transition transition0 = p.transition[0];
+if ( transition0 is RuleClosureTransition )
+{
+-                int depth = context.RecursionDepthEmanatingFromState( p.stateNumber );
++                int depth = context.RecursionDepthEmanatingFromState( p.StateNumber );
+// Detect recursion by more than a single alt, which indicates
+// that the decision's lookahead language is potentially non-regular; terminate
+if ( depth == 1 && d.dfa.UserMaxLookahead == 0 )
+@@ -710,7 +710,7 @@ namespace Antlr3.Analysis
+d.dfa.probe.ReportRecursionOverflow( d, proposedNFAConfiguration );
+if ( debug )
+{
+-                        Console.Out.WriteLine( "analysis overflow in closure(" + d.stateNumber + ")" );
++                        Console.Out.WriteLine( "analysis overflow in closure(" + d.StateNumber + ")" );
+}
+return;
+}
+@@ -727,7 +727,7 @@ namespace Antlr3.Analysis
+//JSystem.@out.println("invoking rule "+ref.rule.name);
+// JSystem.@out.println(" context="+context);
+// traverse epsilon edge to new rule
+-                NFAState ruleTarget = (NFAState)@ref.target;
++                NFAState ruleTarget = (NFAState)@ref.Target;
+Closure( ruleTarget, alt, newContext, semanticContext, d, collectPredicates );
+}
+// Case 2: end of rule state, context (i.e., an invoker) exists
+@@ -758,7 +758,7 @@ namespace Antlr3.Analysis
+}
+*/
+}
+-                    Closure( (NFAState)transition0.target,
++                    Closure( (NFAState)transition0.Target,
+alt,
+context,
+semanticContext,
+@@ -789,7 +789,7 @@ namespace Antlr3.Analysis
+{
+// AND the previous semantic context with new pred
+SemanticContext labelContext =
+-                            transition0.label.SemanticContext;
++                            transition0.Label.SemanticContext;
+// do not hoist syn preds from other rules; only get if in
+// starting state's rule (i.e., context is empty)
+int walkAlt =
+@@ -804,14 +804,14 @@ namespace Antlr3.Analysis
+altLeftEdge.transition(0).target.stateNumber);
+*/
+if ( !labelContext.IsSyntacticPredicate ||
+-                             p == altLeftEdge.transition[0].target )
++                             p == altLeftEdge.transition[0].Target )
+{
+//JSystem.@out.println("&"+labelContext+" enclosingRule="+p.enclosingRule);
+newSemanticContext =
+SemanticContext.And( semanticContext, labelContext );
+}
+}
+-                    Closure( (NFAState)transition0.target,
++                    Closure( (NFAState)transition0.Target,
+alt,
+context,
+newSemanticContext,
+@@ -821,7 +821,7 @@ namespace Antlr3.Analysis
+Transition transition1 = p.transition[1];
+if ( transition1 != null && transition1.IsEpsilon )
+{
+-                    Closure( (NFAState)transition1.target,
++                    Closure( (NFAState)transition1.Target,
+alt,
+context,
+semanticContext,
+@@ -931,7 +931,7 @@ namespace Antlr3.Analysis
+{
+continue;
+}
+-                Label edgeLabel = edge.label;
++                Label edgeLabel = edge.Label;
+
+// SPECIAL CASE
+// if it's an EOT transition on end of lexer rule, but context
+@@ -953,7 +953,7 @@ namespace Antlr3.Analysis
+// found a transition with label;
+// add NFA target to (potentially) new DFA state
+NFAConfiguration newC = labelDFATarget.AddNFAConfiguration(
+-                        (NFAState)edge.target,
++                        (NFAState)edge.Target,
+c.alt,
+c.context,
+c.semanticContext );
+@@ -962,7 +962,7 @@ namespace Antlr3.Analysis
+if ( labelDFATarget.nfaConfigurations.Size() == 0 )
+{
+// kill; it's empty
+-                _dfa.SetState( labelDFATarget.stateNumber, null );
++                _dfa.SetState( labelDFATarget.StateNumber, null );
+labelDFATarget = null;
+}
+return labelDFATarget;
+@@ -992,7 +992,7 @@ namespace Antlr3.Analysis
+}
+NFAState p = _dfa.nfa.GetState( c.state );
+Transition edge = p.transition[0];
+-                Label edgeLabel = edge.label;
++                Label edgeLabel = edge.Label;
+if ( edgeLabel.Equals( eot ) )
+{
+//JSystem.@out.println("config with EOT: "+c);
+@@ -1028,7 +1028,7 @@ namespace Antlr3.Analysis
+// into the reachable state space and the error
+// reporting must be able to compute the path from
+// start to the error state with infinite recursion
+-                _dfa.SetState( d.stateNumber, existingState );
++                _dfa.SetState( d.StateNumber, existingState );
+return existingState;
+}
+
+@@ -1088,7 +1088,7 @@ namespace Antlr3.Analysis
+gatedPreds.Equals( existingStateGatedPreds ) ) )
+{
+// make this d.statenumber point at old DFA state
+-                        _dfa.SetState( d.stateNumber, acceptStateForAlt );
++                        _dfa.SetState( d.StateNumber, acceptStateForAlt );
+_dfa.RemoveState( d );    // remove this state from unique DFA state set
+d = acceptStateForAlt; // use old accept state; throw this one out
+return d;
+@@ -1307,7 +1307,7 @@ namespace Antlr3.Analysis
+{
+if ( debug )
+{
+-                    Console.Out.WriteLine( "resolved DFA state " + d.stateNumber + " with pred" );
++                    Console.Out.WriteLine( "resolved DFA state " + d.StateNumber + " with pred" );
+}
+d.IsResolvedWithPredicates = true;
+_dfa.probe.ReportNondeterminismResolvedWithSemanticPredicate( d );
+@@ -1835,7 +1835,7 @@ namespace Antlr3.Analysis
+// already there...use/return the existing DFA state that
+// is a target of this predicate.  Make this state number
+// point at the existing state
+-                        _dfa.SetState( predDFATarget.stateNumber, existingState );
++                        _dfa.SetState( predDFATarget.StateNumber, existingState );
+predDFATarget = existingState;
+}
+}
+diff --git a/Antlr3/Analysis/State.cs b/Antlr3/Analysis/State.cs
+index 2bc832a..18f5c7d 100644
+--- a/Antlr3/Analysis/State.cs
++++ b/Antlr3/Analysis/State.cs
+@@ -37,14 +37,13 @@ namespace Antlr3.Analysis
+{
+public const int INVALID_STATE_NUMBER = -1;
+
+-        public int stateNumber = INVALID_STATE_NUMBER;
++        private int stateNumber = INVALID_STATE_NUMBER;
+
+/** An accept state is an end of rule state for lexers and
+*  parser grammar rules.
+*/
+protected internal bool acceptState = false;
+
+-        #region Properties
+public virtual bool IsAcceptState
+{
+get
+@@ -56,11 +55,24 @@ namespace Antlr3.Analysis
+acceptState = value;
+}
+}
++
++        public int StateNumber
++        {
++            get
++            {
++                return stateNumber;
++            }
++
++            set
++            {
++                stateNumber = value;
++            }
++        }
++
+public abstract int NumberOfTransitions
+{
+get;
+}
+-        #endregion
+
+public abstract void AddTransition( Transition e );
+
+diff --git a/Antlr3/Analysis/Transition.cs b/Antlr3/Analysis/Transition.cs
+index b649ea5..6a78a7c 100644
+--- a/Antlr3/Analysis/Transition.cs
++++ b/Antlr3/Analysis/Transition.cs
+@@ -43,11 +43,15 @@ namespace Antlr3.Analysis
+*/
+public class Transition : IComparable<Transition>
+{
+-        /** What label must be consumed to transition to target */
+-        public Label label;
++        /// <summary>
++        /// What label must be consumed to transition to target
++        /// </summary>
++        private Label label;
+
+-        /** The target of this transition */
+-        public State target;
++        /// <summary>
++        /// The target of this transition
++        /// </summary>
++        private readonly State target;
+
+public Transition( Label label, State target )
+{
+@@ -61,16 +65,19 @@ namespace Antlr3.Analysis
+this.target = target;
+}
+
+-        #region Properties
+-        [CLSCompliant(false)]
+public Label Label
+{
+get
+{
+return label;
+}
++
++            set
++            {
++                label = value;
++            }
+}
+-        [CLSCompliant(false)]
++
+public State Target
+{
+get
+@@ -79,50 +86,51 @@ namespace Antlr3.Analysis
+}
+}
+
++
+public bool IsAction
+{
+get
+{
+-                return label.IsAction;
++                return Label.IsAction;
+}
+}
++
+public bool IsEpsilon
+{
+get
+{
+-                return label.IsEpsilon;
++                return Label.IsEpsilon;
+}
+}
++
+public bool IsSemanticPredicate
+{
+get
+{
+-                return label.IsSemanticPredicate;
++                return Label.IsSemanticPredicate;
+}
+}
+-        #endregion
+
+public override int GetHashCode()
+{
+-            return label.GetHashCode() + target.stateNumber;
++            return Label.GetHashCode() + Target.StateNumber;
+}
+
+public override bool Equals( object o )
+{
+Transition other = (Transition)o;
+-            return this.label.Equals( other.label ) &&
+-                   this.target.Equals( other.target );
++            return this.Label.Equals( other.Label ) &&
++                   this.Target.Equals( other.Target );
+}
+
+public int CompareTo( Transition other )
+{
+-            return this.label.CompareTo( other.label );
++            return this.Label.CompareTo( other.Label );
+}
+
+public override string ToString()
+{
+-            return label + "->" + target.stateNumber;
++            return Label + "->" + Target.StateNumber;
+}
+-
+}
+}
+diff --git a/Antlr3/Codegen/ACyclicDFACodeGenerator.cs b/Antlr3/Codegen/ACyclicDFACodeGenerator.cs
+index e8c3de9..5f58d73 100644
+--- a/Antlr3/Codegen/ACyclicDFACodeGenerator.cs
++++ b/Antlr3/Codegen/ACyclicDFACodeGenerator.cs
+@@ -92,7 +92,7 @@ namespace Antlr3.Codegen
+dfaST = templates.GetInstanceOf( dfaOptionalBlockStateName );
+}
+dfaST.SetAttribute( "k", k );
+-            dfaST.SetAttribute( "stateNumber", s.stateNumber );
++            dfaST.SetAttribute( "stateNumber", s.StateNumber );
+dfaST.SetAttribute( "semPredState",
+s.IsResolvedWithPredicates );
+/*
+@@ -111,11 +111,11 @@ namespace Antlr3.Codegen
+{
+Transition edge = (Transition)s.Transition( i );
+//System.Console.Out.WriteLine( "edge " + s.stateNumber + "-" + edge.label.ToString() + "->" + edge.target.stateNumber );
+-                if ( edge.label.Atom == Label.EOT )
++                if ( edge.Label.Atom == Label.EOT )
+{
+// don't generate a real edge for EOT; track alt EOT predicts
+// generate that prediction in the else clause as default case
+-                    EOTTarget = (DFAState)edge.target;
++                    EOTTarget = (DFAState)edge.Target;
+EOTPredicts = EOTTarget.GetUniquelyPredictedAlt();
+/*
+System.Console.Out.WriteLine("DFA s"+s.stateNumber+" EOT goes to s"+
+@@ -138,9 +138,9 @@ namespace Antlr3.Codegen
+}
+
+// stick in any gated predicates for any edge if not already a pred
+-                if ( !edge.label.IsSemanticPredicate )
++                if ( !edge.Label.IsSemanticPredicate )
+{
+-                    DFAState target = (DFAState)edge.target;
++                    DFAState target = (DFAState)edge.Target;
+SemanticContext preds =
+target.GetGatedPredicatesInNFAConfigurations();
+if ( preds != null )
+@@ -156,7 +156,7 @@ namespace Antlr3.Codegen
+StringTemplate targetST =
+WalkFixedDFAGeneratingStateMachine( templates,
+dfa,
+-                                                       (DFAState)edge.target,
++                                                       (DFAState)edge.Target,
+k + 1 );
+edgeST.SetAttribute( "targetState", targetST );
+dfaST.SetAttribute( "edges", edgeST );
+@@ -190,7 +190,7 @@ namespace Antlr3.Codegen
+StringTemplate targetST =
+WalkFixedDFAGeneratingStateMachine( templates,
+dfa,
+-                                                           (DFAState)predEdge.target,
++                                                           (DFAState)predEdge.Target,
+k + 1 );
+edgeST.SetAttribute( "targetState", targetST );
+dfaST.SetAttribute( "edges", edgeST );
+diff --git a/Antlr3/Codegen/CodeGenerator.cs b/Antlr3/Codegen/CodeGenerator.cs
+index 5d9408e..30c1ed0 100644
+--- a/Antlr3/Codegen/CodeGenerator.cs
++++ b/Antlr3/Codegen/CodeGenerator.cs
+@@ -969,7 +969,7 @@ namespace Antlr3.Codegen
+stateST = templates.GetInstanceOf( "cyclicDFAState" );
+stateST.SetAttribute( "needErrorClause", true );
+stateST.SetAttribute( "semPredState", s.IsResolvedWithPredicates );
+-            stateST.SetAttribute( "stateNumber", s.stateNumber );
++            stateST.SetAttribute( "stateNumber", s.StateNumber );
+stateST.SetAttribute( "decisionNumber", s.dfa.decisionNumber );
+
+bool foundGatedPred = false;
+@@ -978,7 +978,7 @@ namespace Antlr3.Codegen
+{
+Transition edge = (Transition)s.Transition( i );
+StringTemplate edgeST;
+-                if ( edge.label.Atom == Label.EOT )
++                if ( edge.Label.Atom == Label.EOT )
+{
+// this is the default clause; has to held until last
+edgeST = templates.GetInstanceOf( "eotDFAEdge" );
+@@ -994,11 +994,11 @@ namespace Antlr3.Codegen
+}
+edgeST.SetAttribute( "edgeNumber", i + 1 );
+edgeST.SetAttribute( "targetStateNumber",
+-                                     edge.target.stateNumber );
++                                     edge.Target.StateNumber );
+// stick in any gated predicates for any edge if not already a pred
+-                if ( !edge.label.IsSemanticPredicate )
++                if ( !edge.Label.IsSemanticPredicate )
+{
+-                    DFAState t = (DFAState)edge.target;
++                    DFAState t = (DFAState)edge.Target;
+SemanticContext preds = t.GetGatedPredicatesInNFAConfigurations();
+if ( preds != null )
+{
+@@ -1009,7 +1009,7 @@ namespace Antlr3.Codegen
+edgeST.SetAttribute( "predicates", predST.ToString() );
+}
+}
+-                if ( edge.label.Atom != Label.EOT )
++                if ( edge.Label.Atom != Label.EOT )
+{
+stateST.SetAttribute( "edges", edgeST );
+}
+@@ -1032,7 +1032,7 @@ namespace Antlr3.Codegen
+Transition edge,
+int k )
+{
+-            Label label = edge.label;
++            Label label = edge.Label;
+if ( label.IsSemanticPredicate )
+{
+return GenSemanticPredicateExpr( templates, edge );
+@@ -1052,8 +1052,8 @@ namespace Antlr3.Codegen
+protected internal virtual StringTemplate GenSemanticPredicateExpr( StringTemplateGroup templates,
+Transition edge )
+{
+-            DFA dfa = ( (DFAState)edge.target ).dfa; // which DFA are we in
+-            Label label = edge.label;
++            DFA dfa = ( (DFAState)edge.Target ).dfa; // which DFA are we in
++            Label label = edge.Label;
+SemanticContext semCtx = label.SemanticContext;
+return semCtx.GenExpr( this, templates, dfa );
+}
+@@ -1622,14 +1622,14 @@ namespace Antlr3.Codegen
+for ( int i = 0; i < s.NumberOfTransitions; i++ )
+{
+Transition edge = (Transition)s.Transition( i );
+-                if ( edge.label.IsSemanticPredicate )
++                if ( edge.Label.IsSemanticPredicate )
+{
+return false;
+}
+// can't do a switch if the edges are going to require predicates
+-                if ( edge.label.Atom == Label.EOT )
++                if ( edge.Label.Atom == Label.EOT )
+{
+-                    int EOTPredicts = ( (DFAState)edge.target ).GetUniquelyPredictedAlt();
++                    int EOTPredicts = ( (DFAState)edge.Target ).GetUniquelyPredictedAlt();
+if ( EOTPredicts == NFA.INVALID_ALT_NUMBER )
+{
+// EOT target has to be a predicate then; no unique alt
+@@ -1638,11 +1638,11 @@ namespace Antlr3.Codegen
+}
+// if target is a state with gated preds, we need to use preds on
+// this edge then to reach it.
+-                if ( ( (DFAState)edge.target ).GetGatedPredicatesInNFAConfigurations() != null )
++                if ( ( (DFAState)edge.Target ).GetGatedPredicatesInNFAConfigurations() != null )
+{
+return false;
+}
+-                size += edge.label.Set.Count;
++                size += edge.Label.Set.Count;
+}
+if ( s.NumberOfTransitions < MinSwitchAlts ||
+size > MaxSwitchCaseLabels )
+diff --git a/Antlr3/Grammars/TreeToNFAConverterHelper.cs b/Antlr3/Grammars/TreeToNFAConverterHelper.cs
+index 965e31f..ec0967c 100644
+--- a/Antlr3/Grammars/TreeToNFAConverterHelper.cs
++++ b/Antlr3/Grammars/TreeToNFAConverterHelper.cs
+@@ -120,7 +120,7 @@ namespace Antlr3.Grammars
+NFAState end = r.stopState;
+while ( end.GetTransition( 1 ) != null )
+{
+-                end = (NFAState)end.GetTransition( 1 ).target;
++                end = (NFAState)end.GetTransition( 1 ).Target;
+}
+if ( end.GetTransition( 0 ) != null )
+{
+diff --git a/Antlr3/Tool/CompositeGrammar.cs b/Antlr3/Tool/CompositeGrammar.cs
+index c5b4822..a64c77a 100644
+--- a/Antlr3/Tool/CompositeGrammar.cs
++++ b/Antlr3/Tool/CompositeGrammar.cs
+@@ -373,8 +373,8 @@ namespace Antlr3.Tool
+
+public virtual void AddState( NFAState state )
+{
+-            numberToStateList.setSize( state.stateNumber + 1 ); // make sure we have room
+-            numberToStateList[state.stateNumber] = state;
++            numberToStateList.setSize( state.StateNumber + 1 ); // make sure we have room
++            numberToStateList[state.StateNumber] = state;
+}
+
+public virtual NFAState GetState( int s )
+diff --git a/Antlr3/Tool/DOTGenerator.cs b/Antlr3/Tool/DOTGenerator.cs
+index a3638fb..608e0a5 100644
+--- a/Antlr3/Tool/DOTGenerator.cs
++++ b/Antlr3/Tool/DOTGenerator.cs
+@@ -130,7 +130,7 @@ namespace Antlr3.Tool
+{
+dot = stlib.GetInstanceOf( Path.Combine( dfaTemplateDirectoryName, "dfa" ) );
+dot.SetAttribute( "startState",
+-                        startState.stateNumber );
++                        startState.StateNumber );
+dot.SetAttribute( "useBox",
+AntlrTool.internalOption_ShowNFAConfigsInDFA );
+WalkCreatingDFADOT( dot, (DFAState)startState );
+@@ -139,7 +139,7 @@ namespace Antlr3.Tool
+{
+dot = stlib.GetInstanceOf( Path.Combine( dfaTemplateDirectoryName, "nfa" ) );
+dot.SetAttribute( "startState",
+-                        startState.stateNumber );
++                        startState.StateNumber );
+WalkRuleNFACreatingDOT( dot, startState );
+}
+dot.SetAttribute( "rankdir", rankdir );
+@@ -170,12 +170,12 @@ namespace Antlr3.Tool
+protected virtual void WalkCreatingDFADOT( StringTemplate dot,
+DFAState s )
+{
+-            if ( markedStates.Contains( s.stateNumber ) )
++            if ( markedStates.Contains( s.StateNumber ) )
+{
+return; // already visited this node
+}
+
+-            markedStates.Add( s.stateNumber ); // mark this node as completed.
++            markedStates.Add( s.StateNumber ); // mark this node as completed.
+
+// first add this node
+StringTemplate st;
+@@ -198,8 +198,8 @@ namespace Antlr3.Tool
+//    + s.stateNumber + " [" + i + "] of " + s.NumberOfTransitions );
+if ( StripNonreducedStates )
+{
+-                    if ( edge.target is DFAState &&
+-                        ( (DFAState)edge.target ).AcceptStateReachable != DFA.REACHABLE_YES )
++                    if ( edge.Target is DFAState &&
++                        ( (DFAState)edge.Target ).AcceptStateReachable != DFA.REACHABLE_YES )
+{
+continue; // don't generate nodes for terminal states
+}
+@@ -207,10 +207,10 @@ namespace Antlr3.Tool
+st = stlib.GetInstanceOf( Path.Combine( dfaTemplateDirectoryName, "edge" ) );
+st.SetAttribute( "label", GetEdgeLabel( edge ) );
+st.SetAttribute( "src", GetStateLabel( s ) );
+-                st.SetAttribute( "target", GetStateLabel( edge.target ) );
++                st.SetAttribute( "target", GetStateLabel( edge.Target ) );
+st.SetAttribute( "arrowhead", arrowhead );
+dot.SetAttribute( "edges", st );
+-                WalkCreatingDFADOT( dot, (DFAState)edge.target ); // keep walkin'
++                WalkCreatingDFADOT( dot, (DFAState)edge.Target ); // keep walkin'
+}
+}
+
+@@ -223,12 +223,12 @@ namespace Antlr3.Tool
+protected virtual void WalkRuleNFACreatingDOT( StringTemplate dot,
+State s )
+{
+-            if ( markedStates.Contains( s.stateNumber ) )
++            if ( markedStates.Contains( s.StateNumber ) )
+{
+return; // already visited this node
+}
+
+-            markedStates.Add( s.stateNumber ); // mark this node as completed.
++            markedStates.Add( s.StateNumber ); // mark this node as completed.
+
+// first add this node
+StringTemplate stateST;
+@@ -262,7 +262,7 @@ namespace Antlr3.Tool
+rankST.SetAttribute( "states", GetStateLabel( alt ) );
+if ( alt.transition[1] != null )
+{
+-                            alt = (NFAState)alt.transition[1].target;
++                            alt = (NFAState)alt.transition[1].Target;
+}
+else
+{
+@@ -312,10 +312,10 @@ namespace Antlr3.Tool
+}
+edgeST.SetAttribute( "label", GetEdgeLabel( edge ) );
+edgeST.SetAttribute( "src", GetStateLabel( s ) );
+-                edgeST.SetAttribute( "target", GetStateLabel( edge.target ) );
++                edgeST.SetAttribute( "target", GetStateLabel( edge.Target ) );
+edgeST.SetAttribute( "arrowhead", arrowhead );
+dot.SetAttribute( "edges", edgeST );
+-                WalkRuleNFACreatingDOT( dot, edge.target ); // keep walkin'
++                WalkRuleNFACreatingDOT( dot, edge.Target ); // keep walkin'
+}
+}
+
+@@ -365,7 +365,7 @@ namespace Antlr3.Tool
+*/
+protected virtual string GetEdgeLabel( Transition edge )
+{
+-            string label = edge.label.ToString( grammar );
++            string label = edge.Label.ToString( grammar );
+label = label.Replace( "\\", "\\\\" );
+label = label.Replace( "\"", "\\\"" );
+label = label.Replace( "\n", "\\\\n" );
+@@ -374,7 +374,7 @@ namespace Antlr3.Tool
+{
+label = "e";
+}
+-            State target = edge.target;
++            State target = edge.Target;
+if ( !edge.IsSemanticPredicate && target is DFAState )
+{
+// look for gated predicates; don't add gated to simple sempred edges
+@@ -399,12 +399,12 @@ namespace Antlr3.Tool
+{
+return "null";
+}
+-            string stateLabel = s.stateNumber.ToString();
++            string stateLabel = s.StateNumber.ToString();
+if ( s is DFAState )
+{
+StringBuffer buf = new StringBuffer( 250 );
+buf.Append( 's' );
+-                buf.Append( s.stateNumber );
++                buf.Append( s.StateNumber );
+if ( AntlrTool.internalOption_ShowNFAConfigsInDFA )
+{
+if ( s is DFAState )
+diff --git a/Antlr3/Tool/DgmlGenerator.cs b/Antlr3/Tool/DgmlGenerator.cs
+index 5f2991f..4c78fc3 100644
+--- a/Antlr3/Tool/DgmlGenerator.cs
++++ b/Antlr3/Tool/DgmlGenerator.cs
+@@ -97,7 +97,7 @@ namespace Antlr3.Tool
+_groupId = "decision_";
+_extraNodes.Add(new XElement(Elements.Node,
+new XAttribute(Attributes.Id, _groupId),
+-                        new XAttribute(Attributes.Label, dfaState.stateNumber.ToString()),
++                        new XAttribute(Attributes.Label, dfaState.StateNumber.ToString()),
+new XAttribute(Attributes.Group, "Collapsed")));
+}
+else
+@@ -137,7 +137,7 @@ namespace Antlr3.Tool
+
+private void WalkCreatingDfaDgml(DFAState dfaState)
+{
+-            if (!_markedStates.Add(dfaState.stateNumber))
++            if (!_markedStates.Add(dfaState.StateNumber))
+return;
+
+// first add this node
+@@ -152,13 +152,13 @@ namespace Antlr3.Tool
+}
+
+XElement node = new XElement(Elements.Node,
+-                new XAttribute(Attributes.Id, "state_" + dfaState.stateNumber),
++                new XAttribute(Attributes.Id, "state_" + dfaState.StateNumber),
+new XAttribute(Attributes.Label, GetStateLabel(dfaState)),
+new XAttribute(Attributes.Category, nodeCategory));
+
+_nodes.Add(dfaState, node);
+if (GroupNodes)
+-                _extraLinks.Add(CreateContainmentLink(_groupId, "state_" + dfaState.stateNumber));
++                _extraLinks.Add(CreateContainmentLink(_groupId, "state_" + dfaState.StateNumber));
+
+// make an edge for each transition
+for (int i = 0; i < dfaState.NumberOfTransitions; i++)
+@@ -166,7 +166,7 @@ namespace Antlr3.Tool
+Transition edge = dfaState.Transition(i);
+if (StripNonreducedStates)
+{
+-                    DFAState target = edge.target as DFAState;
++                    DFAState target = edge.Target as DFAState;
+// don't generate nodes for terminal states
+if (target != null && target.AcceptStateReachable != DFA.REACHABLE_YES)
+continue;
+@@ -174,8 +174,8 @@ namespace Antlr3.Tool
+
+string edgeCategory = Categories.Edge;
+XElement edgeElement = new XElement(Elements.Link,
+-                    new XAttribute(Attributes.Source, "state_" + dfaState.stateNumber),
+-                    new XAttribute(Attributes.Target, "state_" + edge.target.stateNumber),
++                    new XAttribute(Attributes.Source, "state_" + dfaState.StateNumber),
++                    new XAttribute(Attributes.Target, "state_" + edge.Target.StateNumber),
+new XAttribute(Attributes.Category, edgeCategory),
+new XAttribute(Attributes.Label, GetEdgeLabel(edge)));
+
+@@ -194,7 +194,7 @@ namespace Antlr3.Tool
+
+private void WalkRuleNfaCreatingDgml(State state)
+{
+-            if (!_markedStates.Add(state.stateNumber))
++            if (!_markedStates.Add(state.StateNumber))
+return;
+
+NFAState nfaState = state as NFAState;
+@@ -209,7 +209,7 @@ namespace Antlr3.Tool
+nodeCategory = Categories.State;
+
+XElement node = new XElement(Elements.Node,
+-                new XAttribute(Attributes.Id, "state_" + state.stateNumber),
++                new XAttribute(Attributes.Id, "state_" + state.StateNumber),
+new XAttribute(Attributes.Label, GetStateLabel(state)),
+new XAttribute(Attributes.Category, nodeCategory));
+
+@@ -225,7 +225,7 @@ namespace Antlr3.Tool
+
+_nodes.Add(state, node);
+if (GroupNodes)
+-                _extraLinks.Add(CreateContainmentLink(_groupId, "state_" + state.stateNumber));
++                _extraLinks.Add(CreateContainmentLink(_groupId, "state_" + state.StateNumber));
+
+// don't go past end of rule
+if (state.IsAcceptState)
+@@ -246,7 +246,7 @@ namespace Antlr3.Tool
+label = string.Format("<{0}>", rr.rule.Name);
+
+XElement link = new XElement(Elements.Link,
+-                        new XAttribute(Attributes.Source, "state_" + state.stateNumber),
++                        new XAttribute(Attributes.Source, "state_" + state.StateNumber),
+new XAttribute(Attributes.Target, "state_" + rr.followState),
+new XAttribute(Attributes.Category, Categories.RuleClosureEdge),
+new XAttribute(Attributes.Label, label));
+@@ -262,14 +262,14 @@ namespace Antlr3.Tool
+edgeCategory = Categories.ActionEdge;
+else if (edge.IsEpsilon)
+edgeCategory = Categories.EpsilonEdge;
+-                    else if (edge.Label.IsSet || edge.label.IsAtom)
++                    else if (edge.Label.IsSet || edge.Label.IsAtom)
+edgeCategory = Categories.AtomEdge;
+else
+edgeCategory = Categories.Edge;
+
+XElement link = new XElement(Elements.Link,
+-                        new XAttribute(Attributes.Source, "state_" + state.stateNumber),
+-                        new XAttribute(Attributes.Target, "state_" + edge.Target.stateNumber),
++                        new XAttribute(Attributes.Source, "state_" + state.StateNumber),
++                        new XAttribute(Attributes.Target, "state_" + edge.Target.StateNumber),
+new XAttribute(Attributes.Category, edgeCategory),
+new XAttribute(Attributes.Label, GetEdgeLabel(edge)));
+
+@@ -321,7 +321,7 @@ namespace Antlr3.Tool
+{
+XElement newLink = new XElement(link.Value);
+newLink.Attribute(Attributes.Target).Remove();
+-                        newLink.Add(new XAttribute(Attributes.Target, "state_" + newTarget.stateNumber));
++                        newLink.Add(new XAttribute(Attributes.Target, "state_" + newTarget.StateNumber));
+newLink.Add(new XElement(Elements.Category, new XAttribute(Attributes.Ref, Categories.OptimizedEdge)));
+
+_extraLinks.Add(newLink);
+@@ -337,7 +337,7 @@ namespace Antlr3.Tool
+return false;
+
+// Cannot skip first state
+-            if (state.stateNumber == 0)
++            if (state.StateNumber == 0)
+return false;
+
+// Cannot skip accepted state
+@@ -378,13 +378,13 @@ namespace Antlr3.Tool
+
+private string GetEdgeLabel(Transition edge)
+{
+-            string label = edge.label.ToString(_grammar);
++            string label = edge.Label.ToString(_grammar);
+label = string.Join(" ", label.Split(default(char[]), StringSplitOptions.RemoveEmptyEntries));
+if (label.Equals(Label.EPSILON_STR))
+{
+label = EpsilonLinkLabel;
+}
+-            State target = edge.target;
++            State target = edge.Target;
+if (!edge.IsSemanticPredicate && target is DFAState)
+{
+// look for gated predicates; don't add gated to simple sempred edges
+@@ -412,14 +412,14 @@ namespace Antlr3.Tool
+if (state == null)
+return "null";
+
+-            string stateLabel = state.stateNumber.ToString();
++            string stateLabel = state.StateNumber.ToString();
+DFAState dfaState = state as DFAState;
+NFAState nfaState = state as NFAState;
+if (dfaState != null)
+{
+StringBuilder builder = new StringBuilder(250);
+builder.Append('s');
+-                builder.Append(state.stateNumber);
++                builder.Append(state.StateNumber);
+if (AntlrTool.internalOption_ShowNFAConfigsInDFA)
+{
+if (dfaState.abortedDueToRecursionOverflow)
+diff --git a/Antlr3/Tool/FASerializer.cs b/Antlr3/Tool/FASerializer.cs
+index 7165bd8..12c3760 100644
+--- a/Antlr3/Tool/FASerializer.cs
++++ b/Antlr3/Tool/FASerializer.cs
+@@ -35,6 +35,7 @@ namespace Antlr3.Tool
+using System.Collections.Generic;
+using Antlr3.Analysis;
+
++    using Environment = System.Environment;
+using IList = System.Collections.IList;
+using StringBuilder = System.Text.StringBuilder;
+
+@@ -104,7 +105,7 @@ namespace Antlr3.Tool
+{
+// special case: s0 is an accept
+string s0 = GetStateString( 0, s );
+-                lines.Add( s0 + "\n" );
++                lines.Add( s0 + Environment.NewLine );
+}
+StringBuilder buf = new StringBuilder( 0 );
+// sort lines to normalize; makes states come out ordered
+@@ -141,7 +142,7 @@ namespace Antlr3.Tool
+for ( int i = 0; i < s.NumberOfTransitions; i++ )
+{
+Transition edge = (Transition)s.GetTransition( i );
+-                WalkFANormalizingStateNumbers( edge.target ); // keep walkin'
++                WalkFANormalizingStateNumbers( edge.Target ); // keep walkin'
+// if this transition is a rule reference, the node "following" this state
+// will not be found and appear to be not in graph.  Must explicitly jump
+// to it, but don't "draw" an edge.
+@@ -161,7 +162,7 @@ namespace Antlr3.Tool
+
+markedStates.Add( s ); // mark this node as completed.
+
+-            int normalizedStateNumber = s.stateNumber;
++            int normalizedStateNumber = s.StateNumber;
+if ( stateNumberTranslator != null )
+{
+normalizedStateNumber = stateNumberTranslator[s];
+@@ -185,16 +186,16 @@ namespace Antlr3.Tool
+}
+else if ( edge.IsSemanticPredicate )
+{
+-                    buf.Append( "-{" + edge.label.SemanticContext + "}?->" );
++                    buf.Append( "-{" + edge.Label.SemanticContext + "}?->" );
+}
+else
+{
+string predsStr = "";
+-                    if ( edge.target is DFAState )
++                    if ( edge.Target is DFAState )
+{
+// look for gated predicates; don't add gated to simple sempred edges
+SemanticContext preds =
+-                            ( (DFAState)edge.target ).GetGatedPredicatesInNFAConfigurations();
++                            ( (DFAState)edge.Target ).GetGatedPredicatesInNFAConfigurations();
+if ( preds != null )
+{
+predsStr = "&&{" +
+@@ -203,20 +204,20 @@ namespace Antlr3.Tool
++ "}?";
+}
+}
+-                    buf.Append( "-" + edge.label.ToString( grammar ) + predsStr + "->" );
++                    buf.Append( "-" + edge.Label.ToString( grammar ) + predsStr + "->" );
+}
+
+-                int normalizedTargetStateNumber = edge.target.stateNumber;
++                int normalizedTargetStateNumber = edge.Target.StateNumber;
+if ( stateNumberTranslator != null )
+{
+-                    normalizedTargetStateNumber = stateNumberTranslator[edge.target];
++                    normalizedTargetStateNumber = stateNumberTranslator[edge.Target];
+}
+-                buf.Append( GetStateString( normalizedTargetStateNumber, edge.target ) );
+-                buf.Append( "\n" );
++                buf.Append( GetStateString( normalizedTargetStateNumber, edge.Target ) );
++                buf.AppendLine();
+lines.Add( buf.ToString() );
+
+// walk this transition
+-                WalkSerializingFA( lines, edge.target );
++                WalkSerializingFA( lines, edge.Target );
+
+// if this transition is a rule reference, the node "following" this state
+// will not be found and appear to be not in graph.  Must explicitly jump
+diff --git a/Antlr3/Tool/Grammar.cs b/Antlr3/Tool/Grammar.cs
+index 7ad46f4..9c70a27 100644
+--- a/Antlr3/Tool/Grammar.cs
++++ b/Antlr3/Tool/Grammar.cs
+@@ -1697,7 +1697,7 @@ namespace Antlr3.Tool
+int walkAlt =
+decisionStartState.TranslateDisplayAltToWalkAlt( alt );
+NFAState altLeftEdge = GetNFAStateForAltOfDecision( decisionStartState, walkAlt );
+-                NFAState altStartState = (NFAState)altLeftEdge.transition[0].target;
++                NFAState altStartState = (NFAState)altLeftEdge.transition[0].Target;
+//JSystem.@out.println("alt "+alt+" start state = "+altStartState.stateNumber);
+altLook[alt] = ll1Analyzer.Look( altStartState );
+//JSystem.@out.println("alt "+alt+": "+altLook[alt].toString(this));
+@@ -2169,7 +2169,7 @@ namespace Antlr3.Tool
+buf.Append( FileName );
+buf.Append( "\" " );
+buf.Append( ruleAST.Line );
+-            buf.Append( "\n" );
++            buf.AppendLine();
+for ( int i = ruleAST.TokenStartIndex;
+i <= ruleAST.TokenStopIndex && i < tokenBuffer.Count;
+i++ )
+@@ -3665,7 +3665,7 @@ namespace Antlr3.Tool
+while ( p.transition[1] != null )
+{
+n++;
+-                p = (NFAState)p.transition[1].target;
++                p = (NFAState)p.transition[1].Target;
+}
+return n;
+}
+@@ -3700,7 +3700,7 @@ namespace Antlr3.Tool
+p = null;
+if ( next != null )
+{
+-                    p = (NFAState)next.target;
++                    p = (NFAState)next.Target;
+}
+}
+return null;
+diff --git a/Antlr3/Tool/GrammarSanity.cs b/Antlr3/Tool/GrammarSanity.cs
+index 86828fc..66f3c2a 100644
+--- a/Antlr3/Tool/GrammarSanity.cs
++++ b/Antlr3/Tool/GrammarSanity.cs
+@@ -131,7 +131,7 @@ namespace Antlr3.Tool
+// must visit if not already visited; send new visitedStates set
+visitedDuringRecursionCheck.Add( refRuleDef );
+bool callReachedAcceptState =
+-                        TraceStatesLookingForLeftRecursion( (NFAState)t0.target,
++                        TraceStatesLookingForLeftRecursion( (NFAState)t0.Target,
+new HashSet<object>(),
+listOfRecursiveCycles );
+// we're back from visiting that rule
+@@ -148,10 +148,10 @@ namespace Antlr3.Tool
+}
+}
+}
+-            else if ( t0.label.IsEpsilon || t0.label.IsSemanticPredicate )
++            else if ( t0.Label.IsEpsilon || t0.Label.IsSemanticPredicate )
+{
+stateReachesAcceptState |=
+-                    TraceStatesLookingForLeftRecursion( (NFAState)t0.target, visitedStates, listOfRecursiveCycles );
++                    TraceStatesLookingForLeftRecursion( (NFAState)t0.Target, visitedStates, listOfRecursiveCycles );
+}
+// else it has a labeled edge
+
+@@ -160,7 +160,7 @@ namespace Antlr3.Tool
+if ( t1 != null )
+{
+stateReachesAcceptState |=
+-                    TraceStatesLookingForLeftRecursion( (NFAState)t1.target,
++                    TraceStatesLookingForLeftRecursion( (NFAState)t1.Target,
+visitedStates,
+listOfRecursiveCycles );
+}
+diff --git a/Antlr3/Tool/Interpreter.cs b/Antlr3/Tool/Interpreter.cs
+index 56f0994..ea4467c 100644
+--- a/Antlr3/Tool/Interpreter.cs
++++ b/Antlr3/Tool/Interpreter.cs
+@@ -278,7 +278,7 @@ namespace Antlr3.Tool
+NoViableAltException nvae =
+new NoViableAltException( description,
+dfa.DecisionNumber,
+-                                                          s.stateNumber,
++                                                          s.StateNumber,
+input );
+if ( actions != null )
+{
+@@ -304,7 +304,7 @@ namespace Antlr3.Tool
+{
+alt = s.nfa.grammar.GetNFAStateForAltOfDecision( s, parseAlt );
+}
+-                    s = (NFAState)alt.transition[0].target;
++                    s = (NFAState)alt.transition[0].Target;
+continue;
+}
+
+@@ -331,7 +331,7 @@ namespace Antlr3.Tool
+}
+
+Transition trans = s.transition[0];
+-                Label label = trans.label;
++                Label label = trans.Label;
+if ( label.IsSemanticPredicate )
+{
+FailedPredicateException fpe =
+@@ -351,7 +351,7 @@ namespace Antlr3.Tool
+if ( trans is RuleClosureTransition )
+{
+ruleInvocationStack.Push( s );
+-                        s = (NFAState)trans.target;
++                        s = (NFAState)trans.Target;
+//Console.Out.WriteLine( "call " + s.enclosingRule.name + " from " + s.nfa.grammar.getFileName() );
+if ( actions != null )
+{
+@@ -366,7 +366,7 @@ namespace Antlr3.Tool
+// CASE 3b: plain old epsilon transition, just move
+else
+{
+-                        s = (NFAState)trans.target;
++                        s = (NFAState)trans.Target;
+}
+}
+
+@@ -381,7 +381,7 @@ namespace Antlr3.Tool
+actions.ConsumeToken( ( (ITokenStream)input ).LT( 1 ) );
+}
+}
+-                    s = (NFAState)s.transition[0].target;
++                    s = (NFAState)s.transition[0].Target;
+input.Consume();
+t = input.LA( 1 );
+}
+@@ -458,22 +458,22 @@ namespace Antlr3.Tool
+{
+Transition t = s.Transition( i );
+// special case: EOT matches any char
+-                    if ( t.label.Matches( c ) )
++                    if ( t.Label.Matches( c ) )
+{
+// take transition i
+-                        s = (DFAState)t.target;
++                        s = (DFAState)t.Target;
+input.Consume();
+c = input.LA( 1 );
+goto dfaLoop;
+}
+-                    if ( t.label.Atom == Label.EOT )
++                    if ( t.Label.Atom == Label.EOT )
+{
+eotTransition = t;
+}
+}
+if ( eotTransition != null )
+{
+-                    s = (DFAState)eotTransition.target;
++                    s = (DFAState)eotTransition.Target;
+goto dfaLoop;
+}
+/*
+diff --git a/Antlr3/Tool/NFAFactory.cs b/Antlr3/Tool/NFAFactory.cs
+index c99615a..3f70fa7 100644
+--- a/Antlr3/Tool/NFAFactory.cs
++++ b/Antlr3/Tool/NFAFactory.cs
+@@ -84,7 +84,7 @@ namespace Antlr3.Tool
+{
+NFAState n = new NFAState( nfa );
+int state = nfa.GetNewNFAStateNumber();
+-            n.stateNumber = state;
++            n.StateNumber = state;
+nfa.AddState( n );
+n.enclosingRule = currentRule;
+return n;
+@@ -115,13 +115,13 @@ namespace Antlr3.Tool
+s = ( (RuleClosureTransition)t ).followState;
+continue;
+}
+-                if ( t.label.IsEpsilon && !t.label.IsAction && s.NumberOfTransitions == 1 )
++                if ( t.Label.IsEpsilon && !t.Label.IsAction && s.NumberOfTransitions == 1 )
+{
+// bypass epsilon transition and point to what the epsilon's
+// target points to unless that epsilon transition points to
+// a block or loop etc..  Also don't collapse epsilons that
+// point at the last node of the alt. Don't collapse action edges
+-                    NFAState epsilonTarget = (NFAState)t.target;
++                    NFAState epsilonTarget = (NFAState)t.Target;
+if ( epsilonTarget.endOfBlockStateNumber == State.INVALID_STATE_NUMBER &&
+epsilonTarget.transition[0] != null )
+{
+@@ -129,7 +129,7 @@ namespace Antlr3.Tool
+//System.Console.Out.WriteLine( "### opt " + s.stateNumber + "->" + epsilonTarget.transition[0].target.stateNumber );
+}
+}
+-                s = (NFAState)t.target;
++                s = (NFAState)t.Target;
+}
+}
+
+@@ -483,7 +483,7 @@ namespace Antlr3.Tool
+firstAlt.decisionStateType = NFAState.BLOCK_START;
+
+// set EOB markers for Jean
+-            firstAlt.endOfBlockStateNumber = blockEndNFAState.stateNumber;
++            firstAlt.endOfBlockStateNumber = blockEndNFAState.StateNumber;
+
+return result;
+}
+@@ -517,7 +517,7 @@ namespace Antlr3.Tool
+TransitionBetweenStates( emptyAlt, blockEndNFAState, Label.EPSILON );
+
+// set EOB markers for Jean
+-                decisionState.endOfBlockStateNumber = blockEndNFAState.stateNumber;
++                decisionState.endOfBlockStateNumber = blockEndNFAState.StateNumber;
+blockEndNFAState.decisionStateType = NFAState.RIGHT_EDGE_OF_BLOCK;
+
+g = new StateCluster( decisionState, blockEndNFAState );
+@@ -533,7 +533,7 @@ namespace Antlr3.Tool
+TransitionBetweenStates( emptyAlt, A.right, Label.EPSILON );
+
+// set EOB markers for Jean (I think this is redundant here)
+-                A.left.endOfBlockStateNumber = A.right.stateNumber;
++                A.left.endOfBlockStateNumber = A.right.StateNumber;
+A.right.decisionStateType = NFAState.RIGHT_EDGE_OF_BLOCK;
+
+g = A; // return same block, but now with optional last path
+@@ -581,7 +581,7 @@ namespace Antlr3.Tool
+A.left.decisionStateType = NFAState.BLOCK_START;
+
+// set EOB markers for Jean
+-            A.left.endOfBlockStateNumber = A.right.stateNumber;
++            A.left.endOfBlockStateNumber = A.right.StateNumber;
+
+StateCluster g = new StateCluster( left, blockEndNFAState );
+return g;
+@@ -653,8 +653,8 @@ namespace Antlr3.Tool
+A.right.decisionStateType = NFAState.LOOPBACK;
+
+// set EOB markers for Jean
+-            A.left.endOfBlockStateNumber = A.right.stateNumber;
+-            bypassDecisionState.endOfBlockStateNumber = blockEndNFAState.stateNumber;
++            A.left.endOfBlockStateNumber = A.right.StateNumber;
++            bypassDecisionState.endOfBlockStateNumber = blockEndNFAState.StateNumber;
+
+StateCluster g = new StateCluster( bypassDecisionState, blockEndNFAState );
+return g;
+@@ -780,10 +780,10 @@ namespace Antlr3.Tool
+State s0 = blk;
+if ( s0 != null && s0.GetTransition( 0 ) != null )
+{
+-                State s1 = s0.GetTransition( 0 ).target;
++                State s1 = s0.GetTransition( 0 ).Target;
+if ( s1 != null && s1.GetTransition( 0 ) != null )
+{
+-                    Label label = s1.GetTransition( 0 ).label;
++                    Label label = s1.GetTransition( 0 ).Label;
+if ( label.IsSet )
+{
+return label.Set;
+

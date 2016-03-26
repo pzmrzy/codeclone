@@ -1,0 +1,11 @@
+commit 12611c9108d66fe1551ca4544175633c4d4008a4
+Merge: 6d429dd b98b62b
+Author:     Terence Parr <parrt@cs.usfca.edu>
+AuthorDate: Thu Nov 12 10:44:18 2015 -0800
+Commit:     Terence Parr <parrt@cs.usfca.edu>
+CommitDate: Thu Nov 12 10:44:18 2015 -0800
+
+Merge pull request #45 from sharwell/build-status
+
+Add README.md with Gitter and Build Status badges
+

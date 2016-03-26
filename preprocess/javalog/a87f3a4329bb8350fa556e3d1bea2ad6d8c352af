@@ -1,0 +1,22 @@
+commit a87f3a4329bb8350fa556e3d1bea2ad6d8c352af
+Author:     Ivan Brezina <ibrezina@ibrezina.net>
+AuthorDate: Tue Oct 1 23:35:08 2013 +0200
+Commit:     Ivan Brezina <ibrezina@ibrezina.net>
+CommitDate: Tue Oct 1 23:35:08 2013 +0200
+
+Memory leak test case
+
+diff --git a/runtime/Cpp/tests/t004lexer.g b/runtime/Cpp/tests/t004lexer.g
+index 2079c7c..a16e407 100644
+--- a/runtime/Cpp/tests/t004lexer.g
++++ b/runtime/Cpp/tests/t004lexer.g
+@@ -10,4 +10,7 @@ options {
+@lexer::namespace
+{ Antlr3Test }
+
+-FOO: 'f' 'o'*;
++FOO: 'f' f=OO;
++
++fragment
++OO: 'o'*;
+

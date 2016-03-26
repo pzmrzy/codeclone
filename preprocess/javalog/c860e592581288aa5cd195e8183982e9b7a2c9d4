@@ -1,0 +1,87 @@
+commit c860e592581288aa5cd195e8183982e9b7a2c9d4
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Wed Feb 22 08:39:14 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Wed Feb 22 12:25:54 2012 -0600
+
+Can't break established API, so for now we @SuppressWarnings("OverridableMethodCallInConstructor")
+
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/RewriteRuleElementStream.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/RewriteRuleElementStream.java
+index da858c7..cba0d71 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/RewriteRuleElementStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/RewriteRuleElementStream.java
+@@ -80,6 +80,7 @@ public abstract class RewriteRuleElementStream {
+}
+
+/** Create a stream with one element */
++	@SuppressWarnings("OverridableMethodCallInConstructor")
+public RewriteRuleElementStream(TreeAdaptor adaptor,
+String elementDescription,
+Object oneElement)
+diff --git a/tool/src/main/java/org/antlr/Tool.java b/tool/src/main/java/org/antlr/Tool.java
+index 013e9e7..48fec23 100644
+--- a/tool/src/main/java/org/antlr/Tool.java
++++ b/tool/src/main/java/org/antlr/Tool.java
+@@ -129,6 +129,7 @@ public class Tool {
+loadResources();
+}
+
++	@SuppressWarnings("OverridableMethodCallInConstructor")
+public Tool(String[] args) {
+loadResources();
+
+diff --git a/tool/src/main/java/org/antlr/analysis/LL1DFA.java b/tool/src/main/java/org/antlr/analysis/LL1DFA.java
+index 32b018b..2915982 100644
+--- a/tool/src/main/java/org/antlr/analysis/LL1DFA.java
++++ b/tool/src/main/java/org/antlr/analysis/LL1DFA.java
+@@ -48,6 +48,7 @@ public class LL1DFA extends DFA {
+*  |
+*  ...
+*/
++	@SuppressWarnings("OverridableMethodCallInConstructor")
+public LL1DFA(int decisionNumber, NFAState decisionStartState, LookaheadSet[] altLook) {
+DFAState s0 = newState();
+startState = s0;
+@@ -71,6 +72,7 @@ public class LL1DFA extends DFA {
+/** From a set of edgeset->list-of-alts mappings, create a DFA
+*  that uses syn preds for all |list-of-alts|>1.
+*/
++	@SuppressWarnings("OverridableMethodCallInConstructor")
+public LL1DFA(int decisionNumber,
+NFAState decisionStartState,
+MultiMap<IntervalSet, Integer> edgeMap)
+diff --git a/tool/src/main/java/org/antlr/tool/CompositeGrammar.java b/tool/src/main/java/org/antlr/tool/CompositeGrammar.java
+index ca219a8..c6908a2 100644
+--- a/tool/src/main/java/org/antlr/tool/CompositeGrammar.java
++++ b/tool/src/main/java/org/antlr/tool/CompositeGrammar.java
+@@ -140,10 +140,12 @@ public class CompositeGrammar {
+tokenIDToTypeMap.put("UP", Utils.integer(Label.UP));
+}
+
++	@SuppressWarnings("OverridableMethodCallInConstructor")
+public CompositeGrammar() {
+initTokenSymbolTables();
+}
+
++	@SuppressWarnings("OverridableMethodCallInConstructor")
+public CompositeGrammar(Grammar g) {
+this();
+setDelegationRoot(g);
+diff --git a/tool/src/main/java/org/antlr/tool/GrammarAST.java b/tool/src/main/java/org/antlr/tool/GrammarAST.java
+index c21a405..60547df 100644
+--- a/tool/src/main/java/org/antlr/tool/GrammarAST.java
++++ b/tool/src/main/java/org/antlr/tool/GrammarAST.java
+@@ -144,10 +144,12 @@ public class GrammarAST extends CommonTree {
+
+public GrammarAST() {}
+
++	@SuppressWarnings("OverridableMethodCallInConstructor")
+public GrammarAST(int t, String txt) {
+initialize(t,txt);
+}
+
++	@SuppressWarnings("OverridableMethodCallInConstructor")
+public GrammarAST(Token token) {
+initialize(token);
+}
+

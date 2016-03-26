@@ -1,0 +1,42 @@
+commit 17a3e5a3baf7e9d9d14289892c1ff4cd10479699
+Author:     parrt <parrt@antlr.org>
+AuthorDate: Wed Jun 22 11:51:58 2011 -0800
+Commit:     parrt <parrt@antlr.org>
+CommitDate: Wed Jun 22 11:51:58 2011 -0800
+
+tweak
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8713]
+
+diff --git a/tool/src/main/antlr3/org/antlr/grammar/v3/CodeGenTreeWalker.g b/tool/src/main/antlr3/org/antlr/grammar/v3/CodeGenTreeWalker.g
+index 80e4d32..1b17fa7 100644
+--- a/tool/src/main/antlr3/org/antlr/grammar/v3/CodeGenTreeWalker.g
++++ b/tool/src/main/antlr3/org/antlr/grammar/v3/CodeGenTreeWalker.g
+@@ -1417,7 +1417,7 @@ rewrite_atom[boolean isRoot] returns [ST code=null]
+grammar,
+((GrammarAST)($r)).getToken(),
+ruleRefName);
+-				$code = new ST(); // blank; no code gen
++				$code = new ST(""); // blank; no code gen
+}
+else
+{
+@@ -1468,7 +1468,7 @@ rewrite_atom[boolean isRoot] returns [ST code=null]
+grammar,
+((GrammarAST)($start)).getToken(),
+tokenName);
+-				$code = new ST(); // blank; no code gen
++				$code = new ST(""); // blank; no code gen
+}
+}
+
+@@ -1498,7 +1498,7 @@ rewrite_atom[boolean isRoot] returns [ST code=null]
+grammar,
+((GrammarAST)($LABEL)).getToken(),
+labelName);
+-				$code = new ST();
++				$code = new ST("");
+}
+else
+{
+

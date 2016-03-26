@@ -1,0 +1,83 @@
+commit 20b9c36fb0bbbfef81f5d705b95ec05b174fd282
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Tue Feb 21 14:26:53 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Tue Feb 21 14:26:53 2012 -0600
+
+Update pom.xml to show warnings and pass "-Xlint -Xlint:-serial" to javac
+
+diff --git a/pom.xml b/pom.xml
+index 85cb983..176d19b 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -178,11 +178,16 @@
+
+<plugin>
+<artifactId>maven-compiler-plugin</artifactId>
+-                <version>2.0.2</version>
++                <version>2.3.2</version>
+<configuration>
+<source>1.6</source>
+<target>1.6</target>
+<sourceDirectory>src</sourceDirectory>
++                    <showWarnings>true</showWarnings>
++                    <compilerArguments>
++                        <Xlint/>
++                        <Xlint:-serial/>
++                    </compilerArguments>
+</configuration>
+</plugin>
+
+diff --git a/runtime/Java/pom.xml b/runtime/Java/pom.xml
+index 0631dd4..963f5db 100644
+--- a/runtime/Java/pom.xml
++++ b/runtime/Java/pom.xml
+@@ -16,7 +16,7 @@
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+<version>3.4.1-SNAPSHOT</version>
+-
++      <relativePath>../../pom.xml</relativePath>
+</parent>
+
+<name>Antlr Runtime 3.4.1-SNAPSHOT</name>
+@@ -99,10 +99,15 @@
+<plugins>
+<plugin>
+<artifactId>maven-compiler-plugin</artifactId>
+-            <version>2.0.2</version>
++            <version>2.3.2</version>
+<configuration>
+<source>1.6</source>
+<target>1.6</target>
++                <showWarnings>true</showWarnings>
++                <compilerArguments>
++                    <Xlint/>
++                    <Xlint:-serial/>
++                </compilerArguments>
+</configuration>
+</plugin>
+
+diff --git a/tool/pom.xml b/tool/pom.xml
+index 0c6f5e5..705fd0e 100644
+--- a/tool/pom.xml
++++ b/tool/pom.xml
+@@ -80,11 +80,16 @@
+
+<plugin>
+<artifactId>maven-compiler-plugin</artifactId>
+-                <version>2.0.2</version>
++                <version>2.3.2</version>
+<configuration>
+<source>1.6</source>
+<target>1.6</target>
+<sourceDirectory>src</sourceDirectory>
++                    <showWarnings>true</showWarnings>
++                    <compilerArguments>
++                        <Xlint/>
++                        <Xlint:-serial/>
++                    </compilerArguments>
+</configuration>
+</plugin>
+
+

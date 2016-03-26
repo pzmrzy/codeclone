@@ -1,0 +1,31 @@
+commit b13a1ffd87085477660b000165efa60cc0b8411b
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Nov 2 10:59:43 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Nov 2 10:59:43 2009 -0800
+
+C# Port:
+* Fix paths for unit tests
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6291]
+
+diff --git a/Antlr3.Test/BaseTest.cs b/Antlr3.Test/BaseTest.cs
+index 5d0f21e..1044441 100644
+--- a/Antlr3.Test/BaseTest.cs
++++ b/Antlr3.Test/BaseTest.cs
+@@ -97,6 +97,14 @@ namespace AntlrUnitTests
+[TestInitialize]
+public void setUp()
+{
++#if DEBUG
++            string configuration = "Debug";
++#else
++            string configuration = "Release";
++#endif
++            System.IO.DirectoryInfo currentAssemblyDirectory = new System.IO.FileInfo(typeof(BaseTest).Assembly.Location).Directory;
++            AntlrTool.ToolPathRoot = Path.Combine(currentAssemblyDirectory.Parent.Parent.Parent.FullName, @"bin\" + configuration);
++
+// new output dir for each test
+tmpdir = Path.GetFullPath( Path.Combine( Path.GetTempPath(), "antlr-" + currentTimeMillis() ) );
+
+

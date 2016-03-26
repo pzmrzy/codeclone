@@ -1,0 +1,296 @@
+commit c1780fa7f1608324b5d5b4d8ca0835344c368c64
+Author:     Benjamin Niemann <pink@odahoda.de>
+AuthorDate: Wed May 18 10:22:32 2011 -0800
+Commit:     Benjamin Niemann <pink@odahoda.de>
+CommitDate: Wed May 18 10:22:32 2011 -0800
+
+[Python] More tweaks to get the ST4 stuff working.
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8545]
+
+diff --git a/runtime/Python/tests/t044trace.py b/runtime/Python/tests/t044trace.py
+index 5b1ea79..13c9b76 100644
+--- a/runtime/Python/tests/t044trace.py
++++ b/runtime/Python/tests/t044trace.py
+@@ -6,7 +6,7 @@ import unittest
+class T(testbase.ANTLRTest):
+def setUp(self):
+self.compileGrammar(options='-trace')
+-
++
+
+def lexerClass(self, base):
+class TLexer(base):
+@@ -29,8 +29,8 @@ class T(testbase.ANTLRTest):
+raise
+
+return TLexer
+-
+-
++
++
+def parserClass(self, base):
+class TParser(base):
+def __init__(self, *args, **kwargs):
+@@ -53,10 +53,10 @@ class T(testbase.ANTLRTest):
+
+def getRuleInvocationStack(self):
+return self._getRuleInvocationStack(base.__module__)
+-
++
+return TParser
+-
+-
++
++
+def testTrace(self):
+cStream = antlr3.StringStream('< 1 + 2 + 3 >')
+lexer = self.getLexer(cStream)
+@@ -66,10 +66,10 @@ class T(testbase.ANTLRTest):
+
+self.failUnlessEqual(
+lexer.traces,
+-            [ '>T__6', '<T__6', '>WS', '<WS', '>INT', '<INT', '>WS', '<WS',
+-              '>T__8', '<T__8', '>WS', '<WS', '>INT', '<INT', '>WS', '<WS',
+-              '>T__8', '<T__8', '>WS', '<WS', '>INT', '<INT', '>WS', '<WS',
+-              '>T__7', '<T__7']
++            [ '>T__7', '<T__7', '>WS', '<WS', '>INT', '<INT', '>WS', '<WS',
++              '>T__6', '<T__6', '>WS', '<WS', '>INT', '<INT', '>WS', '<WS',
++              '>T__6', '<T__6', '>WS', '<WS', '>INT', '<INT', '>WS', '<WS',
++              '>T__8', '<T__8']
+)
+
+self.failUnlessEqual(
+@@ -77,8 +77,8 @@ class T(testbase.ANTLRTest):
+[ '>a', '>synpred1_t044trace_fragment', '<synpred1_t044trace_fragment', '>b', '>c',
+'<c', '>c', '<c', '>c', '<c', '<b', '<a' ]
+)
+-
+-
++
++
+def testInvokationStack(self):
+cStream = antlr3.StringStream('< 1 + 2 + 3 >')
+lexer = self.getLexer(cStream)
+@@ -90,7 +90,6 @@ class T(testbase.ANTLRTest):
+parser._stack,
+['a', 'b', 'c']
+)
+-
++
+if __name__ == '__main__':
+unittest.main()
+-
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Python/AST.stg b/tool/src/main/resources/org/antlr/codegen/templates/Python/AST.stg
+index ec41a71..a9252e3 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Python/AST.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Python/AST.stg
+@@ -320,7 +320,7 @@ self._adaptor.addChild(root_<enclosingTreeLevel>, root_<treeLevel>)<\n>
+rewriteElementList(elements) ::= "<elements:rewriteElement()>"
+
+rewriteElement(e) ::= <<
+-<@pregen()>
++<@pregen><@end>
+<e.el>
+>>
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Python/ASTTreeParser.stg b/tool/src/main/resources/org/antlr/codegen/templates/Python/ASTTreeParser.stg
+index 1cb0d78..718a55f 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Python/ASTTreeParser.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Python/ASTTreeParser.stg
+@@ -37,7 +37,6 @@
+*  Each combination has its own template except that label/no label
+*  is combined into tokenRef, ruleRef, ...
+*/
+-group ASTTreeParser;
+
+finishedBacktracking(block) ::= <<
+<if(backtracking)>
+@@ -115,7 +114,7 @@ _last = _save_last_<treeLevel>
+/** ID! and output=AST (same as plain tokenRef) 'cept add
+*  setting of _last
+*/
+-tokenRefBang(token,label,elementIndex) ::= <<
++tokenRefBang(token,label,elementIndex,terminalOptions) ::= <<
+_last = self.input.LT(1)
+<super.tokenRef(...)>
+>>
+@@ -189,7 +188,7 @@ if _first_<treeLevel> is None:
+// SET AST
+matchSet(s,label,terminalOptions,elementIndex,postmatchCode) ::= <<
+_last = self.input.LT(1)
+-<super.matchSet(..., postmatchCode={
++<super.matchSet(postmatchCode={
+<if(!rewriteMode)>
+<finishedBacktracking({
+<if(terminalOptions.node)>
+@@ -200,21 +199,21 @@ _last = self.input.LT(1)
+self._adaptor.addChild(root_<treeLevel>, <label>_tree)
+})>
+<endif>
+-})>
++}, ...)>
+>>
+
+matchRuleBlockSet(s,label,terminalOptions,elementIndex,postmatchCode,treeLevel="0") ::= <<
+<matchSet(...)>
+-<noRewrite()> <! set return tree !>
++<noRewrite(...)> <! set return tree !>
+>>
+
+-matchSetBang(s,label,elementIndex,postmatchCode) ::= <<
++matchSetBang(s,label,terminalOptions,elementIndex,postmatchCode) ::= <<
+_last = self.input.LT(1)
+<super.matchSet(...)>
+>>
+
+matchSetRuleRoot(s,label,terminalOptions,elementIndex,debug) ::= <<
+-<super.matchSet(..., postmatchCode={
++<super.matchSet(postmatchCode={
+<if(!rewriteMode)>
+<finishedBacktracking({
+<if(terminalOptions.node)>
+@@ -225,7 +224,7 @@ matchSetRuleRoot(s,label,terminalOptions,elementIndex,debug) ::= <<
+root_<treeLevel> = self._adaptor.becomeRoot(<label>_tree, root_<treeLevel>)
+})>
+<endif>
+-})>
++}, ...)>
+>>
+
+// RULE REF AST
+@@ -247,7 +246,7 @@ if _first_<treeLevel> is None:
+/** x+=rule auto construct */
+ruleRefAndListLabel(rule,label,elementIndex,args,scope) ::= <<
+<ruleRef(...)>
+-<listLabel(elem=label+".tree",...)>
++<listLabel(label, {<label>.tree})>
+>>
+
+/** ^(rule ...) auto construct */
+@@ -264,7 +263,7 @@ root_<treeLevel> = self._adaptor.becomeRoot(<label>.tree, root_<treeLevel>)
+/** ^(x+=rule ...) auto construct */
+ruleRefRuleRootAndListLabel(rule,label,elementIndex,args,scope) ::= <<
+<ruleRefRuleRoot(...)>
+-<listLabel(elem=label+".tree",...)>
++<listLabel(label, {<label>.tree})>
+>>
+
+/** rule when output=AST and tracking for rewrite */
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Python/ST.stg b/tool/src/main/resources/org/antlr/codegen/templates/Python/ST.stg
+index 01f8519..56c5e16 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Python/ST.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Python/ST.stg
+@@ -28,7 +28,6 @@
+/** Template subgroup to add template rewrite output
+*  If debugging, then you'll also get STDbg.stg loaded.
+*/
+-group ST;
+
+@outputFile.imports() ::= <<
+<@super.imports()>
+@@ -73,7 +72,7 @@ def getTemplateLib(self):
+/** x+=rule when output=template */
+ruleRefAndListLabel(rule,label,elementIndex,args,scope) ::= <<
+<ruleRef(...)>
+-<listLabel(elem=label+".st",...)>
++<listLabel(label, {<label>.st})>
+>>
+
+rewriteTemplate(alts) ::= <<
+@@ -81,12 +80,12 @@ rewriteTemplate(alts) ::= <<
+<if(backtracking)>
+if <actions.(actionScope).synpredgate>:
+<first(alts):rewriteTemplateAltFirst()>
+-    <rest(alts):{el<rewriteTemplateAlt()>}>
++    <rest(alts):{it | el<rewriteTemplateAlt(it)>}>
+<if(rewriteMode)><replaceTextInLine()><endif>
+
+<else>
+<first(alts):rewriteTemplateAltFirst()>
+-<rest(alts):{el<rewriteTemplateAlt()>}>
++<rest(alts):{it | el<rewriteTemplateAlt(it)>}>
+<if(rewriteMode)><replaceTextInLine()><endif>
+<endif>
+>>
+@@ -107,29 +106,27 @@ self.input.replace(
+<endif>
+>>
+
+-rewriteTemplateAltFirst() ::= <<
+-<if(it.pred)>
+-if <it.pred>:
+-    # <it.description>
+-    retval.st = <it.alt>
++rewriteTemplateAltFirst(alt) ::= <<
++<if(alt.pred)>
++if <alt.pred>:
++    # <alt.description>
++    retval.st = <alt.alt>
+<\n>
+<else>
+-# <it.description>
+-retval.st = <it.alt>
++# <alt.description>
++retval.st = <alt.alt>
+<\n>
+<endif>
+>>
+
+-rewriteTemplateAlt() ::= <<
+-<if(it.pred)>
+-if <it.pred>:
+-    # <it.description>
+-    retval.st = <it.alt>
++rewriteTemplateAlt(alt) ::= <<
++<if(alt.pred)>if <alt.pred>:
++    # <alt.description>
++    retval.st = <alt.alt>
+<\n>
+-<else>
+-se:
+-    # <it.description>
+-    retval.st = <it.alt>
++<else>se:
++    # <alt.description>
++    retval.st = <alt.alt>
+<\n>
+<endif>
+>>
+@@ -144,26 +141,19 @@ None
+*  an attribute to build a bigger template; you get a self-embedded
+*  template.
+*/
+-rewriteExternalTemplate(name,args) ::= <<
+-self.templateLib.getInstanceOf("<name>"<if(args)>,
+-    attributes={<args:{a | "<a.name>": <a.value>}; separator=", ">}<endif>)
+->>
++rewriteExternalTemplate(name,args) ::= <%
++self.templateLib.getInstanceOf("<name>"<if(args)>, attributes={<args:{a | "<a.name>": <a.value>}; separator=", ">}<endif>)
++%>
+
+/** expr is a string expression that says what template to load */
+-rewriteIndirectTemplate(expr,args) ::= <<
+-self.templateLib.getInstanceOf(<expr><if(args)>,
+-    attributes={<args:{a | "<a.name>": <a.value>}; separator=", ">}<endif>)
+->>
++rewriteIndirectTemplate(expr,args) ::= <%
++self.templateLib.getInstanceOf(<expr><if(args)>, attributes={<args:{a | "<a.name>": <a.value>}; separator=", ">}<endif>)
++%>
+
+/** Invoke an inline template with a set of attribute name/value pairs */
+-rewriteInlineTemplate(args, template) ::= <<
+-stringtemplate3.StringTemplate(
+-    "<template>",
+-    group=self.templateLib<if(args)>,
+-    attributes={<args:{a | "<a.name>": <a.value>}; separator=", ">}
+-    <endif>
+-    )
+->>
++rewriteInlineTemplate(args, template) ::= <%
++stringtemplate3.StringTemplate("<template>", group=self.templateLib<if(args)>, attributes={<args:{a | "<a.name>": <a.value>}; separator=", ">}<endif>)
++%>
+
+/** plain -> {foo} action */
+rewriteAction(action) ::= <<
+

@@ -1,0 +1,33 @@
+commit 082287865436255c3fc3d6ac894f6324eb7ab3d1
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Jun 29 19:32:56 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Jun 29 19:32:56 2011 -0800
+
+(C# 3) Merge CL8795 (CommonToken no longer caches result of input.Substring in the Text property)
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8804]
+
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime/CommonToken.cs b/runtime/CSharp3/Sources/Antlr3.Runtime/CommonToken.cs
+index adfd713..5797ca8 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime/CommonToken.cs
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime/CommonToken.cs
+@@ -114,13 +114,12 @@ namespace Antlr.Runtime
+if ( input == null )
+return null;
+
+-                if (start < input.Count && stop < input.Count)
+-                text = input.Substring( start, stop - start + 1 );
+-                else
+-                    text = "<EOF>";
++                if (start <= stop && stop < input.Count)
++                    return input.Substring( start, stop - start + 1 );
+
+-                return text;
++                return "<EOF>";
+}
++
+set
+{
+/** Override the text for this token.  getText() will return this text
+

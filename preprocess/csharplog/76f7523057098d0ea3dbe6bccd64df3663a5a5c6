@@ -1,0 +1,15 @@
+commit 76f7523057098d0ea3dbe6bccd64df3663a5a5c6
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Fri Apr 10 09:57:13 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Fri Apr 10 09:57:13 2009 -0800
+
+C# Port:
+* Check in fake signing keys
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6019]
+
+diff --git a/Antlr3/Key.snk b/Antlr3/Key.snk
+new file mode 100644
+index 0000000..e69de29
+

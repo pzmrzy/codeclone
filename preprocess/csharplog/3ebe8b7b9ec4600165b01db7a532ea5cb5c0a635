@@ -1,0 +1,62 @@
+commit 3ebe8b7b9ec4600165b01db7a532ea5cb5c0a635
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Feb 9 20:36:03 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Feb 9 20:36:03 2011 -0800
+
+(C# 3) Don't emit separator when no write instruction is issued when evaluating an iterated value
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7657]
+
+diff --git a/Antlr4.StringTemplate/Interpreter.cs b/Antlr4.StringTemplate/Interpreter.cs
+index f4372f8..e439759 100644
+--- a/Antlr4.StringTemplate/Interpreter.cs
++++ b/Antlr4.StringTemplate/Interpreter.cs
+@@ -112,6 +112,8 @@ namespace Antlr4.StringTemplate
+
+private IDictionary<Template, List<InterpEvent>> debugInfo;
+
++        private int _writeCount;
++
+public Interpreter(TemplateGroup group)
+: this(group, CultureInfo.CurrentCulture, group.ErrorManager)
+{
+@@ -756,20 +758,20 @@ namespace Antlr4.StringTemplate
+string separator = null;
+if (options != null)
+separator = options[(int)Option.Separator];
+-            bool seenAValue = false;
++            bool sawValue = false;
+while (it.hasNext())
+{
+object iterValue = it.next();
++                if (iterValue == null && options != null && options[(int)Option.Null] == null)
++                    continue;
++
+// Emit separator if we're beyond first value
+-                bool needSeparator = seenAValue &&
+-                    separator != null &&            // we have a separator and
+-                    (iterValue != null ||           // either we have a value
+-                        options[(int)Option.Null] != null); // or no value but null option
+-                if (needSeparator)
++                if (sawValue && separator != null)
+n += @out.WriteSeparator(separator);
++
++                int emptyWriteCount = _writeCount;
+int nw = WriteObject(@out, self, iterValue, options);
+-                if (nw > 0)
+-                    seenAValue = true;
++                sawValue = _writeCount > emptyWriteCount;
+n += nw;
+}
+return n;
+@@ -777,6 +779,8 @@ namespace Antlr4.StringTemplate
+
+protected virtual int WritePlainObject(ITemplateWriter @out, object o, string[] options)
+{
++            _writeCount++;
++
+string formatString = null;
+if (options != null)
+formatString = options[(int)Option.Format];
+

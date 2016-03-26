@@ -1,0 +1,22 @@
+commit 7d4365eb89475d011642c4a733d76f177b5b4e95
+Author:     Ivan Brezina <ibre5041@ibrezina.net>
+AuthorDate: Mon Apr 15 17:43:04 2013 +0200
+Commit:     Ivan Brezina <ibre5041@ibrezina.net>
+CommitDate: Wed Jun 26 15:50:11 2013 +0200
+
+typename fix
+
+diff --git a/runtime/Cpp/include/antlr3commontreeadaptor.hpp b/runtime/Cpp/include/antlr3commontreeadaptor.hpp
+index bac40c9..8b40f1c 100755
+--- a/runtime/Cpp/include/antlr3commontreeadaptor.hpp
++++ b/runtime/Cpp/include/antlr3commontreeadaptor.hpp
+@@ -45,7 +45,7 @@ public:
+typedef typename ImplTraits::TreeType TreeType;
+typedef	TreeType TokenType;
+typedef typename ImplTraits::CommonTokenType CommonTokenType;
+-	typedef typename ImplTraits::DebugEventListener DebuggerType;
++	typedef typename ImplTraits::DebugEventListenerType DebuggerType;
+
+public:
+//The parameter is there only to provide uniform constructor interface
+

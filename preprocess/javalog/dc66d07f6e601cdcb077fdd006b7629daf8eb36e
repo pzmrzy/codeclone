@@ -1,0 +1,11 @@
+commit dc66d07f6e601cdcb077fdd006b7629daf8eb36e
+Merge: 59c7ab3 8cd02f6
+Author:     Terence Parr <parrt@cs.usfca.edu>
+AuthorDate: Fri Feb 10 10:07:50 2012 -0800
+Commit:     Terence Parr <parrt@cs.usfca.edu>
+CommitDate: Fri Feb 10 10:07:50 2012 -0800
+
+Merge pull request #1 from Zannick/python-templates
+
+I  confirm that Zannick/Benjamin Wolf has submitted the same patch through the click wrap license on ANTLR.org.  it is license clean to merge.
+

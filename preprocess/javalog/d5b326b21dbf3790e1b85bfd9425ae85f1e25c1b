@@ -1,0 +1,31 @@
+commit d5b326b21dbf3790e1b85bfd9425ae85f1e25c1b
+Author:     Jim Idle <jimi@temporal-wave.com>
+AuthorDate: Thu Jun 23 11:59:01 2011 -0800
+Commit:     Jim Idle <jimi@temporal-wave.com>
+CommitDate: Thu Jun 23 11:59:01 2011 -0800
+
+Remove the reference to the C codegen .sti file as this is no longer required in ST4
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8750]
+
+diff --git a/runtime/C/C.vcproj b/runtime/C/C.vcproj
+index 2d4d94d..16d9c2b 100644
+--- a/runtime/C/C.vcproj
++++ b/runtime/C/C.vcproj
+@@ -979,15 +979,6 @@
+RelativePath="..\..\tool\src\main\resources\org\antlr\codegen\templates\C\Dbg.stg"
+>
+</File>
+-			<Filter
+-				Name="Interfaces"
+-				Filter="*.sti"
+-				>
+-				<File
+-					RelativePath="..\..\tool\src\main\resources\org\antlr\codegen\templates\ANTLRCore.sti"
+-					>
+-				</File>
+-			</Filter>
+</Filter>
+<Filter
+Name="Java"
+

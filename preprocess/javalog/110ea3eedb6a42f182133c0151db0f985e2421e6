@@ -1,0 +1,31 @@
+commit 110ea3eedb6a42f182133c0151db0f985e2421e6
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Thu Aug 4 12:11:12 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Thu Aug 4 12:11:12 2011 -0800
+
+(C# 2, 3) Fix NullReferenceException in tree parsers
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 9001]
+
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime/Tree/TreeParser.cs b/runtime/CSharp3/Sources/Antlr3.Runtime/Tree/TreeParser.cs
+index 927ee23..f5a1508 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime/Tree/TreeParser.cs
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime/Tree/TreeParser.cs
+@@ -58,13 +58,13 @@ namespace Antlr.Runtime.Tree
+public TreeParser( ITreeNodeStream input )
+: base() // highlight that we go to super to set state object
+{
+-            SetTreeNodeStream( input );
++            this.input = input;
+}
+
+public TreeParser( ITreeNodeStream input, RecognizerSharedState state )
+: base( state ) // share the state object with another parser
+{
+-            SetTreeNodeStream( input );
++            this.input = input;
+}
+
+public override void Reset()
+

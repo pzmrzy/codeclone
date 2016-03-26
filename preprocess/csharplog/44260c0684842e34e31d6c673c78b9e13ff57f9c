@@ -1,0 +1,49 @@
+commit 44260c0684842e34e31d6c673c78b9e13ff57f9c
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Jan 31 15:41:31 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Jan 31 15:41:31 2011 -0800
+
+(C# 3) Merge CL7542
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7589]
+
+diff --git a/Antlr4.StringTemplate/Misc/ErrorManager.cs b/Antlr4.StringTemplate/Misc/ErrorManager.cs
+index 9dc8aaf..418d331 100644
+--- a/Antlr4.StringTemplate/Misc/ErrorManager.cs
++++ b/Antlr4.StringTemplate/Misc/ErrorManager.cs
+@@ -37,9 +37,6 @@ namespace Antlr4.StringTemplate.Misc
+using Exception = System.Exception;
+using Path = System.IO.Path;
+
+-    /** Track errors per thread; e.g., one server transaction's errors
+-     *  will go in one grouping since each has it's own thread.
+-     */
+public class ErrorManager
+{
+public static ITemplateErrorListener DEFAULT_ERROR_LISTENER = new DefaultErrorListener();
+@@ -83,23 +80,6 @@ namespace Antlr4.StringTemplate.Misc
+}
+}
+
+-        /** As we parse group file, there is no embedded context.
+-         *  We read entire templates (e.g., <<...>>) as single
+-         *  tokens and so errors can use the line/charPos of the
+-         *  GroupLexer.  To parse templates during CodeGenerator pass,
+-         *  we must assume templates start at charPos=0 even when they
+-         *  start in middle of line:
+-         *
+-         *  t() ::= <<foo>>
+-         *
+-         *  Here, the template starts at charPos 10, but the TemplateLexer
+-         *  thinks that the charPos is 0.  If we want to get correct
+-         *  error info, we push the template token onto the context
+-         *  stack and then all errors are relative to that.  Should
+-         *  only be 0 or 1 deep, but it's general.
+-         */
+-        //public Stack<Token> context = new Stack<Token>();
+-
+private readonly ITemplateErrorListener listener;
+
+public ErrorManager()
+

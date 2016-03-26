@@ -1,0 +1,990 @@
+commit 74fc8e46350c3d8ade361c3bac7978722c1d4cc6
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sat Apr 18 12:06:18 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sat Apr 18 12:06:18 2009 -0800
+
+C# Port
+* Code cleanup, use C# properties
+* Fix a couple StringTemplate unit tests and improve StringTemplate error messages
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6052]
+
+diff --git a/Antlr3.StringTemplate/Language/ActionLexer.cs b/Antlr3.StringTemplate/Language/ActionLexer.cs
+index 5d9b89b..fa35950 100644
+--- a/Antlr3.StringTemplate/Language/ActionLexer.cs
++++ b/Antlr3.StringTemplate/Language/ActionLexer.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Language\\Action.g3 2009-04-17 13:45:46
++// $ANTLR 3.1.2 Language\\Action.g3 2009-04-18 13:36:20
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -690,9 +690,9 @@ public partial class ActionLexer : Lexer
+case 3:
+// Language\\Action.g3:379:5: ESC_CHAR[out uc, false]
+{
+-					int ESC_CHAR1Start300 = GetCharIndex();
++					int ESC_CHAR1Start300 = CharIndex;
+mESC_CHAR(out uc, false); if (state.failed) return ;
+-					ESC_CHAR1 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ESC_CHAR1Start300, GetCharIndex()-1);
++					ESC_CHAR1 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ESC_CHAR1Start300, CharIndex-1);
+if ( state.backtracking == 0 )
+{
+builder.Append( (ESC_CHAR1!=null?ESC_CHAR1.Text:null) );
+@@ -790,9 +790,9 @@ public partial class ActionLexer : Lexer
+
+}
+
+-			int aStart368 = GetCharIndex();
++			int aStart368 = CharIndex;
+mID(); if (state.failed) return ;
+-			a = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, aStart368, GetCharIndex()-1);
++			a = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, aStart368, CharIndex-1);
+if ( state.backtracking == 0 )
+{
+args.Add((a!=null?a.Text:null));
+@@ -916,9 +916,9 @@ public partial class ActionLexer : Lexer
+
+}
+
+-					int a2Start390 = GetCharIndex();
++					int a2Start390 = CharIndex;
+mID(); if (state.failed) return ;
+-					a2 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, a2Start390, GetCharIndex()-1);
++					a2 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, a2Start390, CharIndex-1);
+if ( state.backtracking == 0 )
+{
+args.Add((a2!=null?a2.Text:null));
+@@ -1025,9 +1025,9 @@ public partial class ActionLexer : Lexer
+case 3:
+// Language\\Action.g3:417:5: ESC_CHAR[out uc, false]
+{
+-					int ESC_CHAR2Start460 = GetCharIndex();
++					int ESC_CHAR2Start460 = CharIndex;
+mESC_CHAR(out uc, false); if (state.failed) return ;
+-					ESC_CHAR2 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ESC_CHAR2Start460, GetCharIndex()-1);
++					ESC_CHAR2 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ESC_CHAR2Start460, CharIndex-1);
+if ( state.backtracking == 0 )
+{
+builder.Append((ESC_CHAR2!=null?ESC_CHAR2.Text:null));
+diff --git a/Antlr3.StringTemplate/Language/AngleBracketTemplateLexer.cs b/Antlr3.StringTemplate/Language/AngleBracketTemplateLexer.cs
+index 17bdc83..6fd604b 100644
+--- a/Antlr3.StringTemplate/Language/AngleBracketTemplateLexer.cs
++++ b/Antlr3.StringTemplate/Language/AngleBracketTemplateLexer.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Language\\AngleBracketTemplateLexer.g3 2009-04-17 13:45:31
++// $ANTLR 3.1.2 Language\\AngleBracketTemplateLexer.g3 2009-04-18 13:36:15
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -357,9 +357,9 @@ public partial class AngleBracketTemplateLexer : Lexer
+
+
+Match('('); if (state.failed) return ;
+-					int expStart171 = GetCharIndex();
++					int expStart171 = CharIndex;
+mIF_EXPR(); if (state.failed) return ;
+-					exp = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, expStart171, GetCharIndex()-1);
++					exp = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, expStart171, CharIndex-1);
+Match(")>"); if (state.failed) return ;
+
+// Language\\AngleBracketTemplateLexer.g3:110:4: ( ( '\\r' )? '\\n' )?
+@@ -450,9 +450,9 @@ public partial class AngleBracketTemplateLexer : Lexer
+
+
+Match('('); if (state.failed) return ;
+-					int expStart220 = GetCharIndex();
++					int expStart220 = CharIndex;
+mIF_EXPR(); if (state.failed) return ;
+-					exp = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, expStart220, GetCharIndex()-1);
++					exp = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, expStart220, CharIndex-1);
+Match(")>"); if (state.failed) return ;
+
+// Language\\AngleBracketTemplateLexer.g3:117:4: ( ( '\\r' )? '\\n' )?
+@@ -1309,9 +1309,9 @@ public partial class AngleBracketTemplateLexer : Lexer
+case 2:
+// Language\\AngleBracketTemplateLexer.g3:196:5: ind= INDENT
+{
+-					int indStart686 = GetCharIndex();
++					int indStart686 = CharIndex;
+mINDENT(); if (state.failed) return ;
+-					ind = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, indStart686, GetCharIndex()-1);
++					ind = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, indStart686, CharIndex-1);
+if ( state.backtracking == 0 )
+{
+
+@@ -1487,9 +1487,9 @@ public partial class AngleBracketTemplateLexer : Lexer
+case 1:
+// Language\\AngleBracketTemplateLexer.g3:237:6: ESC
+{
+-					int ESC1Start766 = GetCharIndex();
++					int ESC1Start766 = CharIndex;
+mESC(); if (state.failed) return ;
+-					ESC1 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ESC1Start766, GetCharIndex()-1);
++					ESC1 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ESC1Start766, CharIndex-1);
+if ( state.backtracking == 0 )
+{
+builder.Append((ESC1!=null?ESC1.Text:null));
+@@ -1500,9 +1500,9 @@ public partial class AngleBracketTemplateLexer : Lexer
+case 2:
+// Language\\AngleBracketTemplateLexer.g3:238:5: st= SUBTEMPLATE
+{
+-					int stStart784 = GetCharIndex();
++					int stStart784 = CharIndex;
+mSUBTEMPLATE(); if (state.failed) return ;
+-					st = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, stStart784, GetCharIndex()-1);
++					st = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, stStart784, CharIndex-1);
+if ( state.backtracking == 0 )
+{
+builder.Append((st!=null?st.Text:null));
+@@ -1598,9 +1598,9 @@ public partial class AngleBracketTemplateLexer : Lexer
+case 2:
+// Language\\AngleBracketTemplateLexer.g3:243:6: st= SUBTEMPLATE
+{
+-						int stStart850 = GetCharIndex();
++						int stStart850 = CharIndex;
+mSUBTEMPLATE(); if (state.failed) return ;
+-						st = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, stStart850, GetCharIndex()-1);
++						st = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, stStart850, CharIndex-1);
+if ( state.backtracking == 0 )
+{
+builder.Append((st!=null?st.Text:null));
+@@ -1731,9 +1731,9 @@ public partial class AngleBracketTemplateLexer : Lexer
+case 1:
+// Language\\AngleBracketTemplateLexer.g3:260:5: ESC
+{
+-						int ESC2Start943 = GetCharIndex();
++						int ESC2Start943 = CharIndex;
+mESC(); if (state.failed) return ;
+-						ESC2 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ESC2Start943, GetCharIndex()-1);
++						ESC2 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ESC2Start943, CharIndex-1);
+if ( state.backtracking == 0 )
+{
+builder.Append((ESC2!=null?ESC2.Text:null));
+@@ -2119,18 +2119,18 @@ public partial class AngleBracketTemplateLexer : Lexer
+// Language\\AngleBracketTemplateLexer.g3:304:5: 'u' a= HEX b= HEX c= HEX d= HEX
+{
+Match('u'); if (state.failed) return ;
+-				int aStart1191 = GetCharIndex();
++				int aStart1191 = CharIndex;
+mHEX(); if (state.failed) return ;
+-				a = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, aStart1191, GetCharIndex()-1);
+-				int bStart1195 = GetCharIndex();
++				a = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, aStart1191, CharIndex-1);
++				int bStart1195 = CharIndex;
+mHEX(); if (state.failed) return ;
+-				b = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, bStart1195, GetCharIndex()-1);
+-				int cStart1199 = GetCharIndex();
++				b = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, bStart1195, CharIndex-1);
++				int cStart1199 = CharIndex;
+mHEX(); if (state.failed) return ;
+-				c = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, cStart1199, GetCharIndex()-1);
+-				int dStart1203 = GetCharIndex();
++				c = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, cStart1199, CharIndex-1);
++				int dStart1203 = CharIndex;
+mHEX(); if (state.failed) return ;
+-				d = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, dStart1203, GetCharIndex()-1);
++				d = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, dStart1203, CharIndex-1);
+if ( state.backtracking == 0 )
+{
+uc = (char)int.Parse((a!=null?a.Text:null)+(b!=null?b.Text:null)+(c!=null?c.Text:null)+(d!=null?d.Text:null), System.Globalization.NumberStyles.AllowHexSpecifier);
+diff --git a/Antlr3.StringTemplate/Language/Group.g3 b/Antlr3.StringTemplate/Language/Group.g3
+index 277bc9a..ae6a21e 100644
+--- a/Antlr3.StringTemplate/Language/Group.g3
++++ b/Antlr3.StringTemplate/Language/Group.g3
+@@ -311,7 +311,7 @@ STRING
+BIGSTRING
+:	'<<' ('\\>' | '\\' ~'>' | '>' ~'>' | ~('\\'|'>'))* '>>'
+{
+-			System.Text.StringBuilder builder = new System.Text.StringBuilder( input.substring( state.tokenStartCharIndex + 2, GetCharIndex() - 3 ) );
++			System.Text.StringBuilder builder = new System.Text.StringBuilder( input.substring( state.tokenStartCharIndex + 2, CharIndex - 3 ) );
+$text = ProcessBigString( builder );
+}
+;
+@@ -324,7 +324,7 @@ ANONYMOUS_TEMPLATE
+)*
+'}'
+{
+-			System.Text.StringBuilder builder = new System.Text.StringBuilder( input.substring( state.tokenStartCharIndex + 1, GetCharIndex() - 2 ) );
++			System.Text.StringBuilder builder = new System.Text.StringBuilder( input.substring( state.tokenStartCharIndex + 1, CharIndex - 2 ) );
+$text = ProcessAnonymousTemplate( builder );
+}
+;
+diff --git a/Antlr3.StringTemplate/Language/GroupLexer.cs b/Antlr3.StringTemplate/Language/GroupLexer.cs
+index 0fed145..7e6804a 100644
+--- a/Antlr3.StringTemplate/Language/GroupLexer.cs
++++ b/Antlr3.StringTemplate/Language/GroupLexer.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Language\\Group.g3 2009-03-23 18:22:46
++// $ANTLR 3.1.2 Language\\Group.g3 2009-04-18 13:37:02
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -444,7 +444,7 @@ public partial class GroupLexer : Lexer
+Match(">>");
+
+
+-						System.Text.StringBuilder builder = new System.Text.StringBuilder( input.substring( state.tokenStartCharIndex + 2, GetCharIndex() - 3 ) );
++						System.Text.StringBuilder builder = new System.Text.StringBuilder( input.substring( state.tokenStartCharIndex + 2, CharIndex - 3 ) );
+Text = ProcessBigString( builder );
+
+
+@@ -536,7 +536,7 @@ public partial class GroupLexer : Lexer
+
+Match('}');
+
+-						System.Text.StringBuilder builder = new System.Text.StringBuilder( input.substring( state.tokenStartCharIndex + 1, GetCharIndex() - 2 ) );
++						System.Text.StringBuilder builder = new System.Text.StringBuilder( input.substring( state.tokenStartCharIndex + 1, CharIndex - 2 ) );
+Text = ProcessAnonymousTemplate( builder );
+
+
+diff --git a/Antlr3.StringTemplate/Language/GroupParserHelper.cs b/Antlr3.StringTemplate/Language/GroupParserHelper.cs
+index 45a2f3a..bf6f9a2 100644
+--- a/Antlr3.StringTemplate/Language/GroupParserHelper.cs
++++ b/Antlr3.StringTemplate/Language/GroupParserHelper.cs
+@@ -45,7 +45,10 @@ namespace Antlr3.ST.Language
+{
+if ( _group != null )
+{
+-                _group.Error( "template group parse error", e );
++                string header = GetErrorHeader( e );
++                string message = GetErrorMessage( e, TokenNames );
++                message = string.Format( "{0}: {1}: {2}", "template group parse error", header, message );
++                _group.Error( message, e );
+}
+else
+{
+diff --git a/Antlr3.StringTemplate/Language/TemplateLexer.cs b/Antlr3.StringTemplate/Language/TemplateLexer.cs
+index 22fa08c..6c2c961 100644
+--- a/Antlr3.StringTemplate/Language/TemplateLexer.cs
++++ b/Antlr3.StringTemplate/Language/TemplateLexer.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Language\\Template.g3 2009-04-17 13:45:38
++// $ANTLR 3.1.2 Language\\Template.g3 2009-04-18 13:36:17
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -465,9 +465,9 @@ public partial class TemplateLexer : Lexer
+
+
+Match('('); if (state.failed) return ;
+-					int expStart206 = GetCharIndex();
++					int expStart206 = CharIndex;
+mIF_EXPR(); if (state.failed) return ;
+-					exp = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, expStart206, GetCharIndex()-1);
++					exp = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, expStart206, CharIndex-1);
+Match(")$"); if (state.failed) return ;
+
+if ( state.backtracking == 0 )
+@@ -558,9 +558,9 @@ public partial class TemplateLexer : Lexer
+
+
+Match('('); if (state.failed) return ;
+-					int expStart265 = GetCharIndex();
++					int expStart265 = CharIndex;
+mIF_EXPR(); if (state.failed) return ;
+-					exp = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, expStart265, GetCharIndex()-1);
++					exp = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, expStart265, CharIndex-1);
+Match(")$"); if (state.failed) return ;
+
+if ( state.backtracking == 0 )
+@@ -1399,9 +1399,9 @@ public partial class TemplateLexer : Lexer
+case 2:
+// Language\\Template.g3:375:5: ind= INDENT
+{
+-					int indStart759 = GetCharIndex();
++					int indStart759 = CharIndex;
+mINDENT(); if (state.failed) return ;
+-					ind = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, indStart759, GetCharIndex()-1);
++					ind = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, indStart759, CharIndex-1);
+if ( state.backtracking == 0 )
+{
+
+@@ -1520,9 +1520,9 @@ public partial class TemplateLexer : Lexer
+case 1:
+// Language\\Template.g3:408:6: ESC
+{
+-					int ESC1Start821 = GetCharIndex();
++					int ESC1Start821 = CharIndex;
+mESC(); if (state.failed) return ;
+-					ESC1 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ESC1Start821, GetCharIndex()-1);
++					ESC1 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ESC1Start821, CharIndex-1);
+if ( state.backtracking == 0 )
+{
+builder.Append((ESC1!=null?ESC1.Text:null));
+@@ -1533,9 +1533,9 @@ public partial class TemplateLexer : Lexer
+case 2:
+// Language\\Template.g3:409:5: st= SUBTEMPLATE
+{
+-					int stStart837 = GetCharIndex();
++					int stStart837 = CharIndex;
+mSUBTEMPLATE(); if (state.failed) return ;
+-					st = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, stStart837, GetCharIndex()-1);
++					st = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, stStart837, CharIndex-1);
+if ( state.backtracking == 0 )
+{
+builder.Append((st!=null?st.Text:null));
+@@ -1631,9 +1631,9 @@ public partial class TemplateLexer : Lexer
+case 2:
+// Language\\Template.g3:414:6: st= SUBTEMPLATE
+{
+-						int stStart895 = GetCharIndex();
++						int stStart895 = CharIndex;
+mSUBTEMPLATE(); if (state.failed) return ;
+-						st = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, stStart895, GetCharIndex()-1);
++						st = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, stStart895, CharIndex-1);
+if ( state.backtracking == 0 )
+{
+builder.Append((st!=null?st.Text:null));
+@@ -1764,9 +1764,9 @@ public partial class TemplateLexer : Lexer
+case 1:
+// Language\\Template.g3:431:5: ESC
+{
+-						int ESC2Start981 = GetCharIndex();
++						int ESC2Start981 = CharIndex;
+mESC(); if (state.failed) return ;
+-						ESC2 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ESC2Start981, GetCharIndex()-1);
++						ESC2 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ESC2Start981, CharIndex-1);
+if ( state.backtracking == 0 )
+{
+builder.Append((ESC2!=null?ESC2.Text:null));
+@@ -2223,18 +2223,18 @@ public partial class TemplateLexer : Lexer
+{
+Match("\\u"); if (state.failed) return ;
+
+-				int aStart1192 = GetCharIndex();
++				int aStart1192 = CharIndex;
+mHEX(); if (state.failed) return ;
+-				a = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, aStart1192, GetCharIndex()-1);
+-				int bStart1196 = GetCharIndex();
++				a = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, aStart1192, CharIndex-1);
++				int bStart1196 = CharIndex;
+mHEX(); if (state.failed) return ;
+-				b = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, bStart1196, GetCharIndex()-1);
+-				int cStart1200 = GetCharIndex();
++				b = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, bStart1196, CharIndex-1);
++				int cStart1200 = CharIndex;
+mHEX(); if (state.failed) return ;
+-				c = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, cStart1200, GetCharIndex()-1);
+-				int dStart1204 = GetCharIndex();
++				c = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, cStart1200, CharIndex-1);
++				int dStart1204 = CharIndex;
+mHEX(); if (state.failed) return ;
+-				d = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, dStart1204, GetCharIndex()-1);
++				d = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, dStart1204, CharIndex-1);
+if ( state.backtracking == 0 )
+{
+uc = (char)int.Parse((a!=null?a.Text:null)+(b!=null?b.Text:null)+(c!=null?c.Text:null)+(d!=null?d.Text:null), System.Globalization.NumberStyles.AllowHexSpecifier);
+diff --git a/Antlr3.StringTemplate/Language/TemplateLexerHelper.cs b/Antlr3.StringTemplate/Language/TemplateLexerHelper.cs
+index 444c77b..234f575 100644
+--- a/Antlr3.StringTemplate/Language/TemplateLexerHelper.cs
++++ b/Antlr3.StringTemplate/Language/TemplateLexerHelper.cs
+@@ -41,6 +41,14 @@ namespace Antlr3.ST.Language
+protected string currentIndent = null;
+protected StringTemplate self;
+
++        public override string[] TokenNames
++        {
++            get
++            {
++                return TemplateParser.tokenNames;
++            }
++        }
++
+public TemplateLexer( StringTemplate self, TextReader r )
+: this( new ANTLRReaderStream( r ) )
+{
+@@ -49,7 +57,10 @@ namespace Antlr3.ST.Language
+
+public override void ReportError( RecognitionException e )
+{
+-            self.Error( "$...$ chunk lexer error", e );
++            string header = GetErrorHeader( e );
++            string message = GetErrorMessage( e, TokenNames );
++            message = string.Format( "{0}: {1}: {2}", "$...$ chunk lexer error", header, message );
++            self.Error( message, e );
+}
+
+bool UpcomingAtEND( int i )
+diff --git a/Antlr3.Test/StringTemplateTests.cs b/Antlr3.Test/StringTemplateTests.cs
+index b299a71..63a298b 100644
+--- a/Antlr3.Test/StringTemplateTests.cs
++++ b/Antlr3.Test/StringTemplateTests.cs
+@@ -1362,15 +1362,11 @@ namespace AntlrUnitTests
+IStringTemplateErrorListener errors = new ErrorBuffer();
+group.ErrorListener = errors;
+StringTemplate t = new StringTemplate( group, "stuff $a then more junk etc..." );
+-            string expectingError = "problem parsing template 'anonymous': line 1:31: expecting '$', found '<EOF>'";
++            //string expectingError = "problem parsing template 'anonymous': line 1:31: expecting '$', found '<EOF>'";
++            string expectingError = "$...$ chunk lexer error: line 1:31: mismatched character '<EOF>' expecting '$':";
+//System.out.println("error: '"+errors+"'");
+//System.out.println("expecting: '"+expectingError+"'");
+-#if false
+Assert.IsTrue( errors.ToString().StartsWith( expectingError ) );
+-#else
+-            if ( !errors.ToString().StartsWith( expectingError ) )
+-                Assert.Inconclusive( "Antlr v3 parse errors are in a different format." );
+-#endif
+}
+
+[TestMethod]
+@@ -5357,13 +5353,9 @@ namespace AntlrUnitTests
+new StringTemplateGroup( new StringReader( templates ),
+typeof( DefaultTemplateLexer ),
+errors );
+-            string expecting = "template group parse error: line 2:1: unexpected token:";
+-#if false
++            //string expecting = "template group parse error: line 2:1: unexpected token:";
++            string expecting = "template group parse error: line 2:1: required (...)+ loop did not match anything at input 'a':";
+Assert.IsTrue( errors.ToString().StartsWith( expecting ) );
+-#else
+-            if ( !errors.ToString().StartsWith( expecting ) )
+-                Assert.Inconclusive( "Antlr v3 parse errors are in a different format." );
+-#endif
+}
+
+[TestMethod]
+diff --git a/Antlr3/Grammars/ANTLRLexer.cs b/Antlr3/Grammars/ANTLRLexer.cs
+index 0fb744f..02edd9e 100644
+--- a/Antlr3/Grammars/ANTLRLexer.cs
++++ b/Antlr3/Grammars/ANTLRLexer.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Grammars\\ANTLR.g3 2009-04-17 13:46:21
++// $ANTLR 3.1.2 Grammars\\ANTLR.g3 2009-04-18 13:36:25
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -2142,9 +2142,9 @@ public partial class ANTLRLexer : Lexer
+case 3:
+// Grammars\\ANTLR.g3:997:5: ACTION_STRING_LITERAL
+{
+-					int ACTION_STRING_LITERAL1Start857 = GetCharIndex();
++					int ACTION_STRING_LITERAL1Start857 = CharIndex;
+mACTION_STRING_LITERAL(); if (state.failed) return ;
+-					ACTION_STRING_LITERAL1 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ACTION_STRING_LITERAL1Start857, GetCharIndex()-1);
++					ACTION_STRING_LITERAL1 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ACTION_STRING_LITERAL1Start857, CharIndex-1);
+if ( state.backtracking == 0 )
+{
+builder.Append((ACTION_STRING_LITERAL1!=null?ACTION_STRING_LITERAL1.Text:null));
+@@ -2155,9 +2155,9 @@ public partial class ANTLRLexer : Lexer
+case 4:
+// Grammars\\ANTLR.g3:998:5: ACTION_CHAR_LITERAL
+{
+-					int ACTION_CHAR_LITERAL2Start865 = GetCharIndex();
++					int ACTION_CHAR_LITERAL2Start865 = CharIndex;
+mACTION_CHAR_LITERAL(); if (state.failed) return ;
+-					ACTION_CHAR_LITERAL2 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ACTION_CHAR_LITERAL2Start865, GetCharIndex()-1);
++					ACTION_CHAR_LITERAL2 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ACTION_CHAR_LITERAL2Start865, CharIndex-1);
+if ( state.backtracking == 0 )
+{
+builder.Append((ACTION_CHAR_LITERAL2!=null?ACTION_CHAR_LITERAL2.Text:null));
+@@ -2867,13 +2867,13 @@ public partial class ANTLRLexer : Lexer
+Match("src"); if (state.failed) return ;
+
+Match(' '); if (state.failed) return ;
+-			int fileStart1270 = GetCharIndex();
++			int fileStart1270 = CharIndex;
+mACTION_STRING_LITERAL(); if (state.failed) return ;
+-			file = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, fileStart1270, GetCharIndex()-1);
++			file = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, fileStart1270, CharIndex-1);
+Match(' '); if (state.failed) return ;
+-			int lineStart1276 = GetCharIndex();
++			int lineStart1276 = CharIndex;
+mINT(); if (state.failed) return ;
+-			line = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, lineStart1276, GetCharIndex()-1);
++			line = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, lineStart1276, CharIndex-1);
+if ( state.backtracking == 0 )
+{
+
+diff --git a/Antlr3/Grammars/ActionAnalysisLexer.cs b/Antlr3/Grammars/ActionAnalysisLexer.cs
+index a0f2cee..4bf0b01 100644
+--- a/Antlr3/Grammars/ActionAnalysisLexer.cs
++++ b/Antlr3/Grammars/ActionAnalysisLexer.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Grammars\\ActionAnalysisLexer.g3 2009-04-17 13:46:13
++// $ANTLR 3.1.2 Grammars\\ActionAnalysisLexer.g3 2009-04-18 13:36:23
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -148,13 +148,13 @@ public partial class ActionAnalysisLexer : Lexer
+// Grammars\\ActionAnalysisLexer.g3:92:4: '$' x= ID '.' y= ID {...}?
+{
+Match('$'); if (state.failed) return ;
+-			int xStart57 = GetCharIndex();
++			int xStart57 = CharIndex;
+mID(); if (state.failed) return ;
+-			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart57, GetCharIndex()-1);
++			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart57, CharIndex-1);
+Match('.'); if (state.failed) return ;
+-			int yStart63 = GetCharIndex();
++			int yStart63 = CharIndex;
+mID(); if (state.failed) return ;
+-			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart63, GetCharIndex()-1);
++			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart63, CharIndex-1);
+if ( !((enclosingRule!=null)) )
+{
+if (state.backtracking>0) {state.failed=true; return ;}
+@@ -226,9 +226,9 @@ public partial class ActionAnalysisLexer : Lexer
+// Grammars\\ActionAnalysisLexer.g3:135:4: '$' ID {...}?
+{
+Match('$'); if (state.failed) return ;
+-			int ID1Start84 = GetCharIndex();
++			int ID1Start84 = CharIndex;
+mID(); if (state.failed) return ;
+-			ID1 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ID1Start84, GetCharIndex()-1);
++			ID1 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ID1Start84, CharIndex-1);
+if ( !((enclosingRule!=null && enclosingRule.GetRuleLabel((ID1!=null?ID1.Text:null))!=null)) )
+{
+if (state.backtracking>0) {state.failed=true; return ;}
+@@ -266,9 +266,9 @@ public partial class ActionAnalysisLexer : Lexer
+// Grammars\\ActionAnalysisLexer.g3:144:4: '$' ID {...}?
+{
+Match('$'); if (state.failed) return ;
+-			int ID2Start106 = GetCharIndex();
++			int ID2Start106 = CharIndex;
+mID(); if (state.failed) return ;
+-			ID2 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ID2Start106, GetCharIndex()-1);
++			ID2 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ID2Start106, CharIndex-1);
+if ( !((enclosingRule!=null && enclosingRule.GetLocalAttributeScope((ID2!=null?ID2.Text:null))!=null)) )
+{
+if (state.backtracking>0) {state.failed=true; return ;}
+diff --git a/Antlr3/Grammars/ActionTranslator.cs b/Antlr3/Grammars/ActionTranslator.cs
+index 5cd219e..865f7fc 100644
+--- a/Antlr3/Grammars/ActionTranslator.cs
++++ b/Antlr3/Grammars/ActionTranslator.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Grammars\\ActionTranslator.g3 2009-04-17 13:46:04
++// $ANTLR 3.1.2 Grammars\\ActionTranslator.g3 2009-04-18 13:36:22
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -173,13 +173,13 @@ public partial class ActionTranslator : Lexer
+// Grammars\\ActionTranslator.g3:91:4: '$' x= ID '.' y= ID ( WS )? '=' expr= ATTR_VALUE_EXPR ';' {...}?
+{
+Match('$'); if (state.failed) return ;
+-			int xStart60 = GetCharIndex();
++			int xStart60 = CharIndex;
+mID(); if (state.failed) return ;
+-			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart60, GetCharIndex()-1);
++			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart60, CharIndex-1);
+Match('.'); if (state.failed) return ;
+-			int yStart66 = GetCharIndex();
++			int yStart66 = CharIndex;
+mID(); if (state.failed) return ;
+-			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart66, GetCharIndex()-1);
++			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart66, CharIndex-1);
+// Grammars\\ActionTranslator.g3:91:22: ( WS )?
+int alt1=2;
+int LA1_0 = input.LA(1);
+@@ -201,9 +201,9 @@ public partial class ActionTranslator : Lexer
+}
+
+Match('='); if (state.failed) return ;
+-			int exprStart75 = GetCharIndex();
++			int exprStart75 = CharIndex;
+mATTR_VALUE_EXPR(); if (state.failed) return ;
+-			expr = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, exprStart75, GetCharIndex()-1);
++			expr = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, exprStart75, CharIndex-1);
+Match(';'); if (state.failed) return ;
+if ( !((enclosingRule!=null &&
+(x!=null?x.Text:null).Equals(enclosingRule.name) &&
+@@ -286,13 +286,13 @@ public partial class ActionTranslator : Lexer
+// Grammars\\ActionTranslator.g3:143:4: '$' x= ID '.' y= ID {...}?
+{
+Match('$'); if (state.failed) return ;
+-			int xStart107 = GetCharIndex();
++			int xStart107 = CharIndex;
+mID(); if (state.failed) return ;
+-			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart107, GetCharIndex()-1);
++			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart107, CharIndex-1);
+Match('.'); if (state.failed) return ;
+-			int yStart113 = GetCharIndex();
++			int yStart113 = CharIndex;
+mID(); if (state.failed) return ;
+-			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart113, GetCharIndex()-1);
++			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart113, CharIndex-1);
+if ( !((enclosingRule!=null &&
+(x!=null?x.Text:null).Equals(enclosingRule.name) &&
+enclosingRule.GetLocalAttributeScope((y!=null?y.Text:null))!=null)) )
+@@ -366,13 +366,13 @@ public partial class ActionTranslator : Lexer
+// Grammars\\ActionTranslator.g3:188:4: '$' x= ID '.' y= ID ( WS )? '=' {...}?
+{
+Match('$'); if (state.failed) return ;
+-			int xStart139 = GetCharIndex();
++			int xStart139 = CharIndex;
+mID(); if (state.failed) return ;
+-			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart139, GetCharIndex()-1);
++			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart139, CharIndex-1);
+Match('.'); if (state.failed) return ;
+-			int yStart145 = GetCharIndex();
++			int yStart145 = CharIndex;
+mID(); if (state.failed) return ;
+-			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart145, GetCharIndex()-1);
++			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart145, CharIndex-1);
+// Grammars\\ActionTranslator.g3:188:22: ( WS )?
+int alt2=2;
+int LA2_0 = input.LA(1);
+@@ -438,13 +438,13 @@ public partial class ActionTranslator : Lexer
+// Grammars\\ActionTranslator.g3:207:4: '$' x= ID '.' y= ID {...}?
+{
+Match('$'); if (state.failed) return ;
+-			int xStart184 = GetCharIndex();
++			int xStart184 = CharIndex;
+mID(); if (state.failed) return ;
+-			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart184, GetCharIndex()-1);
++			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart184, CharIndex-1);
+Match('.'); if (state.failed) return ;
+-			int yStart190 = GetCharIndex();
++			int yStart190 = CharIndex;
+mID(); if (state.failed) return ;
+-			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart190, GetCharIndex()-1);
++			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart190, CharIndex-1);
+if ( !((enclosingRule!=null &&
+(enclosingRule.GetTokenLabel((x!=null?x.Text:null))!=null||
+IsTokenRefInAlt((x!=null?x.Text:null))) &&
+@@ -509,13 +509,13 @@ public partial class ActionTranslator : Lexer
+// Grammars\\ActionTranslator.g3:248:4: '$' x= ID '.' y= ID ( WS )? '=' {...}?{...}?
+{
+Match('$'); if (state.failed) return ;
+-			int xStart221 = GetCharIndex();
++			int xStart221 = CharIndex;
+mID(); if (state.failed) return ;
+-			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart221, GetCharIndex()-1);
++			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart221, CharIndex-1);
+Match('.'); if (state.failed) return ;
+-			int yStart227 = GetCharIndex();
++			int yStart227 = CharIndex;
+mID(); if (state.failed) return ;
+-			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart227, GetCharIndex()-1);
++			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart227, CharIndex-1);
+// Grammars\\ActionTranslator.g3:248:22: ( WS )?
+int alt3=2;
+int LA3_0 = input.LA(1);
+@@ -599,13 +599,13 @@ public partial class ActionTranslator : Lexer
+// Grammars\\ActionTranslator.g3:279:4: '$' x= ID '.' y= ID {...}?{...}?
+{
+Match('$'); if (state.failed) return ;
+-			int xStart280 = GetCharIndex();
++			int xStart280 = CharIndex;
+mID(); if (state.failed) return ;
+-			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart280, GetCharIndex()-1);
++			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart280, CharIndex-1);
+Match('.'); if (state.failed) return ;
+-			int yStart286 = GetCharIndex();
++			int yStart286 = CharIndex;
+mID(); if (state.failed) return ;
+-			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart286, GetCharIndex()-1);
++			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart286, CharIndex-1);
+if ( !((enclosingRule!=null)) )
+{
+if (state.backtracking>0) {state.failed=true; return ;}
+@@ -700,9 +700,9 @@ public partial class ActionTranslator : Lexer
+// Grammars\\ActionTranslator.g3:343:4: '$' ID {...}?
+{
+Match('$'); if (state.failed) return ;
+-			int ID1Start328 = GetCharIndex();
++			int ID1Start328 = CharIndex;
+mID(); if (state.failed) return ;
+-			ID1 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ID1Start328, GetCharIndex()-1);
++			ID1 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ID1Start328, CharIndex-1);
+if ( !((enclosingRule!=null &&
+GetElementLabel((ID1!=null?ID1.Text:null))!=null &&
+enclosingRule.GetRuleLabel((ID1!=null?ID1.Text:null))==null)) )
+@@ -753,9 +753,9 @@ public partial class ActionTranslator : Lexer
+// Grammars\\ActionTranslator.g3:366:4: '$' ID {...}?
+{
+Match('$'); if (state.failed) return ;
+-			int ID2Start352 = GetCharIndex();
++			int ID2Start352 = CharIndex;
+mID(); if (state.failed) return ;
+-			ID2 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ID2Start352, GetCharIndex()-1);
++			ID2 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ID2Start352, CharIndex-1);
+if ( !((grammar.type!=Grammar.LEXER && enclosingRule!=null && IsTokenRefInAlt((ID2!=null?ID2.Text:null)))) )
+{
+if (state.backtracking>0) {state.failed=true; return ;}
+@@ -805,9 +805,9 @@ public partial class ActionTranslator : Lexer
+// Grammars\\ActionTranslator.g3:388:4: '$' ID {...}?
+{
+Match('$'); if (state.failed) return ;
+-			int ID3Start376 = GetCharIndex();
++			int ID3Start376 = CharIndex;
+mID(); if (state.failed) return ;
+-			ID3 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ID3Start376, GetCharIndex()-1);
++			ID3 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ID3Start376, CharIndex-1);
+if ( !((grammar.type==Grammar.LEXER &&
+enclosingRule!=null &&
+IsRuleRefInAlt((ID3!=null?ID3.Text:null)))) )
+@@ -860,9 +860,9 @@ public partial class ActionTranslator : Lexer
+// Grammars\\ActionTranslator.g3:422:4: '$' ID ( WS )? '=' expr= ATTR_VALUE_EXPR ';' {...}?
+{
+Match('$'); if (state.failed) return ;
+-			int ID4Start400 = GetCharIndex();
++			int ID4Start400 = CharIndex;
+mID(); if (state.failed) return ;
+-			ID4 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ID4Start400, GetCharIndex()-1);
++			ID4 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ID4Start400, CharIndex-1);
+// Grammars\\ActionTranslator.g3:422:11: ( WS )?
+int alt4=2;
+int LA4_0 = input.LA(1);
+@@ -884,9 +884,9 @@ public partial class ActionTranslator : Lexer
+}
+
+Match('='); if (state.failed) return ;
+-			int exprStart409 = GetCharIndex();
++			int exprStart409 = CharIndex;
+mATTR_VALUE_EXPR(); if (state.failed) return ;
+-			expr = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, exprStart409, GetCharIndex()-1);
++			expr = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, exprStart409, CharIndex-1);
+Match(';'); if (state.failed) return ;
+if ( !((enclosingRule!=null
+&& enclosingRule.GetLocalAttributeScope((ID4!=null?ID4.Text:null))!=null
+@@ -959,9 +959,9 @@ public partial class ActionTranslator : Lexer
+// Grammars\\ActionTranslator.g3:464:4: '$' ID {...}?
+{
+Match('$'); if (state.failed) return ;
+-			int ID5Start432 = GetCharIndex();
++			int ID5Start432 = CharIndex;
+mID(); if (state.failed) return ;
+-			ID5 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ID5Start432, GetCharIndex()-1);
++			ID5 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ID5Start432, CharIndex-1);
+if ( !((enclosingRule!=null && enclosingRule.GetLocalAttributeScope((ID5!=null?ID5.Text:null))!=null)) )
+{
+if (state.backtracking>0) {state.failed=true; return ;}
+@@ -1025,14 +1025,14 @@ public partial class ActionTranslator : Lexer
+// Grammars\\ActionTranslator.g3:509:4: '$' x= ID '::' y= ID ( WS )? '=' expr= ATTR_VALUE_EXPR ';' {...}?
+{
+Match('$'); if (state.failed) return ;
+-			int xStart458 = GetCharIndex();
++			int xStart458 = CharIndex;
+mID(); if (state.failed) return ;
+-			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart458, GetCharIndex()-1);
++			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart458, CharIndex-1);
+Match("::"); if (state.failed) return ;
+
+-			int yStart464 = GetCharIndex();
++			int yStart464 = CharIndex;
+mID(); if (state.failed) return ;
+-			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart464, GetCharIndex()-1);
++			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart464, CharIndex-1);
+// Grammars\\ActionTranslator.g3:509:23: ( WS )?
+int alt5=2;
+int LA5_0 = input.LA(1);
+@@ -1054,9 +1054,9 @@ public partial class ActionTranslator : Lexer
+}
+
+Match('='); if (state.failed) return ;
+-			int exprStart473 = GetCharIndex();
++			int exprStart473 = CharIndex;
+mATTR_VALUE_EXPR(); if (state.failed) return ;
+-			expr = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, exprStart473, GetCharIndex()-1);
++			expr = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, exprStart473, CharIndex-1);
+Match(';'); if (state.failed) return ;
+if ( !((ResolveDynamicScope((x!=null?x.Text:null))!=null &&
+ResolveDynamicScope((x!=null?x.Text:null)).GetAttribute((y!=null?y.Text:null))!=null)) )
+@@ -1107,14 +1107,14 @@ public partial class ActionTranslator : Lexer
+// Grammars\\ActionTranslator.g3:530:4: '$' x= ID '::' y= ID {...}?
+{
+Match('$'); if (state.failed) return ;
+-			int xStart508 = GetCharIndex();
++			int xStart508 = CharIndex;
+mID(); if (state.failed) return ;
+-			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart508, GetCharIndex()-1);
++			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart508, CharIndex-1);
+Match("::"); if (state.failed) return ;
+
+-			int yStart514 = GetCharIndex();
++			int yStart514 = CharIndex;
+mID(); if (state.failed) return ;
+-			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart514, GetCharIndex()-1);
++			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart514, CharIndex-1);
+if ( !((ResolveDynamicScope((x!=null?x.Text:null))!=null &&
+ResolveDynamicScope((x!=null?x.Text:null)).GetAttribute((y!=null?y.Text:null))!=null)) )
+{
+@@ -1163,14 +1163,14 @@ public partial class ActionTranslator : Lexer
+// Grammars\\ActionTranslator.g3:551:4: '$' x= ID '::' y= ID
+{
+Match('$'); if (state.failed) return ;
+-			int xStart548 = GetCharIndex();
++			int xStart548 = CharIndex;
+mID(); if (state.failed) return ;
+-			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart548, GetCharIndex()-1);
++			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart548, CharIndex-1);
+Match("::"); if (state.failed) return ;
+
+-			int yStart554 = GetCharIndex();
++			int yStart554 = CharIndex;
+mID(); if (state.failed) return ;
+-			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart554, GetCharIndex()-1);
++			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart554, CharIndex-1);
+if ( state.backtracking==1 )
+{
+
+@@ -1207,20 +1207,20 @@ public partial class ActionTranslator : Lexer
+// Grammars\\ActionTranslator.g3:569:4: '$' x= ID '[' '-' expr= SCOPE_INDEX_EXPR ']' '::' y= ID
+{
+Match('$'); if (state.failed) return ;
+-			int xStart576 = GetCharIndex();
++			int xStart576 = CharIndex;
+mID(); if (state.failed) return ;
+-			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart576, GetCharIndex()-1);
++			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart576, CharIndex-1);
+Match('['); if (state.failed) return ;
+Match('-'); if (state.failed) return ;
+-			int exprStart584 = GetCharIndex();
++			int exprStart584 = CharIndex;
+mSCOPE_INDEX_EXPR(); if (state.failed) return ;
+-			expr = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, exprStart584, GetCharIndex()-1);
++			expr = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, exprStart584, CharIndex-1);
+Match(']'); if (state.failed) return ;
+Match("::"); if (state.failed) return ;
+
+-			int yStart592 = GetCharIndex();
++			int yStart592 = CharIndex;
+mID(); if (state.failed) return ;
+-			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart592, GetCharIndex()-1);
++			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart592, CharIndex-1);
+if ( state.backtracking==1 )
+{
+
+@@ -1257,19 +1257,19 @@ public partial class ActionTranslator : Lexer
+// Grammars\\ActionTranslator.g3:580:4: '$' x= ID '[' expr= SCOPE_INDEX_EXPR ']' '::' y= ID
+{
+Match('$'); if (state.failed) return ;
+-			int xStart616 = GetCharIndex();
++			int xStart616 = CharIndex;
+mID(); if (state.failed) return ;
+-			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart616, GetCharIndex()-1);
++			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart616, CharIndex-1);
+Match('['); if (state.failed) return ;
+-			int exprStart622 = GetCharIndex();
++			int exprStart622 = CharIndex;
+mSCOPE_INDEX_EXPR(); if (state.failed) return ;
+-			expr = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, exprStart622, GetCharIndex()-1);
++			expr = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, exprStart622, CharIndex-1);
+Match(']'); if (state.failed) return ;
+Match("::"); if (state.failed) return ;
+
+-			int yStart630 = GetCharIndex();
++			int yStart630 = CharIndex;
+mID(); if (state.failed) return ;
+-			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart630, GetCharIndex()-1);
++			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart630, CharIndex-1);
+if ( state.backtracking==1 )
+{
+
+@@ -1360,9 +1360,9 @@ public partial class ActionTranslator : Lexer
+// Grammars\\ActionTranslator.g3:601:4: '$' ID {...}?
+{
+Match('$'); if (state.failed) return ;
+-			int ID6Start673 = GetCharIndex();
++			int ID6Start673 = CharIndex;
+mID(); if (state.failed) return ;
+-			ID6 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ID6Start673, GetCharIndex()-1);
++			ID6 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ID6Start673, CharIndex-1);
+if ( !((ResolveDynamicScope((ID6!=null?ID6.Text:null))!=null)) )
+{
+if (state.backtracking>0) {state.failed=true; return ;}
+@@ -1733,13 +1733,13 @@ public partial class ActionTranslator : Lexer
+// Grammars\\ActionTranslator.g3:656:4: '%' a= ACTION '.' ID ( WS )? '=' expr= ATTR_VALUE_EXPR ';'
+{
+Match('%'); if (state.failed) return ;
+-			int aStart823 = GetCharIndex();
++			int aStart823 = CharIndex;
+mACTION(); if (state.failed) return ;
+-			a = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, aStart823, GetCharIndex()-1);
++			a = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, aStart823, CharIndex-1);
+Match('.'); if (state.failed) return ;
+-			int ID7Start827 = GetCharIndex();
++			int ID7Start827 = CharIndex;
+mID(); if (state.failed) return ;
+-			ID7 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ID7Start827, GetCharIndex()-1);
++			ID7 = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, ID7Start827, CharIndex-1);
+// Grammars\\ActionTranslator.g3:656:24: ( WS )?
+int alt17=2;
+int LA17_0 = input.LA(1);
+@@ -1761,9 +1761,9 @@ public partial class ActionTranslator : Lexer
+}
+
+Match('='); if (state.failed) return ;
+-			int exprStart836 = GetCharIndex();
++			int exprStart836 = CharIndex;
+mATTR_VALUE_EXPR(); if (state.failed) return ;
+-			expr = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, exprStart836, GetCharIndex()-1);
++			expr = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, exprStart836, CharIndex-1);
+Match(';'); if (state.failed) return ;
+if ( state.backtracking==1 )
+{
+@@ -1803,13 +1803,13 @@ public partial class ActionTranslator : Lexer
+// Grammars\\ActionTranslator.g3:673:4: '%' x= ID '.' y= ID ( WS )? '=' expr= ATTR_VALUE_EXPR ';'
+{
+Match('%'); if (state.failed) return ;
+-			int xStart863 = GetCharIndex();
++			int xStart863 = CharIndex;
+mID(); if (state.failed) return ;
+-			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart863, GetCharIndex()-1);
++			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart863, CharIndex-1);
+Match('.'); if (state.failed) return ;
+-			int yStart869 = GetCharIndex();
++			int yStart869 = CharIndex;
+mID(); if (state.failed) return ;
+-			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart869, GetCharIndex()-1);
++			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart869, CharIndex-1);
+// Grammars\\ActionTranslator.g3:673:22: ( WS )?
+int alt18=2;
+int LA18_0 = input.LA(1);
+@@ -1831,9 +1831,9 @@ public partial class ActionTranslator : Lexer
+}
+
+Match('='); if (state.failed) return ;
+-			int exprStart878 = GetCharIndex();
++			int exprStart878 = CharIndex;
+mATTR_VALUE_EXPR(); if (state.failed) return ;
+-			expr = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, exprStart878, GetCharIndex()-1);
++			expr = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, exprStart878, CharIndex-1);
+Match(';'); if (state.failed) return ;
+if ( state.backtracking==1 )
+{
+@@ -1931,9 +1931,9 @@ public partial class ActionTranslator : Lexer
+// Grammars\\ActionTranslator.g3:691:4: '%' a= ACTION
+{
+Match('%'); if (state.failed) return ;
+-			int aStart927 = GetCharIndex();
++			int aStart927 = CharIndex;
+mACTION(); if (state.failed) return ;
+-			a = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, aStart927, GetCharIndex()-1);
++			a = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, aStart927, CharIndex-1);
+if ( state.backtracking==1 )
+{
+
+@@ -2116,13 +2116,13 @@ public partial class ActionTranslator : Lexer
+// Grammars\\ActionTranslator.g3:713:4: '$' x= ID '.' y= ID
+{
+Match('$'); if (state.failed) return ;
+-			int xStart1016 = GetCharIndex();
++			int xStart1016 = CharIndex;
+mID(); if (state.failed) return ;
+-			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart1016, GetCharIndex()-1);
++			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart1016, CharIndex-1);
+Match('.'); if (state.failed) return ;
+-			int yStart1022 = GetCharIndex();
++			int yStart1022 = CharIndex;
+mID(); if (state.failed) return ;
+-			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart1022, GetCharIndex()-1);
++			y = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, yStart1022, CharIndex-1);
+if ( state.backtracking==1 )
+{
+
+@@ -2157,9 +2157,9 @@ public partial class ActionTranslator : Lexer
+// Grammars\\ActionTranslator.g3:723:4: '$' x= ID
+{
+Match('$'); if (state.failed) return ;
+-			int xStart1042 = GetCharIndex();
++			int xStart1042 = CharIndex;
+mID(); if (state.failed) return ;
+-			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart1042, GetCharIndex()-1);
++			x = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, xStart1042, CharIndex-1);
+if ( state.backtracking==1 )
+{
+
+

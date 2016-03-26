@@ -1,0 +1,22 @@
+commit 2a6f873a7f12e3bdc7837857e9c038b259d0271a
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Mon Dec 3 18:07:21 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Mon Dec 3 18:07:21 2012 -0600
+
+Sign files during the package phase to fix issues with repository:bundle-create
+
+diff --git a/pom.xml b/pom.xml
+index a721d9f..2592e08 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -247,7 +247,7 @@
+<executions>
+<execution>
+<id>sign-artifacts</id>
+-                        <phase>verify</phase>
++                        <phase>package</phase>
+<goals>
+<goal>sign</goal>
+</goals>
+

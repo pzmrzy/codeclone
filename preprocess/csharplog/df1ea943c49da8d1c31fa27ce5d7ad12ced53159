@@ -1,0 +1,140 @@
+commit df1ea943c49da8d1c31fa27ce5d7ad12ced53159
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sun May 15 13:26:10 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sun May 15 13:26:10 2011 -0800
+
+(C# 3) private constructors, set tree adaptor type
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8510]
+
+diff --git a/Antlr3.StringTemplate/Language/Action.g3 b/Antlr3.StringTemplate/Language/Action.g3
+index 20d3634..705a46e 100644
+--- a/Antlr3.StringTemplate/Language/Action.g3
++++ b/Antlr3.StringTemplate/Language/Action.g3
+@@ -71,6 +71,9 @@ tokens
+@lexer::namespace { Antlr3.ST.Language }
+@parser::namespace { Antlr3.ST.Language }
+
++@parser::ctorModifier{private}
++@parser::treeAdaptorType{StringTemplateTreeAdaptor}
++
+public
+action returns [IDictionary<string, object> opts]
+:	(	templatesExpr (SEMI! optionList {$opts = $optionList.opts;})?
+diff --git a/Antlr3.StringTemplate/Language/ActionEvaluator.g3 b/Antlr3.StringTemplate/Language/ActionEvaluator.g3
+index a16bdfd..bbf1fbc 100644
+--- a/Antlr3.StringTemplate/Language/ActionEvaluator.g3
++++ b/Antlr3.StringTemplate/Language/ActionEvaluator.g3
+@@ -47,6 +47,7 @@ using StringWriter = System.IO.StringWriter;
+}
+
+@namespace {Antlr3.ST.Language}
++@ctorModifier{private}
+
+public
+action returns [int numCharsWritten=0]
+diff --git a/Antlr3.StringTemplate/Language/ActionParserHelper.cs b/Antlr3.StringTemplate/Language/ActionParserHelper.cs
+index ae35fd1..241bc0c 100644
+--- a/Antlr3.StringTemplate/Language/ActionParserHelper.cs
++++ b/Antlr3.StringTemplate/Language/ActionParserHelper.cs
+@@ -49,7 +49,7 @@ namespace Antlr3.ST.Language
+this.self = self;
+}
+
+-        partial void CreateTreeAdaptor(ref ITreeAdaptor adaptor)
++        partial void CreateTreeAdaptor(ref StringTemplateTreeAdaptor adaptor)
+{
+adaptor = new StringTemplateTreeAdaptor();
+}
+diff --git a/Antlr3.StringTemplate/Language/AngleBracketTemplateLexer.g3 b/Antlr3.StringTemplate/Language/AngleBracketTemplateLexer.g3
+index 183a90f..c8c9eb2 100644
+--- a/Antlr3.StringTemplate/Language/AngleBracketTemplateLexer.g3
++++ b/Antlr3.StringTemplate/Language/AngleBracketTemplateLexer.g3
+@@ -37,8 +37,8 @@ options
+language=CSharp3;
+}
+
+-/**/
+-@lexer::namespace {Antlr3.ST.Language}
++@namespace {Antlr3.ST.Language}
++@ctorModifier{private}
+
+NEWLINE
+:	('\r')? '\n' {currentIndent=null;}
+diff --git a/Antlr3.StringTemplate/Language/Template.g3 b/Antlr3.StringTemplate/Language/Template.g3
+index 18adc94..6b2a85f 100644
+--- a/Antlr3.StringTemplate/Language/Template.g3
++++ b/Antlr3.StringTemplate/Language/Template.g3
+@@ -39,6 +39,8 @@ options
+@lexer::namespace {Antlr3.ST.Language}
+@parser::namespace {Antlr3.ST.Language}
+
++@lexer::ctorModifier{private}
++
+public
+template[StringTemplate self]
+@init
+diff --git a/Antlr3/Grammars/ActionAnalysisLexer.g3 b/Antlr3/Grammars/ActionAnalysisLexer.g3
+index 972134e..161358f 100644
+--- a/Antlr3/Grammars/ActionAnalysisLexer.g3
++++ b/Antlr3/Grammars/ActionAnalysisLexer.g3
+@@ -47,6 +47,7 @@ options
+}
+
+@namespace{Antlr3.Grammars}
++@ctorModifier{private}
+
+/**	$x.y	x is enclosing rule or rule ref or rule label
+*			y is a return value, parameter, or predefined property.
+diff --git a/Antlr3/Grammars/ActionTranslator.g3 b/Antlr3/Grammars/ActionTranslator.g3
+index 4ddff73..6bd92fc 100644
+--- a/Antlr3/Grammars/ActionTranslator.g3
++++ b/Antlr3/Grammars/ActionTranslator.g3
+@@ -40,6 +40,7 @@ options
+}
+
+@lexer::namespace{Antlr3.Grammars}
++@ctorModifier{private}
+
+/**	$x.y	x is enclosing rule, y is a return value, parameter, or
+* 			predefined property.
+diff --git a/Antlr3/Grammars/TreeToNFAConverter.g3 b/Antlr3/Grammars/TreeToNFAConverter.g3
+index d9e477e..2d889c5 100644
+--- a/Antlr3/Grammars/TreeToNFAConverter.g3
++++ b/Antlr3/Grammars/TreeToNFAConverter.g3
+@@ -51,6 +51,7 @@ using DFA = Antlr.Runtime.DFA;
+}
+
+@namespace{Antlr3.Grammars}
++@ctorModifier{private}
+
+public
+grammar_
+diff --git a/Antlr4.StringTemplate/Compiler/CodeGenerator.g3 b/Antlr4.StringTemplate/Compiler/CodeGenerator.g3
+index a70f39b..4023e73 100644
+--- a/Antlr4.StringTemplate/Compiler/CodeGenerator.g3
++++ b/Antlr4.StringTemplate/Compiler/CodeGenerator.g3
+@@ -44,6 +44,8 @@ using Antlr4.StringTemplate.Misc;
+
+@namespace{Antlr4.StringTemplate.Compiler}
+
++@ctorModifier{private}
++
+templateAndEOF : template[null,null] EOF; // hush warning; ignore
+
+public
+diff --git a/Antlr4.StringTemplate/Compiler/TemplateParser.g3 b/Antlr4.StringTemplate/Compiler/TemplateParser.g3
+index e665056..90ed11a 100644
+--- a/Antlr4.StringTemplate/Compiler/TemplateParser.g3
++++ b/Antlr4.StringTemplate/Compiler/TemplateParser.g3
+@@ -60,6 +60,8 @@ using Antlr4.StringTemplate.Misc;
+catch (RecognitionException re) { re.PreserveStackTrace(); throw; }
+}
+
++@ctorModifier{private}
++
+public
+templateAndEOF : template EOF!;
+
+

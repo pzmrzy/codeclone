@@ -1,0 +1,24 @@
+commit 1958b1bb35cac02f97d179d526cc66e6964ebeb5
+Author:     Jim Idle <jimi@temporal-wave.com>
+AuthorDate: Thu Jul 21 09:43:35 2011 -0800
+Commit:     Jim Idle <jimi@temporal-wave.com>
+CommitDate: Thu Jul 21 09:43:35 2011 -0800
+
+Correct declaration type of memoizing marker in C target
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8897]
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/C/C.stg b/tool/src/main/resources/org/antlr/codegen/templates/C/C.stg
+index e72f790..6f4dd0b 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/C/C.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/C/C.stg
+@@ -1696,7 +1696,7 @@ ruleDeclarations() ::= <<
+}>
+<endif>
+<if(memoize)>
+-ANTLR3_UINT32 <ruleDescriptor.name>_StartIndex;
++ANTLR3_MARKER <ruleDescriptor.name>_StartIndex;
+<endif>
+>>
+
+

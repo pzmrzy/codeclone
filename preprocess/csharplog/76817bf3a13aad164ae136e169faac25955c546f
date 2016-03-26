@@ -1,0 +1,891 @@
+commit 76817bf3a13aad164ae136e169faac25955c546f
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Jan 20 17:07:26 2010 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Jan 20 17:07:26 2010 -0800
+
+C# Port:
+* Merge CL6454
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6586]
+
+diff --git a/Antlr3.Test/Antlr3.Test.csproj b/Antlr3.Test/Antlr3.Test.csproj
+index 7853fe1..8471cde 100644
+--- a/Antlr3.Test/Antlr3.Test.csproj
++++ b/Antlr3.Test/Antlr3.Test.csproj
+@@ -54,6 +54,7 @@
+<Compile Include="ST4\TestFunctions.cs" />
+<Compile Include="ST4\TestGroups.cs" />
+<Compile Include="ST4\TestGroupSyntax.cs" />
++    <Compile Include="ST4\TestGroupSyntaxErrors.cs" />
+<Compile Include="ST4\TestImports.cs" />
+<Compile Include="ST4\TestIndentation.cs" />
+<Compile Include="ST4\TestIndirectionAndEarlyEvaluation.cs" />
+diff --git a/Antlr3.Test/ST4/TestGroupSyntaxErrors.cs b/Antlr3.Test/ST4/TestGroupSyntaxErrors.cs
+new file mode 100644
+index 0000000..2fce7e9
+--- /dev/null
++++ b/Antlr3.Test/ST4/TestGroupSyntaxErrors.cs
+@@ -0,0 +1,166 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace AntlrUnitTests.ST4
++{
++    using Microsoft.VisualStudio.TestTools.UnitTesting;
++    using Path = System.IO.Path;
++    using STGroup = StringTemplate.TemplateGroup;
++    using STGroupFile = StringTemplate.TemplateGroupFile;
++    using String = System.String;
++    using StringTemplate;
++
++    [TestClass]
++    public class TestGroupSyntaxErrors : StringTemplateTestBase
++    {
++        [TestMethod]
++        public void TestMissingTemplate()
++        {
++            String templates =
++                "foo() ::= \n";
++            WriteFile(tmpdir, "t.stg", templates);
++
++            STGroup group = null;
++            ITemplateErrorListener errors = new ErrorBuffer();
++            group = new STGroupFile(Path.Combine(tmpdir, "t.stg"));
++            ErrorManager.ErrorListener = errors;
++            group.Load(); // force load
++            String expected = "t.stg 2:0: missing template at '<EOF>'" + newline;
++            String result = errors.ToString();
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
++        public void TestParen()
++        {
++            String templates =
++                "foo( ::= << >>\n";
++            WriteFile(tmpdir, "t.stg", templates);
++
++            STGroup group = null;
++            var errors = new ErrorBuffer();
++            group = new STGroupFile(Path.Combine(tmpdir, "t.stg"));
++            ErrorManager.ErrorListener = errors;
++            group.Load(); // force load
++            String expected = "t.stg 1:5: missing ')' at '::='" + newline;
++            String result = errors.ToString();
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
++        public void TestParen2()
++        {
++            String templates =
++                "foo) ::= << >>\n" +
++                "bar() ::= <<bar>>\n";
++            WriteFile(tmpdir, "t.stg", templates);
++
++            STGroup group = null;
++            var errors = new ErrorBuffer();
++            group = new STGroupFile(Path.Combine(tmpdir, "t.stg"));
++            ErrorManager.ErrorListener = errors;
++            group.Load(); // force load
++            String expected = "t.stg 1:0: garbled template definition starting at 'foo'" + newline;
++            String result = errors.ToString();
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
++        public void TestArg()
++        {
++            String templates =
++                "foo(a,) ::= << >>\n";
++            WriteFile(tmpdir, "t.stg", templates);
++
++            STGroup group = null;
++            var errors = new ErrorBuffer();
++            group = new STGroupFile(Path.Combine(tmpdir, "t.stg"));
++            ErrorManager.ErrorListener = errors;
++            group.Load(); // force load
++            String expected = "t.stg 1:6: missing ID at ')'" + newline;
++            String result = errors.ToString();
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
++        public void TestArg2()
++        {
++            String templates =
++                "foo(a,,) ::= << >>\n";
++            WriteFile(tmpdir, "t.stg", templates);
++
++            STGroup group = null;
++            ErrorBuffer errors = new ErrorBuffer();
++            group = new STGroupFile(Path.Combine(tmpdir, "t.stg"));
++            ErrorManager.ErrorListener = errors;
++            group.Load(); // force load
++            String expected = "t.stg 1:6: missing ID at ','" + newline +
++                              "t.stg 1:7: missing ID at ')'" + newline;
++            String result = errors.ToString();
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
++        public void TestArg3()
++        {
++            String templates =
++                "foo(a b) ::= << >>\n";
++            WriteFile(tmpdir, "t.stg", templates);
++
++            STGroup group = null;
++            ErrorBuffer errors = new ErrorBuffer();
++            group = new STGroupFile(Path.Combine(tmpdir, "t.stg"));
++            ErrorManager.ErrorListener = errors;
++            group.Load(); // force load
++            String expected = "t.stg 1:6: extraneous input 'b' expecting ')'" + newline;
++            String result = errors.ToString();
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
++        public void TestErrorWithinTemplate()
++        {
++            String templates =
++                "foo(a) ::= \"<a b>\"\n";
++            WriteFile(tmpdir, "t.stg", templates);
++
++            STGroup group = null;
++            ErrorBuffer errors = new ErrorBuffer();
++            group = new STGroupFile(Path.Combine(tmpdir, "t.stg"));
++            ErrorManager.ErrorListener = errors;
++            group.Load(); // force load
++            String expected = "1:15: 'b' came as a complete surprise to me" + newline;
++            String result = errors.ToString();
++            Assert.AreEqual(expected, result);
++        }
++    }
++}
+diff --git a/Antlr3.Test/ST4/TestSyntaxErrors.cs b/Antlr3.Test/ST4/TestSyntaxErrors.cs
+index cea962b..58d7ef4 100644
+--- a/Antlr3.Test/ST4/TestSyntaxErrors.cs
++++ b/Antlr3.Test/ST4/TestSyntaxErrors.cs
+@@ -55,9 +55,28 @@ namespace AntlrUnitTests.ST4
+catch (TemplateException se)
+{
+RecognitionException re = (RecognitionException)se.InnerException;
+-                result = 1 + ":" + re.CharPositionInLine + ": " + se.Message;
++                result = new TemplateCompileTimeMessage(ErrorType.SyntaxError, re.Token, se, se.Message).ToString();
+}
+-            string expected = "1:0: is this a template? parser says: mismatched input ' ' expecting EndOfFile";
++            string expected = "1:0: this doesn't look like a template: \" <> \"";
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
++        public void TestEmptyExpr2()
++        {
++            String template = "hi <> ";
++            TemplateGroup group = new TemplateGroup();
++            String result = null;
++            try
++            {
++                group.DefineTemplate(new TemplateName("test"), template);
++            }
++            catch (TemplateException se)
++            {
++                RecognitionException re = (RecognitionException)se.InnerException;
++                result = new TemplateCompileTimeMessage(ErrorType.SyntaxError, re.Token, se, se.Message).ToString();
++            }
++            String expected = "1:3: doesn't look like an expression";
+Assert.AreEqual(expected, result);
+}
+
+@@ -74,7 +93,7 @@ namespace AntlrUnitTests.ST4
+catch (TemplateException se)
+{
+RecognitionException re = (RecognitionException)se.InnerException;
+-                result = 1 + ":" + re.CharPositionInLine + ": " + se.Message;
++                result = new TemplateCompileTimeMessage(ErrorType.SyntaxError, re.Token, se, se.Message).ToString();
+}
+string expected = "1:4: invalid character: *";
+Assert.AreEqual(expected, result);
+@@ -91,7 +110,7 @@ namespace AntlrUnitTests.ST4
+TemplateGroup group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
+ErrorManager.ErrorListener = errors;
+group.Load(); // force load
+-            string expected = "2:15: mismatched input '<' expecting EOF";
++            String expected = "1:15: doesn't look like an expression" + newline;
+string result = errors.ToString();
+Assert.AreEqual(expected, result);
+}
+@@ -108,7 +127,7 @@ namespace AntlrUnitTests.ST4
+TemplateGroup group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
+ErrorManager.ErrorListener = errors;
+group.Load(); // force load
+-            string expected = "2:14: mismatched input '<' expecting EOF"; // TODO: terrible err message
++            String expected = "1:14: doesn't look like an expression" + newline;
+string result = errors.ToString();
+Assert.AreEqual(expected, result);
+}
+@@ -125,9 +144,43 @@ namespace AntlrUnitTests.ST4
+group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
+ErrorManager.ErrorListener = errors;
+group.Load(); // force load
+-            string expected = "2:29: no viable alternative at input '!'";
++            String expected = "1:29: '!' came as a complete surprise to me" + newline;
+string result = errors.ToString();
+Assert.AreEqual(expected, result);
+}
++
++        [TestMethod]
++        public void TestEOFInExpr()
++        {
++            String templates =
++                "foo() ::= \"hi <name:{[<aaa.bb>]}\"\n";
++            WriteFile(tmpdir, "t.stg", templates);
++
++            TemplateGroup group = null;
++            var errors = new ErrorBuffer();
++            group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
++            ErrorManager.ErrorListener = errors;
++            group.Load(); // force load
++            String expected = "1:32: premature EOF" + newline;
++            String result = errors.ToString();
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
++        public void TestMissingRPAREN()
++        {
++            String templates =
++                "foo() ::= \"hi <foo(>\"\n";
++            WriteFile(tmpdir, "t.stg", templates);
++
++            TemplateGroup group = null;
++            var errors = new ErrorBuffer();
++            group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
++            ErrorManager.ErrorListener = errors;
++            group.Load(); // force load
++            String expected = "1:19: mismatched input '>' expecting RPAREN" + newline;
++            String result = errors.ToString();
++            Assert.AreEqual(expected, result);
++        }
+}
+}
+diff --git a/Antlr3.vsmdi b/Antlr3.vsmdi
+index 511e0b3..b680b22 100644
+--- a/Antlr3.vsmdi
++++ b/Antlr3.vsmdi
+@@ -1065,11 +1065,14 @@
+</TestList>
+<TestList name="Syntax Errors" id="b620fded-8956-44fd-8767-9bbd98497410" parentListId="4adbb104-d28d-4362-8420-a9fefe69c167">
+<TestLinks>
+-      <TestLink id="487bcedc-27c9-30bb-c487-22dc9371ba80" name="TestEmptyExpr" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="357b86d2-3019-204c-f730-526b85728fc9" name="TestEOFInExpr" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="517581cb-2d7c-9911-403a-b8008c1fdb67" name="TestWeirdChar" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="5aa3d837-83d8-cf3b-fd84-692f74beb3aa" name="TestErrorInNestedTemplate" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="b760c95c-f211-2ed3-8e8f-b8da9c2c76e8" name="TestValidButOutOfPlaceChar" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="01f4a50a-cb69-47a7-f1ca-0027cd558288" name="TestEmptyExpr2" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="487bcedc-27c9-30bb-c487-22dc9371ba80" name="TestEmptyExpr" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="cef7f91b-9e73-cfda-e1a9-5f10967a575e" name="TestValidButOutOfPlaceCharOnDifferentLine" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="517581cb-2d7c-9911-403a-b8008c1fdb67" name="TestWeirdChar" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="adbce4fa-830e-d86e-2dd8-6cbbbd3ae0cb" name="TestMissingRPAREN" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+</TestLinks>
+</TestList>
+<TestList name="Line Wrap" id="bb81620e-c56b-4ba8-901d-b75ab7c68b72" parentListId="4adbb104-d28d-4362-8420-a9fefe69c167">
+@@ -1095,6 +1098,16 @@
+<TestLink id="bdda5562-1c35-769a-28bc-9f3ecb2fc860" name="TestLineWrapForList" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+</TestLinks>
+</TestList>
++  <TestList name="CommonTokenStream" id="bed680d9-8938-431e-9808-232e0ac0c3ae" parentListId="8c43106b-9dc1-4907-a29f-aa66a61bf5b6">
++    <TestLinks>
++      <TestLink id="f120ba49-070d-ac51-17b6-4c8692ebc54c" name="Test2ndToken" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="9882555d-3442-eb13-71d5-3739b39b6aad" name="TestCompleteBufferAfterConsuming" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="e34b7227-602a-3f2c-50ff-3eaff6d7fac0" name="TestCompleteBuffer" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="0920e9ad-4bf7-404f-e875-2ece187fe5cc" name="TestFirstToken" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="01c39dd3-5455-0ca1-b735-ee9165d36d01" name="TestOffChannel" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="6424c2f8-38e4-8fe2-c4fe-b0eb382af010" name="TestLookback" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++    </TestLinks>
++  </TestList>
+<TestList name="Subtemplates" id="c068d150-8506-4339-a463-a78bf2ce4e9e" parentListId="4adbb104-d28d-4362-8420-a9fefe69c167">
+<TestLinks>
+<TestLink id="970648e6-20c1-4cfe-423d-83bd585c7ce6" name="TestParallelAttributeIterationWithNullValue" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+@@ -1178,6 +1191,7 @@
+<TestLink id="0911fbc0-a30e-a173-3df8-c100584b4f9c" name="TestQueueThenRemoveOneByOne" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="95115011-85da-85d2-a439-b0d856c1545a" name="TestGetFromEmptyQueue" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="700441e7-fff3-0cd5-6514-b35d14cc6457" name="TestGetFromEmptyQueueAfterSomeAdds" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="2132538a-5cb2-8866-83c9-39356c3f21e4" name="TestGetFromEmptyQueueAfterClear" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="7828ca2b-df2b-714b-4672-39b431289957" name="TestQueueNoRemove" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="4d4bd6a8-4ad7-5175-e560-0708613d0b0a" name="TestQueueThenRemoveAll" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+</TestLinks>
+@@ -1699,6 +1713,17 @@
+<TestLink id="3b84dbe5-305e-cd8a-43f8-61e44310d3a0" name="TestOptionalSet" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+</TestLinks>
+</TestList>
++  <TestList name="Group Syntax Errors" id="f85c7118-4bbf-42c3-8c45-43ef033ac318" parentListId="4adbb104-d28d-4362-8420-a9fefe69c167">
++    <TestLinks>
++      <TestLink id="bb0fce02-d6d8-2260-6770-f34c63698434" name="TestParen" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="08426416-c67b-84c4-7e30-9cc93a73941f" name="TestParen2" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="1def5b4f-4872-3101-d89e-937d5c5d35f3" name="TestMissingTemplate" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="b5179ee1-20cd-0672-fd27-7e21ecbc39fd" name="TestArg2" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="01c21d43-16e1-c6c1-a155-9d173c507e41" name="TestErrorWithinTemplate" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="b1a29e60-757e-1d6b-9558-e0ff181c0451" name="TestArg3" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="e9b77e45-ffbc-76e7-dfe8-e45456445fbb" name="TestArg" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++    </TestLinks>
++  </TestList>
+<TestList name="Indentation" id="fa3ee5f4-25ee-4cb9-9918-3b1f7ab8acb2" parentListId="4adbb104-d28d-4362-8420-a9fefe69c167">
+<TestLinks>
+<TestLink id="f5840a44-22ab-35ce-5073-858ec924ad42" name="TestIndentBetweenLeftJustifiedLiterals" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+diff --git a/StringTemplate4/Compiler/Group.g3 b/StringTemplate4/Compiler/Group.g3
+index 534e614..d7e44b7 100644
+--- a/StringTemplate4/Compiler/Group.g3
++++ b/StringTemplate4/Compiler/Group.g3
+@@ -26,27 +26,6 @@
+THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+-/** Match a group of template definitions beginning
+- *  with a group name declaration.  Templates are enclosed
+- *  in double-quotes or <<...>> quotes for multi-line templates.
+- *  Template names have arg lists that indicate the cardinality
+- *  of the attribute: present, optional, zero-or-more, one-or-more.
+- *  Here is a sample group file:
+-
+-	group nfa;
+-
+-	// an NFA has edges and states
+-	nfa(states,edges) ::= <<
+-	digraph NFA {
+-	rankdir=LR;
+-	<states; separator="\\n">
+-	<edges; separator="\\n">
+-	}
+-	>>
+-
+-	state(name) ::= "node [shape = circle]; <name>;"
+-
+- */
+grammar Group;
+
+options {
+@@ -67,9 +46,22 @@ group[TemplateGroup group, TemplateName prefix]
+GroupLexer lexer = (GroupLexer)input.TokenSource;
+this._group = lexer._group = $group;
+}
+-	:	( templateDef[prefix] | dictDef )+
++	:	def[prefix]+
+;
+
++/** Match template and dictionary defs outside of (...)+ loop in group.
++ *  The key is catching while still in the loop; must keep prediction of
++ *  elements separate from "stay in loop" prediction.
++ */
++def[TemplateName prefix]
++	:	templateDef[prefix]
++	|	dictDef
++	;
++catch[RecognitionException re]
++{
++	sync("garbled template definition starting at '" + input.LT(1).Text + "'");
++}
++
+public
+templateDef[TemplateName prefix]
+@init {
+@@ -85,6 +77,12 @@ templateDef[TemplateName prefix]
+{IToken templateToken = input.LT(1);}
+(	STRING     {template=$STRING.text; n=1;}
+|	BIGSTRING  {template=$BIGSTRING.text; n=2;}
++		|	{
++			template = "";
++			string msg = "missing template at '" + input.LT(1).Text + "'";
++			NoViableAltException e = new NoViableAltException("", 0, 0, input);
++			ErrorManager.SyntaxError(ErrorType.SyntaxError, e, msg, SourceName);
++			}
+)
+{
+template = Misc.Strip(template, n);
+@@ -97,12 +95,13 @@ templateDef[TemplateName prefix]
+else
+this._group.DefineTemplate(prefix, new TemplateName($name.text), $formalArgs.args, template);
+}
+-        catch (TemplateRecognitionException e) {
+-        	RecognitionException re = (RecognitionException)e.InnerException;
+-        	int charPosition =
+-        		re.CharPositionInLine+templateToken.CharPositionInLine+n;
+-	        ErrorManager.CompileTimeError(ErrorType.SyntaxError, e.Message, templateToken.Line + ":" + charPosition);
+-        }
++		catch (TemplateException e)
++		{
++			RecognitionException re = (RecognitionException)e.InnerException;
++			re.Token.CharPositionInLine = re.CharPositionInLine + templateToken.CharPositionInLine + n;
++			re.Token.Line = re.Line + templateToken.Line - 1;
++			ErrorManager.SyntaxError(ErrorType.SyntaxError, re, e.Message);
++		}
+}
+|   alias=ID '::=' target=ID
+;
+@@ -172,6 +171,27 @@ keyValue returns [object value]
+|						{$value = null;}
+;
+
++sync[string msg]
++@init
++{
++	// Consume any garbled tokens that come before the next statement
++	// or the end of the block.
++	int mark = input.Index;
++	IToken t = input.LT(1);
++	Recover(input, null);
++	if (input.Index != mark)
++	{
++		// we consumed bad tokens
++		NoViableAltException e = new NoViableAltException("", 0, 0, input);
++		e.Token = t;
++		ErrorManager.SyntaxError(ErrorType.SyntaxError, e, msg, SourceName);
++		Recover(input, null);
++	}
++}
++	:	// Deliberately match nothing, causing this rule always to be
++		// entered.
++	;
++
+ID	:	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'-'|'_')*
+;
+
+diff --git a/StringTemplate4/Compiler/GroupParserHelper.cs b/StringTemplate4/Compiler/GroupParserHelper.cs
+index 1741b29..7495825 100644
+--- a/StringTemplate4/Compiler/GroupParserHelper.cs
++++ b/StringTemplate4/Compiler/GroupParserHelper.cs
+@@ -32,8 +32,27 @@
+
+namespace StringTemplate.Compiler
+{
++    using Antlr.Runtime;
++    using Path = System.IO.Path;
++
+partial class GroupParser
+{
+protected internal TemplateGroup _group;
++
++        public override string SourceName
++        {
++            get
++            {
++                string fullFileName = base.SourceName;
++                // strip to simple name
++                return Path.GetFileName(fullFileName);
++            }
++        }
++
++        public override void DisplayRecognitionError(string[] tokenNames, RecognitionException e)
++        {
++            string message = GetErrorMessage(e, tokenNames);
++            ErrorManager.SyntaxError(ErrorType.SyntaxError, e, message, SourceName);
++        }
+}
+}
+diff --git a/StringTemplate4/Compiler/TemplateCompiler.cs b/StringTemplate4/Compiler/TemplateCompiler.cs
+index 6638850..7e6bd51 100644
+--- a/StringTemplate4/Compiler/TemplateCompiler.cs
++++ b/StringTemplate4/Compiler/TemplateCompiler.cs
+@@ -142,11 +142,7 @@ namespace StringTemplate.Compiler
+}
+catch (RecognitionException re)
+{
+-                string msg = parser.GetErrorMessage(re, parser.TokenNames);
+-                if (tokens.LA(1) != TemplateLexer.LDELIM)
+-                    throw new TemplateRecognitionException("is this a template? parser says: " + msg, re);
+-                else
+-                    throw new TemplateRecognitionException(msg, re);
++                ThrowTemplateException(tokens, parser, re);
+}
+
+if (strings != null)
+@@ -170,9 +166,7 @@ namespace StringTemplate.Compiler
+}
+catch (RecognitionException re)
+{
+-                string msg = parser.GetErrorMessage(re, parser.TokenNames);
+-                Console.Error.WriteLine(re.StackTrace);
+-                throw new TemplateRecognitionException(msg, re);
++                ThrowTemplateException(tokens, parser, re);
+}
+
+if (strings != null)
+@@ -185,6 +179,34 @@ namespace StringTemplate.Compiler
+return code;
+}
+
++        protected void ThrowTemplateException(ITokenStream tokens, TemplateParser parser, RecognitionException re)
++        {
++            string msg = parser.GetErrorMessage(re, parser.TokenNames);
++            //String hdr = parser.getErrorHeader(re);
++            if (re.Token.Type == TemplateLexer.EOF_TYPE)
++            {
++                throw new TemplateException("premature EOF", re);
++            }
++            else if (re is NoViableAltException)
++            {
++                throw new TemplateException("'" + re.Token.Text + "' came as a complete surprise to me", re);
++            }
++            else if (tokens.Index == 0)
++            {
++                // couldn't parse anything
++                throw new TemplateException("this doesn't look like a template: \"" + tokens + "\"", re);
++            }
++            else if (tokens.LA(1) == TemplateLexer.LDELIM)
++            {
++                // couldn't parse anything
++                throw new TemplateException("doesn't look like an expression", re);
++            }
++            else
++            {
++                throw new TemplateException(msg, re);
++            }
++        }
++
+public int DefineString(string s)
+{
+return strings.Add(s);
+diff --git a/StringTemplate4/Compiler/TemplateLexer.cs b/StringTemplate4/Compiler/TemplateLexer.cs
+index 7061256..774dc32 100644
+--- a/StringTemplate4/Compiler/TemplateLexer.cs
++++ b/StringTemplate4/Compiler/TemplateLexer.cs
+@@ -156,7 +156,7 @@ namespace StringTemplate.Compiler
+if (c == x)
+Consume();
+else
+-                throw new Exception("expecting " + x + "; found " + c);
++                throw new Exception(GetErrorHeader() + "expecting " + x + "; found " + c);
+}
+
+protected void Consume()
+@@ -197,7 +197,11 @@ namespace StringTemplate.Compiler
+{
+while (c == ' ' || c == '\t')
+Consume(); // scarf indent
+-                return NewToken(INDENT);
++
++                if (c != EOF)
++                    return NewToken(INDENT);
++
++                return NewToken(TEXT);
+}
+if (c == delimiterStartChar)
+{
+@@ -330,9 +334,11 @@ namespace StringTemplate.Compiler
+RecognitionException re = new NoViableAltException("", 0, 0, input);
+if (c == EOF)
+{
+-                        throw new TemplateRecognitionException("EOF inside ST expression", re);
++                        re.Token = NewToken(EOF);
++                        throw new TemplateException("EOF inside ST expression", re);
+}
+-                    throw new TemplateRecognitionException("invalid character: " + c, re);
++                    re.Token = NewToken(TokenTypes.Invalid);
++                    throw new TemplateException("invalid character: " + c, re);
+}
+}
+}
+@@ -619,6 +625,11 @@ namespace StringTemplate.Compiler
+return t;
+}
+
++        public string GetErrorHeader()
++        {
++            return startLine + ":" + startCharPositionInLine;
++        }
++
+public string SourceName
+{
+get
+diff --git a/StringTemplate4/Compiler/TemplateRecognitionException.cs b/StringTemplate4/Compiler/TemplateRecognitionException.cs
+deleted file mode 100644
+index 0c3a59a..0000000
+--- a/StringTemplate4/Compiler/TemplateRecognitionException.cs
++++ /dev/null
+@@ -1,44 +0,0 @@
+-﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
+- * All rights reserved.
+- *
+- * Conversion to C#:
+- * Copyright (c) 2008-2009 Sam Harwell
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. Redistributions in binary form must reproduce the above copyright
+- *    notice, this list of conditions and the following disclaimer in the
+- *    documentation and/or other materials provided with the distribution.
+- * 3. The name of the author may not be used to endorse or promote products
+- *    derived from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- */
+-
+-namespace StringTemplate.Compiler
+-{
+-    using Antlr.Runtime;
+-
+-    public class TemplateRecognitionException : TemplateException
+-    {
+-        public TemplateRecognitionException(string message, RecognitionException cause)
+-            : base(message, cause)
+-        {
+-        }
+-    }
+-}
+diff --git a/StringTemplate4/ErrorBuffer.cs b/StringTemplate4/ErrorBuffer.cs
+index b9ec984..e65589b 100644
+--- a/StringTemplate4/ErrorBuffer.cs
++++ b/StringTemplate4/ErrorBuffer.cs
+@@ -32,7 +32,7 @@
+StringBuilder buf = new StringBuilder();
+foreach (TemplateMessage m in errors)
+{
+-                buf.Append(m.ToString());
++                buf.AppendLine(m.ToString());
+}
+return buf.ToString();
+}
+diff --git a/StringTemplate4/ErrorManager.cs b/StringTemplate4/ErrorManager.cs
+index 2d32bff..1073fad 100644
+--- a/StringTemplate4/ErrorManager.cs
++++ b/StringTemplate4/ErrorManager.cs
+@@ -38,6 +38,7 @@ namespace StringTemplate
+using ThreadStatic = System.ThreadStaticAttribute;
+using StringTemplate.Compiler;
+using Type = System.Type;
++    using Antlr.Runtime;
+
+public static class ErrorManager
+{
+@@ -106,6 +107,16 @@ namespace StringTemplate
+ErrorListener.CompileTimeError(new TemplateMessage(error, null, null, arg1, arg2));
+}
+
++        public static void SyntaxError(ErrorType error, RecognitionException e, string msg)
++        {
++            ErrorListener.CompileTimeError(new TemplateCompileTimeMessage(error, e.Token, e, msg));
++        }
++
++        public static void SyntaxError(ErrorType error, RecognitionException e, string msg, object arg)
++        {
++            ErrorListener.CompileTimeError(new TemplateCompileTimeMessage(error, e.Token, e, msg, arg));
++        }
++
+public static void RuntimeError(Template template, int ip, ErrorType error)
+{
+ErrorListener.RuntimeError(new TemplateRuntimeMessage(error, ip, template));
+diff --git a/StringTemplate4/StringTemplate4.csproj b/StringTemplate4/StringTemplate4.csproj
+index 8f1546e..b527630 100644
+--- a/StringTemplate4/StringTemplate4.csproj
++++ b/StringTemplate4/StringTemplate4.csproj
+@@ -57,7 +57,6 @@
+<Compile Include="Compiler\TemplateCompiler.cs" />
+<Compile Include="Compiler\TemplateException.cs" />
+<Compile Include="Compiler\TemplateLexer.cs" />
+-    <Compile Include="Compiler\TemplateRecognitionException.cs" />
+<Compile Include="Coordinate.cs" />
+<Compile Include="DateTimeRenderer.cs" />
+<Compile Include="Debug\AddAttributeEvent.cs" />
+@@ -85,6 +84,7 @@
+<Compile Include="Properties\AssemblyInfo.cs" />
+<Compile Include="StringRenderer.cs" />
+<Compile Include="Template.cs" />
++    <Compile Include="TemplateCompileTimeMessage.cs" />
+<Compile Include="TemplateGroup.cs" />
+<Compile Include="TemplateGroupDirectory.cs" />
+<Compile Include="TemplateGroupFile.cs" />
+diff --git a/StringTemplate4/TemplateCompileTimeMessage.cs b/StringTemplate4/TemplateCompileTimeMessage.cs
+new file mode 100644
+index 0000000..5910ab3
+--- /dev/null
++++ b/StringTemplate4/TemplateCompileTimeMessage.cs
+@@ -0,0 +1,78 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace StringTemplate
++{
++    using Antlr.Runtime;
++    using ArgumentNullException = System.ArgumentNullException;
++    using Exception = System.Exception;
++
++    public class TemplateCompileTimeMessage : TemplateMessage
++    {
++        private IToken _token;
++        private string _message;
++
++        public TemplateCompileTimeMessage(ErrorType error, IToken token)
++            : this(error, token, null)
++        {
++        }
++
++        public TemplateCompileTimeMessage(ErrorType error, IToken token, Exception innerException)
++            : this(error, token, innerException, null)
++        {
++        }
++
++        public TemplateCompileTimeMessage(ErrorType error, IToken token, Exception innerException, string message)
++            : this(error, token, innerException, message, null)
++        {
++        }
++
++        public TemplateCompileTimeMessage(ErrorType error, IToken token, Exception innerException, string message, object arg)
++            : base(error, null, innerException, arg)
++        {
++            if (token == null)
++                throw new ArgumentNullException("token");
++
++            this._token = token;
++            this._message = message;
++        }
++
++        public override string ToString()
++        {
++            string header = _token.Line + ":" + _token.CharPositionInLine;
++            if (Argument1 == null)
++                return string.Format(ErrorType.MessageFormat, header + ": " + _message);
++
++            return string.Format(ErrorType.MessageFormat, Argument1 + " " + header + ": " + _message);
++        }
++    }
++}
+diff --git a/StringTemplate4/TemplateMessage.cs b/StringTemplate4/TemplateMessage.cs
+index 620ba4f..edc7c22 100644
+--- a/StringTemplate4/TemplateMessage.cs
++++ b/StringTemplate4/TemplateMessage.cs
+@@ -40,9 +40,6 @@ namespace StringTemplate
+/** if in debug mode, has create instance, add attr events and eval
+*  template events.
+*/
+-        private ErrorType error;
+-        private object arg1;
+-        private object arg2;
+
+public TemplateMessage(ErrorType error)
+: this(error, null, null, null, null)
+@@ -66,11 +63,29 @@ namespace StringTemplate
+
+public TemplateMessage(ErrorType error, Template template, Exception source, object arg1, object arg2)
+{
+-            this.error = error;
++            this.ErrorType = error;
+this.Template = template;
+this.Source = source;
+-            this.arg1 = arg1;
+-            this.arg2 = arg2;
++            this.Argument1 = arg1;
++            this.Argument2 = arg2;
++        }
++
++        public ErrorType ErrorType
++        {
++            get;
++            private set;
++        }
++
++        public object Argument1
++        {
++            get;
++            private set;
++        }
++
++        public object Argument2
++        {
++            get;
++            private set;
+}
+
+public Template Template
+@@ -83,7 +98,7 @@ namespace StringTemplate
+{
+get
+{
+-                return string.Format(error.MessageFormat, arg1, arg2);
++                return string.Format(ErrorType.MessageFormat, Argument1, Argument2);
+}
+}
+
+@@ -96,7 +111,6 @@ namespace StringTemplate
+public override string ToString()
+{
+StringBuilder builder = new StringBuilder(Message);
+-            builder.AppendLine();
+
+if (Source != null)
+{
+

@@ -1,0 +1,24 @@
+commit e3b6e4b78c1cec36e5a38879f9300a053a44cb7c
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Tue Jun 21 13:33:35 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Tue Jun 21 13:33:35 2011 -0800
+
+(C# 3) Merge CL8670 (corrects a bug from 8669...)
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8701]
+
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime/Parser.cs b/runtime/CSharp3/Sources/Antlr3.Runtime/Parser.cs
+index a76c15b..4874140 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime/Parser.cs
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime/Parser.cs
+@@ -89,7 +89,7 @@ namespace Antlr.Runtime
+t.Line = current.Line;
+t.CharPositionInLine = current.CharPositionInLine;
+t.Channel = DefaultTokenChannel;
+-            t.InputStream = input as ICharStream;
++            t.InputStream = current.InputStream;
+return t;
+}
+
+

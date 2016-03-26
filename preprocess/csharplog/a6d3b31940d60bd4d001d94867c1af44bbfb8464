@@ -1,0 +1,576 @@
+commit a6d3b31940d60bd4d001d94867c1af44bbfb8464
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Tue Nov 30 18:26:21 2010 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Tue Nov 30 18:26:21 2010 -0800
+
+(C# 3) Updated bootstrap binaries (build 3.3.0.7239)
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7258]
+
+diff --git a/bin/Bootstrap/Antlr3.Runtime.Debug.dll b/bin/Bootstrap/Antlr3.Runtime.Debug.dll
+index 3bb18fd..4fb7b1d 100644
+Binary files a/bin/Bootstrap/Antlr3.Runtime.Debug.dll and b/bin/Bootstrap/Antlr3.Runtime.Debug.dll differ
+diff --git a/bin/Bootstrap/Antlr3.Runtime.Debug.pdb b/bin/Bootstrap/Antlr3.Runtime.Debug.pdb
+deleted file mode 100644
+index 2992643..0000000
+Binary files a/bin/Bootstrap/Antlr3.Runtime.Debug.pdb and /dev/null differ
+diff --git a/bin/Bootstrap/Antlr3.Runtime.dll b/bin/Bootstrap/Antlr3.Runtime.dll
+index 96aa60b..69ac47b 100644
+Binary files a/bin/Bootstrap/Antlr3.Runtime.dll and b/bin/Bootstrap/Antlr3.Runtime.dll differ
+diff --git a/bin/Bootstrap/Antlr3.Runtime.pdb b/bin/Bootstrap/Antlr3.Runtime.pdb
+deleted file mode 100644
+index 5b87c04..0000000
+Binary files a/bin/Bootstrap/Antlr3.Runtime.pdb and /dev/null differ
+diff --git a/bin/Bootstrap/Antlr3.StringTemplate.dll b/bin/Bootstrap/Antlr3.StringTemplate.dll
+index f9ef025..b9b1ddd 100644
+Binary files a/bin/Bootstrap/Antlr3.StringTemplate.dll and b/bin/Bootstrap/Antlr3.StringTemplate.dll differ
+diff --git a/bin/Bootstrap/Antlr3.StringTemplate.pdb b/bin/Bootstrap/Antlr3.StringTemplate.pdb
+deleted file mode 100644
+index 58555d8..0000000
+Binary files a/bin/Bootstrap/Antlr3.StringTemplate.pdb and /dev/null differ
+diff --git a/bin/Bootstrap/Antlr3.exe b/bin/Bootstrap/Antlr3.exe
+index 42c1073..3d3d1a5 100755
+Binary files a/bin/Bootstrap/Antlr3.exe and b/bin/Bootstrap/Antlr3.exe differ
+diff --git a/bin/Bootstrap/Antlr3.pdb b/bin/Bootstrap/Antlr3.pdb
+deleted file mode 100644
+index c830c9e..0000000
+Binary files a/bin/Bootstrap/Antlr3.pdb and /dev/null differ
+diff --git a/bin/Bootstrap/AntlrBuildTask.dll b/bin/Bootstrap/AntlrBuildTask.dll
+index 1348847..516c4fc 100644
+Binary files a/bin/Bootstrap/AntlrBuildTask.dll and b/bin/Bootstrap/AntlrBuildTask.dll differ
+diff --git a/bin/Bootstrap/AntlrBuildTask.pdb b/bin/Bootstrap/AntlrBuildTask.pdb
+deleted file mode 100644
+index d910bd4..0000000
+Binary files a/bin/Bootstrap/AntlrBuildTask.pdb and /dev/null differ
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/AST.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/AST.stg
+index 553944f..eb723e8 100644
+--- a/bin/Bootstrap/Codegen/Templates/CSharp3/AST.stg
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/AST.stg
+@@ -72,9 +72,13 @@ public ITreeAdaptor TreeAdaptor
+}
+>>
+
++@returnScope.ruleReturnInterfaces() ::= <<
++, IAstRuleReturnScope\<<ASTLabelType>\>
++>>
++
+@returnScope.ruleReturnMembers() ::= <<
+-internal <ASTLabelType> tree;
+-public override object Tree { get { return tree; } }
++private <ASTLabelType> _tree;
++public <ASTLabelType> Tree { get { return _tree; } set { _tree = value; } }
+>>
+
+/** Add a variable to track rule's return AST */
+@@ -186,26 +190,26 @@ rewriteCode(
+<if(backtracking)>
+if ( <actions.(actionScope).synpredgate> ) {<\n>
+<endif>
+-<prevRuleRootRef()>.tree = root_0;
++<prevRuleRootRef()>.Tree = root_0;
+<rewriteCodeLabels()>
+root_0 = (<ASTLabelType>)adaptor.Nil();
+<alts:rewriteAlt(); separator="else ">
+<! if tree parser and rewrite=true !>
+<if(TREE_PARSER)>
+<if(rewriteMode)>
+-<prevRuleRootRef()>.tree = (<ASTLabelType>)adaptor.RulePostProcessing(root_0);
+-input.ReplaceChildren(adaptor.GetParent(retval.start),
+-                      adaptor.GetChildIndex(retval.start),
++<prevRuleRootRef()>.Tree = (<ASTLabelType>)adaptor.RulePostProcessing(root_0);
++input.ReplaceChildren(adaptor.GetParent(retval.Start),
++                      adaptor.GetChildIndex(retval.Start),
+adaptor.GetChildIndex(_last),
+-                      retval.tree);
++                      retval.Tree);
+<endif>
+<endif>
+<! if parser or tree-parser && rewrite!=true, we need to set result !>
+<if(!TREE_PARSER)>
+-<prevRuleRootRef()>.tree = root_0;<\n>
++<prevRuleRootRef()>.Tree = root_0;<\n>
+<else>
+<if(!rewriteMode)>
+-<prevRuleRootRef()>.tree = root_0;
++<prevRuleRootRef()>.Tree = root_0;
+<endif>
+<endif>
+<if(backtracking)>
+@@ -233,7 +237,7 @@ rewriteCodeLabels() ::= <<
+separator="\n"
+>
+<referencedRuleLabels
+-    :{RewriteRuleSubtreeStream stream_<it>=new RewriteRuleSubtreeStream(adaptor,"rule <it>",<it>!=null?<it>.tree:null);};
++    :{RewriteRuleSubtreeStream stream_<it>=new RewriteRuleSubtreeStream(adaptor,"rule <it>",<it>!=null?<it>.Tree:null);};
+separator="\n"
+>
+<referencedRuleListLabels
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/ASTDbg.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/ASTDbg.stg
+index 67ed356..7f43a38 100644
+--- a/bin/Bootstrap/Codegen/Templates/CSharp3/ASTDbg.stg
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/ASTDbg.stg
+@@ -85,7 +85,6 @@ proxy.TreeAdaptor = adap;
+@ctorForProfilingRootGrammar.finally() ::=<<
+ITreeAdaptor adap = new CommonTreeAdaptor();
+TreeAdaptor = adap;
+-proxy.TreeAdaptor = adap;
+>>
+
+@ctorForPredefinedListener.superClassRef() ::= ": base( input, dbg )"
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/ASTParser.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/ASTParser.stg
+index ffd0bd0..c624a2d 100644
+--- a/bin/Bootstrap/Codegen/Templates/CSharp3/ASTParser.stg
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/ASTParser.stg
+@@ -44,7 +44,7 @@
+group ASTParser;
+
+@rule.setErrorReturnValue() ::= <<
+-retval.tree = (<ASTLabelType>)adaptor.ErrorNode(input, retval.start, input.LT(-1), re);
++retval.Tree = (<ASTLabelType>)adaptor.ErrorNode(input, retval.Start, input.LT(-1), re);
+<! System.out.WriteLine("<ruleName> returns "+((CommonTree)retval.tree).toStringTree()); !>
+>>
+
+@@ -188,7 +188,7 @@ new <hetero>(<label>) <! new MethodNode(IDLabel) !>
+ruleCleanUp() ::= <<
+<super.ruleCleanUp()>
+<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) {<\n><endif>
+-retval.tree = (<ASTLabelType>)adaptor.RulePostProcessing(root_0);
+-adaptor.SetTokenBoundaries(retval.tree, retval.start, retval.stop);
++retval.Tree = (<ASTLabelType>)adaptor.RulePostProcessing(root_0);
++adaptor.SetTokenBoundaries(retval.Tree, retval.Start, retval.Stop);
+<if(backtracking)>}<endif>
+>>
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/ASTTreeParser.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/ASTTreeParser.stg
+index d9066cd..a06edb5 100644
+--- a/bin/Bootstrap/Codegen/Templates/CSharp3/ASTTreeParser.stg
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/ASTTreeParser.stg
+@@ -56,9 +56,9 @@ ruleDeclarations() ::= <<
+noRewrite(rewriteBlockLevel, treeLevel) ::= <<
+<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) {<endif>
+<if(rewriteMode)>
+-retval.tree = (<ASTLabelType>)_first_0;
+-if (adaptor.GetParent(retval.tree)!=null && adaptor.IsNil(adaptor.GetParent(retval.tree)))
+-    retval.tree = (<ASTLabelType>)adaptor.GetParent(retval.tree);
++retval.Tree = (<ASTLabelType>)_first_0;
++if (adaptor.GetParent(retval.Tree)!=null && adaptor.IsNil(adaptor.GetParent(retval.Tree)))
++    retval.Tree = (<ASTLabelType>)adaptor.GetParent(retval.Tree);
+<endif>
+<if(backtracking)>}<endif>
+>>
+@@ -79,7 +79,7 @@ _last = (<ASTLabelType>)input.LT(1);
+<if(rewriteMode)>
+<if(backtracking)>if ( <actions.(actionScope).synpredgate> )<endif>
+<if(root.el.rule)>
+-if ( _first_<enclosingTreeLevel>==null ) _first_<enclosingTreeLevel> = <root.el.label>.tree;
++if ( _first_<enclosingTreeLevel>==null ) _first_<enclosingTreeLevel> = <root.el.label>.Tree;
+<else>
+if ( _first_<enclosingTreeLevel>==null ) _first_<enclosingTreeLevel> = <root.el.label>;
+<endif>
+@@ -230,7 +230,7 @@ _last = (<ASTLabelType>)input.LT(1);
+<if(!rewriteMode)>
+adaptor.AddChild(root_<treeLevel>, <label>.Tree);
+<else> <! rewrite mode !>
+-if ( _first_<treeLevel>==null ) _first_<treeLevel> = <label>.tree;
++if ( _first_<treeLevel>==null ) _first_<treeLevel> = <label>.Tree;
+<endif>
+>>
+
+@@ -294,7 +294,7 @@ ruleCleanUp() ::= <<
+<super.ruleCleanUp()>
+<if(!rewriteMode)>
+<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) {<\n><endif>
+-retval.tree = (<ASTLabelType>)adaptor.RulePostProcessing(root_0);
++retval.Tree = (<ASTLabelType>)adaptor.RulePostProcessing(root_0);
+<if(backtracking)>}<endif>
+<endif>
+>>
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg
+index 647432c..baa8da9 100644
+--- a/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg
+@@ -39,6 +39,16 @@ csharpVisibilityMap ::= [
+default:"private"
+]
+
++// System.Boolean.ToString() returns "True" and "False", but the proper C# literals are "true" and "false"
++// The Java version of Boolean returns "true" and "false", so they map to themselves here.
++booleanLiteral ::= [
++	"True":"true",
++	"False":"false",
++	"true":"true",
++	"false":"false",
++	default:"false"
++]
++
+/** The overall file structure of a recognizer; stores methods for rules
+*  and cyclic DFAs plus support code.
+*/
+@@ -135,6 +145,8 @@ public partial class <grammar.recognizerName> : <@superClassName><superClass><@e
+}
+public override string GrammarFileName { get { return "<fileName>"; } }
+
++	private static readonly bool[] decisionCanBacktrack = new bool[0];
++
+<if(grammar.hasDelegates)>
+public override ICharStream CharStream
+{
+@@ -279,6 +291,16 @@ public partial class <grammar.recognizerName> : <@superClassName><superClass><@e
+
+<scopes:{<if(it.isDynamicGlobalScope)><globalAttributeScope(scope=it)><endif>}>
+<@members>
++#if ANTLR_DEBUG
++	private static readonly bool[] decisionCanBacktrack =
++		new bool[]
++		{
++			false, // invalid decision
++			<grammar.decisions:{d | <booleanLiteral.(d.dfa.hasSynPred)>}; wrap="\n", separator=", ">
++		};
++#else
++	private static readonly bool[] decisionCanBacktrack = new bool[0];
++#endif
+<! WARNING. bug in ST: this is cut-n-paste into Dbg.stg !>
+public <grammar.recognizerName>( <inputStreamType> input<grammar.delegators:{g|, <g.recognizerName> <g:delegateName()>}> )
+: this( input, new RecognizerSharedState()<grammar.delegators:{g|, <g:delegateName()>}> )
+@@ -368,7 +390,7 @@ parser(grammar, name, scopes, tokens, tokenNames, rules, numRules, bitsets,
+*/
+treeParser(grammar, name, scopes, tokens, tokenNames, globalAction, rules,
+numRules, bitsets, labelType={<ASTLabelType>}, ASTLabelType="object",
+-           superClass={<if(actions.(actionScope).superClass)><actions.(actionScope).superClass><else>Antlr.Runtime.Tree.<if(filterMode)><if(buildAST)>TreeRewriter<else>TreeFilter<endif><else>TreeParser<endif><endif>},
++           superClass={<if(actions.(actionScope).superClass)><actions.(actionScope).superClass><else>Antlr.Runtime.Tree.<if(filterMode)><if(buildAST)>TreeRewriter\<<labelType>\><else>TreeFilter<endif><else>TreeParser<endif><endif>},
+members={<actions.treeparser.members>},
+filterMode) ::= <<
+<genericParser(inputStreamType="ITreeNodeStream", rewriteElementType="Node", ...)>
+@@ -383,14 +405,14 @@ treeParser(grammar, name, scopes, tokens, tokenNames, globalAction, rules,
+*/
+synpredRule(ruleName, ruleDescriptor, block, description, nakedBlock) ::=
+<<
+-partial void Enter<ruleName>_fragment();
+-partial void Leave<ruleName>_fragment();
++partial void Enter_<ruleName>_fragment();
++partial void Leave_<ruleName>_fragment();
+
+// $ANTLR start <ruleName>
+public <!final !>void <ruleName>_fragment(<ruleDescriptor.parameterScope:parameterScope(scope=it)>)
+{
+<ruleLabelDefs()>
+-	Enter<ruleName>_fragment();
++	Enter_<ruleName>_fragment();
+EnterRule("<ruleName>_fragment", <ruleDescriptor.index>);
+TraceIn("<ruleName>_fragment", <ruleDescriptor.index>);
+try
+@@ -401,7 +423,7 @@ public <!final !>void <ruleName>_fragment(<ruleDescriptor.parameterScope:paramet
+{
+TraceOut("<ruleName>_fragment", <ruleDescriptor.index>);
+LeaveRule("<ruleName>_fragment", <ruleDescriptor.index>);
+-		Leave<ruleName>_fragment();
++		Leave_<ruleName>_fragment();
+}
+}
+// $ANTLR end <ruleName>
+@@ -464,15 +486,15 @@ rule(ruleName,ruleDescriptor,block,emptyRule,description,exceptions,finally,memo
+<ruleAttributeScope(scope=ruleDescriptor.ruleScope)>
+<returnScope(scope=ruleDescriptor.returnScope)>
+
+-partial void Enter<ruleName>();
+-partial void Leave<ruleName>();
++partial void Enter_<ruleName>();
++partial void Leave_<ruleName>();
+
+// $ANTLR start "<ruleName>"
+// <fileName>:<description>
+[GrammarRule("<ruleName>")]
+-<csharpVisibilityMap.(ruleDescriptor.modifier)> <returnType()> <ruleName>(<ruleDescriptor.parameterScope:parameterScope(scope=it)>)
++<csharpVisibilityMap.(ruleDescriptor.modifier); null="private"> <returnType()> <ruleName>(<ruleDescriptor.parameterScope:parameterScope(scope=it)>)
+{
+-	Enter<ruleName>();
++	Enter_<ruleName>();
+EnterRule("<ruleName>", <ruleDescriptor.index>);
+TraceIn("<ruleName>", <ruleDescriptor.index>);
+<ruleScopeSetUp()>
+@@ -509,7 +531,7 @@ partial void Leave<ruleName>();
+{
+TraceOut("<ruleName>", <ruleDescriptor.index>);
+LeaveRule("<ruleName>", <ruleDescriptor.index>);
+-		Leave<ruleName>();
++		Leave_<ruleName>();
+<memoize()>
+<ruleScopeCleanUp()>
+<finally>
+@@ -532,7 +554,7 @@ catch (<e.decl>)
+ruleDeclarations() ::= <<
+<if(ruleDescriptor.hasMultipleReturnValues)>
+<returnType()> retval = new <returnType()>();
+-retval.start = input.LT(1);<\n>
++retval.Start = (<labelType>)input.LT(1);<\n>
+<else>
+<ruleDescriptor.returnScope.attributes:{ a |
+<a.type> <a.name> = <if(a.initValue)><a.initValue><else><initValue(a.type)><endif>;
+@@ -594,7 +616,7 @@ return<if(!ruleDescriptor.isSynPred)>
+ruleCleanUp() ::= <<
+<if(ruleDescriptor.hasMultipleReturnValues)>
+<if(!TREE_PARSER)>
+-retval.stop = input.LT(-1);<\n>
++retval.Stop = (<labelType>)input.LT(-1);<\n>
+<endif>
+<endif>
+>>
+@@ -611,14 +633,14 @@ if (state.backtracking > 0) { Memoize(input, <ruleDescriptor.index>, <ruleDescri
+*  fragment rules.
+*/
+lexerRule(ruleName,nakedBlock,ruleDescriptor,block,memoize) ::= <<
+-partial void Enter<ruleName>();
+-partial void Leave<ruleName>();
++partial void Enter_<ruleName>();
++partial void Leave_<ruleName>();
+
+// $ANTLR start "<ruleName>"
+[GrammarRule("<ruleName>")]
+-<csharpVisibilityMap.(ruleDescriptor.modifier)> void m<ruleName>(<ruleDescriptor.parameterScope:parameterScope(scope=it)>)
++<csharpVisibilityMap.(ruleDescriptor.modifier); null="private"> void m<ruleName>(<ruleDescriptor.parameterScope:parameterScope(scope=it)>)
+{
+-	Enter<ruleName>();
++	Enter_<ruleName>();
+EnterRule("<ruleName>", <ruleDescriptor.index>);
+TraceIn("<ruleName>", <ruleDescriptor.index>);
+<ruleScopeSetUp()>
+@@ -647,7 +669,7 @@ partial void Leave<ruleName>();
+{
+TraceOut("<ruleName>", <ruleDescriptor.index>);
+LeaveRule("<ruleName>", <ruleDescriptor.index>);
+-		Leave<ruleName>();
++		Leave_<ruleName>();
+<ruleScopeCleanUp()>
+<memoize()>
+}
+@@ -674,7 +696,7 @@ int alt<decisionNumber>=<maxAlt>;
+<decls>
+<@predecision()>
+try { DebugEnterSubRule(<decisionNumber>);
+-try { DebugEnterDecision(<decisionNumber>, false);
++try { DebugEnterDecision(<decisionNumber>, decisionCanBacktrack[<decisionNumber>]);
+<decision>
+} finally { DebugExitDecision(<decisionNumber>); }
+<@postdecision()>
+@@ -693,7 +715,7 @@ ruleBlock(alts,decls,decision,enclosingBlockLevel,blockLevel,decisionNumber,maxK
+int alt<decisionNumber>=<maxAlt>;
+<decls>
+<@predecision()>
+-try { DebugEnterDecision(<decisionNumber>, false);
++try { DebugEnterDecision(<decisionNumber>, decisionCanBacktrack[<decisionNumber>]);
+<decision>
+} finally { DebugExitDecision(<decisionNumber>); }
+<@postdecision()>
+@@ -733,7 +755,7 @@ while (true)
+{
+int alt<decisionNumber>=<maxAlt>;
+<@predecision()>
+-	try { DebugEnterDecision(<decisionNumber>, false);
++	try { DebugEnterDecision(<decisionNumber>, decisionCanBacktrack[<decisionNumber>]);
+<decision>
+} finally { DebugExitDecision(<decisionNumber>); }
+<@postdecision()>
+@@ -771,7 +793,7 @@ while (true)
+{
+int alt<decisionNumber>=<maxAlt>;
+<@predecision()>
+-	try { DebugEnterDecision(<decisionNumber>, false);
++	try { DebugEnterDecision(<decisionNumber>, decisionCanBacktrack[<decisionNumber>]);
+<decision>
+} finally { DebugExitDecision(<decisionNumber>); }
+<@postdecision()>
+@@ -1252,10 +1274,8 @@ private class DFA<dfa.decisionNumber> : DFA
+this.special = DFA<dfa.decisionNumber>_special;
+this.transition = DFA<dfa.decisionNumber>_transition;
+}
+-	public override string GetDescription()
+-	{
+-		return "<dfa.description>";
+-	}
++
++	public override string Description { get { return "<dfa.description>"; } }
+
+public override void Error(NoViableAltException nvae)
+{
+@@ -1284,7 +1304,7 @@ private int SpecialStateTransition<dfa.decisionNumber>(DFA dfa, int s, IIntStrea
+<if(backtracking)>
+if (state.backtracking > 0) {state.failed=true; return -1;}<\n>
+<endif>
+-	NoViableAltException nvae = new NoViableAltException(dfa.GetDescription(), <dfa.decisionNumber>, _s, input);
++	NoViableAltException nvae = new NoViableAltException(dfa.Description, <dfa.decisionNumber>, _s, input);
+dfa.Error(nvae);
+throw nvae;
+}<\n>
+@@ -1365,7 +1385,7 @@ protected void <scope.name>_scopeInit( <scope.name>_scope scope )
+<scope.actions.scopeinit>
+}<\n>
+<else>
+-partial void <scope.name>_scopeInit( <scope.name>_scope scope );
++partial void <scope.name>_scopeInit( <scope.name>_scope scope );<\n>
+<endif>
+<if(scope.actions.scopeafter)>
+protected void <scope.name>_scopeAfter( <scope.name>_scope scope )
+@@ -1373,7 +1393,7 @@ protected void <scope.name>_scopeAfter( <scope.name>_scope scope )
+<scope.actions.scopeafter>
+}<\n>
+<else>
+-partial void <scope.name>_scopeAfter( <scope.name>_scope scope );
++partial void <scope.name>_scopeAfter( <scope.name>_scope scope );<\n>
+<endif>
+protected Stack\<<scope.name>_scope\> <scope.name>_stack = new Stack\<<scope.name>_scope\>();<\n>
+<endif>
+@@ -1438,7 +1458,7 @@ ruleLabelDef(label) ::= <<
+*/
+returnScope(scope) ::= <<
+<if(ruleDescriptor.hasMultipleReturnValues)>
+-public <!static !>class <ruleDescriptor:returnStructName()> : <if(TREE_PARSER)>Tree<else>Parser<endif>RuleReturnScope
++public class <ruleDescriptor:returnStructName()> : <if(TREE_PARSER)>Tree<else>Parser<endif>RuleReturnScope\<<labelType>\><@ruleReturnInterfaces()>
+{
+<scope.attributes:{public <it.decl>;}; separator="\n">
+<@ruleReturnMembers()>
+@@ -1524,7 +1544,7 @@ tokenLabelPropertyRef_pos(scope,attr) ::= "(<scope>!=null?<scope>.CharPositionIn
+tokenLabelPropertyRef_channel(scope,attr) ::= "(<scope>!=null?<scope>.Channel:0)"
+tokenLabelPropertyRef_index(scope,attr) ::= "(<scope>!=null?<scope>.TokenIndex:0)"
+tokenLabelPropertyRef_tree(scope,attr) ::= "<scope>_tree"
+-tokenLabelPropertyRef_int(scope,attr) ::= "(<scope>!=null?Integer.valueOf(<scope>.Text):0)"
++tokenLabelPropertyRef_int(scope,attr) ::= "(<scope>!=null?int.Parse(<scope>.Text):0)"
+
+ruleLabelPropertyRef_start(scope,attr) ::= "(<scope>!=null?((<labelType>)<scope>.Start):null)"
+ruleLabelPropertyRef_stop(scope,attr) ::= "(<scope>!=null?((<labelType>)<scope>.Stop):null)"
+@@ -1535,11 +1555,11 @@ ruleLabelPropertyRef_text(scope,attr) ::= <<
+input.TreeAdaptor.GetTokenStartIndex(<scope>.Start),
+input.TreeAdaptor.GetTokenStopIndex(<scope>.Start))):null)
+<else>
+-(<scope>!=null?input.ToString(<scope>.start,<scope>.stop):null)
++(<scope>!=null?input.ToString(<scope>.Start,<scope>.Stop):null)
+<endif>
+>>
+
+-ruleLabelPropertyRef_st(scope,attr) ::= "(<scope>!=null?<scope>.st:null)"
++ruleLabelPropertyRef_st(scope,attr) ::= "(<scope>!=null?<scope>.Template:null)"
+
+/** Isolated $RULE ref ok in lexer as it's a Token */
+lexerRuleLabel(label) ::= "<label>"
+@@ -1563,12 +1583,12 @@ lexerRuleLabelPropertyRef_text(scope,attr) ::=
+"(<scope>!=null?<scope>.Text:null)"
+
+lexerRuleLabelPropertyRef_int(scope,attr) ::=
+-    "(<scope>!=null?Integer.valueOf(<scope>.Text):0)"
++    "(<scope>!=null?int.Parse(<scope>.Text):0)"
+
+// Somebody may ref $template or $tree or $stop within a rule:
+-rulePropertyRef_start(scope,attr) ::= "((<labelType>)retval.Start)"
+-rulePropertyRef_stop(scope,attr) ::= "((<labelType>)retval.Stop)"
+-rulePropertyRef_tree(scope,attr) ::= "((<ASTLabelType>)retval.Tree)"
++rulePropertyRef_start(scope,attr) ::= "retval.Start"
++rulePropertyRef_stop(scope,attr) ::= "retval.Stop"
++rulePropertyRef_tree(scope,attr) ::= "retval.Tree"
+rulePropertyRef_text(scope,attr) ::= <<
+<if(TREE_PARSER)>
+input.TokenStream.ToString(
+@@ -1578,7 +1598,7 @@ input.TokenStream.ToString(
+input.ToString(retval.Start,input.LT(-1))
+<endif>
+>>
+-rulePropertyRef_st(scope,attr) ::= "retval.st"
++rulePropertyRef_st(scope,attr) ::= "retval.Template"
+
+lexerRulePropertyRef_text(scope,attr) ::= "Text"
+lexerRulePropertyRef_type(scope,attr) ::= "_type"
+@@ -1592,8 +1612,8 @@ lexerRulePropertyRef_int(scope,attr) ::= "int.Parse(<scope>.Text)"
+
+// setting $st and $tree is allowed in local rule. everything else
+// is flagged as error
+-ruleSetPropertyRef_tree(scope,attr,expr) ::= "retval.tree =<expr>;"
+-ruleSetPropertyRef_st(scope,attr,expr) ::= "retval.st =<expr>;"
++ruleSetPropertyRef_tree(scope,attr,expr) ::= "retval.Tree = <expr>;"
++ruleSetPropertyRef_st(scope,attr,expr) ::= "retval.Template =<expr>;"
+
+/** How to execute an action (only when not backtracking) */
+execAction(action) ::= <<
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/Dbg.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/Dbg.stg
+index 336385a..94d43a5 100644
+--- a/bin/Bootstrap/Codegen/Templates/CSharp3/Dbg.stg
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/Dbg.stg
+@@ -68,7 +68,8 @@ public static readonly string[] ruleNames =
+<if(profile)>
+public override bool AlreadyParsedRule( IIntStream input, int ruleIndex )
+{
+-	((Profiler)dbg).ExamineRuleMemoization(input, ruleIndex, <grammar.composite.rootGrammar.recognizerName>.ruleNames[ruleIndex]);
++	int stopIndex = GetRuleMemoization(ruleIndex, input.Index);
++	((Profiler)dbg).ExamineRuleMemoization(input, ruleIndex, stopIndex, <grammar.composite.rootGrammar.recognizerName>.ruleNames[ruleIndex]);
+return base.AlreadyParsedRule(input, ruleIndex);
+}<\n>
+public override void Memoize( IIntStream input, int ruleIndex, int ruleStartIndex )
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/ST.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/ST.stg
+index 9f84f5c..7475a43 100644
+--- a/bin/Bootstrap/Codegen/Templates/CSharp3/ST.stg
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/ST.stg
+@@ -42,9 +42,9 @@ using Antlr3.ST.Language;
+
+/** Add this to each rule's return value struct */
+@returnScope.ruleReturnMembers() ::= <<
+-public StringTemplate st;
+-public object Template { get { return st; } }
+-public override string ToString() { return (st==null) ? string.Empty : st.ToString(); }
++private StringTemplate _st;
++public StringTemplate Template { get { return _st; } set { _st = value; } }
++public override string ToString() { return (Template==null) ? string.Empty : Template.ToString(); }
+>>
+
+@genericParser.members() ::= <<
+@@ -82,14 +82,14 @@ if ( <actions.(actionScope).synpredgate> )
+replaceTextInLine() ::= <<
+<if(TREE_PARSER)>
+((TokenRewriteStream)input.TokenStream).Replace(
+-	input.TreeAdaptor.GetTokenStartIndex(retval.start),
+-	input.TreeAdaptor.GetTokenStopIndex(retval.start),
+-	retval.st );
++	input.TreeAdaptor.GetTokenStartIndex(retval.Start),
++	input.TreeAdaptor.GetTokenStopIndex(retval.Start),
++	retval.Template);
+<else>
+((TokenRewriteStream)input).Replace(
+-	((IToken)retval.start).TokenIndex,
++	retval.Start.TokenIndex,
+input.LT(-1).TokenIndex,
+-	retval.st );
++	retval.Template);
+<endif>
+>>
+
+@@ -98,11 +98,11 @@ rewriteTemplateAlt() ::= <<
+<if(it.pred)>
+if (<it.pred>)
+{
+-	retval.st = <it.alt>;
++	retval.Template = <it.alt>;
+}<\n>
+<else>
+{
+-	retval.st = <it.alt>;
++	retval.Template = <it.alt>;
+}<\n>
+<endif>
+>>
+diff --git a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll
+index b650bd2..3ad6d75 100644
+Binary files a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll and b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll differ
+diff --git a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.pdb b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.pdb
+deleted file mode 100644
+index 95cccc6..0000000
+Binary files a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.pdb and /dev/null differ
+diff --git a/bin/Bootstrap/Tool/Templates/messages/languages/en.stg b/bin/Bootstrap/Tool/Templates/messages/languages/en.stg
+index b3ed9e5..9decc70 100644
+--- a/bin/Bootstrap/Tool/Templates/messages/languages/en.stg
++++ b/bin/Bootstrap/Tool/Templates/messages/languages/en.stg
+@@ -1,6 +1,6 @@
+/*
+- [The "BSD licence"]
+- Copyright (c) 2005-2006 Terence Parr
++ [The "BSD license"]
++ Copyright (c) 2010 Terence Parr
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+

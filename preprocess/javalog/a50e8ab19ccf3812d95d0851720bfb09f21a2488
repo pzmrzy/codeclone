@@ -1,0 +1,150 @@
+commit a50e8ab19ccf3812d95d0851720bfb09f21a2488
+Author:     sharwell <sam@tunnelvisionlabs.com>
+AuthorDate: Mon Feb 6 15:19:48 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Fri Feb 10 15:29:49 2012 -0600
+
+Update build to use ST4 4.0.4 instead of 4.0.2, specify missing maven plugin versions, runtime targets Java 1.6 due to generic type declarations
+
+diff --git a/antlr3-maven-archetype/pom.xml b/antlr3-maven-archetype/pom.xml
+index e87fc49..f5d9815 100644
+--- a/antlr3-maven-archetype/pom.xml
++++ b/antlr3-maven-archetype/pom.xml
+@@ -79,6 +79,7 @@
+<plugin>
+<groupId>org.apache.maven.plugins</groupId>
+<artifactId>maven-source-plugin</artifactId>
++                <version>2.1.2</version>
+<executions>
+<execution>
+<id>attach-sources</id>
+diff --git a/antlr3-maven-archetype/src/main/resources/archetype-resources/pom.xml b/antlr3-maven-archetype/src/main/resources/archetype-resources/pom.xml
+index 4c20687..d0509c9 100644
+--- a/antlr3-maven-archetype/src/main/resources/archetype-resources/pom.xml
++++ b/antlr3-maven-archetype/src/main/resources/archetype-resources/pom.xml
+@@ -104,6 +104,7 @@
+-->
+<plugin>
+<artifactId>maven-compiler-plugin</artifactId>
++                <version>2.0.2</version>
+<configuration>
+<source>1.6</source>
+<target>jsr14</target>
+diff --git a/antlr3-maven-plugin/pom.xml b/antlr3-maven-plugin/pom.xml
+index 3cfc9b6..98a7a34 100644
+--- a/antlr3-maven-plugin/pom.xml
++++ b/antlr3-maven-plugin/pom.xml
+@@ -338,6 +338,7 @@ Jim Idle - March 2009
+<plugin>
+<groupId>org.apache.maven.plugins</groupId>
+<artifactId>maven-source-plugin</artifactId>
++                <version>2.1.2</version>
+<executions>
+<execution>
+<id>attach-sources</id>
+diff --git a/gunit-maven-plugin/pom.xml b/gunit-maven-plugin/pom.xml
+index 3cceb8b..65059ce 100644
+--- a/gunit-maven-plugin/pom.xml
++++ b/gunit-maven-plugin/pom.xml
+@@ -231,6 +231,7 @@
+<plugin>
+<groupId>org.apache.maven.plugins</groupId>
+<artifactId>maven-project-info-reports-plugin</artifactId>
++                <version>2.4</version>
+<configuration>
+<dependencyLocationsEnabled>false</dependencyLocationsEnabled>
+</configuration>
+@@ -239,6 +240,7 @@
+<plugin>
+<groupId>org.apache.maven.plugins</groupId>
+<artifactId>maven-source-plugin</artifactId>
++                <version>2.1.2</version>
+<executions>
+<execution>
+<id>attach-sources</id>
+diff --git a/gunit/pom.xml b/gunit/pom.xml
+index 4fd6e9b..2702a5b 100644
+--- a/gunit/pom.xml
++++ b/gunit/pom.xml
+@@ -86,7 +86,6 @@
+<dependency>
+<groupId>junit</groupId>
+<artifactId>junit</artifactId>
+-            <version>4.5</version>
+<scope>compile</scope>
+</dependency>
+
+@@ -131,6 +130,7 @@
+
+<plugin>
+<artifactId>maven-compiler-plugin</artifactId>
++                <version>2.0.2</version>
+<configuration>
+<source>1.5</source>
+<target>jsr14</target>
+diff --git a/pom.xml b/pom.xml
+index a0245e3..7374742 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -117,8 +117,8 @@
+
+<dependency>
+<groupId>org.antlr</groupId>
+-                <artifactId>stringtemplate</artifactId>
+-                <version>4.0.2</version>
++                <artifactId>ST4</artifactId>
++                <version>4.0.4</version>
+<scope>compile</scope>
+</dependency>
+
+@@ -178,6 +178,7 @@
+
+<plugin>
+<artifactId>maven-compiler-plugin</artifactId>
++                <version>2.0.2</version>
+<configuration>
+<source>1.6</source>
+<target>jsr14</target>
+diff --git a/runtime/Java/pom.xml b/runtime/Java/pom.xml
+index da603c5..0631dd4 100644
+--- a/runtime/Java/pom.xml
++++ b/runtime/Java/pom.xml
+@@ -102,7 +102,7 @@
+<version>2.0.2</version>
+<configuration>
+<source>1.6</source>
+-                <target>jsr14</target>
++                <target>1.6</target>
+</configuration>
+</plugin>
+
+diff --git a/tool/pom.xml b/tool/pom.xml
+index f1f9e71..14b9960 100644
+--- a/tool/pom.xml
++++ b/tool/pom.xml
+@@ -31,10 +31,15 @@
+<dependency>
+<groupId>junit</groupId>
+<artifactId>junit</artifactId>
+-            <version>4.8.2</version>
+<scope>test</scope>
+</dependency>
+
++        <dependency>
++            <groupId>org.antlr</groupId>
++            <artifactId>ST4</artifactId>
++            <scope>compile</scope>
++        </dependency>
++
+</dependencies>
+<!--
+
+@@ -75,6 +80,7 @@
+
+<plugin>
+<artifactId>maven-compiler-plugin</artifactId>
++                <version>2.0.2</version>
+<configuration>
+<source>1.6</source>
+<target>jsr14</target>
+

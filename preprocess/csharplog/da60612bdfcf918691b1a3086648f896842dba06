@@ -1,0 +1,152 @@
+commit da60612bdfcf918691b1a3086648f896842dba06
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Jan 31 16:03:02 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Jan 31 16:03:02 2011 -0800
+
+(C# 3) Merge CL 7568
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7592]
+
+diff --git a/Antlr3.vsmdi b/Antlr3.vsmdi
+index 9856ca2..934aee7 100644
+--- a/Antlr3.vsmdi
++++ b/Antlr3.vsmdi
+@@ -417,7 +417,7 @@
+<TestLinks>
+<TestLink id="bd3615b8-9530-875b-9112-894e3a10a1ca" name="TestNullAttrProp" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="dbfbc5b8-c63d-84f4-7b7f-c07ade428530" name="TestAttrIsList" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="7b0fd268-314e-5be0-7eff-d92eaebb90c6" name="TestIncludeWithNestedArgs" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="2d00e12e-f716-c605-81db-da3388fc90b9" name="TestNullIndirectProp" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="520977ca-8a29-706a-3798-7d2863ed0097" name="TestMapNullValue" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="8aee4ed3-1d93-3b8d-356c-e9ab8344131d" name="TestMultiAttr" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="a9a7d556-bb44-610b-19d1-405133698eff" name="TestSTProp" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+@@ -451,9 +451,10 @@
+<TestLink id="3f3324d5-94aa-9841-6f88-b4b06936dde7" name="TestSeparatorInList" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="f1302103-2533-2c0d-09d9-e3ee0e81b8d1" name="TestMapIndexes" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="29cffafa-1559-ddaa-3234-a1bbdef7e30a" name="TestDefineTemplate" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="0e254e5a-d5b5-f592-e0ec-b46645e29932" name="TestAndNot" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="b7a9790d-fdb9-4b43-a401-d33d9736aabe" name="TestFalseCondWithFormalArgs" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="743ca4e9-6bbc-312f-a51b-6fa3e0139a37" name="TestElseIf" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="2d00e12e-f716-c605-81db-da3388fc90b9" name="TestNullIndirectProp" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="1ce1637f-8543-e298-c530-034b3be54018" name="TestRoundRobinMap" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="880e6a14-850b-9bbd-4755-4cf934748f0f" name="TestSubtemplateExpr" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="8f639ed8-45a5-983a-3607-61d1bea8a74e" name="TestSetUnknownAttr" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="6fd78b97-13e1-6a1d-aea1-beaac3b6cccb" name="TestParallelMapWith3Versus2Elements" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+@@ -464,16 +465,16 @@
+<TestLink id="31ac465f-8146-f96f-dad2-20ae147895a0" name="TestNotFalseCond" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="bccb2808-0328-2742-e9b1-3b2c42c02583" name="TestElseIfAllExprFalse" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="7f2e0b55-7261-b12d-dd1d-d2bede674ca6" name="TestMapThenParallelMap" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="7174b6e2-103b-1dcc-b155-5636d9fb8932" name="TestFalseCondWithElse" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="7b0fd268-314e-5be0-7eff-d92eaebb90c6" name="TestIncludeWithNestedArgs" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="72d3ca00-ed45-1a39-804f-17a0d259820b" name="TestCondParens" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="b43cff6a-8473-4b7e-7c8f-a0b11da91a64" name="TestNoSuchProp" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="36a5f3aa-da13-60e9-c6ae-35531d86c3fb" name="TestPropWithNoAttr" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="9a01a61f-33aa-5873-612f-aa48eea09684" name="TestEarlyEvalIndent" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="2d405e3c-baf7-15fa-3e87-ea3d2e589692" name="TestMapIndexes2" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="2f9daab6-7e50-9a1b-0cd4-29d51b482808" name="TestTrueCond" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="683a799a-4b97-ac38-f1b8-1e89f5e002f6" name="TestMapNullValueInList" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="7174b6e2-103b-1dcc-b155-5636d9fb8932" name="TestFalseCondWithElse" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="f1c473ae-9f41-7774-1d33-4167a44a00af" name="Playing" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="0e254e5a-d5b5-f592-e0ec-b46645e29932" name="TestAndNot" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="1ce1637f-8543-e298-c530-034b3be54018" name="TestRoundRobinMap" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="683a799a-4b97-ac38-f1b8-1e89f5e002f6" name="TestMapNullValueInList" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="2f9daab6-7e50-9a1b-0cd4-29d51b482808" name="TestTrueCond" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="36a5f3aa-da13-60e9-c6ae-35531d86c3fb" name="TestPropWithNoAttr" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+</TestLinks>
+</TestList>
+<TestList name="Debug events" id="32744eeb-e23b-4a91-948c-a18809949b64" parentListId="4adbb104-d28d-4362-8420-a9fefe69c167">
+diff --git a/Antlr4.StringTemplate/TemplateGroup.cs b/Antlr4.StringTemplate/TemplateGroup.cs
+index 9ae0485..ffaddc1 100644
+--- a/Antlr4.StringTemplate/TemplateGroup.cs
++++ b/Antlr4.StringTemplate/TemplateGroup.cs
+@@ -389,9 +389,6 @@ namespace Antlr4.StringTemplate
+IToken nameToken,
+List<FormalArgument> args)
+{
+-            //int n = 1; // num char to strip from left, right of template def token text "" <<>>
+-            //if (templateToken.Type == GroupLexer.BIGSTRING)
+-            //    n = 2;
+try
+{
+if (regionSurroundingTemplateName != null)
+diff --git a/Antlr4.Test.StringTemplate/TestCoreBasics.cs b/Antlr4.Test.StringTemplate/TestCoreBasics.cs
+index 2ca52ae..8f56b83 100644
+--- a/Antlr4.Test.StringTemplate/TestCoreBasics.cs
++++ b/Antlr4.Test.StringTemplate/TestCoreBasics.cs
+@@ -32,12 +32,13 @@
+
+namespace Antlr4.Test.StringTemplate
+{
++    using System.Collections.Generic;
+using Antlr4.StringTemplate;
+-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+-    using StringWriter = System.IO.StringWriter;
+using Antlr4.StringTemplate.Misc;
++    using Microsoft.VisualStudio.TestTools.UnitTesting;
+using ArgumentException = System.ArgumentException;
+-    using System.Collections.Generic;
++    using Path = System.IO.Path;
++    using StringWriter = System.IO.StringWriter;
+
+[TestClass]
+public class TestCoreBasics : BaseTest
+@@ -71,7 +72,7 @@ namespace Antlr4.Test.StringTemplate
+"t() ::= <<hi <name>!>>\n";
+ErrorBuffer errors = new ErrorBuffer();
+writeFile(tmpdir, "t.stg", templates);
+-            TemplateGroup group = new TemplateGroupFile(tmpdir + "/" + "t.stg");
++            TemplateGroup group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
+group.Listener = errors;
+Template st = group.GetInstanceOf("t");
+string result = null;
+@@ -359,7 +360,7 @@ namespace Antlr4.Test.StringTemplate
+"test(name) ::= \"<name:(d.foo)()>\"\n" +
+"bold(x) ::= <<*<x>*>>\n";
+writeFile(tmpdir, "t.stg", templates);
+-            TemplateGroup group = new TemplateGroupFile(tmpdir + "/" + "t.stg");
++            TemplateGroup group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
+Template st = group.GetInstanceOf("test");
+st.Add("name", "Ter");
+st.Add("name", "Tom");
+@@ -857,6 +858,39 @@ namespace Antlr4.Test.StringTemplate
+Assert.AreEqual(expected, result);
+}
+
++        /** (...) forces early eval to string.
++         * We need an STWriter so I must pick one.  toString(...) is used to
++         * ensure b is property name in &lt;a.b&gt;.  It's used to eval default args
++         * (usually strings). It's use to eval option values (usually strings).
++         * So in general no-indent is fine.  Now, if I used indent-writer, it
++         * would mostly work too.  What about &lt;(t())&gt; when t() is huge and indented
++         * but you had called render() with a no-indent-writer?  now *part* your
++         * input is indented!
++         */
++        [TestMethod]
++        public void TestEarlyEvalIndent()
++        {
++            string templates =
++                "t() ::= <<  abc>>\n" +
++                "main() ::= <<\n" +
++                "<t()>\n" +
++                "<(t())>\n" + // early eval ignores indents; mostly for simply strings
++                "  <t()>\n" +
++                "  <(t())>\n" +
++                ">>\n";
++
++            writeFile(tmpdir, "t.stg", templates);
++            TemplateGroup group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
++            Template st = group.GetInstanceOf("main");
++            string result = st.Render();
++            string expected =
++                "  abc" + newline +
++                "abc" + newline +
++                "    abc" + newline +
++                "  abc";
++            Assert.AreEqual(expected, result);
++        }
++
+[TestMethod]
+public void Playing()
+{
+

@@ -1,0 +1,28 @@
+commit e622eba02dd486093215e59de2ba76017c88b936
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Jun 29 22:24:05 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Jun 29 22:24:05 2011 -0800
+
+Fix NullPointerException in SemanticContext
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8807]
+
+diff --git a/tool/src/main/java/org/antlr/analysis/SemanticContext.java b/tool/src/main/java/org/antlr/analysis/SemanticContext.java
+index 51262a6..682de32 100644
+--- a/tool/src/main/java/org/antlr/analysis/SemanticContext.java
++++ b/tool/src/main/java/org/antlr/analysis/SemanticContext.java
+@@ -301,11 +301,10 @@ public abstract class SemanticContext {
+}
+
+public static abstract class CommutativePredicate extends SemanticContext {
+-		protected Set<SemanticContext> operands;
++		protected final Set<SemanticContext> operands = new HashSet<SemanticContext>();
+protected int hashcode;
+
+public CommutativePredicate(SemanticContext a, SemanticContext b) {
+-			operands = new HashSet<SemanticContext>();
+if (a.getClass() == this.getClass()){
+CommutativePredicate predicate = (CommutativePredicate)a;
+operands.addAll(predicate.operands);
+

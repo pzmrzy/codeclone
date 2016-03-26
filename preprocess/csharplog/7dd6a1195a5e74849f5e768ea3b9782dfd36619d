@@ -1,0 +1,233 @@
+commit 7dd6a1195a5e74849f5e768ea3b9782dfd36619d
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Fri Jan 21 08:02:10 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Fri Jan 21 08:02:10 2011 -0800
+
+(C# 3) Fix several issues with strongly-typed lists in the CSharp3 target
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7482]
+
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/AST.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/AST.stg
+index a1dae9a..159eaf3 100644
+--- a/bin/Bootstrap/Codegen/Templates/CSharp3/AST.stg
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/AST.stg
+@@ -135,7 +135,7 @@ tokenRefTrack(token,label,elementIndex,terminalOptions) ::= <<
+*/
+tokenRefTrackAndListLabel(token,label,elementIndex,terminalOptions) ::= <<
+<tokenRefTrack(...)>
+-<listLabel(elem=label,...)>
++<listLabelElem(elem=label,elemType=labelType,...)>
+>>
+
+/** ^(ID ...) track for rewrite */
+@@ -147,7 +147,7 @@ tokenRefRuleRootTrack(token,label,elementIndex,terminalOptions) ::= <<
+/** Match ^(label+=TOKEN ...) track for rewrite */
+tokenRefRuleRootTrackAndListLabel(token,label,elementIndex,terminalOptions) ::= <<
+<tokenRefRuleRootTrack(...)>
+-<listLabel(elem=label,...)>
++<listLabelElem(elem=label,elemType=labelType,...)>
+>>
+
+/** rule when output=AST and tracking for rewrite */
+@@ -159,7 +159,7 @@ ruleRefTrack(rule,label,elementIndex,args,scope) ::= <<
+/** x+=rule when output=AST and tracking for rewrite */
+ruleRefTrackAndListLabel(rule,label,elementIndex,args,scope) ::= <<
+<ruleRefTrack(...)>
+-<listLabel(elem=label+".Tree",...)>
++<listLabelElem(elem=label+".Tree",elemType=ASTLabelType,...)>
+>>
+
+/** ^(rule ...) rewrite */
+@@ -171,7 +171,7 @@ ruleRefRuleRootTrack(rule,label,elementIndex,args,scope) ::= <<
+/** ^(x+=rule ...) rewrite */
+ruleRefRuleRootTrackAndListLabel(rule,label,elementIndex,args,scope) ::= <<
+<ruleRefRuleRootTrack(...)>
+-<listLabel(elem=label+".Tree",...)>
++<listLabelElem(elem=label+".Tree",elemType=ASTLabelType,...)>
+>>
+
+// R e w r i t e
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/ASTParser.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/ASTParser.stg
+index ccb854c..fc0bed0 100644
+--- a/bin/Bootstrap/Codegen/Templates/CSharp3/ASTParser.stg
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/ASTParser.stg
+@@ -74,19 +74,19 @@ root_0 = (<ASTLabelType>)adaptor.BecomeRoot(<label>_tree, root_0);
+/** ids+=ID! and output=AST */
+tokenRefBangAndListLabel(token,label,elementIndex,terminalOptions) ::= <<
+<tokenRefBang(...)>
+-<listLabel(elem=label,...)>
++<listLabelElem(elem=label,elemType=labelType,...)>
+>>
+
+/** label+=TOKEN when output=AST but not rewrite alt */
+tokenRefAndListLabel(token,label,elementIndex,terminalOptions) ::= <<
+<tokenRef(...)>
+-<listLabel(elem=label,...)>
++<listLabelElem(elem=label,elemType=labelType,...)>
+>>
+
+/** Match label+=TOKEN^ when output=AST but not rewrite alt */
+tokenRefRuleRootAndListLabel(token,label,terminalOptions,elementIndex) ::= <<
+<tokenRefRuleRoot(...)>
+-<listLabel(elem=label,...)>
++<listLabelElem(elem=label,elemType=labelType,...)>
+>>
+
+// SET AST
+@@ -142,19 +142,19 @@ ruleRefRuleRoot(rule,label,elementIndex,args,scope) ::= <<
+/** x+=rule when output=AST */
+ruleRefAndListLabel(rule,label,elementIndex,args,scope) ::= <<
+<ruleRef(...)>
+-<listLabel(elem=label+".Tree",...)>
++<listLabelElem(elem=label+".Tree",elemType=ASTLabelType,...)>
+>>
+
+/** x+=rule! when output=AST is a rule ref with list addition */
+ruleRefBangAndListLabel(rule,label,elementIndex,args,scope) ::= <<
+<ruleRefBang(...)>
+-<listLabel(elem=label+".Tree",...)>
++<listLabelElem(elem=label+".Tree",elemType=ASTLabelType,...)>
+>>
+
+/** x+=rule^ */
+ruleRefRuleRootAndListLabel(rule,label,elementIndex,args,scope) ::= <<
+<ruleRefRuleRoot(...)>
+-<listLabel(elem=label+".Tree",...)>
++<listLabelElem(elem=label+".Tree",elemType=ASTLabelType,...)>
+>>
+
+// WILDCARD AST
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/ASTTreeParser.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/ASTTreeParser.stg
+index f9cc460..461d2c0 100644
+--- a/bin/Bootstrap/Codegen/Templates/CSharp3/ASTTreeParser.stg
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/ASTTreeParser.stg
+@@ -135,7 +135,7 @@ if (_first_<treeLevel> == null) _first_<treeLevel> = <label>;
+/** label+=TOKEN auto construct */
+tokenRefAndListLabel(token,label,elementIndex,terminalOptions) ::= <<
+<tokenRef(...)>
+-<listLabel(elem=label,...)>
++<listLabelElem(elem=label,...)>
+>>
+
+/** ^(ID ...) auto construct */
+@@ -157,7 +157,7 @@ root_<treeLevel> = (<ASTLabelType>)adaptor.BecomeRoot(<label>_tree, root_<treeLe
+/** Match ^(label+=TOKEN ...) auto construct */
+tokenRefRuleRootAndListLabel(token,label,elementIndex,terminalOptions) ::= <<
+<tokenRefRuleRoot(...)>
+-<listLabel(elem=label,...)>
++<listLabelElem(elem=label,...)>
+>>
+
+/** Match . wildcard and auto dup the node/subtree */
+@@ -237,7 +237,7 @@ if (_first_<treeLevel> == null) _first_<treeLevel> = <label>.Tree;
+/** x+=rule auto construct */
+ruleRefAndListLabel(rule,label,elementIndex,args,scope) ::= <<
+<ruleRef(...)>
+-<listLabel(elem=label+".Tree",...)>
++<listLabelElem(elem=label+".Tree",...)>
+>>
+
+/** ^(rule ...) auto construct */
+@@ -252,7 +252,7 @@ _last = (<ASTLabelType>)input.LT(1);
+/** ^(x+=rule ...) auto construct */
+ruleRefRuleRootAndListLabel(rule,label,elementIndex,args,scope) ::= <<
+<ruleRefRuleRoot(...)>
+-<listLabel(elem=label+".Tree",...)>
++<listLabelElem(elem=label+".Tree",...)>
+>>
+
+/** rule when output=AST and tracking for rewrite */
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg
+index 0763048..56910ae 100644
+--- a/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg
+@@ -574,7 +574,10 @@ ruleLabelDefs() ::= <<
+<[ruleDescriptor.tokenLabels,ruleDescriptor.tokenListLabels,ruleDescriptor.wildcardTreeLabels,ruleDescriptor.wildcardTreeListLabels]
+:{<labelType> <it.label.text> = default(<labelType>);}; separator="\n"
+>
+-<[ruleDescriptor.tokenListLabels,ruleDescriptor.ruleListLabels,ruleDescriptor.wildcardTreeListLabels]
++<ruleDescriptor.tokenListLabels
++    :{List\<<labelType>\> list_<it.label.text> = null;}; separator="\n"
++>
++<[ruleDescriptor.ruleListLabels,ruleDescriptor.wildcardTreeListLabels]
+:{List\<<ASTLabelType>\> list_<it.label.text> = null;}; separator="\n"
+>
+<ruleDescriptor.ruleLabels:ruleLabelDef(label=it); separator="\n">
+@@ -866,11 +869,15 @@ tokenRef(token,label,elementIndex,terminalOptions) ::= <<
+/** ids+=ID */
+tokenRefAndListLabel(token,label,elementIndex,terminalOptions) ::= <<
+<tokenRef(...)>
+-<listLabel(elem=label,...)>
++<listLabelElem(elem=label,elemType=labelType,...)>
+>>
+
+listLabel(label,elem) ::= <<
+-if (list_<label>==null) list_<label>=new List\<<labelType>\>();
++#error The listLabel template should not be used with this target.<\n>
++>>
++
++listLabelElem(label,elem,elemType) ::= <<
++if (list_<label>==null) list_<label>=new List\<<elemType; null={<labelType>}>\>();
+list_<label>.Add(<elem>);<\n>
+>>
+
+@@ -946,7 +953,7 @@ matchRuleBlockSet ::= matchSet
+
+matchSetAndListLabel(s,label,elementIndex,postmatchCode) ::= <<
+<matchSet(...)>
+-<listLabel(elem=label,...)>
++<listLabelElem(elem=label,elemType=labelType,...)>
+>>
+
+/** Match a string literal */
+@@ -973,7 +980,7 @@ MatchAny(input); <checkRuleBacktrackFailure()>
+
+wildcardAndListLabel(label,elementIndex) ::= <<
+<wildcard(...)>
+-<listLabel(elem=label,...)>
++<listLabelElem(elem=label,elemType=labelType,...)>
+>>
+
+/** Match . wildcard in lexer */
+@@ -986,7 +993,7 @@ MatchAny(); <checkRuleBacktrackFailure()>
+
+wildcardCharListLabel(label, elementIndex) ::= <<
+<wildcardChar(...)>
+-<listLabel(elem=label,...)>
++<listLabelElem(elem=label,elemType=labelType,...)>
+>>
+
+/** Match a rule reference by invoking it possibly with arguments
+@@ -1005,7 +1012,7 @@ PopFollow();
+/** ids+=r */
+ruleRefAndListLabel(rule,label,elementIndex,args,scope) ::= <<
+<ruleRef(...)>
+-<listLabel(elem=label,...)>
++<listLabelElem(elem=label,elemType={<ASTLabelType>},...)>
+>>
+
+/** A lexer rule reference.
+@@ -1031,7 +1038,7 @@ int <label>StartCharPos<elementIndex> = CharPositionInLine;
+/** i+=INT in lexer */
+lexerRuleRefAndListLabel(rule,label,args,elementIndex,scope) ::= <<
+<lexerRuleRef(...)>
+-<listLabel(elem=label,...)>
++<listLabelElem(elem=label,elemType=labelType,...)>
+>>
+
+/** EOF in the lexer */
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/ST.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/ST.stg
+index 46de225..f94cb7f 100644
+--- a/bin/Bootstrap/Codegen/Templates/CSharp3/ST.stg
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/ST.stg
+@@ -62,7 +62,7 @@ public StringTemplateGroup TemplateLib
+/** x+=rule when output=template */
+ruleRefAndListLabel(rule,label,elementIndex,args,scope) ::= <<
+<ruleRef(...)>
+-<listLabel(elem=label+".getTemplate()",...)>
++<listLabelElem(elem=label+".Template",elemType="StringTemplate",...)>
+>>
+
+rewriteTemplate(alts) ::= <<
+

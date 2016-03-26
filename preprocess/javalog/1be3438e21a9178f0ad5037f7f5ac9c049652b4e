@@ -1,0 +1,61 @@
+commit 1be3438e21a9178f0ad5037f7f5ac9c049652b4e
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Mon Sep 16 21:58:09 2013 -0500
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Mon Sep 16 22:26:55 2013 -0500
+
+Make ST3 an optional dependency of the ANTLR 3 runtime (fixes #126)
+
+diff --git a/antlr3-maven-plugin/src/main/java/org/antlr/mojo/antlr3/Antlr3Mojo.java b/antlr3-maven-plugin/src/main/java/org/antlr/mojo/antlr3/Antlr3Mojo.java
+index 2465aa9..a17d96b 100644
+--- a/antlr3-maven-plugin/src/main/java/org/antlr/mojo/antlr3/Antlr3Mojo.java
++++ b/antlr3-maven-plugin/src/main/java/org/antlr/mojo/antlr3/Antlr3Mojo.java
+@@ -34,8 +34,6 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+package org.antlr.mojo.antlr3;
+
+-import antlr.RecognitionException;
+-import antlr.TokenStreamException;
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+@@ -411,7 +409,7 @@ public class Antlr3Mojo
+* @throws InclusionScanException
+*/
+private void processGrammarFiles(File sourceDirectory, File outputDirectory)
+-            throws TokenStreamException, RecognitionException, IOException, InclusionScanException {
++            throws IOException, InclusionScanException {
+// Which files under the source set should we be looking for as grammar files
+//
+SourceMapping mapping = new SuffixMapping("g", Collections.<String>emptySet());
+diff --git a/runtime/Java/pom.xml b/runtime/Java/pom.xml
+index 3d50bd6..6296cb8 100644
+--- a/runtime/Java/pom.xml
++++ b/runtime/Java/pom.xml
+@@ -54,6 +54,7 @@
+<groupId>org.antlr</groupId>
+<artifactId>stringtemplate</artifactId>
+<scope>compile</scope>
++      <optional>true</optional>
+</dependency>
+
+<dependency>
+diff --git a/tool/pom.xml b/tool/pom.xml
+index 1ec7018..dd825e3 100644
+--- a/tool/pom.xml
++++ b/tool/pom.xml
+@@ -39,6 +39,13 @@
+<scope>compile</scope>
+</dependency>
+
++        <dependency>
++            <groupId>org.antlr</groupId>
++            <artifactId>stringtemplate</artifactId>
++            <scope>compile</scope>
++            <optional>true</optional>
++        </dependency>
++
+</dependencies>
+<!--
+
+

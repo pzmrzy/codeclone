@@ -1,0 +1,30 @@
+commit 40590e013a87d0f57dc3ab1c51e7fa0d9071a10b
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Wed Feb 22 09:50:10 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Wed Feb 22 12:26:01 2012 -0600
+
+Fix unchecked warning
+
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/RecognizerSharedState.java b/runtime/Java/src/main/java/org/antlr/runtime/RecognizerSharedState.java
+index cd15c3c..f78ec41 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/RecognizerSharedState.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/RecognizerSharedState.java
+@@ -120,6 +120,7 @@ public class RecognizerSharedState {
+
+public RecognizerSharedState() {}
+
++	@SuppressWarnings("unchecked")
+public RecognizerSharedState(RecognizerSharedState state) {
+if ( this.following.length < state.following.length ) {
+this.following = new BitSet[state.following.length];
+@@ -132,7 +133,7 @@ public class RecognizerSharedState {
+this.syntaxErrors = state.syntaxErrors;
+this.backtracking = state.backtracking;
+if ( state.ruleMemo!=null ) {
+-            this.ruleMemo = new Map[state.ruleMemo.length];
++            this.ruleMemo = (Map<Integer, Integer>[])new Map<?, ?>[state.ruleMemo.length];
+System.arraycopy(state.ruleMemo, 0, this.ruleMemo, 0, state.ruleMemo.length);
+}
+this.token = state.token;
+

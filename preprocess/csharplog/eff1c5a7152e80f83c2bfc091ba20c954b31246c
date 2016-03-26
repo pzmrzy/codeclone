@@ -1,0 +1,297 @@
+commit eff1c5a7152e80f83c2bfc091ba20c954b31246c
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Thu Dec 18 20:42:32 2014 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Thu Dec 18 20:42:32 2014 -0600
+
+Add the [AssemblyInformationalVersion] attribute and update [AssemblyFileVersion]
+
+diff --git a/Antlr3.Runtime.Visualizer/Properties/AssemblyInfo.cs b/Antlr3.Runtime.Visualizer/Properties/AssemblyInfo.cs
+index d64b2b6..82d2414 100644
+--- a/Antlr3.Runtime.Visualizer/Properties/AssemblyInfo.cs
++++ b/Antlr3.Runtime.Visualizer/Properties/AssemblyInfo.cs
+@@ -84,4 +84,5 @@ using System.Windows;
+// by using the '*' as shown below:
+// [assembly: AssemblyVersion("1.0.*")]
+[assembly: AssemblyVersion("3.5.0.2")]
+-[assembly: AssemblyFileVersion("3.5.0.2")]
++[assembly: AssemblyFileVersion("3.5.0.3")]
++[assembly: AssemblyInformationalVersion("3.5.0.3-dev")]
+diff --git a/Antlr3.StringTemplate/Properties/AssemblyInfo.cs b/Antlr3.StringTemplate/Properties/AssemblyInfo.cs
+index 3b57849..6a5cc90 100644
+--- a/Antlr3.StringTemplate/Properties/AssemblyInfo.cs
++++ b/Antlr3.StringTemplate/Properties/AssemblyInfo.cs
+@@ -66,4 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*/
+[assembly: AssemblyVersion("3.5.0.2")]
+-[assembly: AssemblyFileVersion("3.5.0.2")]
++[assembly: AssemblyFileVersion("3.5.0.3")]
++[assembly: AssemblyInformationalVersion("3.5.0.3-dev")]
+diff --git a/Antlr3.Targets/Antlr3.Targets.ActionScript/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.ActionScript/Properties/AssemblyInfo.cs
+index 1651a14..b47ae25 100644
+--- a/Antlr3.Targets/Antlr3.Targets.ActionScript/Properties/AssemblyInfo.cs
++++ b/Antlr3.Targets/Antlr3.Targets.ActionScript/Properties/AssemblyInfo.cs
+@@ -66,4 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*/
+[assembly: AssemblyVersion("3.5.0.2")]
+-[assembly: AssemblyFileVersion("3.5.0.2")]
++[assembly: AssemblyFileVersion("3.5.0.3")]
++[assembly: AssemblyInformationalVersion("3.5.0.3-dev")]
+diff --git a/Antlr3.Targets/Antlr3.Targets.C/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.C/Properties/AssemblyInfo.cs
+index 0d91b41..c2a2962 100644
+--- a/Antlr3.Targets/Antlr3.Targets.C/Properties/AssemblyInfo.cs
++++ b/Antlr3.Targets/Antlr3.Targets.C/Properties/AssemblyInfo.cs
+@@ -66,4 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*/
+[assembly: AssemblyVersion("3.5.0.2")]
+-[assembly: AssemblyFileVersion("3.5.0.2")]
++[assembly: AssemblyFileVersion("3.5.0.3")]
++[assembly: AssemblyInformationalVersion("3.5.0.3-dev")]
+diff --git a/Antlr3.Targets/Antlr3.Targets.CSharp2/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.CSharp2/Properties/AssemblyInfo.cs
+index ce620f8..a590e7d 100644
+--- a/Antlr3.Targets/Antlr3.Targets.CSharp2/Properties/AssemblyInfo.cs
++++ b/Antlr3.Targets/Antlr3.Targets.CSharp2/Properties/AssemblyInfo.cs
+@@ -66,4 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*/
+[assembly: AssemblyVersion("3.5.0.2")]
+-[assembly: AssemblyFileVersion("3.5.0.2")]
++[assembly: AssemblyFileVersion("3.5.0.3")]
++[assembly: AssemblyInformationalVersion("3.5.0.3-dev")]
+diff --git a/Antlr3.Targets/Antlr3.Targets.CSharp3/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.CSharp3/Properties/AssemblyInfo.cs
+index c17122c..5b7f867 100644
+--- a/Antlr3.Targets/Antlr3.Targets.CSharp3/Properties/AssemblyInfo.cs
++++ b/Antlr3.Targets/Antlr3.Targets.CSharp3/Properties/AssemblyInfo.cs
+@@ -66,4 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*/
+[assembly: AssemblyVersion("3.5.0.2")]
+-[assembly: AssemblyFileVersion("3.5.0.2")]
++[assembly: AssemblyFileVersion("3.5.0.3")]
++[assembly: AssemblyInformationalVersion("3.5.0.3-dev")]
+diff --git a/Antlr3.Targets/Antlr3.Targets.Cpp/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.Cpp/Properties/AssemblyInfo.cs
+index 6203146..1f7675d 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Cpp/Properties/AssemblyInfo.cs
++++ b/Antlr3.Targets/Antlr3.Targets.Cpp/Properties/AssemblyInfo.cs
+@@ -66,4 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*/
+[assembly: AssemblyVersion("3.5.0.2")]
+-[assembly: AssemblyFileVersion("3.5.0.2")]
++[assembly: AssemblyFileVersion("3.5.0.3")]
++[assembly: AssemblyInformationalVersion("3.5.0.3-dev")]
+diff --git a/Antlr3.Targets/Antlr3.Targets.Delphi/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.Delphi/Properties/AssemblyInfo.cs
+index 9ae99ac..7b0a30f 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Delphi/Properties/AssemblyInfo.cs
++++ b/Antlr3.Targets/Antlr3.Targets.Delphi/Properties/AssemblyInfo.cs
+@@ -66,4 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*/
+[assembly: AssemblyVersion("3.5.0.2")]
+-[assembly: AssemblyFileVersion("3.5.0.2")]
++[assembly: AssemblyFileVersion("3.5.0.3")]
++[assembly: AssemblyInformationalVersion("3.5.0.3-dev")]
+diff --git a/Antlr3.Targets/Antlr3.Targets.Java/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.Java/Properties/AssemblyInfo.cs
+index 70afdf8..fa031f1 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Java/Properties/AssemblyInfo.cs
++++ b/Antlr3.Targets/Antlr3.Targets.Java/Properties/AssemblyInfo.cs
+@@ -66,4 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*/
+[assembly: AssemblyVersion("3.5.0.2")]
+-[assembly: AssemblyFileVersion("3.5.0.2")]
++[assembly: AssemblyFileVersion("3.5.0.3")]
++[assembly: AssemblyInformationalVersion("3.5.0.3-dev")]
+diff --git a/Antlr3.Targets/Antlr3.Targets.JavaScript/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.JavaScript/Properties/AssemblyInfo.cs
+index 3ec4309..30cb77f 100644
+--- a/Antlr3.Targets/Antlr3.Targets.JavaScript/Properties/AssemblyInfo.cs
++++ b/Antlr3.Targets/Antlr3.Targets.JavaScript/Properties/AssemblyInfo.cs
+@@ -66,4 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*/
+[assembly: AssemblyVersion("3.5.0.2")]
+-[assembly: AssemblyFileVersion("3.5.0.2")]
++[assembly: AssemblyFileVersion("3.5.0.3")]
++[assembly: AssemblyInformationalVersion("3.5.0.3-dev")]
+diff --git a/Antlr3.Targets/Antlr3.Targets.ObjC/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.ObjC/Properties/AssemblyInfo.cs
+index 1420590..76de352 100644
+--- a/Antlr3.Targets/Antlr3.Targets.ObjC/Properties/AssemblyInfo.cs
++++ b/Antlr3.Targets/Antlr3.Targets.ObjC/Properties/AssemblyInfo.cs
+@@ -66,4 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*/
+[assembly: AssemblyVersion("3.5.0.2")]
+-[assembly: AssemblyFileVersion("3.5.0.2")]
++[assembly: AssemblyFileVersion("3.5.0.3")]
++[assembly: AssemblyInformationalVersion("3.5.0.3-dev")]
+diff --git a/Antlr3.Targets/Antlr3.Targets.Perl5/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.Perl5/Properties/AssemblyInfo.cs
+index 1c7d398..d64ff81 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Perl5/Properties/AssemblyInfo.cs
++++ b/Antlr3.Targets/Antlr3.Targets.Perl5/Properties/AssemblyInfo.cs
+@@ -66,4 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*/
+[assembly: AssemblyVersion("3.5.0.2")]
+-[assembly: AssemblyFileVersion("3.5.0.2")]
++[assembly: AssemblyFileVersion("3.5.0.3")]
++[assembly: AssemblyInformationalVersion("3.5.0.3-dev")]
+diff --git a/Antlr3.Targets/Antlr3.Targets.Python/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.Python/Properties/AssemblyInfo.cs
+index 8e43403..7ef79c9 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Python/Properties/AssemblyInfo.cs
++++ b/Antlr3.Targets/Antlr3.Targets.Python/Properties/AssemblyInfo.cs
+@@ -66,4 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*/
+[assembly: AssemblyVersion("3.5.0.2")]
+-[assembly: AssemblyFileVersion("3.5.0.2")]
++[assembly: AssemblyFileVersion("3.5.0.3")]
++[assembly: AssemblyInformationalVersion("3.5.0.3-dev")]
+diff --git a/Antlr3.Targets/Antlr3.Targets.Python3/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.Python3/Properties/AssemblyInfo.cs
+index 8e43403..7ef79c9 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Python3/Properties/AssemblyInfo.cs
++++ b/Antlr3.Targets/Antlr3.Targets.Python3/Properties/AssemblyInfo.cs
+@@ -66,4 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*/
+[assembly: AssemblyVersion("3.5.0.2")]
+-[assembly: AssemblyFileVersion("3.5.0.2")]
++[assembly: AssemblyFileVersion("3.5.0.3")]
++[assembly: AssemblyInformationalVersion("3.5.0.3-dev")]
+diff --git a/Antlr3.Targets/Antlr3.Targets.Ruby/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.Ruby/Properties/AssemblyInfo.cs
+index 6eca3e9..44b75fd 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Ruby/Properties/AssemblyInfo.cs
++++ b/Antlr3.Targets/Antlr3.Targets.Ruby/Properties/AssemblyInfo.cs
+@@ -66,4 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*/
+[assembly: AssemblyVersion("3.5.0.2")]
+-[assembly: AssemblyFileVersion("3.5.0.2")]
++[assembly: AssemblyFileVersion("3.5.0.3")]
++[assembly: AssemblyInformationalVersion("3.5.0.3-dev")]
+diff --git a/Antlr3.Test/Properties/AssemblyInfo.cs b/Antlr3.Test/Properties/AssemblyInfo.cs
+index e293dcc..a8a2112 100644
+--- a/Antlr3.Test/Properties/AssemblyInfo.cs
++++ b/Antlr3.Test/Properties/AssemblyInfo.cs
+@@ -64,4 +64,5 @@ using System.Runtime.InteropServices;
+// You can specify all the values or you can default the Revision and Build Numbers
+// by using the '*' as shown below:
+[assembly: AssemblyVersion("3.5.0.2")]
+-[assembly: AssemblyFileVersion("3.5.0.2")]
++[assembly: AssemblyFileVersion("3.5.0.3")]
++[assembly: AssemblyInformationalVersion("3.5.0.3-dev")]
+diff --git a/Antlr3/Properties/AssemblyInfo.cs b/Antlr3/Properties/AssemblyInfo.cs
+index 9e79585..7a4ba34 100644
+--- a/Antlr3/Properties/AssemblyInfo.cs
++++ b/Antlr3/Properties/AssemblyInfo.cs
+@@ -66,4 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*/
+[assembly: AssemblyVersion("3.5.0.2")]
+-[assembly: AssemblyFileVersion("3.5.0.2")]
++[assembly: AssemblyFileVersion("3.5.0.3")]
++[assembly: AssemblyInformationalVersion("3.5.0.3-dev")]
+diff --git a/Antlr4.StringTemplate.Visualizer/Properties/AssemblyInfo.cs b/Antlr4.StringTemplate.Visualizer/Properties/AssemblyInfo.cs
+index cea8d4a..76b3aca 100644
+--- a/Antlr4.StringTemplate.Visualizer/Properties/AssemblyInfo.cs
++++ b/Antlr4.StringTemplate.Visualizer/Properties/AssemblyInfo.cs
+@@ -84,4 +84,5 @@ using System.Windows;
+// by using the '*' as shown below:
+// [assembly: AssemblyVersion("1.0.*")]
+[assembly: AssemblyVersion("4.0.7.0")]
+-[assembly: AssemblyFileVersion("4.0.7.0")]
++[assembly: AssemblyFileVersion("4.0.7.2")]
++[assembly: AssemblyInformationalVersion("4.0.7.2-dev")]
+diff --git a/Antlr4.StringTemplate/Properties/AssemblyInfo.cs b/Antlr4.StringTemplate/Properties/AssemblyInfo.cs
+index ed17092..70c0fe5 100644
+--- a/Antlr4.StringTemplate/Properties/AssemblyInfo.cs
++++ b/Antlr4.StringTemplate/Properties/AssemblyInfo.cs
+@@ -66,4 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*/
+[assembly: AssemblyVersion("4.0.7.0")]
+-[assembly: AssemblyFileVersion("4.0.7.0")]
++[assembly: AssemblyFileVersion("4.0.7.2")]
++[assembly: AssemblyInformationalVersion("4.0.7.2-dev")]
+diff --git a/Antlr4.Test.StringTemplate/Properties/AssemblyInfo.cs b/Antlr4.Test.StringTemplate/Properties/AssemblyInfo.cs
+index 3ea3fcc..81d2682 100644
+--- a/Antlr4.Test.StringTemplate/Properties/AssemblyInfo.cs
++++ b/Antlr4.Test.StringTemplate/Properties/AssemblyInfo.cs
+@@ -66,3 +66,4 @@ using System.Runtime.InteropServices;
+// by using the '*' as shown below:
+[assembly: AssemblyVersion("4.0.6.9004")]
+[assembly: AssemblyFileVersion("4.0.6.9004")]
++[assembly: AssemblyInformationalVersion("4.0.6.9004-dev")]
+diff --git a/AntlrBuildTask/Properties/AssemblyInfo.cs b/AntlrBuildTask/Properties/AssemblyInfo.cs
+index 08851b1..25ade7b 100644
+--- a/AntlrBuildTask/Properties/AssemblyInfo.cs
++++ b/AntlrBuildTask/Properties/AssemblyInfo.cs
+@@ -67,4 +67,5 @@ using System.Runtime.InteropServices;
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+[assembly: AssemblyVersion("3.5.0.2")]
+-[assembly: AssemblyFileVersion("3.5.0.2")]
++[assembly: AssemblyFileVersion("3.5.0.3")]
++[assembly: AssemblyInformationalVersion("3.5.0.3-dev")]
+diff --git a/Runtime/Antlr3.Runtime.Debug/Properties/AssemblyInfo.cs b/Runtime/Antlr3.Runtime.Debug/Properties/AssemblyInfo.cs
+index 038cddb..d287157 100644
+--- a/Runtime/Antlr3.Runtime.Debug/Properties/AssemblyInfo.cs
++++ b/Runtime/Antlr3.Runtime.Debug/Properties/AssemblyInfo.cs
+@@ -67,4 +67,5 @@ using System.Runtime.InteropServices;
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+[assembly: AssemblyVersion("3.5.0.2")]
+-[assembly: AssemblyFileVersion("3.5.0.2")]
++[assembly: AssemblyFileVersion("3.5.0.3")]
++[assembly: AssemblyInformationalVersion("3.5.0.3-dev")]
+diff --git a/Runtime/Antlr3.Runtime.JavaExtensions/Properties/AssemblyInfo.cs b/Runtime/Antlr3.Runtime.JavaExtensions/Properties/AssemblyInfo.cs
+index 00e66a9..5e7c594 100644
+--- a/Runtime/Antlr3.Runtime.JavaExtensions/Properties/AssemblyInfo.cs
++++ b/Runtime/Antlr3.Runtime.JavaExtensions/Properties/AssemblyInfo.cs
+@@ -66,4 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*/
+[assembly: AssemblyVersion("3.5.0.2")]
+-[assembly: AssemblyFileVersion("3.5.0.2")]
++[assembly: AssemblyFileVersion("3.5.0.3")]
++[assembly: AssemblyInformationalVersion("3.5.0.3-dev")]
+diff --git a/Runtime/Antlr3.Runtime.Test/Properties/AssemblyInfo.cs b/Runtime/Antlr3.Runtime.Test/Properties/AssemblyInfo.cs
+index 1e0fc38..ccf55ac 100644
+--- a/Runtime/Antlr3.Runtime.Test/Properties/AssemblyInfo.cs
++++ b/Runtime/Antlr3.Runtime.Test/Properties/AssemblyInfo.cs
+@@ -67,4 +67,5 @@ using System.Runtime.InteropServices;
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+[assembly: AssemblyVersion("3.5.0.2")]
+-[assembly: AssemblyFileVersion("3.5.0.2")]
++[assembly: AssemblyFileVersion("3.5.0.3")]
++[assembly: AssemblyInformationalVersion("3.5.0.3-dev")]
+diff --git a/Runtime/Antlr3.Runtime/Properties/AssemblyInfo.cs b/Runtime/Antlr3.Runtime/Properties/AssemblyInfo.cs
+index cc3425f..b823616 100644
+--- a/Runtime/Antlr3.Runtime/Properties/AssemblyInfo.cs
++++ b/Runtime/Antlr3.Runtime/Properties/AssemblyInfo.cs
+@@ -69,4 +69,5 @@ using System.Security;
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+[assembly: AssemblyVersion("3.5.0.2")]
+-[assembly: AssemblyFileVersion("3.5.0.2")]
++[assembly: AssemblyFileVersion("3.5.0.3")]
++[assembly: AssemblyInformationalVersion("3.5.0.3-dev")]
+diff --git a/build/prep/prepare.ps1 b/build/prep/prepare.ps1
+index 8146cc1..46eaca0 100644
+--- a/build/prep/prepare.ps1
++++ b/build/prep/prepare.ps1
+@@ -192,8 +192,8 @@ copy "..\..\bin\$BuildConfig\Antlr4.StringTemplate.Visualizer.xml" ".\ST4"
+copy "LICENSE.txt" ".\ST4"
+
+# compress the distributable packages
+-$AntlrVersion = "3.5.0.3-alpha001"
+-$STVersion = "4.0.7.2-alpha001"
++$AntlrVersion = "3.5.0.3-dev"
++$STVersion = "4.0.7.2-dev"
+
+$ArchivePath = ".\dist\antlr-dotnet-csharpbootstrap-" + $AntlrVersion + ".7z"
+.\7z.exe a -r -mx9 $ArchivePath ".\Bootstrap\*"
+

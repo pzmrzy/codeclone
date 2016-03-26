@@ -1,0 +1,646 @@
+commit c30b76aabdfd18bdfa7d851c2251da57c1feb392
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Fri Mar 20 11:38:28 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Fri Mar 20 11:38:28 2009 -0800
+
+C# Port:
+* Suppress creating InitDFA function if there are no DFAs
+* Forgot to implement the partial tree adaptor initializer in the -debug template
+* Updated bootstrap reference executables
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 5958]
+
+diff --git a/Antlr3.StringTemplate/Language/ActionEvaluator.cs b/Antlr3.StringTemplate/Language/ActionEvaluator.cs
+index f629e4b..44a8426 100644
+--- a/Antlr3.StringTemplate/Language/ActionEvaluator.cs
++++ b/Antlr3.StringTemplate/Language/ActionEvaluator.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Language\\ActionEvaluator.g3 2009-03-19 17:26:07
++// $ANTLR 3.1.2 Language\\ActionEvaluator.g3 2009-03-20 14:32:39
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -4106,23 +4106,9 @@ public partial class ActionEvaluator : TreeParser
+return ;
+}
+// $ANTLR end "templateFunctional"
+-	#endregion
++	#endregion Rules
+
+-	// Delegated rules
+-
+-	#region Synpreds
+-	#endregion
+-
+-	#region DFA
+-
+-	protected override void InitDFAs()
+-	{
+-		base.InitDFAs();
+-	}
+-
+-	#endregion
+-
+-	#region Follow Sets
++	#region Follow sets
+public static class Follow
+{
+public static readonly BitSet _expr_in_action56 = new BitSet(new ulong[]{0x2UL});
+@@ -4305,7 +4291,7 @@ public partial class ActionEvaluator : TreeParser
+public static readonly BitSet _expr_in_templateFunctional2162 = new BitSet(new ulong[]{0xFFFFFFFFFF0UL});
+
+}
+-	#endregion
++	#endregion Follow sets
+}
+
+} // namespace Antlr3.ST.Language
+diff --git a/Antlr3.StringTemplate/Language/ActionParser.cs b/Antlr3.StringTemplate/Language/ActionParser.cs
+index c6c098d..5736df8 100644
+--- a/Antlr3.StringTemplate/Language/ActionParser.cs
++++ b/Antlr3.StringTemplate/Language/ActionParser.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Language\\Action.g3 2009-03-20 13:31:28
++// $ANTLR 3.1.2 Language\\Action.g3 2009-03-20 14:32:38
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -3602,9 +3602,7 @@ public partial class ActionParser : Parser
+}
+}
+// $ANTLR end synpred1_Action
+-	#endregion
+-
+-	// Delegated rules
++	#endregion Rules
+
+#region Synpreds
+public bool synpred1_Action()
+@@ -3626,7 +3624,7 @@ public partial class ActionParser : Parser
+return success;
+}
+
+-	#endregion
++	#endregion Synpreds
+
+#region DFA
+DFA15 dfa15;
+@@ -3776,9 +3774,9 @@ public partial class ActionParser : Parser
+throw nvae;
+}
+
+-	#endregion
++	#endregion DFA
+
+-	#region Follow Sets
++	#region Follow sets
+public static class Follow
+{
+public static readonly BitSet _templatesExpr_in_action192 = new BitSet(new ulong[]{0x200000000UL});
+@@ -3884,7 +3882,7 @@ public partial class ActionParser : Parser
+public static readonly BitSet _templateInclude_in_synpred1_Action490 = new BitSet(new ulong[]{0x2UL});
+
+}
+-	#endregion
++	#endregion Follow sets
+}
+
+} // namespace  Antlr3.ST.Language
+diff --git a/Antlr3.StringTemplate/Language/GroupParser.cs b/Antlr3.StringTemplate/Language/GroupParser.cs
+index 9cb52f5..849104e 100644
+--- a/Antlr3.StringTemplate/Language/GroupParser.cs
++++ b/Antlr3.StringTemplate/Language/GroupParser.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Language\\Group.g3 2009-03-18 18:21:15
++// $ANTLR 3.1.2 Language\\Group.g3 2009-03-20 14:32:36
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -1093,23 +1093,9 @@ public partial class GroupParser : Parser
+return value;
+}
+// $ANTLR end "keyValue"
+-	#endregion
++	#endregion Rules
+
+-	// Delegated rules
+-
+-	#region Synpreds
+-	#endregion
+-
+-	#region DFA
+-
+-	protected override void InitDFAs()
+-	{
+-		base.InitDFAs();
+-	}
+-
+-	#endregion
+-
+-	#region Follow Sets
++	#region Follow sets
+public static class Follow
+{
+public static readonly BitSet _KWGROUP_in_group93 = new BitSet(new ulong[]{0x1000UL});
+@@ -1169,7 +1155,7 @@ public partial class GroupParser : Parser
+public static readonly BitSet _ID_in_keyValue544 = new BitSet(new ulong[]{0x2UL});
+
+}
+-	#endregion
++	#endregion Follow sets
+}
+
+} // namespace Antlr3.ST.Language
+diff --git a/Antlr3.StringTemplate/Language/InterfaceParser.cs b/Antlr3.StringTemplate/Language/InterfaceParser.cs
+index 34305c7..90f3622 100644
+--- a/Antlr3.StringTemplate/Language/InterfaceParser.cs
++++ b/Antlr3.StringTemplate/Language/InterfaceParser.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Language\\Interface.g3 2009-03-17 15:10:59
++// $ANTLR 3.1.2 Language\\Interface.g3 2009-03-20 14:32:35
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -313,23 +313,9 @@ public partial class InterfaceParser : Parser
+return args;
+}
+// $ANTLR end "args"
+-	#endregion
++	#endregion Rules
+
+-	// Delegated rules
+-
+-	#region Synpreds
+-	#endregion
+-
+-	#region DFA
+-
+-	protected override void InitDFAs()
+-	{
+-		base.InitDFAs();
+-	}
+-
+-	#endregion
+-
+-	#region Follow Sets
++	#region Follow sets
+public static class Follow
+{
+public static readonly BitSet _INTERFACE_in_groupInterface88 = new BitSet(new ulong[]{0x40UL});
+@@ -348,7 +334,7 @@ public partial class InterfaceParser : Parser
+public static readonly BitSet _ID_in_args187 = new BitSet(new ulong[]{0x22UL});
+
+}
+-	#endregion
++	#endregion Follow sets
+}
+
+} // namespace Antlr3.ST.Language
+diff --git a/Antlr3.StringTemplate/Language/TemplateParser.cs b/Antlr3.StringTemplate/Language/TemplateParser.cs
+index f080702..816541b 100644
+--- a/Antlr3.StringTemplate/Language/TemplateParser.cs
++++ b/Antlr3.StringTemplate/Language/TemplateParser.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Language\\Template.g3 2009-03-18 18:13:50
++// $ANTLR 3.1.2 Language\\Template.g3 2009-03-20 14:32:33
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -467,23 +467,9 @@ public partial class TemplateParser : Parser
+return ;
+}
+// $ANTLR end "action"
+-	#endregion
++	#endregion Rules
+
+-	// Delegated rules
+-
+-	#region Synpreds
+-	#endregion
+-
+-	#region DFA
+-
+-	protected override void InitDFAs()
+-	{
+-		base.InitDFAs();
+-	}
+-
+-	#endregion
+-
+-	#region Follow Sets
++	#region Follow sets
+public static class Follow
+{
+public static readonly BitSet _LITERAL_in_template71 = new BitSet(new ulong[]{0x1D2012UL});
+@@ -502,7 +488,7 @@ public partial class TemplateParser : Parser
+public static readonly BitSet _REGION_DEF_in_action228 = new BitSet(new ulong[]{0x2UL});
+
+}
+-	#endregion
++	#endregion Follow sets
+}
+
+} // namespace Antlr3.ST.Language
+diff --git a/Antlr3/Grammars/ANTLRParser.cs b/Antlr3/Grammars/ANTLRParser.cs
+index 28dab1f..eea1aca 100644
+--- a/Antlr3/Grammars/ANTLRParser.cs
++++ b/Antlr3/Grammars/ANTLRParser.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Grammars\\ANTLR.g3 2009-03-20 13:30:48
++// $ANTLR 3.1.2 Grammars\\ANTLR.g3 2009-03-20 14:32:46
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -10364,9 +10364,7 @@ public partial class ANTLRParser : Parser
+}
+}
+// $ANTLR end synpred1_ANTLR
+-	#endregion
+-
+-	// Delegated rules
++	#endregion Rules
+
+#region Synpreds
+public bool synpred1_ANTLR()
+@@ -10388,7 +10386,7 @@ public partial class ANTLRParser : Parser
+return success;
+}
+
+-	#endregion
++	#endregion Synpreds
+
+#region DFA
+DFA49 dfa49;
+@@ -10911,9 +10909,9 @@ public partial class ANTLRParser : Parser
+throw nvae;
+}
+
+-	#endregion
++	#endregion DFA
+
+-	#region Follow Sets
++	#region Follow sets
+public static class Follow
+{
+public static readonly BitSet _ACTION_in_grammar_308 = new BitSet(new ulong[]{0x1002040008000000UL,0x10000000UL});
+@@ -11198,7 +11196,7 @@ public partial class ANTLRParser : Parser
+public static readonly BitSet _ruleref_in_synpred1_ANTLR1971 = new BitSet(new ulong[]{0x2UL});
+
+}
+-	#endregion
++	#endregion Follow sets
+}
+
+} // namespace Antlr3.Grammars
+diff --git a/Antlr3/Grammars/ANTLRTreePrinter.cs b/Antlr3/Grammars/ANTLRTreePrinter.cs
+index 8e3da11..2255d8c 100644
+--- a/Antlr3/Grammars/ANTLRTreePrinter.cs
++++ b/Antlr3/Grammars/ANTLRTreePrinter.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Grammars\\ANTLRTreePrinter.g3 2009-03-07 09:00:04
++// $ANTLR 3.1.2 Grammars\\ANTLRTreePrinter.g3 2009-03-20 14:32:48
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -3730,23 +3730,9 @@ public partial class ANTLRTreePrinter : TreeParser
+return ;
+}
+// $ANTLR end "ast_suffix"
+-	#endregion
++	#endregion Rules
+
+-	// Delegated rules
+-
+-	#region Synpreds
+-	#endregion
+-
+-	#region DFA
+-
+-	protected override void InitDFAs()
+-	{
+-		base.InitDFAs();
+-	}
+-
+-	#endregion
+-
+-	#region Follow Sets
++	#region Follow sets
+public static class Follow
+{
+public static readonly BitSet _grammar__in_toString72 = new BitSet(new ulong[]{0x2UL});
+@@ -3920,7 +3906,7 @@ public partial class ANTLRTreePrinter : TreeParser
+public static readonly BitSet _BANG_in_ast_suffix1657 = new BitSet(new ulong[]{0x2UL});
+
+}
+-	#endregion
++	#endregion Follow sets
+}
+
+} // namespace Antlr3.Grammars
+diff --git a/Antlr3/Grammars/AssignTokenTypesWalker.cs b/Antlr3/Grammars/AssignTokenTypesWalker.cs
+index f2a6475..7de5b44 100644
+--- a/Antlr3/Grammars/AssignTokenTypesWalker.cs
++++ b/Antlr3/Grammars/AssignTokenTypesWalker.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Grammars\\AssignTokenTypesWalker.g3 2009-03-07 09:00:06
++// $ANTLR 3.1.2 Grammars\\AssignTokenTypesWalker.g3 2009-03-20 14:32:49
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -3196,23 +3196,9 @@ public partial class AssignTokenTypesWalker : TreeParser
+return ;
+}
+// $ANTLR end "ast_suffix"
+-	#endregion
++	#endregion Rules
+
+-	// Delegated rules
+-
+-	#region Synpreds
+-	#endregion
+-
+-	#region DFA
+-
+-	protected override void InitDFAs()
+-	{
+-		base.InitDFAs();
+-	}
+-
+-	#endregion
+-
+-	#region Follow Sets
++	#region Follow sets
+public static class Follow
+{
+public static readonly BitSet _LEXER_GRAMMAR_in_grammar_68 = new BitSet(new ulong[]{0x4UL});
+@@ -3356,7 +3342,7 @@ public partial class AssignTokenTypesWalker : TreeParser
+public static readonly BitSet _set_in_ast_suffix1153 = new BitSet(new ulong[]{0x2UL});
+
+}
+-	#endregion
++	#endregion Follow sets
+}
+
+} // namespace Antlr3.Grammars
+diff --git a/Antlr3/Grammars/CodeGenTreeWalker.cs b/Antlr3/Grammars/CodeGenTreeWalker.cs
+index a21f38d..372c66b 100644
+--- a/Antlr3/Grammars/CodeGenTreeWalker.cs
++++ b/Antlr3/Grammars/CodeGenTreeWalker.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Grammars\\CodeGenTreeWalker.g3 2009-03-18 18:16:14
++// $ANTLR 3.1.2 Grammars\\CodeGenTreeWalker.g3 2009-03-20 14:32:43
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -5773,9 +5773,7 @@ public partial class CodeGenTreeWalker : TreeParser
+}
+}
+// $ANTLR end synpred2_CodeGenTreeWalker
+-	#endregion
+-
+-	// Delegated rules
++	#endregion Rules
+
+#region Synpreds
+public bool synpred1_CodeGenTreeWalker()
+@@ -5815,7 +5813,7 @@ public partial class CodeGenTreeWalker : TreeParser
+return success;
+}
+
+-	#endregion
++	#endregion Synpreds
+
+#region DFA
+DFA45 dfa45;
+@@ -5989,9 +5987,9 @@ public partial class CodeGenTreeWalker : TreeParser
+throw nvae;
+}
+
+-	#endregion
++	#endregion DFA
+
+-	#region Follow Sets
++	#region Follow sets
+public static class Follow
+{
+public static readonly BitSet _LEXER_GRAMMAR_in_grammar_66 = new BitSet(new ulong[]{0x4UL});
+@@ -6167,7 +6165,7 @@ public partial class CodeGenTreeWalker : TreeParser
+public static readonly BitSet _element_action_in_synpred2_CodeGenTreeWalker1385 = new BitSet(new ulong[]{0x2UL});
+
+}
+-	#endregion
++	#endregion Follow sets
+}
+
+} // namespace Antlr3.Grammars
+diff --git a/Antlr3/Grammars/DefineGrammarItemsWalker.cs b/Antlr3/Grammars/DefineGrammarItemsWalker.cs
+index aefb9f9..daa8c2a 100644
+--- a/Antlr3/Grammars/DefineGrammarItemsWalker.cs
++++ b/Antlr3/Grammars/DefineGrammarItemsWalker.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Grammars\\DefineGrammarItemsWalker.g3 2009-03-08 16:36:55
++// $ANTLR 3.1.2 Grammars\\DefineGrammarItemsWalker.g3 2009-03-20 14:32:51
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -4428,9 +4428,7 @@ public partial class DefineGrammarItemsWalker : TreeParser
+}
+}
+// $ANTLR end synpred1_DefineGrammarItemsWalker
+-	#endregion
+-
+-	// Delegated rules
++	#endregion Rules
+
+#region Synpreds
+public bool synpred1_DefineGrammarItemsWalker()
+@@ -4452,7 +4450,7 @@ public partial class DefineGrammarItemsWalker : TreeParser
+return success;
+}
+
+-	#endregion
++	#endregion Synpreds
+
+#region DFA
+DFA36 dfa36;
+@@ -4690,9 +4688,9 @@ public partial class DefineGrammarItemsWalker : TreeParser
+throw nvae;
+}
+
+-	#endregion
++	#endregion DFA
+
+-	#region Follow Sets
++	#region Follow sets
+public static class Follow
+{
+public static readonly BitSet _LEXER_GRAMMAR_in_grammar_77 = new BitSet(new ulong[]{0x4UL});
+@@ -4887,7 +4885,7 @@ public partial class DefineGrammarItemsWalker : TreeParser
+public static readonly BitSet _dotLoop_in_synpred1_DefineGrammarItemsWalker1201 = new BitSet(new ulong[]{0x2UL});
+
+}
+-	#endregion
++	#endregion Follow sets
+}
+
+} // namespace Antlr3.Grammars
+diff --git a/Antlr3/Grammars/TreeToNFAConverter.cs b/Antlr3/Grammars/TreeToNFAConverter.cs
+index c40ca6c..69f1812 100644
+--- a/Antlr3/Grammars/TreeToNFAConverter.cs
++++ b/Antlr3/Grammars/TreeToNFAConverter.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Grammars\\TreeToNFAConverter.g3 2009-03-17 14:56:01
++// $ANTLR 3.1.2 Grammars\\TreeToNFAConverter.g3 2009-03-20 14:32:52
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -4920,12 +4920,7 @@ public partial class TreeToNFAConverter : TreeParser
+return alts;
+}
+// $ANTLR end "testSetElement"
+-	#endregion
+-
+-	// Delegated rules
+-
+-	#region Synpreds
+-	#endregion
++	#endregion Rules
+
+#region DFA
+DFA41 dfa41;
+@@ -5015,9 +5010,9 @@ public partial class TreeToNFAConverter : TreeParser
+}
+
+
+-	#endregion
++	#endregion DFA
+
+-	#region Follow Sets
++	#region Follow sets
+public static class Follow
+{
+public static readonly BitSet _LEXER_GRAMMAR_in_grammar_67 = new BitSet(new ulong[]{0x4UL});
+@@ -5207,7 +5202,7 @@ public partial class TreeToNFAConverter : TreeParser
+public static readonly BitSet _testSetElement_in_testSetElement1967 = new BitSet(new ulong[]{0x8UL});
+
+}
+-	#endregion
++	#endregion Follow sets
+}
+
+} // namespace Antlr3.Grammars
+diff --git a/bin/Bootstrap/Antlr3.Runtime.Debug.dll b/bin/Bootstrap/Antlr3.Runtime.Debug.dll
+index 49adfca..d657c1a 100644
+Binary files a/bin/Bootstrap/Antlr3.Runtime.Debug.dll and b/bin/Bootstrap/Antlr3.Runtime.Debug.dll differ
+diff --git a/bin/Bootstrap/Antlr3.Runtime.Debug.pdb b/bin/Bootstrap/Antlr3.Runtime.Debug.pdb
+index 65b99af..e2dca02 100644
+Binary files a/bin/Bootstrap/Antlr3.Runtime.Debug.pdb and b/bin/Bootstrap/Antlr3.Runtime.Debug.pdb differ
+diff --git a/bin/Bootstrap/Antlr3.Runtime.dll b/bin/Bootstrap/Antlr3.Runtime.dll
+index 9bebd5c..1430299 100644
+Binary files a/bin/Bootstrap/Antlr3.Runtime.dll and b/bin/Bootstrap/Antlr3.Runtime.dll differ
+diff --git a/bin/Bootstrap/Antlr3.Runtime.pdb b/bin/Bootstrap/Antlr3.Runtime.pdb
+index f0977b9..a92a670 100644
+Binary files a/bin/Bootstrap/Antlr3.Runtime.pdb and b/bin/Bootstrap/Antlr3.Runtime.pdb differ
+diff --git a/bin/Bootstrap/Antlr3.StringTemplate.dll b/bin/Bootstrap/Antlr3.StringTemplate.dll
+index 6666810..7d7af25 100644
+Binary files a/bin/Bootstrap/Antlr3.StringTemplate.dll and b/bin/Bootstrap/Antlr3.StringTemplate.dll differ
+diff --git a/bin/Bootstrap/Antlr3.StringTemplate.pdb b/bin/Bootstrap/Antlr3.StringTemplate.pdb
+index b8d2c12..989e407 100644
+Binary files a/bin/Bootstrap/Antlr3.StringTemplate.pdb and b/bin/Bootstrap/Antlr3.StringTemplate.pdb differ
+diff --git a/bin/Bootstrap/Antlr3.exe b/bin/Bootstrap/Antlr3.exe
+index 5020900..8b897e9 100755
+Binary files a/bin/Bootstrap/Antlr3.exe and b/bin/Bootstrap/Antlr3.exe differ
+diff --git a/bin/Bootstrap/Antlr3.pdb b/bin/Bootstrap/Antlr3.pdb
+index 24185bb..e35069d 100644
+Binary files a/bin/Bootstrap/Antlr3.pdb and b/bin/Bootstrap/Antlr3.pdb differ
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/AST.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/AST.stg
+index 340b1ae..f537eb9 100644
+--- a/bin/Bootstrap/Codegen/Templates/CSharp3/AST.stg
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/AST.stg
+@@ -55,7 +55,8 @@ if ( TreeAdaptor == null )
+parserMembers() ::= <<
+// Implement this function in your helper file to use a custom tree adaptor
+partial void InitializeTreeAdaptor();
+-ITreeAdaptor adaptor;<\n>
++ITreeAdaptor adaptor;
++
+public ITreeAdaptor TreeAdaptor
+{
+get
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/ASTDbg.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/ASTDbg.stg
+index 4a261c7..06f5875 100644
+--- a/bin/Bootstrap/Codegen/Templates/CSharp3/ASTDbg.stg
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/ASTDbg.stg
+@@ -36,7 +36,10 @@
+group ASTDbg;
+
+parserMembers() ::= <<
++// Implement this function in your helper file to use a custom tree adaptor
++partial void InitializeTreeAdaptor();
+protected DebugTreeAdaptor adaptor;
++
+public ITreeAdaptor TreeAdaptor
+{
+get
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg
+index 34c9055..dc98655 100644
+--- a/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg
+@@ -264,18 +264,24 @@ public <grammar.recognizerName>( <inputStreamType> input, RecognizerSharedState
+
+#region Rules
+<rules; separator="\n\n">
+-	#endregion
++	#endregion Rules
+
++<if(grammar.delegatedRules)>
+<! generate rule/method definitions for imported rules so they
+appear to be defined in this recognizer. !>
+-	// Delegated rules
++	#region Delegated rules
+<grammar.delegatedRules:{ruleDescriptor|
+public <returnType()> <ruleDescriptor.name>(<ruleDescriptor.parameterScope:parameterScope(scope=it)>) <!throws RecognitionException !>\{ <if(ruleDescriptor.hasReturnValue)>return <endif><ruleDescriptor.grammar:delegateName()>.<ruleDescriptor.name>(<ruleDescriptor.parameterScope.attributes:{a|<a.name>}; separator=", ">); \}}; separator="\n">
++	#endregion Delegated rules<\n>
++<endif>
+
++<if(synpreds)>
+#region Synpreds
+<synpreds:{p | <synpred(p)>}>
+-	#endregion
++	#endregion Synpreds<\n>
++<endif>
+
++<if(cyclicDFAs)>
+#region DFA
+<cyclicDFAs:{dfa | DFA<dfa.decisionNumber> dfa<dfa.decisionNumber>;}; separator="\n">
+
+@@ -286,15 +292,18 @@ public <grammar.recognizerName>( <inputStreamType> input, RecognizerSharedState
+}
+
+<cyclicDFAs:cyclicDFA()><! dump tables for all DFA !>
+-	#endregion
++	#endregion DFA<\n>
++<endif>
+
+-	#region Follow Sets
++<if(bitsets)>
++	#region Follow sets
+public static class Follow
+{
+<bitsets:bitset(name={_<it.name>_in_<it.inName><it.tokenIndex>},
+words64=it.bits)>
+}
+-	#endregion
++	#endregion Follow sets<\n>
++<endif>
+}
+>>
+
+diff --git a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll
+index 8919f04..1078ede 100644
+Binary files a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll and b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll differ
+diff --git a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.pdb b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.pdb
+index 5ede909..3569130 100644
+Binary files a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.pdb and b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.pdb differ
+

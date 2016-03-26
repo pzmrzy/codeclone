@@ -1,0 +1,1015 @@
+commit 65819f61a0559544dfda85ed35f851705e092e0b
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Jan 20 15:47:33 2010 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Jan 20 15:47:33 2010 -0800
+
+C# Port:
+* Merge CL6438, 6439, 6440, 6442, 6443, 6445, 6446, 6447, 6448
+* Terence owes 8x$1 to the broken build piggy bank
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6582]
+
+diff --git a/Antlr3.Test/Antlr3.Test.csproj b/Antlr3.Test/Antlr3.Test.csproj
+index 5b28f3a..7853fe1 100644
+--- a/Antlr3.Test/Antlr3.Test.csproj
++++ b/Antlr3.Test/Antlr3.Test.csproj
+@@ -74,6 +74,7 @@
+<Compile Include="TestAutoAST.cs" />
+<Compile Include="TestBufferedTreeNodeStream.cs" />
+<Compile Include="TestCharDFAConversion.cs" />
++    <Compile Include="TestCommonTokenStream.cs" />
+<Compile Include="TestCompositeGrammars.cs" />
+<Compile Include="TestDFAConversion.cs" />
+<Compile Include="TestDFAMatching.cs" />
+diff --git a/Antlr3.Test/BaseTest.cs b/Antlr3.Test/BaseTest.cs
+index 1044441..22a8ecc 100644
+--- a/Antlr3.Test/BaseTest.cs
++++ b/Antlr3.Test/BaseTest.cs
+@@ -35,6 +35,7 @@ namespace AntlrUnitTests
+using System;
+using System.Collections.Generic;
+using System.Linq;
++    using Antlr.Runtime;
+using Antlr.Runtime.JavaExtensions;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+@@ -1169,5 +1170,27 @@ namespace AntlrUnitTests
+{
+Assert.IsNull( value, message );
+}
++
++        public class FilteringTokenStream : CommonTokenStream
++        {
++            private HashSet<int> _hide = new HashSet<int>();
++
++            public FilteringTokenStream(ITokenSource tokenSource)
++                : base(tokenSource)
++            {
++            }
++
++            protected override void Sync(int i)
++            {
++                base.Sync(i);
++                if (_hide.Contains(Get(i).Type))
++                    Get(i).Channel = TokenChannels.Hidden;
++            }
++
++            public void SetTokenTypeChannel(int ttype, int channel)
++            {
++                _hide.Add(ttype);
++            }
++        }
+}
+}
+diff --git a/Antlr3.Test/TestCommonTokenStream.cs b/Antlr3.Test/TestCommonTokenStream.cs
+new file mode 100644
+index 0000000..3af9ea2
+--- /dev/null
++++ b/Antlr3.Test/TestCommonTokenStream.cs
+@@ -0,0 +1,266 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008 Sam Harwell, Pixel Mine, Inc.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace AntlrUnitTests
++{
++    using Microsoft.VisualStudio.TestTools.UnitTesting;
++    using Antlr3.Tool;
++    using Antlr.Runtime;
++
++    /** This actually tests new (12/4/09) buffered but on-demand fetching stream */
++    [TestClass]
++    public class TestCommonTokenStream : BaseTest
++    {
++        [TestMethod]
++        public void TestFirstToken()
++        {
++            Grammar g = new Grammar(
++                "lexer grammar t;\n" +
++                "ID : 'a'..'z'+;\n" +
++                "INT : '0'..'9'+;\n" +
++                "SEMI : ';';\n" +
++                "ASSIGN : '=';\n" +
++                "PLUS : '+';\n" +
++                "MULT : '*';\n" +
++                "WS : ' '+;\n");
++            // Tokens: 012345678901234567
++            // Input:  x = 3 * 0 + 2 * 0;
++            ICharStream input = new ANTLRStringStream("x = 3 * 0 + 2 * 0;");
++            Interpreter lexEngine = new Interpreter(g, input);
++            BufferedTokenStream tokens = new BufferedTokenStream(lexEngine);
++
++            string result = tokens.LT(1).Text;
++            string expecting = "x";
++            Assert.AreEqual(expecting, result);
++        }
++
++        [TestMethod]
++        public void Test2ndToken()
++        {
++            Grammar g = new Grammar(
++                "lexer grammar t;\n" +
++                "ID : 'a'..'z'+;\n" +
++                "INT : '0'..'9'+;\n" +
++                "SEMI : ';';\n" +
++                "ASSIGN : '=';\n" +
++                "PLUS : '+';\n" +
++                "MULT : '*';\n" +
++                "WS : ' '+;\n");
++            // Tokens: 012345678901234567
++            // Input:  x = 3 * 0 + 2 * 0;
++            ICharStream input = new ANTLRStringStream("x = 3 * 0 + 2 * 0;");
++            Interpreter lexEngine = new Interpreter(g, input);
++            BufferedTokenStream tokens = new BufferedTokenStream(lexEngine);
++
++            string result = tokens.LT(2).Text;
++            string expecting = " ";
++            Assert.AreEqual(expecting, result);
++        }
++
++        [TestMethod]
++        public void TestCompleteBuffer()
++        {
++            Grammar g = new Grammar(
++                "lexer grammar t;\n" +
++                "ID : 'a'..'z'+;\n" +
++                "INT : '0'..'9'+;\n" +
++                "SEMI : ';';\n" +
++                "ASSIGN : '=';\n" +
++                "PLUS : '+';\n" +
++                "MULT : '*';\n" +
++                "WS : ' '+;\n");
++            // Tokens: 012345678901234567
++            // Input:  x = 3 * 0 + 2 * 0;
++            ICharStream input = new ANTLRStringStream("x = 3 * 0 + 2 * 0;");
++            Interpreter lexEngine = new Interpreter(g, input);
++            BufferedTokenStream tokens = new BufferedTokenStream(lexEngine);
++
++            int i = 1;
++            IToken t = tokens.LT(i);
++            while (t.Type != CharStreamConstants.EndOfFile)
++            {
++                i++;
++                t = tokens.LT(i);
++            }
++            tokens.LT(i++); // push it past end
++            tokens.LT(i++);
++
++            string result = tokens.ToString();
++            string expecting = "x = 3 * 0 + 2 * 0;";
++            Assert.AreEqual(expecting, result);
++        }
++
++        [TestMethod]
++        public void TestCompleteBufferAfterConsuming()
++        {
++            Grammar g = new Grammar(
++                "lexer grammar t;\n" +
++                "ID : 'a'..'z'+;\n" +
++                "INT : '0'..'9'+;\n" +
++                "SEMI : ';';\n" +
++                "ASSIGN : '=';\n" +
++                "PLUS : '+';\n" +
++                "MULT : '*';\n" +
++                "WS : ' '+;\n");
++            // Tokens: 012345678901234567
++            // Input:  x = 3 * 0 + 2 * 0;
++            ICharStream input = new ANTLRStringStream("x = 3 * 0 + 2 * 0;");
++            Interpreter lexEngine = new Interpreter(g, input);
++            BufferedTokenStream tokens = new BufferedTokenStream(lexEngine);
++
++            IToken t = tokens.LT(1);
++            while (t.Type != CharStreamConstants.EndOfFile)
++            {
++                tokens.Consume();
++                t = tokens.LT(1);
++            }
++            tokens.Consume();
++            tokens.LT(1); // push it past end
++            tokens.Consume();
++            tokens.LT(1);
++
++            string result = tokens.ToString();
++            string expecting = "x = 3 * 0 + 2 * 0;";
++            Assert.AreEqual(expecting, result);
++        }
++
++        [TestMethod]
++        public void TestLookback()
++        {
++            Grammar g = new Grammar(
++                "lexer grammar t;\n" +
++                "ID : 'a'..'z'+;\n" +
++                "INT : '0'..'9'+;\n" +
++                "SEMI : ';';\n" +
++                "ASSIGN : '=';\n" +
++                "PLUS : '+';\n" +
++                "MULT : '*';\n" +
++                "WS : ' '+;\n");
++            // Tokens: 012345678901234567
++            // Input:  x = 3 * 0 + 2 * 0;
++            ICharStream input = new ANTLRStringStream("x = 3 * 0 + 2 * 0;");
++            Interpreter lexEngine = new Interpreter(g, input);
++            BufferedTokenStream tokens = new BufferedTokenStream(lexEngine);
++
++            tokens.Consume(); // get x into buffer
++            IToken t = tokens.LT(-1);
++            Assert.AreEqual("x", t.Text);
++
++            tokens.Consume();
++            tokens.Consume(); // consume '='
++            t = tokens.LT(-3);
++            Assert.AreEqual("x", t.Text);
++            t = tokens.LT(-2);
++            Assert.AreEqual(" ", t.Text);
++            t = tokens.LT(-1);
++            Assert.AreEqual("=", t.Text);
++        }
++
++        private class TestOffChannelTokenSource : ITokenSource
++        {
++            int i = 0;
++            IToken[] tokens =
++            {
++                new CommonToken(1," "),
++                new CommonToken(1,"x"),
++                new CommonToken(1," "),
++                new CommonToken(1,"="),
++                new CommonToken(1,"34"),
++                new CommonToken(1," "),
++                new CommonToken(1," "),
++                new CommonToken(1,";"),
++                new CommonToken(1,"\n"),
++                new CommonToken(CharStreamConstants.EndOfFile,"")
++            };
++
++            public TestOffChannelTokenSource()
++            {
++                tokens[0].Channel = Lexer.Hidden;
++                tokens[2].Channel = Lexer.Hidden;
++                tokens[5].Channel = Lexer.Hidden;
++                tokens[6].Channel = Lexer.Hidden;
++                tokens[8].Channel = Lexer.Hidden;
++            }
++
++            public string SourceName
++            {
++                get
++                {
++                    return "test";
++                }
++            }
++
++            public string[] TokenNames
++            {
++                get
++                {
++                    throw new System.NotImplementedException();
++                }
++            }
++
++            public IToken NextToken()
++            {
++                return tokens[i++];
++            }
++        }
++
++        [TestMethod]
++        public void TestOffChannel()
++        {
++            ITokenSource lexer = // simulate input " x =34  ;\n"
++                new TestOffChannelTokenSource();
++
++            CommonTokenStream tokens = new CommonTokenStream(lexer);
++
++            Assert.AreEqual("x", tokens.LT(1).Text); // must skip first off channel token
++            tokens.Consume();
++            Assert.AreEqual("=", tokens.LT(1).Text);
++            Assert.AreEqual("x", tokens.LT(-1).Text);
++
++            tokens.Consume();
++            Assert.AreEqual("34", tokens.LT(1).Text);
++            Assert.AreEqual("=", tokens.LT(-1).Text);
++
++            tokens.Consume();
++            Assert.AreEqual(";", tokens.LT(1).Text);
++            Assert.AreEqual("34", tokens.LT(-1).Text);
++
++            tokens.Consume();
++            Assert.AreEqual(CharStreamConstants.EndOfFile, tokens.LA(1));
++            Assert.AreEqual(";", tokens.LT(-1).Text);
++
++            Assert.AreEqual("34", tokens.LT(-2).Text);
++            Assert.AreEqual("=", tokens.LT(-3).Text);
++            Assert.AreEqual("x", tokens.LT(-4).Text);
++        }
++    }
++}
+diff --git a/Antlr3.Test/TestFastQueue.cs b/Antlr3.Test/TestFastQueue.cs
+index 99c94cb..1b3954d 100644
+--- a/Antlr3.Test/TestFastQueue.cs
++++ b/Antlr3.Test/TestFastQueue.cs
+@@ -111,11 +111,11 @@ namespace AntlrUnitTests
+{
+q.Dequeue();
+}
+-            catch ( ArgumentException nsee )
++            catch (IndexOutOfRangeException nsee)
+{
+msg = nsee.Message;
+}
+-            string expecting = "queue index 0 > size 0";
++            string expecting = "queue index 0 > last index -1";
+string found = msg;
+Assert.AreEqual( expecting, found );
+}
+@@ -133,16 +133,15 @@ namespace AntlrUnitTests
+{
+q.Dequeue();
+}
+-            catch ( ArgumentException nsee )
++            catch (IndexOutOfRangeException nsee)
+{
+msg = nsee.Message;
+}
+-            string expecting = "queue index 0 > size 0";
++            string expecting = "queue index 0 > last index -1";
+string found = msg;
+Assert.AreEqual( expecting, found );
+}
+
+-#if false
+[TestMethod]
+public void TestGetFromEmptyQueueAfterClear()
+{
+@@ -155,14 +154,13 @@ namespace AntlrUnitTests
+{
+q.Dequeue();
+}
+-            catch ( ArgumentException nsee )
++            catch ( IndexOutOfRangeException nsee )
+{
+msg = nsee.Message;
+}
+-            string expecting = "queue index 0 > size 0";
++            string expecting = "queue index 0 > last index -1";
+string found = msg;
+Assert.AreEqual( expecting, found );
+}
+-#endif
+}
+}
+diff --git a/Antlr3.Test/TestInterpretedLexing.cs b/Antlr3.Test/TestInterpretedLexing.cs
+index b427808..631adc9 100644
+--- a/Antlr3.Test/TestInterpretedLexing.cs
++++ b/Antlr3.Test/TestInterpretedLexing.cs
+@@ -161,13 +161,13 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "1234.5" );
+Interpreter engine = new Interpreter( g, input );
+IToken result = engine.Scan( "A" );
+-            assertEquals( result.Type, Atype );
++            Assert.AreEqual( Atype, result.Type );
+}
+
+[TestMethod]
+public void TestTokensRules() /*throws Exception*/ {
+Grammar pg = new Grammar(
+-                "grammar p;\n" +
++                "parser grammar p;\n" +
+"a : (INT|FLOAT|WS)+;\n" );
+Grammar g = new Grammar();
+g.ImportTokenVocabulary( pg );
+@@ -182,11 +182,11 @@ namespace AntlrUnitTests
+Interpreter lexEngine = new Interpreter( g, input );
+
+CommonTokenStream tokens = new CommonTokenStream( lexEngine );
+-            tokens.FillBuffer();
++            tokens.LT(5); // make sure it grabs all tokens
+string result = tokens.ToString();
+//System.out.println(result);
+string expecting = "123 139.52";
+-            assertEquals( result, expecting );
++            Assert.AreEqual( expecting, result );
+}
+
+}
+diff --git a/Antlr3.Test/TestInterpretedParsing.cs b/Antlr3.Test/TestInterpretedParsing.cs
+index 13c7f7c..5fd5786 100644
+--- a/Antlr3.Test/TestInterpretedParsing.cs
++++ b/Antlr3.Test/TestInterpretedParsing.cs
+@@ -42,21 +42,16 @@ namespace AntlrUnitTests
+[TestClass]
+public class TestInterpretedParsing : BaseTest
+{
+-
+-        /** Public default constructor used by TestRig */
+-        public TestInterpretedParsing()
+-        {
+-        }
+-
+[TestMethod]
+-        public void TestSimpleParse() /*throws Exception*/ {
++        public void TestSimpleParse()
++        {
+Grammar pg = new Grammar(
+"parser grammar p;\n" +
+"prog : WHILE ID LCURLY (assign)* RCURLY EOF;\n" +
+"assign : ID ASSIGN expr SEMI ;\n" +
+-                "expr : INT | FLOAT | ID ;\n" );
++                "expr : INT | FLOAT | ID ;\n");
+Grammar g = new Grammar();
+-            g.ImportTokenVocabulary( pg );
++            g.ImportTokenVocabulary(pg);
+g.FileName = Grammar.IGNORE_STRING_IN_GRAMMAR_FILE_NAME + "string";
+g.SetGrammarContent(
+"lexer grammar t;\n" +
+@@ -69,32 +64,33 @@ namespace AntlrUnitTests
+"INT : (DIGIT)+ ;\n" +
+"FLOAT : (DIGIT)+ '.' (DIGIT)* ;\n" +
+"fragment DIGIT : '0'..'9';\n" +
+-                "WS : (' ')+ ;\n" );
+-            ICharStream input = new ANTLRStringStream( "while x { i=1; y=3.42; z=y; }" );
+-            Interpreter lexEngine = new Interpreter( g, input );
++                "WS : (' ')+ ;\n");
++            ICharStream input = new ANTLRStringStream("while x { i=1; y=3.42; z=y; }");
++            Interpreter lexEngine = new Interpreter(g, input);
+
+-            CommonTokenStream tokens = new CommonTokenStream( lexEngine );
+-            tokens.SetTokenTypeChannel( g.GetTokenType( "WS" ), 99 );
++            FilteringTokenStream tokens = new FilteringTokenStream(lexEngine);
++            tokens.SetTokenTypeChannel(g.GetTokenType("WS"), 99);
+//System.out.println("tokens="+tokens.toString());
+-            Interpreter parseEngine = new Interpreter( pg, tokens );
+-            ParseTree t = parseEngine.Parse( "prog" );
++            Interpreter parseEngine = new Interpreter(pg, tokens);
++            ParseTree t = parseEngine.Parse("prog");
+string result = t.ToStringTree();
+string expecting =
+"(<grammar p> (prog while x { (assign i = (expr 1) ;) (assign y = (expr 3.42) ;) (assign z = (expr y) ;) } <EOF>))";
+-            assertEquals( expecting, result );
++            assertEquals(expecting, result);
+}
+
+[TestMethod]
+-        public void TestMismatchedTokenError() /*throws Exception*/ {
+-            Assert.Inconclusive( "May be failing on just my port..." );
++        public void TestMismatchedTokenError()
++        {
++            Assert.Inconclusive("May be failing on just my port...");
+Grammar pg = new Grammar(
+"parser grammar p;\n" +
+"prog : WHILE ID LCURLY (assign)* RCURLY;\n" +
+"assign : ID ASSIGN expr SEMI ;\n" +
+-                "expr : INT | FLOAT | ID ;\n" );
++                "expr : INT | FLOAT | ID ;\n");
+Grammar g = new Grammar();
+g.FileName = Grammar.IGNORE_STRING_IN_GRAMMAR_FILE_NAME + "string";
+-            g.ImportTokenVocabulary( pg );
++            g.ImportTokenVocabulary(pg);
+g.SetGrammarContent(
+"lexer grammar t;\n" +
+"WHILE : 'while';\n" +
+@@ -106,31 +102,32 @@ namespace AntlrUnitTests
+"INT : (DIGIT)+ ;\n" +
+"FLOAT : (DIGIT)+ '.' (DIGIT)* ;\n" +
+"fragment DIGIT : '0'..'9';\n" +
+-                "WS : (' ')+ ;\n" );
+-            ICharStream input = new ANTLRStringStream( "while x { i=1 y=3.42; z=y; }" );
+-            Interpreter lexEngine = new Interpreter( g, input );
++                "WS : (' ')+ ;\n");
++            ICharStream input = new ANTLRStringStream("while x { i=1 y=3.42; z=y; }");
++            Interpreter lexEngine = new Interpreter(g, input);
+
+-            CommonTokenStream tokens = new CommonTokenStream( lexEngine );
+-            tokens.SetTokenTypeChannel( g.GetTokenType( "WS" ), 99 );
++            FilteringTokenStream tokens = new FilteringTokenStream(lexEngine);
++            tokens.SetTokenTypeChannel(g.GetTokenType("WS"), 99);
+//System.out.println("tokens="+tokens.toString());
+-            Interpreter parseEngine = new Interpreter( pg, tokens );
+-            ParseTree t = parseEngine.Parse( "prog" );
++            Interpreter parseEngine = new Interpreter(pg, tokens);
++            ParseTree t = parseEngine.Parse("prog");
+string result = t.ToStringTree();
+string expecting =
+"(<grammar p> (prog while x { (assign i = (expr 1) MismatchedTokenException(5!=9))))";
+-            assertEquals( expecting, result );
++            assertEquals(expecting, result);
+}
+
+[TestMethod]
+-        public void TestMismatchedSetError() /*throws Exception*/ {
+-            Assert.Inconclusive( "May be failing on just my port..." );
++        public void TestMismatchedSetError()
++        {
++            Assert.Inconclusive("May be failing on just my port...");
+Grammar pg = new Grammar(
+"parser grammar p;\n" +
+"prog : WHILE ID LCURLY (assign)* RCURLY;\n" +
+"assign : ID ASSIGN expr SEMI ;\n" +
+-                "expr : INT | FLOAT | ID ;\n" );
++                "expr : INT | FLOAT | ID ;\n");
+Grammar g = new Grammar();
+-            g.ImportTokenVocabulary( pg );
++            g.ImportTokenVocabulary(pg);
+g.FileName = "<string>";
+g.SetGrammarContent(
+"lexer grammar t;\n" +
+@@ -143,31 +140,32 @@ namespace AntlrUnitTests
+"INT : (DIGIT)+ ;\n" +
+"FLOAT : (DIGIT)+ '.' (DIGIT)* ;\n" +
+"fragment DIGIT : '0'..'9';\n" +
+-                "WS : (' ')+ ;\n" );
+-            ICharStream input = new ANTLRStringStream( "while x { i=; y=3.42; z=y; }" );
+-            Interpreter lexEngine = new Interpreter( g, input );
++                "WS : (' ')+ ;\n");
++            ICharStream input = new ANTLRStringStream("while x { i=; y=3.42; z=y; }");
++            Interpreter lexEngine = new Interpreter(g, input);
+
+-            CommonTokenStream tokens = new CommonTokenStream( lexEngine );
+-            tokens.SetTokenTypeChannel( g.GetTokenType( "WS" ), 99 );
++            FilteringTokenStream tokens = new FilteringTokenStream(lexEngine);
++            tokens.SetTokenTypeChannel(g.GetTokenType("WS"), 99);
+//System.out.println("tokens="+tokens.toString());
+-            Interpreter parseEngine = new Interpreter( pg, tokens );
+-            ParseTree t = parseEngine.Parse( "prog" );
++            Interpreter parseEngine = new Interpreter(pg, tokens);
++            ParseTree t = parseEngine.Parse("prog");
+string result = t.ToStringTree();
+string expecting =
+"(<grammar p> (prog while x { (assign i = (expr MismatchedSetException(9!={5,10,11})))))";
+-            assertEquals( expecting, result );
++            assertEquals(expecting, result);
+}
+
+[TestMethod]
+-        public void TestNoViableAltError() /*throws Exception*/ {
+-            Assert.Inconclusive( "May be failing on just my port..." );
++        public void TestNoViableAltError()
++        {
++            Assert.Inconclusive("May be failing on just my port...");
+Grammar pg = new Grammar(
+"parser grammar p;\n" +
+"prog : WHILE ID LCURLY (assign)* RCURLY;\n" +
+"assign : ID ASSIGN expr SEMI ;\n" +
+-                "expr : {;}INT | FLOAT | ID ;\n" );
++                "expr : {;}INT | FLOAT | ID ;\n");
+Grammar g = new Grammar();
+-            g.ImportTokenVocabulary( pg );
++            g.ImportTokenVocabulary(pg);
+g.FileName = "<string>";
+g.SetGrammarContent(
+"lexer grammar t;\n" +
+@@ -180,20 +178,19 @@ namespace AntlrUnitTests
+"INT : (DIGIT)+ ;\n" +
+"FLOAT : (DIGIT)+ '.' (DIGIT)* ;\n" +
+"fragment DIGIT : '0'..'9';\n" +
+-                "WS : (' ')+ ;\n" );
+-            ICharStream input = new ANTLRStringStream( "while x { i=; y=3.42; z=y; }" );
+-            Interpreter lexEngine = new Interpreter( g, input );
++                "WS : (' ')+ ;\n");
++            ICharStream input = new ANTLRStringStream("while x { i=; y=3.42; z=y; }");
++            Interpreter lexEngine = new Interpreter(g, input);
+
+-            CommonTokenStream tokens = new CommonTokenStream( lexEngine );
+-            tokens.SetTokenTypeChannel( g.GetTokenType( "WS" ), 99 );
++            FilteringTokenStream tokens = new FilteringTokenStream(lexEngine);
++            tokens.SetTokenTypeChannel(g.GetTokenType("WS"), 99);
+//System.out.println("tokens="+tokens.toString());
+-            Interpreter parseEngine = new Interpreter( pg, tokens );
+-            ParseTree t = parseEngine.Parse( "prog" );
++            Interpreter parseEngine = new Interpreter(pg, tokens);
++            ParseTree t = parseEngine.Parse("prog");
+string result = t.ToStringTree();
+string expecting =
+"(<grammar p> (prog while x { (assign i = (expr NoViableAltException(9@[4:1: expr : ( INT | FLOAT | ID );])))))";
+-            assertEquals( expecting, result );
++            assertEquals(expecting, result);
+}
+-
+}
+}
+diff --git a/Antlr3.Test/TestTokenRewriteStream.cs b/Antlr3.Test/TestTokenRewriteStream.cs
+index e01607d..a6efc60 100644
+--- a/Antlr3.Test/TestTokenRewriteStream.cs
++++ b/Antlr3.Test/TestTokenRewriteStream.cs
+@@ -45,12 +45,6 @@ namespace AntlrUnitTests
+[TestClass]
+public class TestTokenRewriteStream : BaseTest
+{
+-
+-        /** Public default constructor used by TestRig */
+-        public TestTokenRewriteStream()
+-        {
+-        }
+-
+[TestMethod]
+public void TestInsertBeforeIndex0() /*throws Exception*/ {
+Grammar g = new Grammar(
+@@ -61,7 +55,6 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
+tokens.InsertBefore( 0, "0" );
+string result = tokens.ToString();
+string expecting = "0abc";
+@@ -78,7 +71,6 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
+tokens.InsertAfter( 2, "x" );
+string result = tokens.ToString();
+string expecting = "abcx";
+@@ -95,7 +87,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.InsertBefore( 1, "x" );
+tokens.InsertAfter( 1, "x" );
+string result = tokens.ToString();
+@@ -113,7 +105,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.Replace( 0, "x" );
+string result = tokens.ToString();
+string expecting = "xbc";
+@@ -130,7 +122,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.Replace( 2, "x" );
+string result = tokens.ToString();
+string expecting = "abx";
+@@ -147,7 +139,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.Replace( 1, "x" );
+string result = tokens.ToString();
+string expecting = "axc";
+@@ -169,7 +161,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "x = 3 * 0;" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.Replace( 4, 8, "0" ); // replace 3 * 0 with 0
+
+string result = tokens.ToOriginalString();
+@@ -205,7 +197,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "x = 3 * 0 + 2 * 0;" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+
+string result = tokens.ToOriginalString();
+string expecting = "x = 3 * 0 + 2 * 0;";
+@@ -233,7 +225,7 @@ namespace AntlrUnitTests
+assertEquals( expecting, result );
+
+tokens.InsertAfter( 17, "// comment" );
+-            result = tokens.ToString( 12, 17 );
++            result = tokens.ToString( 12, 18 );
+expecting = "2 * 0;// comment";
+assertEquals( expecting, result );
+
+@@ -253,7 +245,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.Replace( 1, "x" );
+tokens.Replace( 1, "y" );
+string result = tokens.ToString();
+@@ -271,7 +263,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.InsertBefore( 0, "_" );
+tokens.Replace( 1, "x" );
+tokens.Replace( 1, "y" );
+@@ -290,7 +282,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.Replace( 1, "x" );
+tokens.Delete( 1 );
+string result = tokens.ToString();
+@@ -308,7 +300,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.Replace( 0, 2, "x" );
+tokens.InsertBefore( 1, "0" );
+Exception exc = null;
+@@ -335,7 +327,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.InsertBefore( 0, "0" );
+tokens.Replace( 0, "x" ); // supercedes insert at 0
+string result = tokens.ToString();
+@@ -353,7 +345,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.InsertBefore( 1, "x" );
+tokens.InsertBefore( 1, "y" );
+string result = tokens.ToString();
+@@ -371,7 +363,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.InsertBefore( 0, "x" );
+tokens.InsertBefore( 0, "y" );
+tokens.Replace( 0, "z" );
+@@ -390,7 +382,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.Replace( 2, "x" );
+tokens.InsertBefore( 2, "y" );
+string result = tokens.ToString();
+@@ -408,7 +400,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.InsertBefore( 2, "y" );
+tokens.Replace( 2, "x" );
+string result = tokens.ToString();
+@@ -426,7 +418,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.Replace( 2, "x" );
+tokens.InsertAfter( 2, "y" );
+string result = tokens.ToString();
+@@ -444,7 +436,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abcccba" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.Replace( 2, 4, "x" );
+tokens.InsertBefore( 2, "y" );
+string result = tokens.ToString();
+@@ -462,7 +454,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abcccba" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.Replace( 2, 4, "x" );
+tokens.InsertBefore( 4, "y" ); // no effect; within range of a replace
+Exception exc = null;
+@@ -489,7 +481,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abcccba" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.Replace( 2, 4, "x" );
+tokens.InsertAfter( 4, "y" );
+string result = tokens.ToString();
+@@ -507,7 +499,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abcccba" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.Replace( 0, 6, "x" );
+string result = tokens.ToString();
+string expecting = "x";
+@@ -524,7 +516,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abcccba" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.Replace( 2, 4, "xyz" );
+string result = tokens.ToString( 0, 6 );
+string expecting = "abxyzba";
+@@ -541,7 +533,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abcccba" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.Replace( 2, 4, "xyz" );
+tokens.Replace( 3, 5, "foo" ); // overlaps, error
+Exception exc = null;
+@@ -568,7 +560,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abcccba" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.Replace( 2, 4, "xyz" );
+tokens.Replace( 1, 3, "foo" ); // overlap, error
+Exception exc = null;
+@@ -595,7 +587,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abcba" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.Replace( 2, 2, "xyz" );
+tokens.Replace( 0, 3, "foo" );
+string result = tokens.ToString();
+@@ -615,7 +607,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.InsertBefore( 0, "x" );
+tokens.InsertBefore( 0, "y" );
+string result = tokens.ToString();
+@@ -633,7 +625,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.InsertBefore( 1, "x" );
+tokens.InsertBefore( 0, "y" );
+tokens.InsertBefore( 1, "z" );
+@@ -652,7 +644,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.Replace( 0, 2, "foo" );
+tokens.InsertBefore( 0, "z" ); // combine with left edge of rewrite
+string result = tokens.ToString();
+@@ -670,7 +662,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.Delete( 0, 2 );
+tokens.InsertBefore( 0, "z" ); // combine with left edge of rewrite
+string result = tokens.ToString();
+@@ -688,7 +680,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.InsertBefore( 1, "x" );
+tokens.InsertBefore( 2, "y" );
+tokens.InsertBefore( 0, "z" );
+@@ -707,7 +699,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abcc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.Replace( 1, 2, "foo" );
+tokens.Replace( 0, 3, "bar" ); // wipes prior nested replace
+string result = tokens.ToString();
+@@ -725,7 +717,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abcc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.Replace( 0, 3, "bar" );
+tokens.Replace( 1, 2, "foo" ); // cannot split earlier replace
+Exception exc = null;
+@@ -752,7 +744,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abcc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.Replace( 1, 2, "foo" );
+tokens.Replace( 0, 2, "bar" ); // wipes prior nested replace
+string result = tokens.ToString();
+@@ -770,7 +762,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abcc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.Replace( 1, 2, "foo" );
+tokens.Replace( 1, 3, "bar" ); // wipes prior nested replace
+string result = tokens.ToString();
+@@ -788,7 +780,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abcc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.Replace( 1, 2, "foo" );
+tokens.Replace( 1, 2, "foo" ); // drop previous, identical
+string result = tokens.ToString();
+@@ -806,7 +798,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abcc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.InsertBefore( 1, "foo" );
+tokens.Replace( 1, 2, "foo" ); // kill prev insert
+string result = tokens.ToString();
+@@ -824,7 +816,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abcc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.InsertBefore( 1, "x" );
+tokens.Replace( 2, 3, "foo" );
+string result = tokens.ToString();
+@@ -842,7 +834,7 @@ namespace AntlrUnitTests
+ICharStream input = new ANTLRStringStream( "abcc" );
+Interpreter lexEngine = new Interpreter( g, input );
+TokenRewriteStream tokens = new TokenRewriteStream( lexEngine );
+-            tokens.LT( 1 ); // fill buffer
++            tokens.Fill();
+tokens.Replace( 2, 3, "foo" );
+tokens.InsertBefore( 1, "x" );
+string result = tokens.ToString();
+diff --git a/Antlr3.Test/TestTreeNodeStream.cs b/Antlr3.Test/TestTreeNodeStream.cs
+index 055a803..a98f0e4 100644
+--- a/Antlr3.Test/TestTreeNodeStream.cs
++++ b/Antlr3.Test/TestTreeNodeStream.cs
+@@ -207,7 +207,6 @@ namespace AntlrUnitTests
+stream.Consume();
+}
+assertEquals( TokenTypes.EndOfFile, ( (ITree)stream.LT( 1 ) ).Type );
+-            assertEquals( TokenTypes.Up, ( (ITree)stream.LT( -1 ) ).Type );
+stream.Rewind( m );      // REWIND
+
+// consume til end again :)
+@@ -217,7 +216,6 @@ namespace AntlrUnitTests
+stream.Consume();
+}
+assertEquals( TokenTypes.EndOfFile, ( (ITree)stream.LT( 1 ) ).Type );
+-            assertEquals( TokenTypes.Up, ( (ITree)stream.LT( -1 ) ).Type );
+}
+
+[TestMethod]
+

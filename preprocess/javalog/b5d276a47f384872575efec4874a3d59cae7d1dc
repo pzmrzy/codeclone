@@ -1,0 +1,53 @@
+commit b5d276a47f384872575efec4874a3d59cae7d1dc
+Author:     parrt <parrt@antlr.org>
+AuthorDate: Tue Jul 5 10:39:52 2011 -0800
+Commit:     parrt <parrt@antlr.org>
+CommitDate: Tue Jul 5 10:39:52 2011 -0800
+
+Sam fixes rare infinite loop upon error in nextToken().
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8827]
+
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/Lexer.java b/runtime/Java/src/main/java/org/antlr/runtime/Lexer.java
+index 6037bcf..a1a24e1 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/Lexer.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/Lexer.java
+@@ -95,14 +95,18 @@ public abstract class Lexer extends BaseRecognizer implements TokenSource {
+}
+return state.token;
+}
+-			catch (NoViableAltException nva) {
+-				reportError(nva);
+-				recover(nva); // throw out current char and try again
++			catch (MismatchedRangeException re) {
++				reportError(re);
++				// matchRange() routine has already called recover()
+}
+-			catch (RecognitionException re) {
++			catch (MismatchedTokenException re) {
+reportError(re);
+// match() routine has already called recover()
+}
++			catch (RecognitionException re) {
++				reportError(re);
++				recover(re); // throw out current char and try again
++			}
+}
+}
+
+diff --git a/tool/CHANGES.txt b/tool/CHANGES.txt
+index 0378111..0f90e62 100644
+--- a/tool/CHANGES.txt
++++ b/tool/CHANGES.txt
+@@ -7,6 +7,10 @@ University of San Francisco
+
+CHANGES
+
++July 5, 2011
++
++* Sam fixes rare infinite loop upon error in nextToken().
++
+June 29, 2011
+
+* Sam noticed CommonToken.getText() cached substring pulled from input, which
+

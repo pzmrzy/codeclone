@@ -1,0 +1,139 @@
+commit aac06a06da4c12b8fdf515d48ff8892e0d6bed32
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Fri Jun 17 05:58:41 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Fri Jun 17 05:58:41 2011 -0800
+
+(C# 3) Implement ITokenStreamInformation for UnbufferedTokenStream
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8651]
+
+diff --git a/Antlr3.Runtime/Misc/LookaheadStream.cs b/Antlr3.Runtime/Misc/LookaheadStream.cs
+index 845d970..24dc0cb 100644
+--- a/Antlr3.Runtime/Misc/LookaheadStream.cs
++++ b/Antlr3.Runtime/Misc/LookaheadStream.cs
+@@ -33,6 +33,7 @@
+namespace Antlr.Runtime.Misc
+{
+using ArgumentException = System.ArgumentException;
++    using InvalidOperationException = System.InvalidOperationException;
+
+/** <summary>
+*  A lookahead queue that knows how to mark/release locations
+@@ -75,6 +76,14 @@ namespace Antlr.Runtime.Misc
+}
+}
+
++        public T PreviousElement
++        {
++            get
++            {
++                return _previousElement;
++            }
++        }
++
+public override void Clear()
+{
+base.Clear();
+@@ -184,6 +193,9 @@ namespace Antlr.Runtime.Misc
+
+public virtual void Release( int marker )
+{
++            if (_markDepth == 0)
++                throw new InvalidOperationException();
++
+_markDepth--;
+}
+
+@@ -195,7 +207,7 @@ namespace Antlr.Runtime.Misc
+
+public virtual void Rewind()
+{
+-            Seek( _lastMarker );
++            Rewind( _lastMarker );
+}
+
+/** <summary>
+diff --git a/Antlr3.Runtime/UnbufferedTokenStream.cs b/Antlr3.Runtime/UnbufferedTokenStream.cs
+index 7bac543..c1bfcb2 100644
+--- a/Antlr3.Runtime/UnbufferedTokenStream.cs
++++ b/Antlr3.Runtime/UnbufferedTokenStream.cs
+@@ -52,7 +52,7 @@ namespace Antlr.Runtime
+*  @see BufferedTokenStream
+*  @see CommonTokenStream
+*/
+-    public class UnbufferedTokenStream : LookaheadStream<IToken>, ITokenStream
++    public class UnbufferedTokenStream : LookaheadStream<IToken>, ITokenStream, ITokenStreamInformation
+{
+[CLSCompliant(false)]
+protected ITokenSource tokenSource;
+@@ -61,6 +61,8 @@ namespace Antlr.Runtime
+/** Skip tokens on any channel but this one; this is how we skip whitespace... */
+protected int channel = TokenChannels.Default;
+
++        private readonly ListStack<IToken> _realTokens = new ListStack<IToken>() { null };
++
+public UnbufferedTokenStream(ITokenSource tokenSource)
+{
+this.tokenSource = tokenSource;
+@@ -82,6 +84,59 @@ namespace Antlr.Runtime
+}
+}
+
++        #region ITokenStreamInformation Members
++
++        public IToken LastToken
++        {
++            get
++            {
++                return LB(1);
++            }
++        }
++
++        public IToken LastRealToken
++        {
++            get
++            {
++                return _realTokens.Peek();
++            }
++        }
++
++        public int MaxLookBehind
++        {
++            get
++            {
++                return 1;
++            }
++        }
++
++        public override int Mark()
++        {
++            _realTokens.Push(_realTokens.Peek());
++            return base.Mark();
++        }
++
++        public override void Release(int marker)
++        {
++            base.Release(marker);
++            _realTokens.Pop();
++        }
++
++        public override void Clear()
++        {
++            _realTokens.Clear();
++            _realTokens.Push(null);
++        }
++
++        public override void Consume()
++        {
++            base.Consume();
++            if (PreviousElement != null && PreviousElement.Line > 0)
++                _realTokens[_realTokens.Count - 1] = PreviousElement;
++        }
++
++        #endregion
++
+public override IToken NextElement()
+{
+IToken t = this.tokenSource.NextToken();
+

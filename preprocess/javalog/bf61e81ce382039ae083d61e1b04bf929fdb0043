@@ -1,0 +1,24 @@
+commit bf61e81ce382039ae083d61e1b04bf929fdb0043
+Author:     Terence Parr <parrt@antlr.org>
+AuthorDate: Sat Dec 1 14:12:09 2012 -0800
+Commit:     Terence Parr <parrt@antlr.org>
+CommitDate: Sat Dec 1 14:12:09 2012 -0800
+
+forgot to change CHANGES file.
+
+diff --git a/tool/CHANGES.txt b/tool/CHANGES.txt
+index 4fd2a55..e55f00c 100644
+--- a/tool/CHANGES.txt
++++ b/tool/CHANGES.txt
+@@ -9,6 +9,10 @@ CHANGES
+
+??? 2012 -- release 3.5
+
++December 1, 2012
++
++* Added error msg for .. in parser
++
+September 17, 2012
+
+* Add Gokulakannan Somasundaram's C++ target based upon C target.
+

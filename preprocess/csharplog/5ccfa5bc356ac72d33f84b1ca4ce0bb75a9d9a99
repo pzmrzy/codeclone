@@ -1,0 +1,24 @@
+commit 5ccfa5bc356ac72d33f84b1ca4ce0bb75a9d9a99
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Apr 5 09:06:43 2010 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Apr 5 09:06:43 2010 -0800
+
+C# Port: Merge CL6731
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6795]
+
+diff --git a/Antlr3/Tool/ErrorManager.cs b/Antlr3/Tool/ErrorManager.cs
+index ac3d01f..0796eeb 100644
+--- a/Antlr3/Tool/ErrorManager.cs
++++ b/Antlr3/Tool/ErrorManager.cs
+@@ -805,7 +805,7 @@ namespace Antlr3.Tool
+GetErrorState().errors++;
+Message msg = new LeftRecursionCyclesMessage( cycles );
+GetErrorState().errorMsgIDs.Add( msg.msgID );
+-            GetErrorListener().Warning( msg );
++            GetErrorListener().Error( msg );
+}
+
+public static void GrammarError( int msgID,
+

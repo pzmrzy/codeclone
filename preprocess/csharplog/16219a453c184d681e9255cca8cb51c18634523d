@@ -1,0 +1,25 @@
+commit 16219a453c184d681e9255cca8cb51c18634523d
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Thu Mar 19 13:52:18 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Thu Mar 19 13:52:18 2009 -0800
+
+C# Port:
+* Fix unit test assertion with "actual" and "expected" reversed
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 5949]
+
+diff --git a/Antlr3.Test/StringTemplateTests.cs b/Antlr3.Test/StringTemplateTests.cs
+index b096a2a..b299a71 100644
+--- a/Antlr3.Test/StringTemplateTests.cs
++++ b/Antlr3.Test/StringTemplateTests.cs
+@@ -1895,7 +1895,7 @@ namespace AntlrUnitTests
+new StringTemplate( group,
+"$if(b)$x$endif$ $if(!b)$y$endif$" );
+t.SetAttribute( "b", true );
+-            Assert.AreEqual( t.ToString(), "x " );
++            Assert.AreEqual( "x ", t.ToString() );
+
+t = t.GetInstanceOf();
+t.SetAttribute( "b", false );
+

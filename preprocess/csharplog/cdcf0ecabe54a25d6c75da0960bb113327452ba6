@@ -1,0 +1,134 @@
+commit cdcf0ecabe54a25d6c75da0960bb113327452ba6
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sat Jul 30 10:06:19 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sat Jul 30 10:06:19 2011 -0800
+
+(C# 3) Updated unit test deployment, ErrorManager initialization
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8950]
+
+diff --git a/Antlr3.Test/BaseTest.cs b/Antlr3.Test/BaseTest.cs
+index be89dac..c18fdc8 100644
+--- a/Antlr3.Test/BaseTest.cs
++++ b/Antlr3.Test/BaseTest.cs
+@@ -37,11 +37,12 @@ namespace AntlrUnitTests
+using System.Linq;
+using Antlr.Runtime;
+using Antlr.Runtime.JavaExtensions;
+-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Antlr3.Extensions;
++    using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using AntlrTool = Antlr3.AntlrTool;
+using BindingFlags = System.Reflection.BindingFlags;
++    using CultureInfo = System.Globalization.CultureInfo;
+using Debugger = System.Diagnostics.Debugger;
+using Directory = System.IO.Directory;
+using ErrorManager = Antlr3.Tool.ErrorManager;
+@@ -61,6 +62,15 @@ namespace AntlrUnitTests
+using StringTemplateGroup = Antlr4.StringTemplate.TemplateGroup;
+
+[TestClass]
++#if DEBUG
++    [DeploymentItem(@"bin\Debug\Codegen\", "Codegen")]
++    [DeploymentItem(@"bin\Debug\Targets\", "Targets")]
++    [DeploymentItem(@"bin\Debug\Tool\", "Tool")]
++#else
++    [DeploymentItem(@"bin\Release\Codegen\", "Codegen")]
++    [DeploymentItem(@"bin\Release\Targets\", "Targets")]
++    [DeploymentItem(@"bin\Release\Tool\", "Tool")]
++#endif
+public abstract class BaseTest
+{
+public readonly string jikes = null;
+@@ -111,6 +121,8 @@ namespace AntlrUnitTests
+// new output dir for each test
+tmpdir = Path.GetFullPath( Path.Combine( Path.GetTempPath(), "antlr-" + currentTimeMillis() ) );
+
++            ErrorManager.SetLocale(CultureInfo.GetCultureInfo("en-us"));
++            ErrorManager.SetFormat("antlr");
+ErrorManager.ResetErrorState();
+StringTemplateGroup.DefaultGroup = new StringTemplateGroup();
+
+@@ -929,7 +941,7 @@ namespace AntlrUnitTests
+{
+createParserST =
+new StringTemplate(
+-                    "        $parserName$ parser = new $parserName$(tokens);\n" );
++                    "        <parserName> parser = new <parserName>(tokens);\n" );
+}
+outputFileST.SetAttribute( "createParser", createParserST );
+outputFileST.SetAttribute( "parserName", parserName );
+@@ -1011,7 +1023,7 @@ namespace AntlrUnitTests
+"public class Test {\n" +
+"    static String templates =\n" +
+"    		\"group test;\"+" +
+-                "    		\"foo(x,y) ::= \\\"<x> <y>\\\"\";\n" +
++                "    		\"foo(x,y) ::= \\\"\\<x> \\<y>\\\"\";\n" +
+"    static StringTemplateGroup group =" +
+"    		new StringTemplateGroup(new StringReader(templates)," +
+"					AngleBracketTemplateLexer.class);" +
+diff --git a/Antlr3/Tool/ErrorManager.cs b/Antlr3/Tool/ErrorManager.cs
+index c5a9bcf..09c4dc8 100644
+--- a/Antlr3/Tool/ErrorManager.cs
++++ b/Antlr3/Tool/ErrorManager.cs
+@@ -250,6 +250,11 @@ namespace Antlr3.Tool
+*/
+private static String[] idToMessageTemplateName = new String[MAX_MESSAGE_NUMBER + 1];
+
++        static ErrorManager()
++        {
++            InitIdToMessageNameMapping();
++        }
++
+public static TraceListener ExternalListener
+{
+get;
+@@ -394,8 +399,6 @@ namespace Antlr3.Tool
+
+internal static void Initialize()
+{
+-            InitIdToMessageNameMapping();
+-
+// it is inefficient to set the default locale here if another
+// piece of code is going to set the locale, but that would
+// require that a user call an init() function or something.  I prefer
+@@ -420,6 +423,9 @@ namespace Antlr3.Tool
+*/
+public static void SetLocale( CultureInfo locale )
+{
++            if (ErrorManager.locale == locale)
++                return;
++
+ErrorManager.locale = locale;
+string language = locale.TwoLetterISOLanguageName;
+string fileName = Path.Combine(Path.Combine(Path.Combine(Path.Combine(Path.Combine(AntlrTool.ToolPathRoot, "Tool"), "Templates"), "messages"), "languages"), language + ".stg");
+@@ -456,6 +462,9 @@ namespace Antlr3.Tool
+*/
+public static void SetFormat( String formatName )
+{
++            if (ErrorManager.formatName == formatName)
++                return;
++
+ErrorManager.formatName = formatName;
+string fileName = Path.Combine(Path.Combine(Path.Combine(Path.Combine(Path.Combine(AntlrTool.ToolPathRoot, "Tool"), "Templates"), "messages"), "formats"), formatName + ".stg");
+format = new TemplateGroupFile(fileName);
+diff --git a/AntlrTestConfig.testrunconfig b/AntlrTestConfig.testrunconfig
+index e5064de..38a6b45 100644
+--- a/AntlrTestConfig.testrunconfig
++++ b/AntlrTestConfig.testrunconfig
+@@ -2,11 +2,7 @@
+<TestRunConfiguration name="AntlrTestConfig" id="ffdb4029-8f84-4bbb-9829-cc1e67c5715e" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+<Description>This is a default test run configuration for a local test run.</Description>
+<CodeCoverage keyFile="Antlr3\Key.snk" />
+-  <Deployment>
+-    <DeploymentItem filename="bin\Debug\Codegen\" outputDirectory="Codegen" />
+-    <DeploymentItem filename="bin\Debug\Targets\" outputDirectory="Targets" />
+-    <DeploymentItem filename="bin\Debug\Tool\" outputDirectory="Tool" />
+-  </Deployment>
++  <Deployment />
+<Hosts>
+<VSSDKTestHostRunConfig name="VS IDE" HiveKind="DevEnv" HiveName="9.0" IsRANU="false" xmlns="http://microsoft.com/schemas/VisualStudio/SDK/Tools/IdeHostAdapter/2006/06" />
+<DeviceHostRunConfigData name="Smart Device" deviceId="AE1FD546-ECB8-4553-B0AA-53E129544859" deviceName="Pocket PC 2003 Device" platformId="3C41C503-53EF-4c2a-8DD4-A8217CAD115E" platformName="Pocket PC 2003" uiPlatformId="00000000-0000-0000-0000-000000000000" />
+

@@ -1,0 +1,409 @@
+commit 0631090539a7d878c1f096c9a1baf634f6ac9fcc
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sun May 15 13:27:06 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sun May 15 13:27:06 2011 -0800
+
+(C# 3) Make the instruction pointer a field in TemplateFrame instead of Interpreter. Fixes issues with default argument templates.
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8512]
+
+diff --git a/Antlr4.StringTemplate/Compiler/CompilationState.cs b/Antlr4.StringTemplate/Compiler/CompilationState.cs
+index 2512f3e..da9551d 100644
+--- a/Antlr4.StringTemplate/Compiler/CompilationState.cs
++++ b/Antlr4.StringTemplate/Compiler/CompilationState.cs
+@@ -80,7 +80,7 @@ namespace Antlr4.StringTemplate.Compiler
+}
+else
+{
+-                if (Interpreter.predefinedAnonSubtemplateAttributes.Contains(name))
++                if (Interpreter.PredefinedAnonymousSubtemplateAttributes.Contains(name))
+{
+errMgr.CompiletimeError(ErrorType.REF_TO_IMPLICIT_ATTRIBUTE_OUT_OF_SCOPE, templateToken, id.Token);
+Emit(id, Bytecode.INSTR_NULL);
+diff --git a/Antlr4.StringTemplate/Interpreter.cs b/Antlr4.StringTemplate/Interpreter.cs
+index cef11f7..c3a172c 100644
+--- a/Antlr4.StringTemplate/Interpreter.cs
++++ b/Antlr4.StringTemplate/Interpreter.cs
+@@ -33,6 +33,7 @@
+namespace Antlr4.StringTemplate
+{
+using System.Collections.Generic;
++    using System.Collections.ObjectModel;
+using System.Linq;
+using Antlr4.StringTemplate.Compiler;
+using Antlr4.StringTemplate.Debug;
+@@ -78,7 +79,7 @@ namespace Antlr4.StringTemplate
+
+public const int DefaultOperandStackSize = 512;
+
+-        public static readonly HashSet<string> predefinedAnonSubtemplateAttributes = new HashSet<string>() { "i", "i0" };
++        private static readonly string[] predefinedAnonSubtemplateAttributes = { "i", "i0" };
+
+/** Dump bytecode instructions as we execute them? */
+private static bool trace = false;
+@@ -96,7 +97,6 @@ namespace Antlr4.StringTemplate
+/** Operand stack, grows upwards */
+private object[] operands = new object[DefaultOperandStackSize];
+private int sp = -1;        // stack pointer register
+-        private int current_ip = 0; // mirrors ip in exec(), but visible to all methods
+private int nwline = 0;     // how many char written on this template LINE so far?
+
+/** If trace mode, track trace here */
+@@ -143,10 +143,17 @@ namespace Antlr4.StringTemplate
+}
+}
+
++        public static ReadOnlyCollection<string> PredefinedAnonymousSubtemplateAttributes
++        {
++            get
++            {
++                return new ReadOnlyCollection<string>(predefinedAnonSubtemplateAttributes);
++            }
++        }
++
+/** Execute template self and return how many characters it wrote to out */
+public virtual int Execute(ITemplateWriter @out, TemplateFrame frame)
+{
+-            int save_ip = current_ip;
+try
+{
+SetDefaultArguments(frame);
+@@ -160,13 +167,9 @@ namespace Antlr4.StringTemplate
+StringBuilder builder = new StringBuilder();
+builder.AppendLine(e.ToString());
+builder.AppendLine(e.StackTrace);
+-                _errorManager.RuntimeError(frame, current_ip, ErrorType.INTERNAL_ERROR, "internal error: " + builder);
++                _errorManager.RuntimeError(frame, ErrorType.INTERNAL_ERROR, "internal error: " + builder);
+return 0;
+}
+-            finally
+-            {
+-                current_ip = save_ip;
+-            }
+}
+
+protected virtual int ExecuteImpl(ITemplateWriter @out, TemplateFrame frame)
+@@ -190,7 +193,7 @@ namespace Antlr4.StringTemplate
+Trace(frame, ip);
+
+Bytecode opcode = (Bytecode)code[ip];
+-                current_ip = ip;
++                frame.InstructionPointer = ip;
+ip++; //jump to next instruction or first byte of operand
+switch (opcode)
+{
+@@ -212,7 +215,7 @@ namespace Antlr4.StringTemplate
+}
+catch (AttributeNotFoundException)
+{
+-                        _errorManager.RuntimeError(frame, current_ip, ErrorType.NO_SUCH_ATTRIBUTE, name);
++                        _errorManager.RuntimeError(frame, ErrorType.NO_SUCH_ATTRIBUTE, name);
+o = null;
+}
+operands[++sp] = o;
+@@ -249,7 +252,7 @@ namespace Antlr4.StringTemplate
+ip += Instruction.OperandSizeInBytes;
+// look up in original hierarchy not enclosing template (variable group)
+// see TestSubtemplates.testEvalSTFromAnotherGroup()
+-                    st = self.Group.GetEmbeddedInstanceOf(frame, ip, name);
++                    st = self.Group.GetEmbeddedInstanceOf(frame, name);
+// get n args and store into st's attr list
+StoreArguments(frame, nargs, st);
+sp -= nargs;
+@@ -260,7 +263,7 @@ namespace Antlr4.StringTemplate
+nargs = GetShort(code, ip);
+ip += Instruction.OperandSizeInBytes;
+name = (string)operands[sp - nargs];
+-                    st = self.Group.GetEmbeddedInstanceOf(frame, ip, name);
++                    st = self.Group.GetEmbeddedInstanceOf(frame, name);
+StoreArguments(frame, nargs, st);
+sp -= nargs;
+sp--; // pop template name
+@@ -274,7 +277,7 @@ namespace Antlr4.StringTemplate
+IDictionary<string, object> attrs = (IDictionary<string, object>)operands[sp--];
+// look up in original hierarchy not enclosing template (variable group)
+// see TestSubtemplates.testEvalSTFromAnotherGroup()
+-                    st = self.Group.GetEmbeddedInstanceOf(frame, ip, name);
++                    st = self.Group.GetEmbeddedInstanceOf(frame, name);
+// get n args and store into st's attr list
+StoreArguments(frame, attrs, st);
+operands[++sp] = st;
+@@ -431,7 +434,7 @@ namespace Antlr4.StringTemplate
+}
+else
+{
+-                        _errorManager.RuntimeError(frame, current_ip, ErrorType.EXPECTING_STRING, "trim", o.GetType());
++                        _errorManager.RuntimeError(frame, ErrorType.EXPECTING_STRING, "trim", o.GetType());
+operands[++sp] = o;
+}
+break;
+@@ -448,7 +451,7 @@ namespace Antlr4.StringTemplate
+}
+else
+{
+-                        _errorManager.RuntimeError(frame, current_ip, ErrorType.EXPECTING_STRING, "strlen", o.GetType());
++                        _errorManager.RuntimeError(frame, ErrorType.EXPECTING_STRING, "strlen", o.GetType());
+operands[++sp] = 0;
+}
+break;
+@@ -567,12 +570,12 @@ namespace Antlr4.StringTemplate
+CompiledTemplate imported = self.impl.NativeGroup.LookupImportedTemplate(name);
+if (imported == null)
+{
+-                _errorManager.RuntimeError(frame, current_ip, ErrorType.NO_IMPORTED_TEMPLATE, name);
++                _errorManager.RuntimeError(frame, ErrorType.NO_IMPORTED_TEMPLATE, name);
+st = self.Group.CreateStringTemplateInternally(new CompiledTemplate());
+}
+else
+{
+-                st = imported.NativeGroup.GetEmbeddedInstanceOf(frame, current_ip, name);
++                st = imported.NativeGroup.GetEmbeddedInstanceOf(frame, name);
+st.Group = group;
+}
+
+@@ -589,7 +592,7 @@ namespace Antlr4.StringTemplate
+CompiledTemplate imported = self.impl.NativeGroup.LookupImportedTemplate(name);
+if (imported == null)
+{
+-                _errorManager.RuntimeError(frame, current_ip, ErrorType.NO_IMPORTED_TEMPLATE, name);
++                _errorManager.RuntimeError(frame, ErrorType.NO_IMPORTED_TEMPLATE, name);
+st = self.Group.CreateStringTemplateInternally(new CompiledTemplate());
+}
+else
+@@ -655,7 +658,6 @@ namespace Antlr4.StringTemplate
+if (nargs < (nformalArgs - st.impl.NumberOfArgsWithDefaultValues) || nargs > nformalArgs)
+{
+_errorManager.RuntimeError(frame,
+-                                    current_ip,
+ErrorType.ARGUMENT_COUNT_MISMATCH,
+nargs,
+st.impl.Name,
+@@ -665,9 +667,9 @@ namespace Antlr4.StringTemplate
+foreach (string argName in attrs.Keys)
+{
+// don't let it throw an exception in RawSetAttribute
+-                if (st.impl.FormalArguments == null || !st.impl.FormalArguments.Any(i => i.Name == argName))
++                if (st.impl.FormalArguments == null || !st.impl.FormalArguments.Exists(i => i.Name == argName))
+{
+-                    _errorManager.RuntimeError(frame, current_ip, ErrorType.NO_SUCH_ATTRIBUTE, argName);
++                    _errorManager.RuntimeError(frame, ErrorType.NO_SUCH_ATTRIBUTE, argName);
+continue;
+}
+
+@@ -684,13 +686,12 @@ namespace Antlr4.StringTemplate
+int firstArg = sp - (nargs - 1);
+int numToStore = Math.Min(nargs, nformalArgs);
+if (st.impl.IsAnonSubtemplate)
+-                nformalArgs -= predefinedAnonSubtemplateAttributes.Count;
++                nformalArgs -= predefinedAnonSubtemplateAttributes.Length;
+
+if (nargs < (nformalArgs - st.impl.NumberOfArgsWithDefaultValues) ||
+nargs > nformalArgs)
+{
+_errorManager.RuntimeError(frame,
+-                                    current_ip,
+ErrorType.ARGUMENT_COUNT_MISMATCH,
+nargs,
+st.impl.Name,
+@@ -715,7 +716,7 @@ namespace Antlr4.StringTemplate
+if (_debug)
+{
+int start = @out.Index; // track char we're about to write
+-                EvalExprEvent e = new IndentEvent(frame, new Interval(start, indent.Length), GetExpressionInterval(self));
++                EvalExprEvent e = new IndentEvent(frame, new Interval(start, indent.Length), GetExpressionInterval(frame));
+TrackDebugEvent(frame, e);
+}
+
+@@ -731,7 +732,7 @@ namespace Antlr4.StringTemplate
+int n = WriteObject(@out, frame, o, null);
+if (_debug)
+{
+-                Interval templateLocation = frame.Template.impl.sourceMap[current_ip];
++                Interval templateLocation = frame.Template.impl.sourceMap[frame.InstructionPointer];
+EvalExprEvent e = new EvalExprEvent(frame, Interval.FromBounds(start, @out.Index), templateLocation);
+TrackDebugEvent(frame, e);
+}
+@@ -770,7 +771,7 @@ namespace Antlr4.StringTemplate
+
+if (_debug)
+{
+-                Interval templateLocation = frame.Template.impl.sourceMap[current_ip];
++                Interval templateLocation = frame.Template.impl.sourceMap[frame.InstructionPointer];
+EvalExprEvent e = new EvalExprEvent(frame, Interval.FromBounds(start, @out.Index), templateLocation);
+TrackDebugEvent(frame, e);
+}
+@@ -899,9 +900,9 @@ namespace Antlr4.StringTemplate
+return n;
+}
+
+-        protected virtual Interval GetExpressionInterval(Template self)
++        protected virtual Interval GetExpressionInterval(TemplateFrame frame)
+{
+-            return self.impl.sourceMap[current_ip];
++            return frame.Template.impl.sourceMap[frame.InstructionPointer];
+}
+
+protected virtual void Map(TemplateFrame frame, object attr, Template st)
+@@ -1005,7 +1006,7 @@ namespace Antlr4.StringTemplate
+List<FormalArgument> formalArguments = code.FormalArguments;
+if (!code.HasFormalArgs || formalArguments == null)
+{
+-                _errorManager.RuntimeError(frame, current_ip, ErrorType.MISSING_FORMAL_ARGUMENTS);
++                _errorManager.RuntimeError(frame, ErrorType.MISSING_FORMAL_ARGUMENTS);
+return null;
+}
+
+@@ -1013,11 +1014,11 @@ namespace Antlr4.StringTemplate
+object[] formalArgumentNames = formalArguments.Select(i => i.Name).ToArray();
+int nformalArgs = formalArgumentNames.Length;
+if (prototype.IsAnonymousSubtemplate)
+-                nformalArgs -= predefinedAnonSubtemplateAttributes.Count;
++                nformalArgs -= predefinedAnonSubtemplateAttributes.Length;
+
+if (nformalArgs != numExprs)
+{
+-                _errorManager.RuntimeError(frame, current_ip, ErrorType.MAP_ARGUMENT_COUNT_MISMATCH, numExprs, nformalArgs);
++                _errorManager.RuntimeError(frame, ErrorType.MAP_ARGUMENT_COUNT_MISMATCH, numExprs, nformalArgs);
+// TODO just fill first n
+// truncate arg list to match smaller size
+int shorterSize = Math.Min(formalArgumentNames.Length, numExprs);
+@@ -1064,7 +1065,7 @@ namespace Antlr4.StringTemplate
+{
+if (st.impl.FormalArguments == null)
+{
+-                _errorManager.RuntimeError(frame, current_ip, ErrorType.ARGUMENT_COUNT_MISMATCH, 1, st.impl.Name, 0);
++                _errorManager.RuntimeError(frame, ErrorType.ARGUMENT_COUNT_MISMATCH, 1, st.impl.Name, 0);
+return;
+}
+
+@@ -1378,7 +1379,7 @@ namespace Antlr4.StringTemplate
+
+if (o == null)
+{
+-                _errorManager.RuntimeError(frame, current_ip, ErrorType.NO_SUCH_PROPERTY,
++                _errorManager.RuntimeError(frame, ErrorType.NO_SUCH_PROPERTY,
+"null attribute");
+return null;
+}
+@@ -1394,7 +1395,7 @@ namespace Antlr4.StringTemplate
+}
+catch (TemplateNoSuchPropertyException e)
+{
+-                _errorManager.RuntimeError(frame, current_ip, ErrorType.NO_SUCH_PROPERTY,
++                _errorManager.RuntimeError(frame, ErrorType.NO_SUCH_PROPERTY,
+e, o.GetType().Name + "." + property);
+}
+return null;
+diff --git a/Antlr4.StringTemplate/Misc/ErrorManager.cs b/Antlr4.StringTemplate/Misc/ErrorManager.cs
+index 0870b6b..349dd82 100644
+--- a/Antlr4.StringTemplate/Misc/ErrorManager.cs
++++ b/Antlr4.StringTemplate/Misc/ErrorManager.cs
+@@ -132,29 +132,29 @@ namespace Antlr4.StringTemplate.Misc
+Listener.CompiletimeError(new TemplateGroupCompiletimeMessage(error, srcName, e.Token, e, msg));
+}
+
+-        public virtual void RuntimeError(TemplateFrame frame, int ip, ErrorType error)
++        public virtual void RuntimeError(TemplateFrame frame, ErrorType error)
+{
+-            Listener.RuntimeError(new TemplateRuntimeMessage(error, ip, frame));
++            Listener.RuntimeError(new TemplateRuntimeMessage(error, frame != null ? frame.InstructionPointer : 0, frame));
+}
+
+-        public virtual void RuntimeError(TemplateFrame frame, int ip, ErrorType error, object arg)
++        public virtual void RuntimeError(TemplateFrame frame, ErrorType error, object arg)
+{
+-            Listener.RuntimeError(new TemplateRuntimeMessage(error, ip, frame, arg));
++            Listener.RuntimeError(new TemplateRuntimeMessage(error, frame != null ? frame.InstructionPointer : 0, frame, arg));
+}
+
+-        public virtual void RuntimeError(TemplateFrame frame, int ip, ErrorType error, Exception e, object arg)
++        public virtual void RuntimeError(TemplateFrame frame, ErrorType error, Exception e, object arg)
+{
+-            Listener.RuntimeError(new TemplateRuntimeMessage(error, ip, frame, e, arg));
++            Listener.RuntimeError(new TemplateRuntimeMessage(error, frame != null ? frame.InstructionPointer : 0, frame, e, arg));
+}
+
+-        public virtual void RuntimeError(TemplateFrame frame, int ip, ErrorType error, object arg, object arg2)
++        public virtual void RuntimeError(TemplateFrame frame, ErrorType error, object arg, object arg2)
+{
+-            Listener.RuntimeError(new TemplateRuntimeMessage(error, ip, frame, null, arg, arg2));
++            Listener.RuntimeError(new TemplateRuntimeMessage(error, frame != null ? frame.InstructionPointer : 0, frame, null, arg, arg2));
+}
+
+-        public virtual void RuntimeError(TemplateFrame frame, int ip, ErrorType error, object arg, object arg2, object arg3)
++        public virtual void RuntimeError(TemplateFrame frame, ErrorType error, object arg, object arg2, object arg3)
+{
+-            Listener.RuntimeError(new TemplateRuntimeMessage(error, ip, frame, null, arg, arg2, arg3));
++            Listener.RuntimeError(new TemplateRuntimeMessage(error, frame != null ? frame.InstructionPointer : 0, frame, null, arg, arg2, arg3));
+}
+
+public virtual void IOError(Template self, ErrorType error, Exception e)
+diff --git a/Antlr4.StringTemplate/TemplateFrame.cs b/Antlr4.StringTemplate/TemplateFrame.cs
+index c278c26..4fd015c 100644
+--- a/Antlr4.StringTemplate/TemplateFrame.cs
++++ b/Antlr4.StringTemplate/TemplateFrame.cs
+@@ -40,6 +40,7 @@ namespace Antlr4.StringTemplate
+{
+private readonly Template _template;
+private readonly TemplateFrame _parent;
++        private int _ip;
+private DebugEvents _debugState;
+
+public TemplateFrame(Template template, TemplateFrame parent)
+@@ -64,6 +65,19 @@ namespace Antlr4.StringTemplate
+}
+}
+
++        public int InstructionPointer
++        {
++            get
++            {
++                return _ip;
++            }
++
++            set
++            {
++                _ip = value;
++            }
++        }
++
+public DebugEvents GetDebugState()
+{
+_debugState = _debugState ?? new DebugEvents();
+diff --git a/Antlr4.StringTemplate/TemplateGroup.cs b/Antlr4.StringTemplate/TemplateGroup.cs
+index d604e79..5adfbdd 100644
+--- a/Antlr4.StringTemplate/TemplateGroup.cs
++++ b/Antlr4.StringTemplate/TemplateGroup.cs
+@@ -257,7 +257,7 @@ namespace Antlr4.StringTemplate
+return null;
+}
+
+-        protected internal virtual Template GetEmbeddedInstanceOf(TemplateFrame frame, int ip, string name)
++        protected internal virtual Template GetEmbeddedInstanceOf(TemplateFrame frame, string name)
+{
+if (Verbose)
+{
+@@ -267,7 +267,7 @@ namespace Antlr4.StringTemplate
+Template st = GetInstanceOf(name);
+if (st == null)
+{
+-                ErrorManager.RuntimeError(frame, ip, ErrorType.NO_SUCH_TEMPLATE, name);
++                ErrorManager.RuntimeError(frame, ErrorType.NO_SUCH_TEMPLATE, name);
+return CreateStringTemplateInternally(new CompiledTemplate());
+}
+
+diff --git a/Antlr4.StringTemplate/TemplateGroupDirectory.cs b/Antlr4.StringTemplate/TemplateGroupDirectory.cs
+index a6b4cf1..053c3d2 100644
+--- a/Antlr4.StringTemplate/TemplateGroupDirectory.cs
++++ b/Antlr4.StringTemplate/TemplateGroupDirectory.cs
+@@ -188,7 +188,7 @@ namespace Antlr4.StringTemplate
+}
+catch (UriFormatException me)
+{
+-                ErrorManager.RuntimeError(null, 0, ErrorType.INVALID_TEMPLATE_NAME, me, Path.Combine(root.LocalPath, fileName));
++                ErrorManager.RuntimeError(null, ErrorType.INVALID_TEMPLATE_NAME, me, Path.Combine(root.LocalPath, fileName));
+return null;
+}
+
+

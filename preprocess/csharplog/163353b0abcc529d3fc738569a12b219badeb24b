@@ -1,0 +1,165 @@
+commit 163353b0abcc529d3fc738569a12b219badeb24b
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Wed Aug 7 21:55:33 2013 -0500
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Fri Aug 9 23:59:24 2013 -0500
+
+Updated StringTemplate 4 code
+
+diff --git a/Antlr4.StringTemplate/Compiler/Group.g3 b/Antlr4.StringTemplate/Compiler/Group.g3
+index 01c118e..5291c8e 100644
+--- a/Antlr4.StringTemplate/Compiler/Group.g3
++++ b/Antlr4.StringTemplate/Compiler/Group.g3
+@@ -72,7 +72,7 @@ this._group = lexer.group = $group;
+}
+ID ('.' ID)* // might be a.b.c.d
+)*
+-		def[prefix]+
++		def[prefix]*
+EOF
+;
+
+diff --git a/Antlr4.StringTemplate/Template.cs b/Antlr4.StringTemplate/Template.cs
+index bcea153..0bb9e2b 100644
+--- a/Antlr4.StringTemplate/Template.cs
++++ b/Antlr4.StringTemplate/Template.cs
+@@ -195,7 +195,12 @@ namespace Antlr4.StringTemplate
+throw new ArgumentNullException("prototype");
+
+this.impl = prototype.impl;
+-            this.locals = shadowLocals || prototype.locals == null ? prototype.locals : (object[])prototype.locals.Clone();
++
++            if (shadowLocals && prototype.locals != null)
++                this.locals = (object[])prototype.locals.Clone();
++            else if (impl.FormalArguments != null && impl.FormalArguments.Count > 0)
++                this.locals = new object[impl.FormalArguments.Count];
++
+this.groupThatCreatedThisInstance = prototype.groupThatCreatedThisInstance;
+}
+
+diff --git a/Antlr4.Test.StringTemplate/TestCoreBasics.cs b/Antlr4.Test.StringTemplate/TestCoreBasics.cs
+index 04bde44..403867f 100644
+--- a/Antlr4.Test.StringTemplate/TestCoreBasics.cs
++++ b/Antlr4.Test.StringTemplate/TestCoreBasics.cs
+@@ -1221,5 +1221,20 @@ namespace Antlr4.Test.StringTemplate
+Template st = new Template(template);
+st.impl.Dump();
+}
++
++        [TestMethod]
++        [TestCategory(TestCategories.ST4)]
++        public void TestPrototype()
++        {
++            Template prototype = new Template("simple template");
++
++            Template st = new Template(prototype);
++            st.Add("arg1", "value");
++            Assert.AreEqual("simple template", st.Render());
++
++            Template st2 = new Template(prototype);
++            st2.Add("arg1", "value");
++            Assert.AreEqual("simple template", st2.Render());
++        }
+}
+}
+diff --git a/Antlr4.Test.StringTemplate/TestDollarDelimiters.cs b/Antlr4.Test.StringTemplate/TestDollarDelimiters.cs
+index 2b7671b..d5ea1ac 100644
+--- a/Antlr4.Test.StringTemplate/TestDollarDelimiters.cs
++++ b/Antlr4.Test.StringTemplate/TestDollarDelimiters.cs
+@@ -100,5 +100,52 @@ namespace Antlr4.Test.StringTemplate
+string result = b.Render();
+Assert.AreEqual(expecting, result);
+}
++
++        /// <summary>
++        /// This is part of a regression test for antlr/stringtemplate4#46.
++        /// </summary>
++        /// <seealso href="https://github.com/antlr/stringtemplate4/issues/46">STGroupString does not honor delimeter stanza in a string definition</seealso>
++        [TestMethod]
++        [TestCategory(TestCategories.ST4)]
++        public void TestDelimitersClause()
++        {
++            string templates =
++                    "delimiters \"$\", \"$\"" + newline +
++                    "method(name) ::= <<" + newline +
++                    "$stat(name)$" + newline +
++                    ">>" + newline +
++                    "stat(name,value=\"99\") ::= \"x=$value$; // $name$\"" + newline
++                    ;
++            writeFile(tmpdir, "group.stg", templates);
++            TemplateGroup group = new TemplateGroupFile(tmpdir + "/group.stg");
++            Template b = group.GetInstanceOf("method");
++            b.Add("name", "foo");
++            string expecting = "x=99; // foo";
++            string result = b.Render();
++            Assert.AreEqual(expecting, result);
++        }
++
++        /// <summary>
++        /// This is part of a regression test for antlr/stringtemplate4#46.
++        /// </summary>
++        /// <seealso href="https://github.com/antlr/stringtemplate4/issues/46">STGroupString does not honor delimeter stanza in a string definition</seealso>
++        [TestMethod]
++        [TestCategory(TestCategories.ST4)]
++        public void TestDelimitersClauseInGroupString()
++        {
++            string templates =
++                    "delimiters \"$\", \"$\"" + newline +
++                    "method(name) ::= <<" + newline +
++                    "$stat(name)$" + newline +
++                    ">>" + newline +
++                    "stat(name,value=\"99\") ::= \"x=$value$; // $name$\"" + newline
++                    ;
++            TemplateGroup group = new TemplateGroupString(templates);
++            Template b = group.GetInstanceOf("method");
++            b.Add("name", "foo");
++            string expecting = "x=99; // foo";
++            string result = b.Render();
++            Assert.AreEqual(expecting, result);
++        }
+}
+}
+diff --git a/Antlr4.Test.StringTemplate/TestImports.cs b/Antlr4.Test.StringTemplate/TestImports.cs
+index 4b3ec6d..451f060 100644
+--- a/Antlr4.Test.StringTemplate/TestImports.cs
++++ b/Antlr4.Test.StringTemplate/TestImports.cs
+@@ -104,6 +104,31 @@ namespace Antlr4.Test.StringTemplate
+Assert.AreEqual(expected, result);
+}
+
++        [TestMethod]
++        [TestCategory(TestCategories.ST4)]
++        public void TestEmptyGroupImportGroupFileSameDir()
++        {
++            /*
++            dir
++                group1.stg		that imports group2.stg in same dir with just filename
++                group2.stg		has c()
++             */
++            string dir = tmpdir;
++            string groupFile =
++                "import \"group2.stg\"\n";
++            writeFile(dir, "group1.stg", groupFile);
++
++            groupFile =
++                "c() ::= \"g2 c\"\n";
++            writeFile(dir, "group2.stg", groupFile);
++
++            TemplateGroup group1 = new TemplateGroupFile(Path.Combine(dir, "group1.stg"));
++            Template st = group1.GetInstanceOf("c"); // should see c()
++            string expected = "g2 c";
++            string result = st.Render();
++            Assert.AreEqual(expected, result);
++        }
++
+[TestMethod][TestCategory(TestCategories.ST4)]
+public void TestImportGroupFileSameDir()
+{
+diff --git a/Reference/stringtemplate4 b/Reference/stringtemplate4
+index 7f3a831..0ac514f 160000
+--- a/Reference/stringtemplate4
++++ b/Reference/stringtemplate4
+@@ -1 +1 @@
+-Subproject commit 7f3a831cefb693472a2e383d9d258e761685b274
++Subproject commit 0ac514f440a0911c1468cc415dfb05a93c32cbb8
+

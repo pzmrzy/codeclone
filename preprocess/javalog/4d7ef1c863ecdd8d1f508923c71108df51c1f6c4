@@ -1,0 +1,49 @@
+commit 4d7ef1c863ecdd8d1f508923c71108df51c1f6c4
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Thu Dec 13 17:38:34 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Thu Dec 13 18:00:48 2012 -0600
+
+Use while(true){...} instead of do{...}while(true);
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg b/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
+index 1082079..0632150 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
+@@ -596,7 +596,7 @@ int cnt<decisionNumber>=0;
+<decls>
+<@preloop()>
+loop<decisionNumber>:
+-do {
++while (true) {
+int alt<decisionNumber>=<maxAlt>;
+<@predecision()>
+<decision>
+@@ -611,7 +611,7 @@ do {
+throw eee;
+}
+cnt<decisionNumber>++;
+-} while (true);
++}
+<@postloop()>
+>>
+
+@@ -623,7 +623,7 @@ closureBlock(alts,decls,decision,enclosingBlockLevel,blockLevel,decisionNumber,m
+<decls>
+<@preloop()>
+loop<decisionNumber>:
+-do {
++while (true) {
+int alt<decisionNumber>=<maxAlt>;
+<@predecision()>
+<decision>
+@@ -633,7 +633,7 @@ do {
+default :
+break loop<decisionNumber>;
+}
+-} while (true);
++}
+<@postloop()>
+>>
+
+

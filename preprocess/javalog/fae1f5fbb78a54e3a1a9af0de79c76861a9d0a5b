@@ -1,0 +1,71 @@
+commit fae1f5fbb78a54e3a1a9af0de79c76861a9d0a5b
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Apr 20 19:26:12 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Apr 20 19:26:12 2011 -0800
+
+Implement throwsSpec
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8283]
+
+diff --git a/tool/src/main/java/org/antlr/codegen/JavaTarget.java b/tool/src/main/java/org/antlr/codegen/JavaTarget.java
+index 53c64d2..809aaf9 100644
+--- a/tool/src/main/java/org/antlr/codegen/JavaTarget.java
++++ b/tool/src/main/java/org/antlr/codegen/JavaTarget.java
+@@ -28,8 +28,9 @@
+package org.antlr.codegen;
+
+import org.antlr.Tool;
+-import org.stringtemplate.v4.ST;
+import org.antlr.tool.Grammar;
++import org.antlr.tool.Rule;
++import org.stringtemplate.v4.ST;
+
+public class JavaTarget extends Target {
+protected ST chooseWhereCyclicDFAsGo(Tool tool,
+@@ -40,5 +41,12 @@ public class JavaTarget extends Target {
+{
+return recognizerST;
+}
+-}
+
++	@Override
++	protected void performGrammarAnalysis(CodeGenerator generator, Grammar grammar) {
++		super.performGrammarAnalysis(generator, grammar);
++		for (Rule rule : grammar.getRules()) {
++			rule.throwsSpec.add("RecognitionException");
++		}
++	}
++}
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg b/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
+index 1cc0433..3fb24c2 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
+@@ -248,7 +248,7 @@ public class <grammar.recognizerName> extends <@superClassName><superClass><@end
+appear to be defined in this recognizer. !>
+// Delegated rules
+<grammar.delegatedRules:{ruleDescriptor|
+-    public <returnType()> <ruleDescriptor.name>(<ruleDescriptor.parameterScope:parameterScope()>) throws RecognitionException { <if(ruleDescriptor.hasReturnValue)>return <endif><ruleDescriptor.grammar:delegateName()>.<ruleDescriptor.name>(<ruleDescriptor.parameterScope.attributes:{a|<a.name>}; separator=", ">); \}}; separator="\n">
++    public <returnType()> <ruleDescriptor.name>(<ruleDescriptor.parameterScope:parameterScope()>) throws <ruleDescriptor.throwsSpec:{x|<x>}; separator=", "> { <if(ruleDescriptor.hasReturnValue)>return <endif><ruleDescriptor.grammar:delegateName()>.<ruleDescriptor.name>(<ruleDescriptor.parameterScope.attributes:{a|<a.name>}; separator=", ">); \}}; separator="\n">
+
+<synpreds:{p | <synpred(p)>}>
+
+@@ -303,7 +303,7 @@ treeParser(grammar, name, scopes, tokens, tokenNames, globalAction, rules,
+synpredRule(ruleName, ruleDescriptor, block, description, nakedBlock) ::=
+<<
+// $ANTLR start <ruleName>
+-public final void <ruleName>_fragment(<ruleDescriptor.parameterScope:parameterScope()>) throws RecognitionException {
++public final void <ruleName>_fragment(<ruleDescriptor.parameterScope:parameterScope()>) throws <ruleDescriptor.throwsSpec:{x|<x>}; separator=", "> {
+<ruleLabelDefs()>
+<if(trace)>
+traceIn("<ruleName>_fragment", <ruleDescriptor.index>);
+@@ -368,7 +368,7 @@ rule(ruleName,ruleDescriptor,block,emptyRule,description,exceptions,finally,memo
+
+// $ANTLR start "<ruleName>"
+// <fileName>:<description>
+-public final <returnType()> <ruleName>(<ruleDescriptor.parameterScope:parameterScope()>) throws RecognitionException {
++public final <returnType()> <ruleName>(<ruleDescriptor.parameterScope:parameterScope()>) throws <ruleDescriptor.throwsSpec:{x|<x>}; separator=", "> {
+<if(trace)>traceIn("<ruleName>", <ruleDescriptor.index>);<endif>
+<ruleScopeSetUp()>
+<ruleDeclarations()>
+

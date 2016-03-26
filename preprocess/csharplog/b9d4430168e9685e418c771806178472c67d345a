@@ -1,0 +1,118 @@
+commit b9d4430168e9685e418c771806178472c67d345a
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Thu Nov 25 09:25:24 2010 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Thu Nov 25 09:25:24 2010 -0800
+
+(C# 3) Tweaks to produce output closer to the Java version of the tool
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7189]
+
+diff --git a/Antlr3/Grammars/ANTLR.g3 b/Antlr3/Grammars/ANTLR.g3
+index 13db663..f9b8a44 100644
+--- a/Antlr3/Grammars/ANTLR.g3
++++ b/Antlr3/Grammars/ANTLR.g3
+@@ -424,7 +424,7 @@ altList[IDictionary<string, object> opts]
+GrammarAST blkRoot = null;
+GrammarAST save = currentBlockAST;
+}
+-	:	( -> BLOCK[$start,"BLOCK"] )
++	:	( -> BLOCK[input.LT(-1),"BLOCK"] )
+{
+blkRoot = (GrammarAST)$tree.GetChild(0);
+blkRoot.BlockOptions = $opts;
+@@ -446,7 +446,7 @@ alternative
+:	element+
+-> ^(ALT[$start,"ALT"] element+ EOA["<end-of-alt>"])
+|	// epsilon alt
+-		-> ^(ALT[$start,"ALT"] EPSILON[$start,"epsilon"] EOA["<end-of-alt>"])
++		-> ^(ALT[$start,"ALT"] EPSILON[input.LT(-1),"epsilon"] EOA["<end-of-alt>"])
+;
+
+exceptionGroup
+diff --git a/Antlr3/Grammars/CodeGenTreeWalker.g3 b/Antlr3/Grammars/CodeGenTreeWalker.g3
+index 77a6b13..9f00175 100644
+--- a/Antlr3/Grammars/CodeGenTreeWalker.g3
++++ b/Antlr3/Grammars/CodeGenTreeWalker.g3
+@@ -430,7 +430,7 @@ setBlock returns [StringTemplate code=null]
+altcode.SetAttribute("elements.{el,line,pos}",
+setcode,
+$s.Line,
+-								 $s.CharPositionInLine
++								 $s.CharPositionInLine + 1
+);
+altcode.SetAttribute("altNum", 1);
+altcode.SetAttribute("outerAlt", blockNestingLevel==RULE_BLOCK_NESTING_LEVEL);
+@@ -514,7 +514,7 @@ alternative returns [StringTemplate code]
+$code.SetAttribute("elements.{el,line,pos}",
+$e.code,
+$e.start.Line,
+-										  $e.start.CharPositionInLine
++										  $e.start.CharPositionInLine + 1
+);
+}
+}
+@@ -720,7 +720,7 @@ tree_ returns [StringTemplate code]
+$code.SetAttribute("root.{el,line,pos}",
+$el.code,
+$el.start.Line,
+-								  $el.start.CharPositionInLine
++								  $el.start.CharPositionInLine + 1
+);
+}
+// push all the immediately-following actions out before children
+@@ -732,7 +732,7 @@ tree_ returns [StringTemplate code]
+$code.SetAttribute("actionsAfterRoot.{el,line,pos}",
+$act.code,
+$act.start.Line,
+-									  $act.start.CharPositionInLine
++									  $act.start.CharPositionInLine + 1
+);
+}
+)*
+@@ -741,7 +741,7 @@ tree_ returns [StringTemplate code]
+$code.SetAttribute("children.{el,line,pos}",
+$el.code,
+$el.start.Line,
+-								  $el.start.CharPositionInLine
++								  $el.start.CharPositionInLine + 1
+);
+}
+)*
+@@ -1104,7 +1104,7 @@ rewrite_alternative returns [StringTemplate code=null]
+{$code.SetAttribute("elements.{el,line,pos}",
+$el.code,
+$el.start.Line,
+-										$el.start.CharPositionInLine
++										$el.start.CharPositionInLine + 1
+);
+}
+)+
+@@ -1112,7 +1112,7 @@ rewrite_alternative returns [StringTemplate code=null]
+{$code.SetAttribute("elements.{el,line,pos}",
+templates.GetInstanceOf("rewriteEmptyAlt"),
+$a.Line,
+-								   $a.CharPositionInLine
++								   $a.CharPositionInLine + 1
+);
+}
+)
+@@ -1181,7 +1181,7 @@ rewrite_tree returns [StringTemplate code]
+$code.SetAttribute("root.{el,line,pos}",
+$r.code,
+$r.start.Line,
+-								   $r.start.CharPositionInLine
++								   $r.start.CharPositionInLine + 1
+);
+}
+(
+@@ -1190,7 +1190,7 @@ rewrite_tree returns [StringTemplate code]
+$code.SetAttribute("children.{el,line,pos}",
+$el.code,
+$el.start.Line,
+-									$el.start.CharPositionInLine
++									$el.start.CharPositionInLine + 1
+);
+}
+)*
+

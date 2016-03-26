@@ -1,0 +1,1593 @@
+commit a27f7debdc12eb93e9450260306e9bbbd89d9f50
+Author:     Alan Condit <acondit@ipns.com>
+AuthorDate: Mon Apr 23 07:58:57 2012 -0700
+Commit:     Alan Condit <acondit@ipns.com>
+CommitDate: Mon Apr 23 07:58:57 2012 -0700
+
+Changed <Cocoa/Cocoa.h> to <Foundation/Foundation.h> to support use on iOS devices.
+
+diff --git a/runtime/ObjC/Framework/ACBTree.m b/runtime/ObjC/Framework/ACBTree.m
+index 5bb5815..fd7f1b7 100644
+--- a/runtime/ObjC/Framework/ACBTree.m
++++ b/runtime/ObjC/Framework/ACBTree.m
+@@ -6,7 +6,7 @@
+//  Copyright 2011 Alan Condit. All rights reserved.
+//
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "ACBTree.h"
+#import "AMutableDictionary.h"
+#import "RuntimeException.h"
+diff --git a/runtime/ObjC/Framework/AMutableArray.h b/runtime/ObjC/Framework/AMutableArray.h
+index 28d0797..45197b6 100644
+--- a/runtime/ObjC/Framework/AMutableArray.h
++++ b/runtime/ObjC/Framework/AMutableArray.h
+@@ -6,7 +6,7 @@
+//  Copyright 2011 Alan's MachineWorks. All rights reserved.
+//
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "ArrayIterator.h"
+
+@class ArrayIterator;
+diff --git a/runtime/ObjC/Framework/AMutableDictionary.m b/runtime/ObjC/Framework/AMutableDictionary.m
+index d8028bb..0243d51 100644
+--- a/runtime/ObjC/Framework/AMutableDictionary.m
++++ b/runtime/ObjC/Framework/AMutableDictionary.m
+@@ -6,7 +6,7 @@
+//  Copyright 2011 Alan Condit. All rights reserved.
+//
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "AMutableDictionary.h"
+#import "ACBTree.h"
+
+diff --git a/runtime/ObjC/Framework/ANTLRBitSet.h b/runtime/ObjC/Framework/ANTLRBitSet.h
+index 155022d..140e94d 100644
+--- a/runtime/ObjC/Framework/ANTLRBitSet.h
++++ b/runtime/ObjC/Framework/ANTLRBitSet.h
+@@ -25,7 +25,7 @@
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <CoreFoundation/CoreFoundation.h>
+#import "Token.h"
+#import "AMutableArray.h"
+diff --git a/runtime/ObjC/Framework/ANTLRError.h b/runtime/ObjC/Framework/ANTLRError.h
+index 9a15702..5d974e4 100644
+--- a/runtime/ObjC/Framework/ANTLRError.h
++++ b/runtime/ObjC/Framework/ANTLRError.h
+@@ -30,6 +30,6 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+
+#define ANTLRErrorDomain @"ANTLRError"
+diff --git a/runtime/ObjC/Framework/ANTLRInputStream.h b/runtime/ObjC/Framework/ANTLRInputStream.h
+index 8f1714f..5127cdb 100644
+--- a/runtime/ObjC/Framework/ANTLRInputStream.h
++++ b/runtime/ObjC/Framework/ANTLRInputStream.h
+@@ -6,7 +6,7 @@
+//  Copyright 2011 Alan's MachineWorks. All rights reserved.
+//
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "AntlrReaderStream.h"
+
+@interface ANTLRInputStream : ANTLRReaderStream {
+diff --git a/runtime/ObjC/Framework/ANTLRInputStream.m b/runtime/ObjC/Framework/ANTLRInputStream.m
+index f9aee0a..ca5bc4a 100644
+--- a/runtime/ObjC/Framework/ANTLRInputStream.m
++++ b/runtime/ObjC/Framework/ANTLRInputStream.m
+@@ -6,7 +6,7 @@
+//  Copyright 2011 Alan's MachineWorks. All rights reserved.
+//
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "ANTLRInputStream.h"
+
+
+diff --git a/runtime/ObjC/Framework/ANTLRReaderStream.h b/runtime/ObjC/Framework/ANTLRReaderStream.h
+index 4494a87..4187fe8 100644
+--- a/runtime/ObjC/Framework/ANTLRReaderStream.h
++++ b/runtime/ObjC/Framework/ANTLRReaderStream.h
+@@ -6,7 +6,7 @@
+//  Copyright 2011 Alan's MachineWorks. All rights reserved.
+//
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "ANTLRStringStream.h"
+
+@interface ANTLRReaderStream : ANTLRStringStream {
+diff --git a/runtime/ObjC/Framework/ANTLRStringStream.h b/runtime/ObjC/Framework/ANTLRStringStream.h
+index e2a9fc0..061a4b1 100644
+--- a/runtime/ObjC/Framework/ANTLRStringStream.h
++++ b/runtime/ObjC/Framework/ANTLRStringStream.h
+@@ -25,7 +25,7 @@
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "CharStream.h"
+#import "CharStreamState.h"
+#import "PtrBuffer.h"
+diff --git a/runtime/ObjC/Framework/ArrayIterator.h b/runtime/ObjC/Framework/ArrayIterator.h
+index 280f03f..3a0af07 100644
+--- a/runtime/ObjC/Framework/ArrayIterator.h
++++ b/runtime/ObjC/Framework/ArrayIterator.h
+@@ -25,7 +25,6 @@
+*  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+*  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+-#import <Cocoa/Cocoa.h>
+#import <Foundation/Foundation.h>
+
+/**
+diff --git a/runtime/ObjC/Framework/BaseMapElement.h b/runtime/ObjC/Framework/BaseMapElement.h
+index 49279c5..defb659 100644
+--- a/runtime/ObjC/Framework/BaseMapElement.h
++++ b/runtime/ObjC/Framework/BaseMapElement.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "LinkBase.h"
+#import "ACNumber.h"
+
+diff --git a/runtime/ObjC/Framework/BaseRecognizer.h b/runtime/ObjC/Framework/BaseRecognizer.h
+index c2c769e..e398063 100644
+--- a/runtime/ObjC/Framework/BaseRecognizer.h
++++ b/runtime/ObjC/Framework/BaseRecognizer.h
+@@ -25,7 +25,6 @@
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+-#import <Cocoa/Cocoa.h>
+#import <Foundation/Foundation.h>
+
+#import "IntStream.h"
+diff --git a/runtime/ObjC/Framework/BaseStack.h b/runtime/ObjC/Framework/BaseStack.h
+index a9e923c..7c92536 100644
+--- a/runtime/ObjC/Framework/BaseStack.h
++++ b/runtime/ObjC/Framework/BaseStack.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "PtrBuffer.h"
+
+//#define GLOBAL_SCOPE       0
+diff --git a/runtime/ObjC/Framework/BaseTreeAdaptor.h b/runtime/ObjC/Framework/BaseTreeAdaptor.h
+index bcad849..c0d8442 100644
+--- a/runtime/ObjC/Framework/BaseTreeAdaptor.h
++++ b/runtime/ObjC/Framework/BaseTreeAdaptor.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "TreeAdaptor.h"
+#import "CommonErrorNode.h"
+#import "UniqueIDMap.h"
+diff --git a/runtime/ObjC/Framework/BufferedTokenStream.h b/runtime/ObjC/Framework/BufferedTokenStream.h
+index b02f237..ca8c4fb 100644
+--- a/runtime/ObjC/Framework/BufferedTokenStream.h
++++ b/runtime/ObjC/Framework/BufferedTokenStream.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "TokenStream.h"
+#import "TokenSource.h"
+#import "ANTLRBitSet.h"
+diff --git a/runtime/ObjC/Framework/BufferedTreeNodeStream.h b/runtime/ObjC/Framework/BufferedTreeNodeStream.h
+index 55b0e3c..f2691f8 100644
+--- a/runtime/ObjC/Framework/BufferedTreeNodeStream.h
++++ b/runtime/ObjC/Framework/BufferedTreeNodeStream.h
+@@ -28,7 +28,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "Tree.h"
+#import "CommonTreeAdaptor.h"
+#import "TokenStream.h"
+diff --git a/runtime/ObjC/Framework/CharStreamState.h b/runtime/ObjC/Framework/CharStreamState.h
+index 4ca4896..7e8ba17 100644
+--- a/runtime/ObjC/Framework/CharStreamState.h
++++ b/runtime/ObjC/Framework/CharStreamState.h
+@@ -28,7 +28,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+
+
+@interface CharStreamState : NSObject
+diff --git a/runtime/ObjC/Framework/CommonErrorNode.h b/runtime/ObjC/Framework/CommonErrorNode.h
+index d7045ab..b36dba8 100644
+--- a/runtime/ObjC/Framework/CommonErrorNode.h
++++ b/runtime/ObjC/Framework/CommonErrorNode.h
+@@ -28,7 +28,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "CommonTree.h"
+#import "TokenStream.h"
+//#import "IntStream.h"
+diff --git a/runtime/ObjC/Framework/CommonToken.h b/runtime/ObjC/Framework/CommonToken.h
+index 8326c5b..16823da 100644
+--- a/runtime/ObjC/Framework/CommonToken.h
++++ b/runtime/ObjC/Framework/CommonToken.h
+@@ -25,7 +25,7 @@
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "Token.h"
+#import "CharStream.h"
+
+diff --git a/runtime/ObjC/Framework/CommonTokenStream.h b/runtime/ObjC/Framework/CommonTokenStream.h
+index 5179ca6..80c580e 100644
+--- a/runtime/ObjC/Framework/CommonTokenStream.h
++++ b/runtime/ObjC/Framework/CommonTokenStream.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "TokenStream.h"
+#import "Token.h"
+#import "CommonToken.h"
+diff --git a/runtime/ObjC/Framework/CommonTree.h b/runtime/ObjC/Framework/CommonTree.h
+index 56cf98e..a5117d3 100644
+--- a/runtime/ObjC/Framework/CommonTree.h
++++ b/runtime/ObjC/Framework/CommonTree.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "CommonToken.h"
+#import "BaseTree.h"
+
+diff --git a/runtime/ObjC/Framework/CommonTreeAdaptor.h b/runtime/ObjC/Framework/CommonTreeAdaptor.h
+index e5d7cb8..8d775e8 100644
+--- a/runtime/ObjC/Framework/CommonTreeAdaptor.h
++++ b/runtime/ObjC/Framework/CommonTreeAdaptor.h
+@@ -25,7 +25,7 @@
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "Tree.h"
+#import "CommonToken.h"
+#import "CommonTree.h"
+diff --git a/runtime/ObjC/Framework/CommonTreeNodeStream.h b/runtime/ObjC/Framework/CommonTreeNodeStream.h
+index 745fa86..be5371f 100644
+--- a/runtime/ObjC/Framework/CommonTreeNodeStream.h
++++ b/runtime/ObjC/Framework/CommonTreeNodeStream.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "CommonTree.h"
+#import "CommonTreeNodeStream.h"
+#import "LookaheadStream.h"
+diff --git a/runtime/ObjC/Framework/DFA.h b/runtime/ObjC/Framework/DFA.h
+index beebbe1..508e1ff 100644
+--- a/runtime/ObjC/Framework/DFA.h
++++ b/runtime/ObjC/Framework/DFA.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "BaseRecognizer.h"
+#import "CharStream.h"
+#import "NoViableAltException.h"
+diff --git a/runtime/ObjC/Framework/DebugEventListener.h b/runtime/ObjC/Framework/DebugEventListener.h
+index 6756b6a..11f94a8 100644
+--- a/runtime/ObjC/Framework/DebugEventListener.h
++++ b/runtime/ObjC/Framework/DebugEventListener.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "Token.h"
+#import "RecognitionException.h"
+
+diff --git a/runtime/ObjC/Framework/DebugEventSocketProxy.h b/runtime/ObjC/Framework/DebugEventSocketProxy.h
+index 31a0bae..c40b3b4 100644
+--- a/runtime/ObjC/Framework/DebugEventSocketProxy.h
++++ b/runtime/ObjC/Framework/DebugEventSocketProxy.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "Parser.h"
+#import "DebugEventListener.h"
+#import <sys/socket.h>
+diff --git a/runtime/ObjC/Framework/DebugParser.h b/runtime/ObjC/Framework/DebugParser.h
+index 0c86795..9f34d96 100644
+--- a/runtime/ObjC/Framework/DebugParser.h
++++ b/runtime/ObjC/Framework/DebugParser.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "Parser.h"
+#import "DebugEventSocketProxy.h"
+#import "DebugTokenStream.h"
+diff --git a/runtime/ObjC/Framework/DebugTokenStream.h b/runtime/ObjC/Framework/DebugTokenStream.h
+index 0daa09a..6a30491 100644
+--- a/runtime/ObjC/Framework/DebugTokenStream.h
++++ b/runtime/ObjC/Framework/DebugTokenStream.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "Parser.h"
+#import "TokenStream.h"
+#import "TokenSource.h"
+diff --git a/runtime/ObjC/Framework/DebugTreeAdaptor.h b/runtime/ObjC/Framework/DebugTreeAdaptor.h
+index 5aede04..ae1a0d6 100644
+--- a/runtime/ObjC/Framework/DebugTreeAdaptor.h
++++ b/runtime/ObjC/Framework/DebugTreeAdaptor.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "Parser.h"
+#import "CommonTreeAdaptor.h"
+#import "DebugEventListener.h"
+diff --git a/runtime/ObjC/Framework/DebugTreeNodeStream.h b/runtime/ObjC/Framework/DebugTreeNodeStream.h
+index 14e2f6b..4262505 100644
+--- a/runtime/ObjC/Framework/DebugTreeNodeStream.h
++++ b/runtime/ObjC/Framework/DebugTreeNodeStream.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "DebugEventListener.h"
+#import "TreeAdaptor.h"
+#import "TreeNodeStream.h"
+diff --git a/runtime/ObjC/Framework/DebugTreeParser.h b/runtime/ObjC/Framework/DebugTreeParser.h
+index 9e81b65..0c6a186 100644
+--- a/runtime/ObjC/Framework/DebugTreeParser.h
++++ b/runtime/ObjC/Framework/DebugTreeParser.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "TreeParser.h"
+#import "DebugEventSocketProxy.h"
+#import "DebugTreeNodeStream.h"
+diff --git a/runtime/ObjC/Framework/EarlyExitException.h b/runtime/ObjC/Framework/EarlyExitException.h
+index ae0a812..0849f13 100644
+--- a/runtime/ObjC/Framework/EarlyExitException.h
++++ b/runtime/ObjC/Framework/EarlyExitException.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "RecognitionException.h"
+
+@interface EarlyExitException : RecognitionException {
+diff --git a/runtime/ObjC/Framework/Entry.m b/runtime/ObjC/Framework/Entry.m
+index bbc8b8c..f42190e 100644
+--- a/runtime/ObjC/Framework/Entry.m
++++ b/runtime/ObjC/Framework/Entry.m
+@@ -1,5 +1,5 @@
+#import "Entry.h"
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "RuntimeException.h"
+
+@implementation HTEntry
+diff --git a/runtime/ObjC/Framework/FailedPredicateException.h b/runtime/ObjC/Framework/FailedPredicateException.h
+index a988fb0..05184bc 100644
+--- a/runtime/ObjC/Framework/FailedPredicateException.h
++++ b/runtime/ObjC/Framework/FailedPredicateException.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "RecognitionException.h"
+
+
+diff --git a/runtime/ObjC/Framework/FastQueue.h b/runtime/ObjC/Framework/FastQueue.h
+index b5132de..1ac6d1a 100644
+--- a/runtime/ObjC/Framework/FastQueue.h
++++ b/runtime/ObjC/Framework/FastQueue.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "AMutableArray.h"
+
+@interface FastQueue : NSObject <NSCopying>
+diff --git a/runtime/ObjC/Framework/HashMap.h b/runtime/ObjC/Framework/HashMap.h
+index b8e64bd..eb9ae55 100644
+--- a/runtime/ObjC/Framework/HashMap.h
++++ b/runtime/ObjC/Framework/HashMap.h
+@@ -27,7 +27,6 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
+#import <Foundation/Foundation.h>
+#import "AMutableArray.h"
+#import "AMutableDictionary.h"
+diff --git a/runtime/ObjC/Framework/HashRule.h b/runtime/ObjC/Framework/HashRule.h
+index 10a8053..94b0abd 100644
+--- a/runtime/ObjC/Framework/HashRule.h
++++ b/runtime/ObjC/Framework/HashRule.h
+@@ -27,7 +27,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "ACNumber.h"
+#import "RuleMemo.h"
+#import "PtrBuffer.h"
+diff --git a/runtime/ObjC/Framework/IntArray.h b/runtime/ObjC/Framework/IntArray.h
+index 21461ea..72e29f2 100644
+--- a/runtime/ObjC/Framework/IntArray.h
++++ b/runtime/ObjC/Framework/IntArray.h
+@@ -27,7 +27,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+
+#define ANTLR_INT_ARRAY_INITIAL_SIZE 10
+
+diff --git a/runtime/ObjC/Framework/Lexer.h b/runtime/ObjC/Framework/Lexer.h
+index d4f4241..9fa13c8 100644
+--- a/runtime/ObjC/Framework/Lexer.h
++++ b/runtime/ObjC/Framework/Lexer.h
+@@ -25,7 +25,7 @@
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "TokenSource.h"
+#import "BaseRecognizer.h"
+#import "RecognizerSharedState.h"
+diff --git a/runtime/ObjC/Framework/LexerRuleReturnScope.h b/runtime/ObjC/Framework/LexerRuleReturnScope.h
+index e5dda07..08f7eef 100644
+--- a/runtime/ObjC/Framework/LexerRuleReturnScope.h
++++ b/runtime/ObjC/Framework/LexerRuleReturnScope.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+
+@interface LexerRuleReturnScope : NSObject {
+NSInteger start;
+diff --git a/runtime/ObjC/Framework/LexerState.h b/runtime/ObjC/Framework/LexerState.h
+index b6a6057..7399502 100644
+--- a/runtime/ObjC/Framework/LexerState.h
++++ b/runtime/ObjC/Framework/LexerState.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "Token.h"
+#import "RecognizerSharedState.h"
+
+diff --git a/runtime/ObjC/Framework/LinkBase.h b/runtime/ObjC/Framework/LinkBase.h
+index e25fcc1..760a493 100644
+--- a/runtime/ObjC/Framework/LinkBase.h
++++ b/runtime/ObjC/Framework/LinkBase.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+
+#ifndef DEBUG_DEALLOC
+#define DEBUG_DEALLOC
+diff --git a/runtime/ObjC/Framework/LinkedHashMap.m b/runtime/ObjC/Framework/LinkedHashMap.m
+index cbb03ee..b0d5f6f 100644
+--- a/runtime/ObjC/Framework/LinkedHashMap.m
++++ b/runtime/ObjC/Framework/LinkedHashMap.m
+@@ -1,4 +1,4 @@
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "AMutableArray.h"
+#import "LinkedHashMap.h"
+#import "RuntimeException.h"
+diff --git a/runtime/ObjC/Framework/LinkedList.m b/runtime/ObjC/Framework/LinkedList.m
+index 2829869..8a8d39d 100644
+--- a/runtime/ObjC/Framework/LinkedList.m
++++ b/runtime/ObjC/Framework/LinkedList.m
+@@ -1,5 +1,5 @@
+#import "LinkedList.h"
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "AMutableArray.h"
+#import "RuntimeException.h"
+
+diff --git a/runtime/ObjC/Framework/LookaheadStream.h b/runtime/ObjC/Framework/LookaheadStream.h
+index 6c5e3cc..b600996 100644
+--- a/runtime/ObjC/Framework/LookaheadStream.h
++++ b/runtime/ObjC/Framework/LookaheadStream.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "FastQueue.h"
+
+#define UNITIALIZED_EOF_ELEMENT_INDEX NSIntegerMax
+diff --git a/runtime/ObjC/Framework/Map.h b/runtime/ObjC/Framework/Map.h
+index 1a482ea..1356814 100644
+--- a/runtime/ObjC/Framework/Map.h
++++ b/runtime/ObjC/Framework/Map.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "PtrBuffer.h"
+#import "MapElement.h"
+
+diff --git a/runtime/ObjC/Framework/MapElement.h b/runtime/ObjC/Framework/MapElement.h
+index d5abc77..fe8d0a3 100644
+--- a/runtime/ObjC/Framework/MapElement.h
++++ b/runtime/ObjC/Framework/MapElement.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "ACNumber.h"
+#import "BaseMapElement.h"
+
+diff --git a/runtime/ObjC/Framework/MapElement.m b/runtime/ObjC/Framework/MapElement.m
+index 15cb5f5..2b05224 100644
+--- a/runtime/ObjC/Framework/MapElement.m
++++ b/runtime/ObjC/Framework/MapElement.m
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "MapElement.h"
+
+
+diff --git a/runtime/ObjC/Framework/MismatchedNotSetException.h b/runtime/ObjC/Framework/MismatchedNotSetException.h
+index 95ce6ef..84453b4 100644
+--- a/runtime/ObjC/Framework/MismatchedNotSetException.h
++++ b/runtime/ObjC/Framework/MismatchedNotSetException.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "RecognitionException.h"
+#import "ANTLRBitSet.h"
+
+diff --git a/runtime/ObjC/Framework/MismatchedRangeException.h b/runtime/ObjC/Framework/MismatchedRangeException.h
+index 16d64cf..dc3425d 100644
+--- a/runtime/ObjC/Framework/MismatchedRangeException.h
++++ b/runtime/ObjC/Framework/MismatchedRangeException.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "RecognitionException.h"
+
+@protocol IntStream;
+diff --git a/runtime/ObjC/Framework/MismatchedSetException.h b/runtime/ObjC/Framework/MismatchedSetException.h
+index a45f676..980717b 100644
+--- a/runtime/ObjC/Framework/MismatchedSetException.h
++++ b/runtime/ObjC/Framework/MismatchedSetException.h
+@@ -25,7 +25,7 @@
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "RecognitionException.h"
+
+@interface MismatchedSetException : RecognitionException {
+diff --git a/runtime/ObjC/Framework/MismatchedTokenException.h b/runtime/ObjC/Framework/MismatchedTokenException.h
+index 104b575..792aa4d 100644
+--- a/runtime/ObjC/Framework/MismatchedTokenException.h
++++ b/runtime/ObjC/Framework/MismatchedTokenException.h
+@@ -25,7 +25,7 @@
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "RecognitionException.h"
+#import "ANTLRBitSet.h"
+
+diff --git a/runtime/ObjC/Framework/MismatchedTreeNodeException.h b/runtime/ObjC/Framework/MismatchedTreeNodeException.h
+index 8fa5b25..4cb1c91 100644
+--- a/runtime/ObjC/Framework/MismatchedTreeNodeException.h
++++ b/runtime/ObjC/Framework/MismatchedTreeNodeException.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "RecognitionException.h"
+
+@protocol IntStream;
+diff --git a/runtime/ObjC/Framework/MissingTokenException.h b/runtime/ObjC/Framework/MissingTokenException.h
+index 19b6914..1f94005 100644
+--- a/runtime/ObjC/Framework/MissingTokenException.h
++++ b/runtime/ObjC/Framework/MissingTokenException.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "MismatchedTokenException.h"
+#import "Token.h"
+
+diff --git a/runtime/ObjC/Framework/NoViableAltException.h b/runtime/ObjC/Framework/NoViableAltException.h
+index 2b6a037..47fb1c9 100644
+--- a/runtime/ObjC/Framework/NoViableAltException.h
++++ b/runtime/ObjC/Framework/NoViableAltException.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "RecognitionException.h"
+#import "IntStream.h"
+
+diff --git a/runtime/ObjC/Framework/NodeMapElement.h b/runtime/ObjC/Framework/NodeMapElement.h
+index c7f5450..523e457 100644
+--- a/runtime/ObjC/Framework/NodeMapElement.h
++++ b/runtime/ObjC/Framework/NodeMapElement.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "BaseMapElement.h"
+#import "BaseTree.h"
+
+diff --git a/runtime/ObjC/Framework/ParseTree.h b/runtime/ObjC/Framework/ParseTree.h
+index e963d22..3f23287 100644
+--- a/runtime/ObjC/Framework/ParseTree.h
++++ b/runtime/ObjC/Framework/ParseTree.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "BaseTree.h"
+#import "CommonToken.h"
+#import "AMutableArray.h"
+diff --git a/runtime/ObjC/Framework/Parser.h b/runtime/ObjC/Framework/Parser.h
+index e8c3f16..38723d9 100644
+--- a/runtime/ObjC/Framework/Parser.h
++++ b/runtime/ObjC/Framework/Parser.h
+@@ -25,7 +25,7 @@
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "BaseRecognizer.h"
+#import "CommonToken.h"
+#import "TokenStream.h"
+diff --git a/runtime/ObjC/Framework/ParserRuleReturnScope.h b/runtime/ObjC/Framework/ParserRuleReturnScope.h
+index 60d7dab..4691074 100644
+--- a/runtime/ObjC/Framework/ParserRuleReturnScope.h
++++ b/runtime/ObjC/Framework/ParserRuleReturnScope.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "Token.h"
+#import "RuleReturnScope.h"
+
+diff --git a/runtime/ObjC/Framework/PtrBuffer.h b/runtime/ObjC/Framework/PtrBuffer.h
+index 9e5d741..bc49e88 100644
+--- a/runtime/ObjC/Framework/PtrBuffer.h
++++ b/runtime/ObjC/Framework/PtrBuffer.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "LinkBase.h"
+
+//#define GLOBAL_SCOPE       0
+diff --git a/runtime/ObjC/Framework/PtrStack.h b/runtime/ObjC/Framework/PtrStack.h
+index 639ea42..cb4e7e3 100644
+--- a/runtime/ObjC/Framework/PtrStack.h
++++ b/runtime/ObjC/Framework/PtrStack.h
+@@ -6,7 +6,7 @@
+//  Copyright 2010 Alan's MachineWorks. All rights reserved.
+//ptrBuffer
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "ACNumber.h"
+#import "BaseStack.h"
+#import "RuleMemo.h"
+diff --git a/runtime/ObjC/Framework/RecognitionException.h b/runtime/ObjC/Framework/RecognitionException.h
+index e45b18b..8919812 100644
+--- a/runtime/ObjC/Framework/RecognitionException.h
++++ b/runtime/ObjC/Framework/RecognitionException.h
+@@ -25,7 +25,7 @@
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "RuntimeException.h"
+#import "Token.h"
+#import "IntStream.h"
+diff --git a/runtime/ObjC/Framework/RecognizerSharedState.h b/runtime/ObjC/Framework/RecognizerSharedState.h
+index 354af13..72af752 100755
+--- a/runtime/ObjC/Framework/RecognizerSharedState.h
++++ b/runtime/ObjC/Framework/RecognizerSharedState.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "Token.h"
+#import "ANTLRBitSet.h"
+#import "RuleStack.h"
+diff --git a/runtime/ObjC/Framework/RewriteRuleElementStream.h b/runtime/ObjC/Framework/RewriteRuleElementStream.h
+index 68d7b53..367b4c0 100644
+--- a/runtime/ObjC/Framework/RewriteRuleElementStream.h
++++ b/runtime/ObjC/Framework/RewriteRuleElementStream.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "TreeAdaptor.h"
+
+// TODO: this should be separated into stream and enumerator classes
+diff --git a/runtime/ObjC/Framework/RewriteRuleNodeStream.h b/runtime/ObjC/Framework/RewriteRuleNodeStream.h
+index a3395f5..5792530 100755
+--- a/runtime/ObjC/Framework/RewriteRuleNodeStream.h
++++ b/runtime/ObjC/Framework/RewriteRuleNodeStream.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "RewriteRuleElementStream.h"
+
+@interface RewriteRuleNodeStream : RewriteRuleElementStream {
+diff --git a/runtime/ObjC/Framework/RewriteRuleSubtreeStream.h b/runtime/ObjC/Framework/RewriteRuleSubtreeStream.h
+index cd18396..81ccd07 100644
+--- a/runtime/ObjC/Framework/RewriteRuleSubtreeStream.h
++++ b/runtime/ObjC/Framework/RewriteRuleSubtreeStream.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "RewriteRuleElementStream.h"
+
+@interface RewriteRuleSubtreeStream : RewriteRuleElementStream {
+diff --git a/runtime/ObjC/Framework/RewriteRuleTokenStream.h b/runtime/ObjC/Framework/RewriteRuleTokenStream.h
+index e47d666..320b792 100644
+--- a/runtime/ObjC/Framework/RewriteRuleTokenStream.h
++++ b/runtime/ObjC/Framework/RewriteRuleTokenStream.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "RewriteRuleElementStream.h"
+
+
+diff --git a/runtime/ObjC/Framework/RuleMapElement.h b/runtime/ObjC/Framework/RuleMapElement.h
+index 6a34f90..415d711 100644
+--- a/runtime/ObjC/Framework/RuleMapElement.h
++++ b/runtime/ObjC/Framework/RuleMapElement.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "BaseMapElement.h"
+
+@interface RuleMapElement : BaseMapElement {
+diff --git a/runtime/ObjC/Framework/RuleMemo.h b/runtime/ObjC/Framework/RuleMemo.h
+index 17b6a37..40e6efc 100644
+--- a/runtime/ObjC/Framework/RuleMemo.h
++++ b/runtime/ObjC/Framework/RuleMemo.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "ACNumber.h"
+#import "LinkBase.h"
+
+diff --git a/runtime/ObjC/Framework/RuleReturnScope.h b/runtime/ObjC/Framework/RuleReturnScope.h
+index 47fcd19..163107d 100644
+--- a/runtime/ObjC/Framework/RuleReturnScope.h
++++ b/runtime/ObjC/Framework/RuleReturnScope.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "Token.h"
+
+@interface RuleReturnScope : NSObject <NSCopying> {
+diff --git a/runtime/ObjC/Framework/RuleStack.h b/runtime/ObjC/Framework/RuleStack.h
+index 423d5cf..a0f6235 100644
+--- a/runtime/ObjC/Framework/RuleStack.h
++++ b/runtime/ObjC/Framework/RuleStack.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "BaseStack.h"
+#import "HashRule.h"
+
+diff --git a/runtime/ObjC/Framework/RuntimeException.h b/runtime/ObjC/Framework/RuntimeException.h
+index 7122696..1a26e0a 100644
+--- a/runtime/ObjC/Framework/RuntimeException.h
++++ b/runtime/ObjC/Framework/RuntimeException.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+
+@interface RuntimeException : NSException {
+}
+diff --git a/runtime/ObjC/Framework/StreamEnumerator.h b/runtime/ObjC/Framework/StreamEnumerator.h
+index feb7d7c..9461cb3 100644
+--- a/runtime/ObjC/Framework/StreamEnumerator.h
++++ b/runtime/ObjC/Framework/StreamEnumerator.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "AMutableArray.h"
+
+@interface StreamEnumerator : NSEnumerator
+diff --git a/runtime/ObjC/Framework/SymbolStack.h b/runtime/ObjC/Framework/SymbolStack.h
+index df8e0a1..77a6959 100644
+--- a/runtime/ObjC/Framework/SymbolStack.h
++++ b/runtime/ObjC/Framework/SymbolStack.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "BaseStack.h"
+// #import "SymbolScope.h"
+
+diff --git a/runtime/ObjC/Framework/Token+DebuggerSupport.h b/runtime/ObjC/Framework/Token+DebuggerSupport.h
+index 93d6299..c8aa28a 100644
+--- a/runtime/ObjC/Framework/Token+DebuggerSupport.h
++++ b/runtime/ObjC/Framework/Token+DebuggerSupport.h
+@@ -30,7 +30,7 @@
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "Token.h"
+#import "CommonToken.h"
+
+diff --git a/runtime/ObjC/Framework/Token.h b/runtime/ObjC/Framework/Token.h
+index f5562e6..ea1e523 100644
+--- a/runtime/ObjC/Framework/Token.h
++++ b/runtime/ObjC/Framework/Token.h
+@@ -25,7 +25,7 @@
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+
+#ifndef DEBUG_DEALLOC
+#define DEBUG_DEALLOC
+diff --git a/runtime/ObjC/Framework/TokenRewriteStream.h b/runtime/ObjC/Framework/TokenRewriteStream.h
+index a6ccc34..846e4a2 100644
+--- a/runtime/ObjC/Framework/TokenRewriteStream.h
++++ b/runtime/ObjC/Framework/TokenRewriteStream.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "CommonTokenStream.h"
+#import "LinkBase.h"
+#import "HashMap.h"
+diff --git a/runtime/ObjC/Framework/TreeException.h b/runtime/ObjC/Framework/TreeException.h
+index dd58aff..739e205 100644
+--- a/runtime/ObjC/Framework/TreeException.h
++++ b/runtime/ObjC/Framework/TreeException.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "Tree.h"
+#import "RecognitionException.h"
+
+diff --git a/runtime/ObjC/Framework/TreeIterator.h b/runtime/ObjC/Framework/TreeIterator.h
+index 982e4b6..36976fc 100644
+--- a/runtime/ObjC/Framework/TreeIterator.h
++++ b/runtime/ObjC/Framework/TreeIterator.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "CommonTreeAdaptor.h"
+#import "FastQueue.h"
+#import "TreeAdaptor.h"
+diff --git a/runtime/ObjC/Framework/TreeNodeStream.h b/runtime/ObjC/Framework/TreeNodeStream.h
+index d16527d..944a5e0 100644
+--- a/runtime/ObjC/Framework/TreeNodeStream.h
++++ b/runtime/ObjC/Framework/TreeNodeStream.h
+@@ -25,7 +25,7 @@
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "IntStream.h"
+#import "CharStream.h"
+#import "TokenStream.h"
+diff --git a/runtime/ObjC/Framework/TreeParser.h b/runtime/ObjC/Framework/TreeParser.h
+index 91cdb97..0f98fd6 100644
+--- a/runtime/ObjC/Framework/TreeParser.h
++++ b/runtime/ObjC/Framework/TreeParser.h
+@@ -24,7 +24,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "BaseRecognizer.h"
+#import "TreeNodeStream.h"
+#import "CommonTreeAdaptor.h"
+diff --git a/runtime/ObjC/Framework/TreePatternLexer.h b/runtime/ObjC/Framework/TreePatternLexer.h
+index e8d477d..e5b4754 100644
+--- a/runtime/ObjC/Framework/TreePatternLexer.h
++++ b/runtime/ObjC/Framework/TreePatternLexer.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+
+typedef enum {
+LexerTokenTypeEOF = -1,
+diff --git a/runtime/ObjC/Framework/TreePatternParser.h b/runtime/ObjC/Framework/TreePatternParser.h
+index d8377c6..0b7b90b 100644
+--- a/runtime/ObjC/Framework/TreePatternParser.h
++++ b/runtime/ObjC/Framework/TreePatternParser.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "TreePatternLexer.h"
+#import "TreeWizard.h"
+#import "TreeAdaptor.h"
+diff --git a/runtime/ObjC/Framework/TreeRewriter.h b/runtime/ObjC/Framework/TreeRewriter.h
+index 24e1063..fa3a884 100644
+--- a/runtime/ObjC/Framework/TreeRewriter.h
++++ b/runtime/ObjC/Framework/TreeRewriter.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "TreeParser.h"
+
+@interface ANTLRfptr : NSObject {
+diff --git a/runtime/ObjC/Framework/TreeRuleReturnScope.h b/runtime/ObjC/Framework/TreeRuleReturnScope.h
+index ab7ae60..88e8a0e 100644
+--- a/runtime/ObjC/Framework/TreeRuleReturnScope.h
++++ b/runtime/ObjC/Framework/TreeRuleReturnScope.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "RuleReturnScope.h"
+#import "CommonTree.h"
+
+diff --git a/runtime/ObjC/Framework/TreeVisitor.h b/runtime/ObjC/Framework/TreeVisitor.h
+index f6aef1d..7516a08 100644
+--- a/runtime/ObjC/Framework/TreeVisitor.h
++++ b/runtime/ObjC/Framework/TreeVisitor.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "TreeAdaptor.h"
+#import "TreeVisitorAction.h"
+
+diff --git a/runtime/ObjC/Framework/TreeVisitorAction.h b/runtime/ObjC/Framework/TreeVisitorAction.h
+index 71f5cc6..9c72dad 100644
+--- a/runtime/ObjC/Framework/TreeVisitorAction.h
++++ b/runtime/ObjC/Framework/TreeVisitorAction.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "BaseTree.h"
+
+@interface TreeVisitorAction : NSObject
+diff --git a/runtime/ObjC/Framework/TreeWizard.h b/runtime/ObjC/Framework/TreeWizard.h
+index 7fa5792..2965ed4 100644
+--- a/runtime/ObjC/Framework/TreeWizard.h
++++ b/runtime/ObjC/Framework/TreeWizard.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "CommonTreeAdaptor.h"
+#import "CommonTree.h"
+#import "MapElement.h"
+diff --git a/runtime/ObjC/Framework/UnbufferedTokenStream.h b/runtime/ObjC/Framework/UnbufferedTokenStream.h
+index e9b462e..755c8bd 100644
+--- a/runtime/ObjC/Framework/UnbufferedTokenStream.h
++++ b/runtime/ObjC/Framework/UnbufferedTokenStream.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "RuntimeException.h"
+#import "TokenSource.h"
+#import "LookaheadStream.h"
+diff --git a/runtime/ObjC/Framework/UniqueIDMap.h b/runtime/ObjC/Framework/UniqueIDMap.h
+index bfa851d..3efc0fd 100644
+--- a/runtime/ObjC/Framework/UniqueIDMap.h
++++ b/runtime/ObjC/Framework/UniqueIDMap.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "PtrBuffer.h"
+#import "NodeMapElement.h"
+
+diff --git a/runtime/ObjC/Framework/UnwantedTokenException.h b/runtime/ObjC/Framework/UnwantedTokenException.h
+index 009f5ed..202b28c 100644
+--- a/runtime/ObjC/Framework/UnwantedTokenException.h
++++ b/runtime/ObjC/Framework/UnwantedTokenException.h
+@@ -29,7 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "MismatchedTokenException.h"
+
+@interface UnwantedTokenException : MismatchedTokenException {
+diff --git a/runtime/ObjC/Framework/examples/LL-star/SimpleCLexer.h b/runtime/ObjC/Framework/examples/LL-star/SimpleCLexer.h
+index c9deb4f..832311d 100644
+--- a/runtime/ObjC/Framework/examples/LL-star/SimpleCLexer.h
++++ b/runtime/ObjC/Framework/examples/LL-star/SimpleCLexer.h
+@@ -3,7 +3,7 @@
+/* =============================================================================
+* Standard antlr OBJC runtime definitions
+*/
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+/* End of standard antlr3 runtime definitions
+* =============================================================================
+diff --git a/runtime/ObjC/Framework/examples/LL-star/SimpleCParser.h b/runtime/ObjC/Framework/examples/LL-star/SimpleCParser.h
+index b9cc488..108113c 100644
+--- a/runtime/ObjC/Framework/examples/LL-star/SimpleCParser.h
++++ b/runtime/ObjC/Framework/examples/LL-star/SimpleCParser.h
+@@ -3,7 +3,7 @@
+/* =============================================================================
+* Standard antlr OBJC runtime definitions
+*/
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+/* End of standard antlr3 runtime definitions
+* =============================================================================
+diff --git a/runtime/ObjC/Framework/examples/LL-star/main.m b/runtime/ObjC/Framework/examples/LL-star/main.m
+index 7c15b8e..2ab47d3 100644
+--- a/runtime/ObjC/Framework/examples/LL-star/main.m
++++ b/runtime/ObjC/Framework/examples/LL-star/main.m
+@@ -1,4 +1,4 @@
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+#import "SimpleCLexer.h"
+#import "SimpleCParser.h"
+diff --git a/runtime/ObjC/Framework/examples/combined/CombinedLexer.h b/runtime/ObjC/Framework/examples/combined/CombinedLexer.h
+index 4899537..6c2b67a 100644
+--- a/runtime/ObjC/Framework/examples/combined/CombinedLexer.h
++++ b/runtime/ObjC/Framework/examples/combined/CombinedLexer.h
+@@ -3,7 +3,7 @@
+/* =============================================================================
+* Standard antlr OBJC runtime definitions
+*/
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+/* End of standard antlr3 runtime definitions
+* =============================================================================
+diff --git a/runtime/ObjC/Framework/examples/combined/CombinedParser.h b/runtime/ObjC/Framework/examples/combined/CombinedParser.h
+index e907be0..6627eed 100644
+--- a/runtime/ObjC/Framework/examples/combined/CombinedParser.h
++++ b/runtime/ObjC/Framework/examples/combined/CombinedParser.h
+@@ -3,7 +3,7 @@
+/* =============================================================================
+* Standard antlr OBJC runtime definitions
+*/
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+/* End of standard antlr3 runtime definitions
+* =============================================================================
+diff --git a/runtime/ObjC/Framework/examples/combined/main.m b/runtime/ObjC/Framework/examples/combined/main.m
+index 580ae41..fc48224 100644
+--- a/runtime/ObjC/Framework/examples/combined/main.m
++++ b/runtime/ObjC/Framework/examples/combined/main.m
+@@ -1,4 +1,4 @@
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "CombinedLexer.h"
+#import <ANTLR/ANTLR.h>
+
+diff --git a/runtime/ObjC/Framework/examples/fuzzy/Fuzzy.h b/runtime/ObjC/Framework/examples/fuzzy/Fuzzy.h
+index e97734f..cfb8eae 100644
+--- a/runtime/ObjC/Framework/examples/fuzzy/Fuzzy.h
++++ b/runtime/ObjC/Framework/examples/fuzzy/Fuzzy.h
+@@ -3,7 +3,7 @@
+/* =============================================================================
+* Standard antlr OBJC runtime definitions
+*/
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+/* End of standard antlr3 runtime definitions
+* =============================================================================
+diff --git a/runtime/ObjC/Framework/examples/fuzzy/main.m b/runtime/ObjC/Framework/examples/fuzzy/main.m
+index 2360f94..aff7fc1 100644
+--- a/runtime/ObjC/Framework/examples/fuzzy/main.m
++++ b/runtime/ObjC/Framework/examples/fuzzy/main.m
+@@ -1,4 +1,4 @@
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "Fuzzy.h"
+#import <ANTLR/ANTLR.h>
+
+diff --git a/runtime/ObjC/Framework/examples/hoistedPredicates/TLexer.h b/runtime/ObjC/Framework/examples/hoistedPredicates/TLexer.h
+index 76eb0b0..5b93d1d 100644
+--- a/runtime/ObjC/Framework/examples/hoistedPredicates/TLexer.h
++++ b/runtime/ObjC/Framework/examples/hoistedPredicates/TLexer.h
+@@ -3,7 +3,7 @@
+/* =============================================================================
+* Standard antlr OBJC runtime definitions
+*/
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+/* End of standard antlr3 runtime definitions
+* =============================================================================
+diff --git a/runtime/ObjC/Framework/examples/hoistedPredicates/TParser.h b/runtime/ObjC/Framework/examples/hoistedPredicates/TParser.h
+index 31dddec..ddc2b48 100644
+--- a/runtime/ObjC/Framework/examples/hoistedPredicates/TParser.h
++++ b/runtime/ObjC/Framework/examples/hoistedPredicates/TParser.h
+@@ -3,7 +3,7 @@
+/* =============================================================================
+* Standard antlr OBJC runtime definitions
+*/
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+/* End of standard antlr3 runtime definitions
+* =============================================================================
+diff --git a/runtime/ObjC/Framework/examples/hoistedPredicates/main.m b/runtime/ObjC/Framework/examples/hoistedPredicates/main.m
+index 4f0222c..f71be5f 100644
+--- a/runtime/ObjC/Framework/examples/hoistedPredicates/main.m
++++ b/runtime/ObjC/Framework/examples/hoistedPredicates/main.m
+@@ -1,4 +1,4 @@
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+#import "TLexer.h"
+#import "TParser.h"
+diff --git a/runtime/ObjC/Framework/examples/lexertest-simple/TestLexer.h b/runtime/ObjC/Framework/examples/lexertest-simple/TestLexer.h
+index 9e0d1cd..ab4ce16 100644
+--- a/runtime/ObjC/Framework/examples/lexertest-simple/TestLexer.h
++++ b/runtime/ObjC/Framework/examples/lexertest-simple/TestLexer.h
+@@ -3,7 +3,7 @@
+/* =============================================================================
+* Standard antlr OBJC runtime definitions
+*/
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+/* End of standard antlr3 runtime definitions
+* =============================================================================
+diff --git a/runtime/ObjC/Framework/examples/lexertest-simple/main.m b/runtime/ObjC/Framework/examples/lexertest-simple/main.m
+index 60110a7..709f440 100644
+--- a/runtime/ObjC/Framework/examples/lexertest-simple/main.m
++++ b/runtime/ObjC/Framework/examples/lexertest-simple/main.m
+@@ -1,4 +1,4 @@
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import "TestLexer.h"
+#import <ANTLR/ANTLR.h>
+#import <unistd.h>
+diff --git a/runtime/ObjC/Framework/examples/polydiff/PolyDifferentiator.h b/runtime/ObjC/Framework/examples/polydiff/PolyDifferentiator.h
+index 449799a..68949c3 100644
+--- a/runtime/ObjC/Framework/examples/polydiff/PolyDifferentiator.h
++++ b/runtime/ObjC/Framework/examples/polydiff/PolyDifferentiator.h
+@@ -3,7 +3,7 @@
+/* =============================================================================
+* Standard antlr OBJC runtime definitions
+*/
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+/* End of standard antlr3 runtime definitions
+* =============================================================================
+diff --git a/runtime/ObjC/Framework/examples/polydiff/PolyLexer.h b/runtime/ObjC/Framework/examples/polydiff/PolyLexer.h
+index ca69ffa..9eb1d64 100644
+--- a/runtime/ObjC/Framework/examples/polydiff/PolyLexer.h
++++ b/runtime/ObjC/Framework/examples/polydiff/PolyLexer.h
+@@ -3,7 +3,7 @@
+/* =============================================================================
+* Standard antlr OBJC runtime definitions
+*/
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+/* End of standard antlr3 runtime definitions
+* =============================================================================
+diff --git a/runtime/ObjC/Framework/examples/polydiff/PolyParser.h b/runtime/ObjC/Framework/examples/polydiff/PolyParser.h
+index 7d769b5..9fed63a 100644
+--- a/runtime/ObjC/Framework/examples/polydiff/PolyParser.h
++++ b/runtime/ObjC/Framework/examples/polydiff/PolyParser.h
+@@ -3,7 +3,7 @@
+/* =============================================================================
+* Standard antlr OBJC runtime definitions
+*/
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+/* End of standard antlr3 runtime definitions
+* =============================================================================
+diff --git a/runtime/ObjC/Framework/examples/polydiff/PolyPrinter.h b/runtime/ObjC/Framework/examples/polydiff/PolyPrinter.h
+index 7ca63e5..3e59f89 100644
+--- a/runtime/ObjC/Framework/examples/polydiff/PolyPrinter.h
++++ b/runtime/ObjC/Framework/examples/polydiff/PolyPrinter.h
+@@ -3,7 +3,7 @@
+/* =============================================================================
+* Standard antlr3 OBJC runtime definitions
+*/
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+#import <ST4/ST.h>
+
+diff --git a/runtime/ObjC/Framework/examples/polydiff/Simplifier.h b/runtime/ObjC/Framework/examples/polydiff/Simplifier.h
+index ca033c6..b3fc9df 100644
+--- a/runtime/ObjC/Framework/examples/polydiff/Simplifier.h
++++ b/runtime/ObjC/Framework/examples/polydiff/Simplifier.h
+@@ -3,7 +3,7 @@
+/* =============================================================================
+* Standard antlr OBJC runtime definitions
+*/
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+/* End of standard antlr3 runtime definitions
+* =============================================================================
+diff --git a/runtime/ObjC/Framework/examples/polydiff/main.m b/runtime/ObjC/Framework/examples/polydiff/main.m
+index 94b38d7..082ccd2 100644
+--- a/runtime/ObjC/Framework/examples/polydiff/main.m
++++ b/runtime/ObjC/Framework/examples/polydiff/main.m
+@@ -1,4 +1,4 @@
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+#import "PolyLexer.h"
+#import "PolyParser.h"
+diff --git a/runtime/ObjC/Framework/examples/scopes/SymbolTableLexer.h b/runtime/ObjC/Framework/examples/scopes/SymbolTableLexer.h
+index 336caec..b5c76ec 100644
+--- a/runtime/ObjC/Framework/examples/scopes/SymbolTableLexer.h
++++ b/runtime/ObjC/Framework/examples/scopes/SymbolTableLexer.h
+@@ -3,7 +3,7 @@
+/* =============================================================================
+* Standard antlr OBJC runtime definitions
+*/
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+/* End of standard antlr3 runtime definitions
+* =============================================================================
+diff --git a/runtime/ObjC/Framework/examples/scopes/SymbolTableParser.h b/runtime/ObjC/Framework/examples/scopes/SymbolTableParser.h
+index 9698660..afd118a 100644
+--- a/runtime/ObjC/Framework/examples/scopes/SymbolTableParser.h
++++ b/runtime/ObjC/Framework/examples/scopes/SymbolTableParser.h
+@@ -3,7 +3,7 @@
+/* =============================================================================
+* Standard antlr OBJC runtime definitions
+*/
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+/* End of standard antlr3 runtime definitions
+* =============================================================================
+diff --git a/runtime/ObjC/Framework/examples/scopes/main.m b/runtime/ObjC/Framework/examples/scopes/main.m
+index be9ea8f..f7700fa 100644
+--- a/runtime/ObjC/Framework/examples/scopes/main.m
++++ b/runtime/ObjC/Framework/examples/scopes/main.m
+@@ -1,4 +1,4 @@
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+#import "SymbolTableLexer.h"
+#import "SymbolTableParser.h"
+diff --git a/runtime/ObjC/Framework/examples/simplecTreeParser/SimpleCLexer.h b/runtime/ObjC/Framework/examples/simplecTreeParser/SimpleCLexer.h
+index e0b550b..e9e2d2a 100644
+--- a/runtime/ObjC/Framework/examples/simplecTreeParser/SimpleCLexer.h
++++ b/runtime/ObjC/Framework/examples/simplecTreeParser/SimpleCLexer.h
+@@ -3,7 +3,7 @@
+/* =============================================================================
+* Standard antlr OBJC runtime definitions
+*/
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+/* End of standard antlr3 runtime definitions
+* =============================================================================
+diff --git a/runtime/ObjC/Framework/examples/simplecTreeParser/SimpleCParser.h b/runtime/ObjC/Framework/examples/simplecTreeParser/SimpleCParser.h
+index 0f125d1..31f40ee 100644
+--- a/runtime/ObjC/Framework/examples/simplecTreeParser/SimpleCParser.h
++++ b/runtime/ObjC/Framework/examples/simplecTreeParser/SimpleCParser.h
+@@ -3,7 +3,7 @@
+/* =============================================================================
+* Standard antlr OBJC runtime definitions
+*/
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+/* End of standard antlr3 runtime definitions
+* =============================================================================
+diff --git a/runtime/ObjC/Framework/examples/simplecTreeParser/SimpleCTP.h b/runtime/ObjC/Framework/examples/simplecTreeParser/SimpleCTP.h
+index 3808ac9..e543b4c 100644
+--- a/runtime/ObjC/Framework/examples/simplecTreeParser/SimpleCTP.h
++++ b/runtime/ObjC/Framework/examples/simplecTreeParser/SimpleCTP.h
+@@ -3,7 +3,7 @@
+/* =============================================================================
+* Standard antlr OBJC runtime definitions
+*/
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+/* End of standard antlr3 runtime definitions
+* =============================================================================
+diff --git a/runtime/ObjC/Framework/examples/simplecTreeParser/SimpleCWalker.h b/runtime/ObjC/Framework/examples/simplecTreeParser/SimpleCWalker.h
+index 400a294..649efdb 100644
+--- a/runtime/ObjC/Framework/examples/simplecTreeParser/SimpleCWalker.h
++++ b/runtime/ObjC/Framework/examples/simplecTreeParser/SimpleCWalker.h
+@@ -3,7 +3,7 @@
+/* =============================================================================
+* Standard antlr OBJC runtime definitions
+*/
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+/* End of standard antlr3 runtime definitions
+* =============================================================================
+diff --git a/runtime/ObjC/Framework/examples/simplecTreeParser/main.m b/runtime/ObjC/Framework/examples/simplecTreeParser/main.m
+index 0cc7397..bf3ea27 100644
+--- a/runtime/ObjC/Framework/examples/simplecTreeParser/main.m
++++ b/runtime/ObjC/Framework/examples/simplecTreeParser/main.m
+@@ -1,4 +1,4 @@
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+#import "SimpleCLexer.h"
+#import "SimpleCParser.h"
+diff --git a/runtime/ObjC/Framework/examples/treeparser/LangDumpDecl.h b/runtime/ObjC/Framework/examples/treeparser/LangDumpDecl.h
+index eb5cd77..67e4836 100644
+--- a/runtime/ObjC/Framework/examples/treeparser/LangDumpDecl.h
++++ b/runtime/ObjC/Framework/examples/treeparser/LangDumpDecl.h
+@@ -3,7 +3,7 @@
+/* =============================================================================
+* Standard antlr OBJC runtime definitions
+*/
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+/* End of standard antlr3 runtime definitions
+* =============================================================================
+diff --git a/runtime/ObjC/Framework/examples/treeparser/LangLexer.h b/runtime/ObjC/Framework/examples/treeparser/LangLexer.h
+index 458cb0d..9905e66 100644
+--- a/runtime/ObjC/Framework/examples/treeparser/LangLexer.h
++++ b/runtime/ObjC/Framework/examples/treeparser/LangLexer.h
+@@ -3,7 +3,7 @@
+/* =============================================================================
+* Standard antlr OBJC runtime definitions
+*/
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+/* End of standard antlr3 runtime definitions
+* =============================================================================
+diff --git a/runtime/ObjC/Framework/examples/treeparser/LangParser.h b/runtime/ObjC/Framework/examples/treeparser/LangParser.h
+index 6bfbfc2..62efb21 100644
+--- a/runtime/ObjC/Framework/examples/treeparser/LangParser.h
++++ b/runtime/ObjC/Framework/examples/treeparser/LangParser.h
+@@ -3,7 +3,7 @@
+/* =============================================================================
+* Standard antlr OBJC runtime definitions
+*/
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+/* End of standard antlr3 runtime definitions
+* =============================================================================
+diff --git a/runtime/ObjC/Framework/examples/treeparser/main.m b/runtime/ObjC/Framework/examples/treeparser/main.m
+index 11201b6..610c76a 100644
+--- a/runtime/ObjC/Framework/examples/treeparser/main.m
++++ b/runtime/ObjC/Framework/examples/treeparser/main.m
+@@ -1,4 +1,4 @@
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+#import "LangLexer.h"
+#import "LangParser.h"
+diff --git a/runtime/ObjC/Framework/examples/treerewrite/TreeRewriteLexer.h b/runtime/ObjC/Framework/examples/treerewrite/TreeRewriteLexer.h
+index 380e161..8595371 100644
+--- a/runtime/ObjC/Framework/examples/treerewrite/TreeRewriteLexer.h
++++ b/runtime/ObjC/Framework/examples/treerewrite/TreeRewriteLexer.h
+@@ -3,7 +3,7 @@
+/* =============================================================================
+* Standard antlr OBJC runtime definitions
+*/
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+/* End of standard antlr3 runtime definitions
+* =============================================================================
+diff --git a/runtime/ObjC/Framework/examples/treerewrite/TreeRewriteParser.h b/runtime/ObjC/Framework/examples/treerewrite/TreeRewriteParser.h
+index e8af0a6..3139f47 100644
+--- a/runtime/ObjC/Framework/examples/treerewrite/TreeRewriteParser.h
++++ b/runtime/ObjC/Framework/examples/treerewrite/TreeRewriteParser.h
+@@ -3,7 +3,7 @@
+/* =============================================================================
+* Standard antlr OBJC runtime definitions
+*/
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+/* End of standard antlr3 runtime definitions
+* =============================================================================
+diff --git a/runtime/ObjC/Framework/examples/treerewrite/main.m b/runtime/ObjC/Framework/examples/treerewrite/main.m
+index b84c7c5..6b0062b 100644
+--- a/runtime/ObjC/Framework/examples/treerewrite/main.m
++++ b/runtime/ObjC/Framework/examples/treerewrite/main.m
+@@ -1,4 +1,4 @@
+-#import <Cocoa/Cocoa.h>
++#import <Foundation/Foundation.h>
+#import <ANTLR/ANTLR.h>
+#import "TreeRewriteLexer.h"
+#import "TreeRewriteParser.h"
+

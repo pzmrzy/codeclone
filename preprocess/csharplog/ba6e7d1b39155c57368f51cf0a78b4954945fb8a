@@ -1,0 +1,64 @@
+commit ba6e7d1b39155c57368f51cf0a78b4954945fb8a
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Feb 14 07:17:53 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Feb 14 07:17:53 2011 -0800
+
+(C# 3) Fix support for the 'text' terminal option by allowing quoted strings
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7687]
+
+diff --git a/Antlr3.Targets/Antlr3.Targets.CSharp3/CSharp3Target.cs b/Antlr3.Targets/Antlr3.Targets.CSharp3/CSharp3Target.cs
+index 53d860a..a5de03f 100644
+--- a/Antlr3.Targets/Antlr3.Targets.CSharp3/CSharp3Target.cs
++++ b/Antlr3.Targets/Antlr3.Targets.CSharp3/CSharp3Target.cs
+@@ -82,12 +82,21 @@ namespace Antlr3.Targets
+
+protected override void GenRecognizerFile(AntlrTool tool, CodeGenerator generator, Grammar grammar, StringTemplate outputFileST)
+{
+-            generator.Templates.RegisterRenderer(typeof(string), new StringRenderer());
++            generator.Templates.RegisterRenderer(typeof(string), new StringRenderer(generator, this));
+base.GenRecognizerFile(tool, generator, grammar, outputFileST);
+}
+
+public class StringRenderer : IAttributeRenderer
+{
++            private readonly CodeGenerator _generator;
++            private readonly CSharp3Target _target;
++
++            public StringRenderer(CodeGenerator generator, CSharp3Target target)
++            {
++                _generator = generator;
++                _target = target;
++            }
++
+public string ToString(string value)
+{
+return value;
+@@ -109,6 +118,9 @@ namespace Antlr3.Targets
+case "cap":
+return char.ToUpper(value[0], CultureInfo.CurrentCulture) + value.Substring(1);
+
++                case "string":
++                    return _target.GetTargetStringLiteralFromString(value, true);
++
+default:
+throw new ArgumentException(string.Format("Unsupported format name: '{0}'", formatName), "formatName");
+}
+diff --git a/Antlr3/Grammars/ANTLR.g3 b/Antlr3/Grammars/ANTLR.g3
+index 7626672..79abbd0 100644
+--- a/Antlr3/Grammars/ANTLR.g3
++++ b/Antlr3/Grammars/ANTLR.g3
+@@ -592,9 +592,9 @@ StringBuffer buf = new StringBuffer();
+;
+
+elementOption[GrammarAST terminalAST]
+-	:	a=id ASSIGN^ (b=id|s=STRING_LITERAL)
++	:	a=id ASSIGN^ (b=id|STRING_LITERAL|DOUBLE_QUOTE_STRING_LITERAL|DOUBLE_ANGLE_STRING_LITERAL)
+{
+-		object v = ($b.tree!=null)?$b.text:$s.text;
++		object v = $b.text ?? $STRING_LITERAL.text ?? $DOUBLE_QUOTE_STRING_LITERAL.text ?? $DOUBLE_ANGLE_STRING_LITERAL.text;
+terminalAST.SetTerminalOption(Grammar,$a.text,v);
+}
+;
+

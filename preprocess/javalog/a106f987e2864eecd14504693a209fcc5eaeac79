@@ -1,0 +1,250 @@
+commit a106f987e2864eecd14504693a209fcc5eaeac79
+Author:     acondit <acondit@parrt.spork>
+AuthorDate: Fri Mar 11 12:01:48 2011 -0800
+Commit:     acondit <acondit@parrt.spork>
+CommitDate: Fri Mar 11 12:01:48 2011 -0800
+
+Changes made towards ST4 implementation
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 7859]
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/ObjC/AST.stg b/tool/src/main/resources/org/antlr/codegen/templates/ObjC/AST.stg
+index 6cb0c4a..e85a9f7 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/ObjC/AST.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/ObjC/AST.stg
+@@ -157,7 +157,7 @@ parserMethods() ::= <<
+
+- (void) dealloc
+{
+-    [self setTree:nil];
++    self.tree = nil;
+[super dealloc];
+}
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/ObjC/ASTDbg.stg b/tool/src/main/resources/org/antlr/codegen/templates/ObjC/ASTDbg.stg
+index 7c487e9..4bd8209 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/ObjC/ASTDbg.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/ObjC/ASTDbg.stg
+@@ -32,14 +32,14 @@
+group ASTDbg;
+
+parserMembers() ::= <<
+-ANTLRDebugTreeAdaptor *adaptor = [ANTLRDebugTreeAdaptor newANTLRDebugTreeAdaptor:(id)dbg Adaptor:[ANTLRCommonTreeAdaptor newANTLRCommonTreeAdaptor]];
++ANTLRDebugTreeAdaptor *adaptor = [ANTLRDebugTreeAdaptor newTreeAdaptor:(id)dbg Adaptor:[ANTLRCommonTreeAdaptor newTreeAdaptor]];
+
+// fix this
+- (void) setTreeAdaptor:(id<ANTLRTreeAdaptor>)anAdaptor
+{
+-    adaptor = [ANTLRDebugTreeAdaptor newANTLRDebugTreeAdaptor:dbg Adaptor:anAdaptor];
++    adaptor = [ANTLRDebugTreeAdaptor newTreeAdaptor:dbg Adaptor:anAdaptor];
+<if(grammar.grammarIsRoot)>
+-    adaptor = [ANTLRDebugTreeAdaptor newANTLRDebugTreeAdaptor:adaptor withDBG:dbg];
++    adaptor = [ANTLRDebugTreeAdaptor newTreeAdaptor:adaptor withDBG:dbg];
+<else>
+adaptor = (ANTLRDebugTreeAdaptor *)adaptor; // delegator sends dbg adaptor
+<endif><\n>
+@@ -70,13 +70,13 @@ try {
+>>
+
+@ctorForRootGrammar.finally() ::= <<
+-ANTLRCommonTreeAdaptor *adap = [ANTLRCommonTreeAdaptor newANTLRCommonTreeAdaptor];
++ANTLRCommonTreeAdaptor *adap = [ANTLRCommonTreeAdaptor newTreeAdaptor];
+[self setTreeAdaptor:adap];
+[proxy setTreeAdaptor:adap];
+>>
+
+@ctorForProfilingRootGrammar.finally() ::=<<
+-ANTLRCommonTreeAdaptor *adap = [ANTLRCommonTreeAdaptor newANTLRCommonTreeAdaptor];
++ANTLRCommonTreeAdaptor *adap = [ANTLRCommonTreeAdaptor newTreeAdaptor];
+[self setTreeAdaptor:adap];
+[proxy setTreeAdaptor:adap];
+>>
+@@ -85,7 +85,7 @@ ANTLRCommonTreeAdaptor *adap = [ANTLRCommonTreeAdaptor newANTLRCommonTreeAdaptor
+
+@ctorForPredefinedListener.finally() ::=<<
+<if(grammar.grammarIsRoot)> <! don't create new adaptor for delegates !>
+-ANTLRCommonTreeAdaptor *adap = [ANTLRCommonTreeAdaptor newANTLRCommonTreeAdaptor];
++ANTLRCommonTreeAdaptor *adap = [ANTLRCommonTreeAdaptor newTreeAdaptor];
+[self setTreeAdaptor:adap];<\n>
+<endif>
+>>
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/ObjC/ASTTreeParser.stg b/tool/src/main/resources/org/antlr/codegen/templates/ObjC/ASTTreeParser.stg
+index eb6a4c9..fb43671 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/ObjC/ASTTreeParser.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/ObjC/ASTTreeParser.stg
+@@ -75,6 +75,11 @@ group ASTTreeParser;
+[super dealloc];
+}
+
++@synthesize tree;
++>>
++
++@returnScopeProperties() ::= <<
++@property (retain) <recognizer.ASTLabelType; null="ANTLRCommonTree"> *tree;
+>>
+
+/** Add a variable to track last element matched */
+@@ -276,7 +281,7 @@ _last = (<ASTLabelType> *)[input LT:1];
+<super.ruleRef(...)>
+<if(backtracking)>if ( <actions.(actionScope).synpredgate> ) <endif>
+<if(!rewriteMode)>
+-    [treeAdaptor addChild:[<label> getTree] toTree:root_<treeLevel>];
++    [treeAdaptor addChild:<label>.tree toTree:root_<treeLevel>];
+<else> <! rewrite mode !>
+if ( _first_<treeLevel> == nil ) _first_<treeLevel> = <label>.tree;
+<endif>
+@@ -286,7 +291,8 @@ if ( _first_<treeLevel> == nil ) _first_<treeLevel> = <label>.tree;
+ruleRefAndListLabel(rule,label,elementIndex,args,scope) ::= <<
+/* ASTTreeParser ruleRefAndListLabel */
+<ruleRef(...)>
+-<listLabel(elem = "["+label+" getTree]",...)>
++<! <listLabel(elem = "["+label+" getTree]",...)> !>
++<listLabel(elem = label+".tree",...)>
+>>
+
+/** ^(rule ...) auto construct */
+@@ -296,7 +302,7 @@ _last = (<ASTLabelType> *)[input LT:1];
+<super.ruleRef(...)>
+<if(!rewriteMode)>
+<if(backtracking)>if ( state.backtracking == 0 ) <endif>
+-root_<treeLevel> = (<ASTLabelType> *)[treeAdaptor becomeRoot:[<label> getTree] old:root_<treeLevel>];
++root_<treeLevel> = (<ASTLabelType> *)[treeAdaptor becomeRoot:<label>.tree old:root_<treeLevel>];
+<endif>
+>>
+
+@@ -304,7 +310,7 @@ root_<treeLevel> = (<ASTLabelType> *)[treeAdaptor becomeRoot:[<label> getTree] o
+ruleRefRuleRootAndListLabel(rule,label,elementIndex,args,scope) ::= <<
+/* ASTTreeParser ruleRefRuleRootAndListLabel */
+<ruleRefRuleRoot(...)>
+-<listLabel(elem="["+label+" getTree]",...)>
++<listLabel(elem=label+".tree",...)>
+>>
+
+/** rule when output=AST and tracking for rewrite */
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/ObjC/ObjC.stg b/tool/src/main/resources/org/antlr/codegen/templates/ObjC/ObjC.stg
+index 09b8daf..5e6bb77 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/ObjC/ObjC.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/ObjC/ObjC.stg
+@@ -293,6 +293,7 @@ lexerHeaderFile( LEXER,
+<actions.lexer.memVars>
+/* ObjC end of actions.lexer.memVars */
+}
+++ (void) initialize;
++ (<className()> *)new<className()>WithCharStream:(id\<ANTLRCharStream>)anInput;
+/* ObjC start actions.lexer.methodsDecl */
+<actions.lexer.methodsDecl>
+@@ -323,7 +324,7 @@ lexer(  grammar,
+scopes,
+rules,
+numRules,
+-        labelType="id<ANTLRToken>",
++        labelType="ANTLRCommonToken",
+filterMode,
+superClass="ANTLRLexer"
+) ::= <<
+@@ -418,7 +419,7 @@ filteringNextToken() ::= <<
+{
+while (YES) {
+if ( [input LA:1] == ANTLRCharStreamEOF ) {
+-            return [ANTLRCommonToken eofToken];
++            return [<LabelType> eofToken];
+}
+state.token = nil;
+state.channel = ANTLRTokenChannelDefault;
+@@ -621,6 +622,7 @@ typedef enum {
+<@properties()>
+/* ObjC end of properties */
+
+++ (void) initialize;
++ (id) new<className()>:(<inputStreamType>)aStream;
+/* ObjC start of actions.(actionScope).methodsDecl */
+<actions.(actionScope).methodsDecl>
+@@ -734,7 +736,7 @@ genericParser(  grammar,
+{
+#pragma mark Bitsets
+<bitsets:bitsetInit(name={FOLLOW_<it.name>_in_<it.inName><it.tokenIndex>}, words64=it.bits)>
+-    [ANTLRBaseRecognizer setTokenNames:[[NSArray arrayWithObjects:@"\<invalid>", @"\<EOR>", @"\<DOWN>", @"\<UP>", <tokenNames:{@<it>}; separator=", ", wrap="\n ">, nil] retain]];
++    [ANTLRBaseRecognizer setTokenNames:[[NSMutableArray arrayWithObjects:@"\<invalid>", @"\<EOR>", @"\<DOWN>", @"\<UP>", <tokenNames:{@<it>}; separator=", ", wrap="\n ">, nil] retain]];
+[ANTLRBaseRecognizer setGrammarFileName:@"<fileName>"];
+<synpreds:{pred | <synpred(pred)>}>
+}
+@@ -954,7 +956,7 @@ NSInteger <ruleDescriptor.name>_StartIndex = [input getIndex];
+ruleScopeSetUp() ::= <<
+/* ruleScopeSetUp */
+<ruleDescriptor.useScopes:{[<it>_stack push:[[<it>_Scope new<it>_Scope] retain]];}>
+-<ruleDescriptor.ruleScope:{ANTLRSymbolStack *<it.name>_stack = [ANTLRSymbolStack newANTLRSymbolStackWithLen:30];
++<ruleDescriptor.ruleScope:{<! ANTLRSymbolStack *<it.name>_stack = [ANTLRSymbolStack newANTLRSymbolStackWithLen:30]; !>
+[<it.name>_stack push:[[<it.name>_Scope new<it.name>_Scope] retain]];}>
+>>
+
+@@ -1046,7 +1048,7 @@ lexerRule(ruleName, nakedBlock, ruleDescriptor, block, memoize) ::= <<
+<ruleDescriptor.actions.init>
+<block>
+<ruleCleanUp()>
+-        [state setType:_type];<\n>
++        state.type = _type;
+state.channel = _channel;
+<(ruleDescriptor.actions.after):execAction()>
+<endif>
+@@ -1291,7 +1293,7 @@ NSInteger <label>Start = [self getIndex];
+[self matchString:<string>]; <checkRuleBacktrackFailure()>
+NSInteger StartLine<elementIndex> = [self getLine];
+NSInteger <label>StartCharPos<elementIndex> = [self getCharPositionInLine];
+-<label> = [[ANTLRCommonToken newANTLRCommonToken:input Type:ANTLRTokenTypeInvalid Channel:ANTLRTokenChannelDefault Start:<label>Start Stop:[self getIndex]] retain];
++<label> = [[<LabelType> newToken:input Type:ANTLRTokenTypeInvalid Channel:ANTLRTokenChannelDefault Start:<label>Start Stop:[self getIndex]] retain];
+[self setLine:<label>StartLine<elementIndex>];
+[self setCharPositionInLine:<label>StartCharPos<elementIndex>];
+<else>
+@@ -1354,7 +1356,7 @@ lexerRuleRef(rule,label,args,elementIndex,scope) ::= <<
+<if(label)>
+NSInteger <label>Start<elementIndex> = [self getIndex];
+[self m<rule.name><if(args)>:<args; separator=" :"><endif>]; <checkRuleBacktrackFailure()><\n>
+-<label> = [[ANTLRCommonToken newANTLRCommonToken:input Type:ANTLRTokenTypeInvalid Channel:ANTLRTokenChannelDefault Start:<label>Start<elementIndex> Stop:[self getIndex]-1] retain];
++<label> = [[<LabelType> newToken:input Type:ANTLRTokenTypeInvalid Channel:ANTLRTokenChannelDefault Start:<label>Start<elementIndex> Stop:[self getIndex]-1] retain];
+[<label> setLine:[self getLine]];
+<else>
+[self <if(scope)><scope:delegateName()>.<endif>m<rule.name><if(args)>:<args; separator=" :"><endif>]; <checkRuleBacktrackFailure()><\n>
+@@ -1372,7 +1374,7 @@ lexerMatchEOF(label,elementIndex) ::= <<
+<if(label)>
+NSInteger <label>Start<elementIndex> = [self getIndex];
+[self matchChar:ANTLRCharStreamEOF]; <checkRuleBacktrackFailure()><\n>
+-<labelType> <label> = [[ANTLRCommonToken newANTLRCommonToken:input Type:ANTLRTokenTypeEOF Channel:ANTLRTokenChannelDefault Start:<label>Start<elementIndex> Stop:[self getIndex]-1] retain];
++<labelType> <label> = [[<labelType> newToken:input Type:ANTLRTokenTypeEOF Channel:ANTLRTokenChannelDefault Start:<label>Start<elementIndex> Stop:[self getIndex]-1] retain];
+[<label> setLine:[self getLine]];
+<else>
+[self matchChar:ANTLRCharStreamEOF]; <checkRuleBacktrackFailure()><\n>
+@@ -2065,7 +2067,7 @@ listLabelRef(label) ::= "list_<label>"
+/* not sure the next are the right approach; and they are evaluated early; */
+/* they cannot see TREE_PARSER or PARSER attributes for example. :( */
+
+-tokenLabelPropertyRef_text(scope,attr) ::= "(<scope>!=nil?[<scope> getText]:@\"nil\")"
++tokenLabelPropertyRef_text(scope,attr) ::= "(<scope>!=nil?[<scope> getText]:nil)"
+tokenLabelPropertyRef_type(scope,attr) ::= "(<scope>!=nil?[<scope> getType]:0)"
+tokenLabelPropertyRef_line(scope,attr) ::= "(<scope>!=nil?[<scope> getLine]:0)"
+tokenLabelPropertyRef_pos(scope,attr) ::= "(<scope>!=nil?[<scope> getCharPositionInLine]:0)"
+@@ -2114,18 +2116,18 @@ rulePropertyRef_st(scope,attr) ::= "retval.st"
+
+/* hideous: find a way to cut down on the number of templates to support read/write access */
+/* TODO: also, which ones are valid to write to? ask Ter */
+-lexerRuleSetPropertyRef_text(scope,attr,expr) ::= "[state setText:<expr>];"
++lexerRuleSetPropertyRef_text(scope,attr,expr) ::= "state.text = <expr>;"
+lexerRuleSetPropertyRef_type(scope,attr,expr) ::= "_type"
+-lexerRuleSetPropertyRef_line(scope,attr,expr) ::= "[state getTokenStartLine]"
+-lexerRuleSetPropertyRef_pos(scope,attr,expr) ::= "[state getCharPositionInLine]"
++lexerRuleSetPropertyRef_line(scope,attr,expr) ::= "state.tokenStartLine"
++lexerRuleSetPropertyRef_pos(scope,attr,expr) ::= "state.tokenStartCharPositionInLine"
+lexerRuleSetPropertyRef_index(scope,attr,expr) ::= "-1" /* undefined token index in lexer */
+-lexerRuleSetPropertyRef_channel(scope,attr,expr) ::= "[state setChannel:<expr>];"
+-lexerRuleSetPropertyRef_start(scope,attr,expr) ::= "[state getTokenStartCharIndex]"
++lexerRuleSetPropertyRef_channel(scope,attr,expr) ::= "state.channel=<expr>;"
++lexerRuleSetPropertyRef_start(scope,attr,expr) ::= "state.tokenStartCharIndex"
+lexerRuleSetPropertyRef_stop(scope,attr,expr) ::= "([self getIndex]-1)"
+
+
+lexerRulePropertyRef_text(scope,attr) ::= "[self getText]"
+-lexerRulePropertyRef_type(scope,attr) ::= "[state getType]"
++lexerRulePropertyRef_type(scope,attr) ::= "state.type"
+lexerRulePropertyRef_line(scope,attr) ::= "state.tokenStartLine"
+lexerRulePropertyRef_pos(scope,attr) ::= "state.tokenStartCharPositionInLine"
+lexerRulePropertyRef_index(scope,attr) ::= "-1" // undefined token index in lexer
+

@@ -1,0 +1,61 @@
+commit 80df03783a66d04d6bbddb62db0ecdc0ff89ca48
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Tue Jul 5 11:37:11 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Tue Jul 5 11:37:11 2011 -0800
+
+Fix potential infinite loop in Lexer
+NextToken() calls ParseNextToken() instead of calling mTokens directly
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8832]
+
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime/Lexer.cs b/runtime/CSharp3/Sources/Antlr3.Runtime/Lexer.cs
+index 81958e9..cf478c6 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime/Lexer.cs
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime/Lexer.cs
+@@ -144,7 +144,7 @@ namespace Antlr.Runtime
+}
+try
+{
+-                    mTokens();
++                    ParseNextToken();
+if ( state.token == null )
+{
+Emit();
+@@ -155,15 +155,20 @@ namespace Antlr.Runtime
+}
+return state.token;
+}
+-                catch ( NoViableAltException nva )
++                catch (MismatchedRangeException mre)
+{
+-                    ReportError( nva );
+-                    Recover( nva ); // throw out current char and try again
++                    ReportError(mre);
++                    // MatchRange() routine has already called recover()
++                }
++                catch (MismatchedTokenException mte)
++                {
++                    ReportError(mte);
++                    // Match() routine has already called recover()
+}
+catch ( RecognitionException re )
+{
+ReportError( re );
+-                    // match() routine has already called recover()
++                    Recover( re ); // throw out current char and try again
+}
+}
+}
+@@ -421,5 +426,10 @@ namespace Antlr.Runtime
+string inputSymbol = ( (char)input.LT( 1 ) ) + " line=" + Line + ":" + CharPositionInLine;
+base.TraceOut( ruleName, ruleIndex, inputSymbol );
+}
++
++        protected virtual void ParseNextToken()
++        {
++            mTokens();
++        }
+}
+}
+

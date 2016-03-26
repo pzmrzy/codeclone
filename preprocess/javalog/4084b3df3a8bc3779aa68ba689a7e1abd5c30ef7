@@ -1,0 +1,24 @@
+commit 4084b3df3a8bc3779aa68ba689a7e1abd5c30ef7
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Wed Mar 7 10:03:05 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Wed Mar 7 10:03:05 2012 -0600
+
+Fix unit test
+
+diff --git a/tool/src/test/java/org/antlr/test/TestAttributes.java b/tool/src/test/java/org/antlr/test/TestAttributes.java
+index b34301d..eccb5e6 100644
+--- a/tool/src/test/java/org/antlr/test/TestAttributes.java
++++ b/tool/src/test/java/org/antlr/test/TestAttributes.java
+@@ -634,8 +634,8 @@ public class TestAttributes extends BaseTest {
+@Test public void testRuleLabels() throws Exception {
+String action = "$r.x; $r.start;\n $r.stop;\n $r.tree; $a.x; $a.stop;";
+String expecting = "(r!=null?((t.a_return)r).x:0); (r!=null?((Token)r.start):null);" + newline +
+-			"             (r!=null?((Token)r.stop):null);" + newline +
+-			"             (r!=null?((Object)r.getTree()):null); (r!=null?((t.a_return)r).x:0); (r!=null?((Token)r.stop):null);";
++			"\t\t\t (r!=null?((Token)r.stop):null);" + newline +
++			"\t\t\t (r!=null?((Object)r.getTree()):null); (r!=null?((t.a_return)r).x:0); (r!=null?((Token)r.stop):null);";
+
+ErrorQueue equeue = new ErrorQueue();
+ErrorManager.setErrorListener(equeue);
+

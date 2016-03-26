@@ -1,0 +1,30 @@
+commit 8f70add51ad4fc84a530eb74a2f70e1a85899278
+Author:     Zannick <jokeserver@gmail.com>
+AuthorDate: Sat Jun 23 16:53:43 2012 -0700
+Commit:     Zannick <jokeserver@gmail.com>
+CommitDate: Mon Jun 25 00:59:08 2012 -0700
+
+Convert dfaEdgeSwitch to use set inclusion.
+
+This makes it so the condition is eg. "LA3 in {FOO, BAR, BAZ}"
+instead of "LA3 == FOO or LA3 == BAR or LA3 == BAZ".
+
+Unfortunately other cases that would benefit from this approach
+(such as setTest) are structured in such a way that they don't have
+an easy way (so far as I can tell) to discern what to be checking
+("LA3" in the above example).
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Python3/Python3.stg b/tool/src/main/resources/org/antlr/codegen/templates/Python3/Python3.stg
+index a4cb813..b1c1fbf 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Python3/Python3.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Python3/Python3.stg
+@@ -1078,7 +1078,7 @@ else:
+>>
+
+dfaEdgeSwitch(labels, targetState) ::= <<
+-if <labels:{it | LA<decisionNumber> == <it>}; separator=" or ">:
++if LA<decisionNumber> in {<labels; separator=", ">}:
+<targetState>
+>>
+
+

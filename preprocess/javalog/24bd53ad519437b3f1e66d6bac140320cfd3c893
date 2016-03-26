@@ -1,0 +1,29 @@
+commit 24bd53ad519437b3f1e66d6bac140320cfd3c893
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Fri Nov 30 09:10:21 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Fri Nov 30 09:10:21 2012 -0600
+
+Specify plugin groupId
+
+diff --git a/pom.xml b/pom.xml
+index e16dc1f..3aeb938 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -138,6 +138,7 @@
+</plugin>
+
+<plugin>
++                <groupId>org.apache.maven.plugins</groupId>
+<artifactId>maven-compiler-plugin</artifactId>
+<version>3.0</version>
+<configuration>
+@@ -154,6 +155,7 @@
+</plugin>
+
+<plugin>
++                <groupId>org.apache.maven.plugins</groupId>
+<artifactId>maven-surefire-plugin</artifactId>
+<version>2.12.4</version>
+</plugin>
+

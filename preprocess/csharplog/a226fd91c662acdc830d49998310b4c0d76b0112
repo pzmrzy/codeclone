@@ -1,0 +1,944 @@
+commit a226fd91c662acdc830d49998310b4c0d76b0112
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Tue Feb 15 14:40:50 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Tue Feb 15 14:40:50 2011 -0800
+
+(C# 3) ST3: type proxies may only be registered in the group
+Cleaned up and simplified some ST3 grammars
+Use generics in a couple extra places
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7702]
+
+diff --git a/Antlr3.StringTemplate/Language/ASTExpr.cs b/Antlr3.StringTemplate/Language/ASTExpr.cs
+index 4b3a9e2..6e32fce 100644
+--- a/Antlr3.StringTemplate/Language/ASTExpr.cs
++++ b/Antlr3.StringTemplate/Language/ASTExpr.cs
+@@ -612,7 +612,7 @@ namespace Antlr3.ST.Language
+if ( o == null )
+return null;
+
+-            ITypeProxyFactory proxyFactory = self.GetProxy(o.GetType());
++            ITypeProxyFactory proxyFactory = self.Group.GetTypeProxyFactory(o.GetType());
+if (proxyFactory != null)
+o = proxyFactory.CreateProxy(o);
+
+@@ -1011,7 +1011,7 @@ namespace Antlr3.ST.Language
+
+if (o != null)
+{
+-                ITypeProxyFactory proxyFactory = self.GetProxy(o.GetType());
++                ITypeProxyFactory proxyFactory = self.Group.GetTypeProxyFactory(o.GetType());
+if (proxyFactory != null)
+o = proxyFactory.CreateProxy(o);
+}
+diff --git a/Antlr3.StringTemplate/Language/Action.g3 b/Antlr3.StringTemplate/Language/Action.g3
+index 6893d08..20d3634 100644
+--- a/Antlr3.StringTemplate/Language/Action.g3
++++ b/Antlr3.StringTemplate/Language/Action.g3
+@@ -68,81 +68,11 @@ tokens
+NOTHING;
+}
+
+-@lexer::header
+-{
+-/*
+- [The "BSD licence"]
+- Copyright (c) 2005-2008 Terence Parr
+- All rights reserved.
+-
+- Grammar conversion to ANTLR v3 and C#:
+- Copyright (c) 2008 Sam Harwell, Pixel Mine, Inc.
+- All rights reserved.
+-
+- Redistribution and use in source and binary forms, with or without
+- modification, are permitted provided that the following conditions
+- are met:
+- 1. Redistributions of source code must retain the above copyright
+-	notice, this list of conditions and the following disclaimer.
+- 2. Redistributions in binary form must reproduce the above copyright
+-	notice, this list of conditions and the following disclaimer in the
+-	documentation and/or other materials provided with the distribution.
+- 3. The name of the author may not be used to endorse or promote products
+-	derived from this software without specific prior written permission.
+-
+- THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-*/
+-}
+-
+-@parser::header
+-{
+-/*
+- [The "BSD licence"]
+- Copyright (c) 2005-2008 Terence Parr
+- All rights reserved.
+-
+- Grammar conversion to ANTLR v3 and C#:
+- Copyright (c) 2008 Sam Harwell, Pixel Mine, Inc.
+- All rights reserved.
+-
+- Redistribution and use in source and binary forms, with or without
+- modification, are permitted provided that the following conditions
+- are met:
+- 1. Redistributions of source code must retain the above copyright
+-	notice, this list of conditions and the following disclaimer.
+- 2. Redistributions in binary form must reproduce the above copyright
+-	notice, this list of conditions and the following disclaimer in the
+-	documentation and/or other materials provided with the distribution.
+- 3. The name of the author may not be used to endorse or promote products
+-	derived from this software without specific prior written permission.
+-
+- THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-*/
+-}
+-
+@lexer::namespace { Antlr3.ST.Language }
+@parser::namespace { Antlr3.ST.Language }
+
+public
+-action returns [IDictionary<string, object> opts=null]
++action returns [IDictionary<string, object> opts]
+:	(	templatesExpr (SEMI! optionList {$opts = $optionList.opts;})?
+|	'if'^ LPAREN! ifCondition RPAREN!
+|	'elseif'! LPAREN! ifCondition RPAREN! // return just conditional
+@@ -155,15 +85,8 @@ optionList! returns [IDictionary<string, object> opts=new Dictionary<string, obj
+;
+
+option[IDictionary<string, object> opts]
+-@init
+-{
+-object v=null;
+-}
+-	:	ID
+-		( ASSIGN nonAlternatingTemplateExpr {v=$nonAlternatingTemplateExpr.tree;}
+-		| {v=ASTExpr.EmptyOption;}
+-		)
+-		{opts[$ID.text] = v;}
++	:	ID (ASSIGN nonAlternatingTemplateExpr)?
++		{opts[$ID.text] = (object)$nonAlternatingTemplateExpr.tree ?? ASTExpr.EmptyOption;}
+;
+
+templatesExpr
+@@ -215,8 +138,7 @@ primaryExpr
+;
+
+valueExpr
+-	:	LPAREN templatesExpr RPAREN
+-		-> ^(VALUE[$LPAREN,"value"] templatesExpr)
++	:	LPAREN<type=VALUE;text="value">^ templatesExpr RPAREN!
+;
+
+nonAlternatingTemplateExpr
+@@ -281,10 +203,9 @@ atom
+;
+
+list
+-	:	lb=LBRACK
+-		listElement (COMMA listElement)*
+-		RBRACK
+-		-> ^(LIST[$lb,"value"] listElement+)
++	:	LBRACK<type=LIST;text="value">^
++		listElement (COMMA! listElement)*
++		RBRACK!
+;
+
+listElement
+@@ -302,23 +223,20 @@ templateInclude
+;
+
+/** Match (foo)() and (foo+".terse")() */
+-indirectTemplate!
+-	:	LPAREN e=templatesExpr RPAREN args=argList
+-		-> ^(VALUE["value"] $e $args)
++indirectTemplate
++	:	LPAREN<type=VALUE;text="value">^ templatesExpr RPAREN! argList
+;
+
+-argList!
+-	:	LPAREN
+-		(	argumentAssignment (COMMA argumentAssignment)*
++argList
++	:	LPAREN<type=ARGS;text="ARGS">^
++		(	argumentAssignment (COMMA! argumentAssignment)*
+)?
+-		RPAREN
+-		-> ^(ARGS["ARGS"] argumentAssignment*)
++		RPAREN!
+|	singleArg // bold(name)
+;
+
+singleArg
+-	:	LPAREN nonAlternatingTemplateExpr RPAREN
+-		-> ^(SINGLEVALUEARG["SINGLEVALUEARG"] nonAlternatingTemplateExpr)
++	:	LPAREN<type=SINGLEVALUEARG;text="SINGLEVALUEARG">^ nonAlternatingTemplateExpr RPAREN!
+;
+
+argumentAssignment
+diff --git a/Antlr3.StringTemplate/Language/ActionEvaluator.g3 b/Antlr3.StringTemplate/Language/ActionEvaluator.g3
+index 9af129a..187c54a 100644
+--- a/Antlr3.StringTemplate/Language/ActionEvaluator.g3
++++ b/Antlr3.StringTemplate/Language/ActionEvaluator.g3
+@@ -40,45 +40,10 @@ options
+
+@header
+{
+-/*
+- [The "BSD licence"]
+- Copyright (c) 2005-2008 Terence Parr
+- All rights reserved.
+-
+- Grammar conversion to ANTLR v3 and C#:
+- Copyright (c) 2008 Sam Harwell, Pixel Mine, Inc.
+- All rights reserved.
+-
+- Redistribution and use in source and binary forms, with or without
+- modification, are permitted provided that the following conditions
+- are met:
+- 1. Redistributions of source code must retain the above copyright
+-	notice, this list of conditions and the following disclaimer.
+- 2. Redistributions in binary form must reproduce the above copyright
+-	notice, this list of conditions and the following disclaimer in the
+-	documentation and/or other materials provided with the distribution.
+- 3. The name of the author may not be used to endorse or promote products
+-	derived from this software without specific prior written permission.
+-
+- THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-*/
+-
+using System.Linq;
+using Antlr.Runtime.JavaExtensions;
+
+-using IDictionary = System.Collections.IDictionary;
+-using Set = System.Collections.Generic.HashSet<object>;
+using StringWriter = System.IO.StringWriter;
+-using Vector = System.Collections.Generic.List<object>;
+}
+
+@namespace {Antlr3.ST.Language}
+@@ -89,11 +54,6 @@ action returns [int numCharsWritten=0]
+;
+
+expr returns [object value]
+-@init
+-{
+-	IDictionary argumentContext=null;
+-	$value = null;
+-}
+:	^(PLUS a=expr b=expr {$value = chunk.Add($a.value,$b.value);})
+|	templateApplication {$value = $templateApplication.value;}
+|	attribute {$value = $attribute.value;}
+@@ -114,7 +74,7 @@ expr returns [object value]
+;
+
+/** create a new list of expressions as a new multi-value attribute */
+-list returns [object value=null]
++list returns [object value]
+@init
+{
+List<object> elements = new List<object>();
+@@ -137,7 +97,7 @@ list returns [object value=null]
+{$value = new Cat(elements);}
+;
+
+-templateInclude returns [object value=null]
++templateInclude returns [object value]
+@init
+{
+StringTemplateAST args = null;
+@@ -167,7 +127,7 @@ templateInclude returns [object value=null]
+templateApplication returns [object value]
+@init
+{
+-	var templatesToApply = new System.Collections.Generic.List<StringTemplate>();
++	var templatesToApply = new List<StringTemplate>();
+List<object> attributes = new List<object>();
+}
+:	^(	APPLY a=expr
+@@ -198,14 +158,14 @@ function returns [object value]
+)
+;
+
+-singleFunctionArg returns [object value=null]
++singleFunctionArg returns [object value]
+:	^( SINGLEVALUEARG expr {$value = $expr.value;} )
+;
+
+-template[System.Collections.Generic.List<StringTemplate> templatesToApply]
++template[List<StringTemplate> templatesToApply]
+@init
+{
+-	IDictionary argumentContext = null;
++	IDictionary<string, object> argumentContext = null;
+}
+:	^(	TEMPLATE
+(	ID args=. // don't eval argList now; must re-eval each iteration
+@@ -306,8 +266,8 @@ attribute returns [object value]
+*  in rawSetArgumentAttribute.
+*/
+public
+-argList[StringTemplate embedded, System.Collections.Generic.Dictionary<string, object> initialContext]
+-	returns [System.Collections.Generic.Dictionary<string, object> argumentContext=null]
++argList[StringTemplate embedded, Dictionary<string, object> initialContext]
++	returns [Dictionary<string, object> argumentContext]
+@init
+{
+$argumentContext = $initialContext;
+@@ -320,7 +280,7 @@ argList[StringTemplate embedded, System.Collections.Generic.Dictionary<string, o
+|	singleTemplateArg[$embedded,$argumentContext]
+;
+
+-singleTemplateArg[StringTemplate embedded, IDictionary argumentContext]
++singleTemplateArg[StringTemplate embedded, IDictionary<string, object> argumentContext]
+:	^( SINGLEVALUEARG e=expr )
+{
+if ( $e.value!=null )
+@@ -360,7 +320,7 @@ singleTemplateArg[StringTemplate embedded, IDictionary argumentContext]
+}
+;
+
+-argumentAssignment[StringTemplate embedded, IDictionary argumentContext]
++argumentAssignment[StringTemplate embedded, IDictionary<string, object> argumentContext]
+:	^( ASSIGN arg=ID expr )
+{
+if ( $expr.value != null )
+@@ -961,7 +921,7 @@ templateCompiled[System.Reflection.Emit.ILGenerator gen]
+templateFunctional[List<System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,StringTemplate>> templateApplicators]
+@init
+{
+-	IDictionary argumentContext = null;
++	IDictionary<string, object> argumentContext = null;
+}
+:	^(	TEMPLATE
+(	ID args=. // don't eval argList now; must re-eval each iteration
+diff --git a/Antlr3.StringTemplate/Language/AngleBracketTemplateLexer.g3 b/Antlr3.StringTemplate/Language/AngleBracketTemplateLexer.g3
+index 713132f..183a90f 100644
+--- a/Antlr3.StringTemplate/Language/AngleBracketTemplateLexer.g3
++++ b/Antlr3.StringTemplate/Language/AngleBracketTemplateLexer.g3
+@@ -37,42 +37,6 @@ options
+language=CSharp3;
+}
+
+-@lexer::header
+-{
+-/*
+- [The "BSD licence"]
+- Copyright (c) 2005-2008 Terence Parr
+- All rights reserved.
+-
+- Grammar conversion to ANTLR v3 and C#:
+- Copyright (c) 2008 Sam Harwell, Pixel Mine, Inc.
+- All rights reserved.
+-
+- Redistribution and use in source and binary forms, with or without
+- modification, are permitted provided that the following conditions
+- are met:
+- 1. Redistributions of source code must retain the above copyright
+-	notice, this list of conditions and the following disclaimer.
+- 2. Redistributions in binary form must reproduce the above copyright
+-	notice, this list of conditions and the following disclaimer in the
+-	documentation and/or other materials provided with the distribution.
+- 3. The name of the author may not be used to endorse or promote products
+-	derived from this software without specific prior written permission.
+-
+- THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-*/
+-
+-using StringBuffer = System.Text.StringBuilder;
+-}
+/**/
+@lexer::namespace {Antlr3.ST.Language}
+
+diff --git a/Antlr3.StringTemplate/Language/Group.g3 b/Antlr3.StringTemplate/Language/Group.g3
+index db611ff..09072cf 100644
+--- a/Antlr3.StringTemplate/Language/Group.g3
++++ b/Antlr3.StringTemplate/Language/Group.g3
+@@ -43,79 +43,6 @@ KWIMPLEMENTS = 'implements';
+KWDEFAULT = 'default';
+}
+
+-@lexer::header
+-{
+-/*
+- [The "BSD licence"]
+- Copyright (c) 2005-2008 Terence Parr
+- All rights reserved.
+-
+- Grammar conversion to ANTLR v3 and C#:
+- Copyright (c) 2008 Sam Harwell, Pixel Mine, Inc.
+- All rights reserved.
+-
+- Redistribution and use in source and binary forms, with or without
+- modification, are permitted provided that the following conditions
+- are met:
+- 1. Redistributions of source code must retain the above copyright
+-	notice, this list of conditions and the following disclaimer.
+- 2. Redistributions in binary form must reproduce the above copyright
+-	notice, this list of conditions and the following disclaimer in the
+-	documentation and/or other materials provided with the distribution.
+- 3. The name of the author may not be used to endorse or promote products
+-	derived from this software without specific prior written permission.
+-
+- THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-*/
+-}
+-
+-@parser::header
+-{
+-/*
+- [The "BSD licence"]
+- Copyright (c) 2005-2008 Terence Parr
+- All rights reserved.
+-
+- Grammar conversion to ANTLR v3 and C#:
+- Copyright (c) 2008 Sam Harwell, Pixel Mine, Inc.
+- All rights reserved.
+-
+- Redistribution and use in source and binary forms, with or without
+- modification, are permitted provided that the following conditions
+- are met:
+- 1. Redistributions of source code must retain the above copyright
+-	notice, this list of conditions and the following disclaimer.
+- 2. Redistributions in binary form must reproduce the above copyright
+-	notice, this list of conditions and the following disclaimer in the
+-	documentation and/or other materials provided with the distribution.
+- 3. The name of the author may not be used to endorse or promote products
+-	derived from this software without specific prior written permission.
+-
+- THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-*/
+-
+-using HashMap = System.Collections.Hashtable;
+-using IDictionary = System.Collections.IDictionary;
+-}
+-
+@lexer::namespace {Antlr3.ST.Language}
+@parser::namespace {Antlr3.ST.Language}
+
+@@ -138,18 +65,16 @@ this._group = g;
+template[StringTemplateGroup g]
+@init
+{
+-	IDictionary formalArgs = null;
+StringTemplate st = null;
+-	bool ignore = false;
+string templateName=null;
+int line = input.LT(1).Line;
+}
+:	(	AT scope2=ID DOT region=ID
+{
+-				templateName=g.GetMangledRegionName($scope2.text,$region.text);
+-				if ( g.IsDefinedInThisGroup(templateName) )
++				templateName = $g.GetMangledRegionName($scope2.text,$region.text);
++				if ( $g.IsDefinedInThisGroup(templateName) )
+{
+-					g.Error("group "+g.Name+" line "+line+": redefinition of template region: @"+
++					$g.Error("group "+$g.Name+" line "+line+": redefinition of template region: @"+
+$scope2.text+"."+$region.text);
+st = new StringTemplate(); // create bogus template to fill in
+}
+@@ -157,16 +82,16 @@ template[StringTemplateGroup g]
+{
+bool err = false;
+// @template.region() ::= "..."
+-					StringTemplate scopeST = g.LookupTemplate($scope2.text);
++					StringTemplate scopeST = $g.LookupTemplate($scope2.text);
+if ( scopeST == null )
+{
+-						g.Error("group "+g.Name+" line "+line+": reference to region within undefined template: "+
++						$g.Error("group "+$g.Name+" line "+line+": reference to region within undefined template: "+
+$scope2.text);
+err=true;
+}
+else if ( !scopeST.ContainsRegionName($region.text) )
+{
+-						g.Error("group "+g.Name+" line "+line+": template "+$scope2.text+" has no region called "+
++						$g.Error("group "+$g.Name+" line "+line+": template "+$scope2.text+" has no region called "+
+$region.text);
+err=true;
+}
+@@ -176,7 +101,7 @@ template[StringTemplateGroup g]
+}
+else
+{
+-						st = g.DefineRegionTemplate($scope2.text,
++						st = $g.DefineRegionTemplate($scope2.text,
+$region.text,
+null,
+RegionType.Explicit);
+@@ -185,14 +110,14 @@ template[StringTemplateGroup g]
+}
+|	name=ID {templateName = $name.text;}
+{
+-				if ( g.IsDefinedInThisGroup(templateName) )
++				if ( $g.IsDefinedInThisGroup(templateName) )
+{
+-					g.Error("redefinition of template: "+templateName);
++					$g.Error("redefinition of template: "+templateName);
+st = new StringTemplate(); // create bogus template to fill in
+}
+else
+{
+-					st = g.DefineTemplate(templateName, null);
++					st = $g.DefineTemplate(templateName, null);
+}
+}
+)
+@@ -210,7 +135,7 @@ template[StringTemplateGroup g]
+;
+
+args[StringTemplate st]
+-	:	arg[st] ( COMMA arg[st] )*
++	:	arg[$st] ( COMMA arg[$st] )*
+;
+
+arg[StringTemplate st]
+@@ -224,61 +149,61 @@ arg[StringTemplate st]
+defaultValue=new StringTemplate("\$_val_\$");
+defaultValue.SetAttribute("_val_", $s.text);
+defaultValue.DefineFormalArgument("_val_");
+-				defaultValue.Name = "<"+st.Name+"'s arg "+$name.text+" default value subtemplate>";
++				defaultValue.Name = "<"+$st.Name+"'s arg "+$name.text+" default value subtemplate>";
+}
+|	ASSIGN bs=ANONYMOUS_TEMPLATE
+{
+-				defaultValue=new StringTemplate(st.Group, $bs.text);
+-				defaultValue.Name = "<"+st.Name+"'s arg "+$name.text+" default value subtemplate>";
++				defaultValue=new StringTemplate($st.Group, $bs.text);
++				defaultValue.Name = "<"+$st.Name+"'s arg "+$name.text+" default value subtemplate>";
+}
+)?
+-		{st.DefineFormalArgument($name.text, defaultValue);}
++		{$st.DefineFormalArgument($name.text, defaultValue);}
+;
+
+mapdef[StringTemplateGroup g]
+:	name=ID
+DEFINED_TO_BE m=map
+{
+-			if ( g.GetMap($name.text)!=null )
++			if ( $g.GetMap($name.text)!=null )
+{
+-				g.Error("redefinition of map: "+$name.text);
++				$g.Error("redefinition of map: "+$name.text);
+}
+-			else if ( g.IsDefinedInThisGroup($name.text) )
++			else if ( $g.IsDefinedInThisGroup($name.text) )
+{
+-				g.Error("redefinition of template as map: "+$name.text);
++				$g.Error("redefinition of template as map: "+$name.text);
+}
+else
+{
+-				g.DefineMap($name.text, m);
++				$g.DefineMap($name.text, $m.mapping);
+}
+}
+;
+
+-map returns [IDictionary mapping=new HashMap()]
++map returns [IDictionary<string, StringTemplate> mapping = new Dictionary<string, StringTemplate>()]
+:   LBRACK mapPairs[mapping] RBRACK
+;
+
+-mapPairs [IDictionary mapping]
++mapPairs [IDictionary<string, StringTemplate> mapping]
+:	keyValuePair[mapping] (COMMA keyValuePair[mapping])*
+(COMMA defaultValuePair[mapping])?
+|	defaultValuePair[mapping]
+;
+
+-defaultValuePair[IDictionary mapping]
++defaultValuePair[IDictionary<string, StringTemplate> mapping]
+:	'default' COLON v=keyValue
+-		{mapping[ASTExpr.DefaultMapValueName] = $v.value;}
++		{$mapping[ASTExpr.DefaultMapValueName] = $v.value;}
+;
+
+-keyValuePair[IDictionary mapping]
+-	:	key=STRING COLON v=keyValue {mapping[$key.text] = $v.value;}
++keyValuePair[IDictionary<string, StringTemplate> mapping]
++	:	key=STRING COLON v=keyValue {$mapping[$key.text] = $v.value;}
+;
+
+-keyValue returns [StringTemplate value=null]
+-	:	s1=BIGSTRING	{value = new StringTemplate(_group,$s1.text);}
+-	|	s2=STRING		{value = new StringTemplate(_group,$s2.text);}
++keyValue returns [StringTemplate value]
++	:	s1=BIGSTRING	{$value = new StringTemplate(_group,$s1.text);}
++	|	s2=STRING		{$value = new StringTemplate(_group,$s2.text);}
+|	k=ID			{$k.text == "key"}?
+-						{value = ASTExpr.MapKeyValue;}
+-	|					{value = null;}
++						{$value = ASTExpr.MapKeyValue;}
++	|					//{$value = null;}
+;
+
+//////////////////////////////////////////////////////////////////////////////////////
+diff --git a/Antlr3.StringTemplate/Language/Interface.g3 b/Antlr3.StringTemplate/Language/Interface.g3
+index 7f1f82d..e714f65 100644
+--- a/Antlr3.StringTemplate/Language/Interface.g3
++++ b/Antlr3.StringTemplate/Language/Interface.g3
+@@ -42,76 +42,6 @@ tokens
+OPTIONAL = 'optional';
+}
+
+-@lexer::header
+-{
+-/*
+- [The "BSD licence"]
+- Copyright (c) 2005-2008 Terence Parr
+- All rights reserved.
+-
+- Grammar conversion to ANTLR v3 and C#:
+- Copyright (c) 2008 Sam Harwell, Pixel Mine, Inc.
+- All rights reserved.
+-
+- Redistribution and use in source and binary forms, with or without
+- modification, are permitted provided that the following conditions
+- are met:
+- 1. Redistributions of source code must retain the above copyright
+-	notice, this list of conditions and the following disclaimer.
+- 2. Redistributions in binary form must reproduce the above copyright
+-	notice, this list of conditions and the following disclaimer in the
+-	documentation and/or other materials provided with the distribution.
+- 3. The name of the author may not be used to endorse or promote products
+-	derived from this software without specific prior written permission.
+-
+- THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-*/
+-}
+-
+-@parser::header
+-{
+-/*
+- [The "BSD licence"]
+- Copyright (c) 2005-2008 Terence Parr
+- All rights reserved.
+-
+- Grammar conversion to ANTLR v3 and C#:
+- Copyright (c) 2008 Sam Harwell, Pixel Mine, Inc.
+- All rights reserved.
+-
+- Redistribution and use in source and binary forms, with or without
+- modification, are permitted provided that the following conditions
+- are met:
+- 1. Redistributions of source code must retain the above copyright
+-	notice, this list of conditions and the following disclaimer.
+- 2. Redistributions in binary form must reproduce the above copyright
+-	notice, this list of conditions and the following disclaimer in the
+-	documentation and/or other materials provided with the distribution.
+- 3. The name of the author may not be used to endorse or promote products
+-	derived from this software without specific prior written permission.
+-
+- THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-*/
+-}
+-
+@lexer::namespace {Antlr3.ST.Language}
+@parser::namespace {Antlr3.ST.Language}
+
+diff --git a/Antlr3.StringTemplate/Language/Template.g3 b/Antlr3.StringTemplate/Language/Template.g3
+index 5f143e2..18adc94 100644
+--- a/Antlr3.StringTemplate/Language/Template.g3
++++ b/Antlr3.StringTemplate/Language/Template.g3
+@@ -36,77 +36,6 @@ options
+language=CSharp3;
+}
+
+-@lexer::header
+-{
+-/*
+- [The "BSD licence"]
+- Copyright (c) 2005-2008 Terence Parr
+- All rights reserved.
+-
+- Grammar conversion to ANTLR v3 and C#:
+- Copyright (c) 2008 Sam Harwell, Pixel Mine, Inc.
+- All rights reserved.
+-
+- Redistribution and use in source and binary forms, with or without
+- modification, are permitted provided that the following conditions
+- are met:
+- 1. Redistributions of source code must retain the above copyright
+-	notice, this list of conditions and the following disclaimer.
+- 2. Redistributions in binary form must reproduce the above copyright
+-	notice, this list of conditions and the following disclaimer in the
+-	documentation and/or other materials provided with the distribution.
+- 3. The name of the author may not be used to endorse or promote products
+-	derived from this software without specific prior written permission.
+-
+- THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-*/
+-}
+-
+-@parser::header
+-{
+-/*
+- [The "BSD licence"]
+- Copyright (c) 2005-2008 Terence Parr
+- All rights reserved.
+-
+- Grammar conversion to ANTLR v3 and C#:
+- Copyright (c) 2008 Sam Harwell, Pixel Mine, Inc.
+- All rights reserved.
+-
+- Redistribution and use in source and binary forms, with or without
+- modification, are permitted provided that the following conditions
+- are met:
+- 1. Redistributions of source code must retain the above copyright
+-	notice, this list of conditions and the following disclaimer.
+- 2. Redistributions in binary form must reproduce the above copyright
+-	notice, this list of conditions and the following disclaimer in the
+-	documentation and/or other materials provided with the distribution.
+- 3. The name of the author may not be used to endorse or promote products
+-	derived from this software without specific prior written permission.
+-
+- THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-*/
+-using Antlr.Runtime.JavaExtensions;
+-}
+-
+@lexer::namespace {Antlr3.ST.Language}
+@parser::namespace {Antlr3.ST.Language}
+
+@@ -345,7 +274,7 @@ ACTION
+)+
+(	('\r'|'\n') => ('\r')? '\n' {atLeft = true;} )?
+(	('$@end$') => '$@end$'
+-					|	.	{self.Error("missing region "+t+" $@end$ tag");}
++					|	.	{self.Error("missing region "+t+" \$@end$ tag");}
+)
+(	{atLeft}? ('\r')? '\n' )?
+)
+diff --git a/Antlr3.StringTemplate/StringTemplate.cs b/Antlr3.StringTemplate/StringTemplate.cs
+index 39491b3..0be083d 100644
+--- a/Antlr3.StringTemplate/StringTemplate.cs
++++ b/Antlr3.StringTemplate/StringTemplate.cs
+@@ -317,8 +317,6 @@ namespace Antlr3.ST
+*/
+private TypeRegistry<IAttributeRenderer> _attributeRenderers;
+
+-        private TypeRegistry<ITypeProxyFactory> _proxyFactories;
+-
+/** <summary>
+*  A list of alternating string and ASTExpr references.
+*  This is compiled to when the template is loaded/defined and walked to
+@@ -646,7 +644,6 @@ namespace Antlr3.ST
+protected virtual void Dup( StringTemplate from, StringTemplate to )
+{
+to._attributeRenderers = from._attributeRenderers;
+-            to._proxyFactories = from._proxyFactories;
+to._pattern = from._pattern;
+to._chunks = from._chunks;
+to._formalArguments = from._formalArguments;
+@@ -942,7 +939,7 @@ namespace Antlr3.ST
+*  </summary>
+*/
+public virtual void RawSetArgumentAttribute( StringTemplate embedded,
+-                                            IDictionary attributes,
++                                            IDictionary<string, object> attributes,
+string name,
+object value )
+{
+@@ -1365,6 +1362,9 @@ namespace Antlr3.ST
+*/
+public virtual void RegisterRenderer( Type objectType, IAttributeRenderer renderer )
+{
++            if (objectType == null)
++                throw new ArgumentNullException("objectType");
++
+if (_attributeRenderers == null)
+_attributeRenderers = new TypeRegistry<IAttributeRenderer>();
+
+@@ -1378,6 +1378,9 @@ namespace Antlr3.ST
+*/
+public virtual IAttributeRenderer GetAttributeRenderer( Type objectType )
+{
++            if (objectType == null)
++                throw new ArgumentNullException("objectType");
++
+IAttributeRenderer renderer;
+if (_attributeRenderers != null && _attributeRenderers.TryGetValue(objectType, out renderer))
+return renderer;
+@@ -1388,27 +1391,6 @@ namespace Antlr3.ST
+return _group.GetAttributeRenderer(objectType);
+}
+
+-        public virtual void RegisterProxy(Type originalObjectType, ITypeProxyFactory proxyFactory)
+-        {
+-            if (_proxyFactories == null)
+-                _proxyFactories = new TypeRegistry<ITypeProxyFactory>();
+-
+-            _proxyFactories[originalObjectType] = proxyFactory;
+-        }
+-
+-        public virtual ITypeProxyFactory GetProxy(Type originalObjectType)
+-        {
+-            ITypeProxyFactory proxyFactory;
+-            if (_proxyFactories != null && _proxyFactories.TryGetValue(originalObjectType, out proxyFactory))
+-                return proxyFactory;
+-
+-            if (_enclosingInstance != null)
+-                return _enclosingInstance.GetProxy(originalObjectType);
+-
+-            return _group.GetProxy(originalObjectType);
+-        }
+-
+-
+#region Utility routines
+
+public virtual void Error( string msg )
+diff --git a/Antlr3.StringTemplate/StringTemplateGroup.cs b/Antlr3.StringTemplate/StringTemplateGroup.cs
+index d7119ab..91d7aff 100644
+--- a/Antlr3.StringTemplate/StringTemplateGroup.cs
++++ b/Antlr3.StringTemplate/StringTemplateGroup.cs
+@@ -99,7 +99,7 @@ namespace Antlr3.ST
+*  defined by the user like typeInitMap ::= ["int":"0"]
+*  </summary>
+*/
+-        Dictionary<string, IDictionary> _maps = new Dictionary<string, IDictionary>();
++        Dictionary<string, IDictionary<string, StringTemplate>> _maps = new Dictionary<string, IDictionary<string, StringTemplate>>();
+
+/** <summary>How to pull apart a template into chunks?</summary> */
+Type _templateLexerClass;
+@@ -1222,7 +1222,7 @@ namespace Antlr3.ST
+return null;
+}
+
+-        public virtual void RegisterProxy(Type originalObjectType, ITypeProxyFactory proxyFactory)
++        public virtual void RegisterTypeProxyFactory(Type originalObjectType, ITypeProxyFactory proxyFactory)
+{
+if (_proxyFactories == null)
+_proxyFactories = new TypeRegistry<ITypeProxyFactory>();
+@@ -1230,19 +1230,19 @@ namespace Antlr3.ST
+_proxyFactories[originalObjectType] = proxyFactory;
+}
+
+-        public virtual ITypeProxyFactory GetProxy(Type originalObjectType)
++        public virtual ITypeProxyFactory GetTypeProxyFactory(Type originalObjectType)
+{
+ITypeProxyFactory proxyFactory;
+if (_proxyFactories != null && _proxyFactories.TryGetValue(originalObjectType, out proxyFactory))
+return proxyFactory;
+
+if (_superGroup != null)
+-                return _superGroup.GetProxy(originalObjectType);
++                return _superGroup.GetTypeProxyFactory(originalObjectType);
+
+return null;
+}
+
+-        public virtual IDictionary GetMap( string name )
++        public virtual IDictionary<string, StringTemplate> GetMap(string name)
+{
+if ( _maps == null )
+{
+@@ -1252,7 +1252,7 @@ namespace Antlr3.ST
+}
+return _superGroup.GetMap( name );
+}
+-            IDictionary m;
++            IDictionary<string, StringTemplate> m;
+if ( ( !_maps.TryGetValue( name, out m ) || m == null ) && _superGroup != null )
+{
+m = _superGroup.GetMap( name );
+@@ -1265,7 +1265,7 @@ namespace Antlr3.ST
+*  these while you reference them.
+*  </summary>
+*/
+-        public virtual void DefineMap( string name, IDictionary mapping )
++        public virtual void DefineMap(string name, IDictionary<string, StringTemplate> mapping)
+{
+_maps[name] = mapping;
+}
+

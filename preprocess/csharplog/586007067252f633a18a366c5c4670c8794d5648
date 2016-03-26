@@ -1,0 +1,3313 @@
+commit 586007067252f633a18a366c5c4670c8794d5648
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sat Feb 26 16:34:14 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sat Feb 26 16:34:14 2011 -0800
+
+(C# 3) Merge CL7764 (left recursion support round 1)
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7782]
+
+diff --git a/Antlr3.Test/Antlr3.Test.csproj b/Antlr3.Test/Antlr3.Test.csproj
+index 6e4bcdc..eb84593 100644
+--- a/Antlr3.Test/Antlr3.Test.csproj
++++ b/Antlr3.Test/Antlr3.Test.csproj
+@@ -62,6 +62,7 @@
+<Compile Include="TestInterpretedParsing.cs" />
+<Compile Include="TestIntervalSet.cs" />
+<Compile Include="TestJavaCodeGeneration.cs" />
++    <Compile Include="TestLeftRecursion.cs" />
+<Compile Include="TestLexer.cs" />
+<Compile Include="TestMessages.cs" />
+<Compile Include="TestNFAConstruction.cs" />
+diff --git a/Antlr3.Test/BaseTest.cs b/Antlr3.Test/BaseTest.cs
+index c728814..dca75d4 100644
+--- a/Antlr3.Test/BaseTest.cs
++++ b/Antlr3.Test/BaseTest.cs
+@@ -575,7 +575,69 @@ namespace AntlrUnitTests
+bool debug )
+{
+stderrDuringParse = null;
+-            if ( treeParserBuildsTrees && parserBuildsTrees )
++            WriteRecognizerAndCompile(parserName, treeParserName, lexerName, parserStartRuleName, treeParserStartRuleName, parserBuildsTrees, parserBuildsTemplate, treeParserBuildsTrees, debug);
++
++            return execRecognizer();
++        }
++
++        public string execRecognizer()
++        {
++            try
++            {
++                string[] args = new string[] {
++				/*"java",*/ "-classpath", tmpdir+pathSep+ClassPath,
++				"Test", System.IO.Path.GetFullPath( System.IO.Path.Combine( tmpdir, "input") )
++			};
++                //String cmdLine = "java -classpath " + CLASSPATH + pathSep + tmpdir + " Test " + Path.GetFullPath( Path.Combine( tmpdir, "input" ) );
++                //System.out.println("execParser: "+cmdLine);
++
++                System.Diagnostics.Process process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Jvm, '"' + string.Join("\" \"", args) + '"')
++                {
++                    UseShellExecute = false,
++                    CreateNoWindow = true,
++                    RedirectStandardOutput = true,
++                    RedirectStandardError = true,
++                    WorkingDirectory = tmpdir
++                });
++
++                //Process process =
++                //    Runtime.getRuntime().exec( args, null, new File( tmpdir ) );
++                StreamVacuum stdoutVacuum = new StreamVacuum(process.StandardOutput);
++                StreamVacuum stderrVacuum = new StreamVacuum(process.StandardError);
++                stdoutVacuum.start();
++                stderrVacuum.start();
++                process.WaitForExit();
++                stdoutVacuum.join();
++                stderrVacuum.join();
++                string output = null;
++                output = stdoutVacuum.ToString();
++                if (stderrVacuum.ToString().Length > 0)
++                {
++                    this.stderrDuringParse = stderrVacuum.ToString();
++                    //Console.Error.WriteLine( "exec stderrVacuum: " + stderrVacuum );
++                }
++                return output;
++            }
++            catch (Exception e)
++            {
++                Console.Error.WriteLine("can't exec recognizer");
++                e.PrintStackTrace(Console.Error);
++            }
++            return null;
++        }
++
++        public void WriteRecognizerAndCompile(
++            string parserName,
++            string treeParserName,
++            string lexerName,
++            string parserStartRuleName,
++            string treeParserStartRuleName,
++            bool parserBuildsTrees,
++            bool parserBuildsTemplate,
++            bool treeParserBuildsTrees,
++            bool debug)
++        {
++            if (treeParserBuildsTrees && parserBuildsTrees)
+{
+writeTreeAndTreeTestFile( parserName,
+treeParserName,
+@@ -613,48 +675,6 @@ namespace AntlrUnitTests
+}
+
+compile( "Test.java" );
+-            try
+-            {
+-                string[] args = new string[] {
+-				/*"java",*/ "-classpath", tmpdir+pathSep+ClassPath,
+-				"Test", System.IO.Path.GetFullPath( System.IO.Path.Combine( tmpdir, "input") )
+-			};
+-                //String cmdLine = "java -classpath " + CLASSPATH + pathSep + tmpdir + " Test " + Path.GetFullPath( Path.Combine( tmpdir, "input" ) );
+-                //System.out.println("execParser: "+cmdLine);
+-
+-                System.Diagnostics.Process process = System.Diagnostics.Process.Start( new System.Diagnostics.ProcessStartInfo( Jvm, '"' + string.Join( "\" \"", args ) + '"' )
+-                {
+-                    UseShellExecute = false,
+-                    CreateNoWindow = true,
+-                    RedirectStandardOutput = true,
+-                    RedirectStandardError = true,
+-                    WorkingDirectory = tmpdir
+-                } );
+-
+-                //Process process =
+-                //    Runtime.getRuntime().exec( args, null, new File( tmpdir ) );
+-                StreamVacuum stdoutVacuum = new StreamVacuum( process.StandardOutput );
+-                StreamVacuum stderrVacuum = new StreamVacuum( process.StandardError );
+-                stdoutVacuum.start();
+-                stderrVacuum.start();
+-                process.WaitForExit();
+-                stdoutVacuum.join();
+-                stderrVacuum.join();
+-                string output = null;
+-                output = stdoutVacuum.ToString();
+-                if ( stderrVacuum.ToString().Length > 0 )
+-                {
+-                    this.stderrDuringParse = stderrVacuum.ToString();
+-                    //Console.Error.WriteLine( "exec stderrVacuum: " + stderrVacuum );
+-                }
+-                return output;
+-            }
+-            catch ( Exception e )
+-            {
+-                Console.Error.WriteLine( "can't exec recognizer" );
+-                e.PrintStackTrace( Console.Error );
+-            }
+-            return null;
+}
+
+protected void checkGrammarSemanticsError( ErrorQueue equeue,
+diff --git a/Antlr3.Test/TestLeftRecursion.cs b/Antlr3.Test/TestLeftRecursion.cs
+new file mode 100644
+index 0000000..7e44782
+--- /dev/null
++++ b/Antlr3.Test/TestLeftRecursion.cs
+@@ -0,0 +1,394 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2011 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2011 Sam Harwell, Pixel Mine, Inc.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace AntlrUnitTests
++{
++    using Microsoft.VisualStudio.TestTools.UnitTesting;
++    using Console = System.Console;
++
++    [TestClass]
++    public class TestLeftRecursion : BaseTest
++    {
++        protected bool debug = false;
++
++        [TestMethod]
++        public void TestSimple()
++        {
++            string grammar =
++                "grammar T;\n" +
++                "s : a {System.out.println($a.text);} ;\n" +
++                "a : a ID\n" +
++                "  | ID" +
++                "  ;\n" +
++                "ID : 'a'..'z'+ ;\n" +
++                "WS : (' '|'\\n') {skip();} ;\n";
++            string found = execParser("T.g", grammar, "TParser", "TLexer",
++                                      "s", "a b c", debug);
++            string expecting = "abc\n";
++            Assert.AreEqual(expecting, found);
++        }
++
++        [TestMethod]
++        public void TestTernaryExpr()
++        {
++            string grammar =
++                "grammar T;\n" +
++                "options {output=AST;}\n" +
++                "e : e '*'^ e" +
++                "  | e '+'^ e" +
++                "  | e '?'<assoc=right>^ e ':'! e" +
++                "  | e '='<assoc=right>^ e" +
++                "  | ID" +
++                "  ;\n" +
++                "ID : 'a'..'z'+ ;\n" +
++                "WS : (' '|'\\n') {skip();} ;\n";
++
++            string[] tests = {
++			"a",			"a",
++			"a+b",			"(+ a b)",
++			"a*b",			"(* a b)",
++			"a?b:c",		"(? a b c)",
++			"a=b=c",		"(= a (= b c))",
++			"a?b+c:d",		"(? a (+ b c) d)",
++			"a?b=c:d",		"(? a (= b c) d)",
++			"a? b?c:d : e",	"(? a (? b c d) e)",
++			"a?b: c?d:e",	"(? a b (? c d e))",
++		};
++
++            RunTests(grammar, tests, "e");
++        }
++
++        [TestMethod]
++        public void TestDeclarationsUsingASTOperators()
++        {
++            string grammar =
++                "grammar T;\n" +
++                "options {output=AST;}\n" +
++                "declarator\n" +
++                "        : declarator '['^ e ']'!\n" +
++                "        | declarator '['^ ']'!\n" +
++                "        | declarator '('^ ')'!\n" +
++                "        | '*'^ declarator\n" + // binds less tight than suffixes
++                "        | '('! declarator ')'!\n" +
++                "        | ID\n" +
++                "        ;\n" +
++                "e : INT ;\n" +
++                "ID : 'a'..'z'+ ;\n" +
++                "INT : '0'..'9'+ ;\n" +
++                "WS : (' '|'\\n') {skip();} ;\n";
++
++            string[] tests = {
++			"a",		"a",
++			"*a",		"(* a)",
++			"**a",		"(* (* a))",
++			"a[3]",		"([ a 3)",
++			"b[]",		"([ b)",
++			"(a)",		"a",
++			"a[]()",	"(( ([ a))",
++			"a[][]",	"([ ([ a))",
++			"*a[]",		"(* ([ a))",
++			"(*a)[]",	"([ (* a))",
++		};
++
++            RunTests(grammar, tests, "declarator");
++        }
++
++        [TestMethod]
++        public void TestDeclarationsUsingRewriteOperators()
++        {
++            string grammar =
++                "grammar T;\n" +
++                "options {output=AST;}\n" +
++                "declarator\n" +
++                "        : declarator '[' e ']' -> ^('[' declarator e)\n" +
++                "        | declarator '[' ']' -> ^('[' declarator)\n" +
++                "        | declarator '(' ')' -> ^('(' declarator)\n" +
++                "        | '*' declarator -> ^('*' declarator) \n" + // binds less tight than suffixes
++                "        | '(' declarator ')' -> declarator\n" +
++                "        | ID -> ID\n" +
++                "        ;\n" +
++                "e : INT ;\n" +
++                "ID : 'a'..'z'+ ;\n" +
++                "INT : '0'..'9'+ ;\n" +
++                "WS : (' '|'\\n') {skip();} ;\n";
++
++            string[] tests = {
++			"a",		"a",
++			"*a",		"(* a)",
++			"**a",		"(* (* a))",
++			"a[3]",		"([ a 3)",
++			"b[]",		"([ b)",
++			"(a)",		"a",
++			"a[]()",	"(( ([ a))",
++			"a[][]",	"([ ([ a))",
++			"*a[]",		"(* ([ a))",
++			"(*a)[]",	"([ (* a))",
++		};
++
++            RunTests(grammar, tests, "declarator");
++        }
++
++        [TestMethod]
++        public void TestExpressionsUsingASTOperators()
++        {
++            string grammar =
++                "grammar T;\n" +
++                "options {output=AST;}\n" +
++                "e : e '.'^ ID\n" +
++                "  | e '.'^ 'this'\n" +
++                "  | '-'^ e\n" +
++                "  | e '*'^ e\n" +
++                "  | e ('+'^|'-'^) e\n" +
++                "  | INT\n" +
++                "  | ID\n" +
++                "  ;\n" +
++                "ID : 'a'..'z'+ ;\n" +
++                "INT : '0'..'9'+ ;\n" +
++                "WS : (' '|'\\n') {skip();} ;\n";
++
++            string[] tests = {
++			"a",		"a",
++			"1",		"1",
++			"a+1",		"(+ a 1)",
++			"a*1",		"(* a 1)",
++			"a.b",		"(. a b)",
++			"a.this",	"(. a this)",
++			"a-b+c",	"(+ (- a b) c)",
++			"a+b*c",	"(+ a (* b c))",
++			"a.b+1",	"(+ (. a b) 1)",
++			"-a",		"(- a)",
++			"-a+b",		"(+ (- a) b)",
++			"-a.b",		"(- (. a b))",
++		};
++
++            RunTests(grammar, tests, "e");
++        }
++
++        [TestMethod]
++        public void TestExpressionsUsingRewriteOperators()
++        {
++            string grammar =
++                "grammar T;\n" +
++                "options {output=AST;}\n" +
++                "e : e '.' ID 				-> ^('.' e ID)\n" +
++                "  | e '.' 'this' 			-> ^('.' e 'this')\n" +
++                "  | '-' e 					-> ^('-' e)\n" +
++                "  | e '*' b=e 				-> ^('*' e $b)\n" +
++                "  | e (op='+'|op='-') b=e	-> ^($op e $b)\n" +
++                "  | INT 					-> INT\n" +
++                "  | ID 					-> ID\n" +
++                "  ;\n" +
++                "ID : 'a'..'z'+ ;\n" +
++                "INT : '0'..'9'+ ;\n" +
++                "WS : (' '|'\\n') {skip();} ;\n";
++
++            string[] tests =
++                {
++                    "a",		"a",
++                    "1",		"1",
++                    "a+1",		"(+ a 1)",
++                    "a*1",		"(* a 1)",
++                    "a.b",		"(. a b)",
++                    "a.this",	"(. a this)",
++                    "a+b*c",	"(+ a (* b c))",
++                    "a.b+1",	"(+ (. a b) 1)",
++                    "-a",		"(- a)",
++                    "-a+b",		"(+ (- a) b)",
++                    "-a.b",		"(- (. a b))",
++                };
++
++            RunTests(grammar, tests, "e");
++        }
++
++        [TestMethod]
++        public void TestExpressionAssociativity()
++        {
++            string grammar =
++                "grammar T;\n" +
++                "options {output=AST;}\n" +
++                "e\n" +
++                "  : e '.'^ ID\n" +
++                "  | '-'^ e\n" +
++                "  | e '^'<assoc=right>^ e\n" +
++                "  | e '*'^ e\n" +
++                "  | e ('+'^|'-'^) e\n" +
++                "  | e ('='<assoc=right>^ |'+='<assoc=right>^) e\n" +
++                "  | INT\n" +
++                "  | ID\n" +
++                "  ;\n" +
++                "ID : 'a'..'z'+ ;\n" +
++                "INT : '0'..'9'+ ;\n" +
++                "WS : (' '|'\\n') {skip();} ;\n";
++
++            string[] tests =
++                {
++                    "a",		"a",
++                    "1",		"1",
++                    "a+1",		"(+ a 1)",
++                    "a*1",		"(* a 1)",
++                    "a.b",		"(. a b)",
++                    "a-b+c",	"(+ (- a b) c)",
++
++                    "a+b*c",	"(+ a (* b c))",
++                    "a.b+1",	"(+ (. a b) 1)",
++                    "-a",		"(- a)",
++                    "-a+b",		"(+ (- a) b)",
++                    "-a.b",		"(- (. a b))",
++                    "a^b^c",	"(^ a (^ b c))",
++                    "a=b=c",	"(= a (= b c))",
++                    "a=b=c+d.e","(= a (= b (+ c (. d e))))",
++                };
++
++            RunTests(grammar, tests, "e");
++        }
++
++        [TestMethod]
++        public void TestJavaExpressions()
++        {
++            // Generates about 7k in bytecodes for generated e_ rule;
++            // Well within the 64k method limit. e_primary compiles
++            // to about 2k in bytecodes.
++            // this is simplified from real java
++            string grammar =
++                "grammar T;\n" +
++                "options {output=AST;}\n" +
++                "expressionList\n" +
++                "    :   e (','! e)*\n" +
++                "    ;\n" +
++                "e   :   '('! e ')'!\n" +
++                "    |   'this' \n" +
++                "    |   'super'\n" +
++                "    |   INT\n" +
++                "    |   ID\n" +
++                "    |   type '.'^ 'class'\n" +
++                "    |   e '.'^ ID\n" +
++                "    |   e '.'^ 'this'\n" +
++                "    |   e '.'^ 'super' '('^ expressionList? ')'!\n" +
++                "    |   e '.'^ 'new'^ ID '('! expressionList? ')'!\n" +
++                "	 |	 'new'^ type ( '(' expressionList? ')'! | (options {k=1;}:'[' e ']'!)+)\n" + // ugly; simplified
++                "    |   e '['^ e ']'!\n" +
++                "    |   '('^ type ')'! e\n" +
++                "    |   e ('++'^ | '--'^)\n" +
++                "    |   e '('^ expressionList? ')'!\n" +
++                "    |   ('+'^|'-'^|'++'^|'--'^) e\n" +
++                "    |   ('~'^|'!'^) e\n" +
++                "    |   e ('*'^|'/'^|'%'^) e\n" +
++                "    |   e ('+'^|'-'^) e\n" +
++                "    |   e ('<' '<' | '>' '>' '>' | '>' '>') e\n" +
++                "    |   e ('<='^ | '>='^ | '>'^ | '<'^) e\n" +
++                "    |   e 'instanceof'^ e\n" +
++                "    |   e ('=='^ | '!='^) e\n" +
++                "    |   e '&'^ e\n" +
++                "    |   e '^'<assoc=right>^ e\n" +
++                "    |   e '|'^ e\n" +
++                "    |   e '&&'^ e\n" +
++                "    |   e '||'^ e\n" +
++                "//    |   e '?' e ':' e\n" +
++                "    |   e ('='<assoc=right>^\n" +
++                "          |'+='<assoc=right>^\n" +
++                "          |'-='<assoc=right>^\n" +
++                "          |'*='<assoc=right>^\n" +
++                "          |'/='<assoc=right>^\n" +
++                "          |'&='<assoc=right>^\n" +
++                "          |'|='<assoc=right>^\n" +
++                "          |'^='<assoc=right>^\n" +
++                "          |'>>='<assoc=right>^\n" +
++                "          |'>>>='<assoc=right>^\n" +
++                "          |'<<='<assoc=right>^\n" +
++                "          |'<<<='<assoc=right>^\n" +
++                "          |'%='<assoc=right>^) e\n" +
++                "    ;\n" +
++                "type: ID \n" +
++                "    | ID '['^ ']'!\n" +
++                "    | 'int'\n" +
++                "	 | 'int' '['^ ']'! \n" +
++                "    ;\n" +
++                "ID : ('a'..'z'|'A'..'Z'|'_'|'$')+;\n" +
++                "INT : '0'..'9'+ ;\n" +
++                "WS : (' '|'\\n') {skip();} ;\n";
++
++            string[] tests =
++                {
++                    "a",		"a",
++                    "1",		"1",
++                    "a+1",		"(+ a 1)",
++                    "a*1",		"(* a 1)",
++                    "a.b",		"(. a b)",
++                    "a-b+c",	"(+ (- a b) c)",
++
++                    "a+b*c",	"(+ a (* b c))",
++                    "a.b+1",	"(+ (. a b) 1)",
++                    "-a",		"(- a)",
++                    "-a+b",		"(+ (- a) b)",
++                    "-a.b",		"(- (. a b))",
++                    "a^b^c",	"(^ a (^ b c))",
++                    "a=b=c",	"(= a (= b c))",
++                    "a=b=c+d.e","(= a (= b (+ c (. d e))))",
++                    "a|b&c",	"(| a (& b c))",
++                    "(a|b)&c",	"(& (| a b) c)",
++
++                    "(T)x",							"(( T x)",
++                    "new A().b",					"(. (new A () b)",
++                    "(T)t.f()",						"(( (( T (. t f)))",
++                    "a.f(x)==T.c",					"(== (( (. a f) x) (. T c))",
++                    "a.f().g(x,1)",					"(( (. (( (. a f)) g) x 1)",
++                    "new T[((n-1) * x) + 1]",		"(new T [ (+ (* (- n 1) x) 1))",
++                };
++
++            RunTests(grammar, tests, "e");
++        }
++
++        public void RunTests(string grammar, string[] tests, string startRule)
++        {
++            rawGenerateAndBuildRecognizer("T.g", grammar, "TParser", "TLexer", debug);
++            WriteRecognizerAndCompile("TParser",
++                                             null,
++                                             "TLexer",
++                                             startRule,
++                                             null,
++                                             true,
++                                             false,
++                                             false,
++                                             debug);
++
++            for (int i = 0; i < tests.Length; i += 2)
++            {
++                string test = tests[i];
++                string expecting = tests[i + 1] + "\n";
++                writeFile(tmpdir, "input", test);
++                string found = execRecognizer();
++                Console.Write(test + " -> " + found);
++                Assert.AreEqual(expecting, found);
++            }
++        }
++    }
++}
+diff --git a/Antlr3.vsmdi b/Antlr3.vsmdi
+index 66aff7c..b384250 100644
+--- a/Antlr3.vsmdi
++++ b/Antlr3.vsmdi
+@@ -339,22 +339,20 @@
+<TestList name="Regions" id="28b56038-623a-47a8-adcb-f5e23303e4a0" parentListId="4adbb104-d28d-4362-8420-a9fefe69c167">
+<TestLinks>
+<TestLink id="876d7948-6933-f9b3-50b4-64fcaa2a90c4" name="TestDefineRegionInSubgroupThatRefsSuper" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="ebe10f2b-e552-998c-a739-7c9cd0bf88ac" name="TestRegionOverrideRefSuperRegion" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="06ae96f5-1358-bcbc-8cad-67123751d37d" name="TestRegion" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="a287f385-a0e1-a876-5742-1a0d5d8942c6" name="TestSuperRegionRefMissingOk" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="384dc7ba-9280-cbf5-ac09-c71cfa196140" name="TestAnonymousTemplateInRegion" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="fb99ea63-735d-3db2-e0dd-f0bde0dbc102" name="TestIndentBeforeRegionIsIgnored" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="3b975616-c6e9-f9a3-5992-22d3a0c18e20" name="TestEmbeddedRegion" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="ebe10f2b-e552-998c-a739-7c9cd0bf88ac" name="TestRegionOverrideRefSuperRegion" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="7a92a140-e129-2408-a75f-46792dd9589f" name="TestAccessDictionaryFromAnonymousTemplateInRegion" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="db36848d-942b-93a5-f9d3-6d04413df643" name="TestDefineRegionInSameGroup" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="812c5bc8-c31f-fe01-ba03-9ae4d34235a4" name="TestAccessDictionaryFromAnonymousTemplate" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="0b09b3e4-fab0-d6b3-22ba-f73ce6919550" name="TestRegionOverrideStripsNewlines" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="25c79e77-a9dc-f77a-c3de-c85280cc9f3a" name="TestRegionOverrideRefSuperRegion3Levels" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="3b975616-c6e9-f9a3-5992-22d3a0c18e20" name="TestEmbeddedRegion" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="5a579f7d-489b-39b2-ae73-8d0002da22d3" name="TestUnknownRegionDefError" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="162a1b20-76d3-f55d-5e9d-8674677e8fc3" name="TestRegionOverrideRefSuperImplicitRegion" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="62229bd7-8afc-5de8-aef1-83e219e7f10d" name="TestDefineRegionInSubgroup2" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="db36848d-942b-93a5-f9d3-6d04413df643" name="TestDefineRegionInSameGroup" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="67214068-43a8-c38e-ba44-18f6f60c3ce9" name="TestCantDefineEmbeddedRegionAgain" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="a287f385-a0e1-a876-5742-1a0d5d8942c6" name="TestSuperRegionRefMissingOk" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="384dc7ba-9280-cbf5-ac09-c71cfa196140" name="TestAnonymousTemplateInRegion" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="9ee02534-0ce6-cb83-de5d-91557fd3473c" name="TestDefineRegionInSubgroup" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="25c79e77-a9dc-f77a-c3de-c85280cc9f3a" name="TestRegionOverrideRefSuperRegion3Levels" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+</TestLinks>
+</TestList>
+<TestList name="Groups" id="2b84a5ba-a6b2-44f6-842f-39aeaec2d3f0" parentListId="4adbb104-d28d-4362-8420-a9fefe69c167">
+@@ -601,20 +599,22 @@
+</TestList>
+<TestList name="Null and Empty Values" id="6f9712eb-43ef-4a76-8810-256978946e66" parentListId="4adbb104-d28d-4362-8420-a9fefe69c167">
+<TestLinks>
+-      <TestLink id="b879fb5e-6a4c-241f-b033-d25d6abf7834" name="TestMissingDictionaryValue" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="4b205f96-4bd5-5463-9f87-e3e31b67ad67" name="TestNullListGetsNoOutput" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="eb219894-31c6-9f63-48d7-0e206eab131b" name="TestTemplateAppliedToNullIsEmpty" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="a9fd36a0-39db-9760-f315-4241ef87bb07" name="TestSeparatorWithNull2ndValue" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="89aa0d63-ef73-deee-d9f2-ef60a65bc79c" name="TestSeparatorWithTwoNullValuesInRow" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="b53fdbbe-0aca-f5f3-de48-91eb01f59e10" name="TestSizeZeroButNonNullListGetsNoOutput" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="8ba621e8-293b-a998-801c-72c36f389d6f" name="TestMissingDictionaryValue3" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="f02cdd70-112c-21ae-7f42-1946190897b8" name="TestTwoNullValues" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="571604ee-fe3a-14db-0f1d-0708af9eb69a" name="TestTemplateAppliedToMissingValueIsEmpty" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="2908b4b8-d608-33f8-8fb0-f1d9a663363e" name="TestSeparatorEmittedForEmptyIteratorValue2" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="a9fd36a0-39db-9760-f315-4241ef87bb07" name="TestSeparatorWithNull2ndValue" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="20fe5cd5-5b2c-7c20-416b-77ac0f3a78fe" name="TestSeparatorWithNullLastValue" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="b879fb5e-6a4c-241f-b033-d25d6abf7834" name="TestMissingDictionaryValue" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="48f9e9db-1eb9-82c7-5c18-ce6094bb8b1e" name="TestEmptyListGetsNoOutput" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="1ae32124-051b-b79c-98fc-082f42926874" name="TestSeparatorWithNullFirstValue" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="8ba621e8-293b-a998-801c-72c36f389d6f" name="TestMissingDictionaryValue3" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="b6339730-7ad5-f5f9-cbb4-f9e9452740ad" name="TestNullListItemNotCountedForIteratorIndex" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="48f9e9db-1eb9-82c7-5c18-ce6094bb8b1e" name="TestEmptyListGetsNoOutput" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="b53fdbbe-0aca-f5f3-de48-91eb01f59e10" name="TestSizeZeroButNonNullListGetsNoOutput" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="eb219894-31c6-9f63-48d7-0e206eab131b" name="TestTemplateAppliedToNullIsEmpty" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="89aa0d63-ef73-deee-d9f2-ef60a65bc79c" name="TestSeparatorWithTwoNullValuesInRow" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="4b205f96-4bd5-5463-9f87-e3e31b67ad67" name="TestNullListGetsNoOutput" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="bd126d9a-f4e9-da4f-dbba-9de28ca09b02" name="TestSeparatorEmittedForEmptyIteratorValue" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="923f1fcb-961d-e3db-d2c6-bf232a92ed48" name="TestMissingDictionaryValue2" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="f02cdd70-112c-21ae-7f42-1946190897b8" name="TestTwoNullValues" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="20fe5cd5-5b2c-7c20-416b-77ac0f3a78fe" name="TestSeparatorWithNullLastValue" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+</TestLinks>
+</TestList>
+<TestList name="DFA conversion" id="700cc8dd-23d3-4b5a-a523-d9fbf43ecde2" parentListId="8c43106b-9dc1-4907-a29f-aa66a61bf5b6">
+@@ -1325,22 +1325,21 @@
+<TestLink id="5c5cec61-7c49-f809-d2fb-3c94a34a2250" name="TestEmptyExprAsFirstLineGetsNoOutput" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="518f077a-01a0-859c-bad4-6d9cc4dc16c6" name="TestTrimJustOneWSInSubtemplates" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="722dd057-8dff-88de-0503-d387477ef592" name="TestNestedIFOnMultipleLines" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="a67a5f7c-cf32-17a9-1f6c-0d18a04039a2" name="TestNoSeparatorEmittedForSkippedIteratorValue" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="0ca8b7d9-2b9b-8c08-c39e-a8049d033e83" name="TestIFOnMultipleLines" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="da44ec84-3231-5e31-7962-48e7ae5967c4" name="TestEmptyLineWithIndent" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="d43522e6-c8fb-2d8d-f633-59397527244d" name="TestTrimmedSubtemplates" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="02ef4ada-1c34-45fc-8299-2c45d1af8e17" name="TestTrimmedSubtemplatesArgs" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="381b9f68-4786-86e4-bd9c-aec96ff93f1a" name="TestIFElseExpr" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="a12ca9c8-7b16-f42c-fc00-8a0e86317cd9" name="TestNewlineNormalizationInTemplateStringPC" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="0ca8b7d9-2b9b-8c08-c39e-a8049d033e83" name="TestIFOnMultipleLines" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="65f0ce63-e1c3-17e8-dc8f-3060bd34287c" name="TestSizeZeroOnLineByItselfGetsNoOutput" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="3b435148-b47a-ded9-ad30-c384adacb8b0" name="TestLineBreak2" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="62f7b058-a127-bd85-bc8d-3e7c29ca7799" name="TestSizeZeroOnLineWithIndentGetsNoOutput" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="e6d78fab-cdbc-0532-f489-1d5cff2ed90d" name="TestLineBreakNoWhiteSpace" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="6753404b-e7d9-9259-1d80-4d46a2fff330" name="TestTrimNewlineInSubtemplates" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="4dea8820-cb56-aaa7-1b7f-62ef923e6fb3" name="TestEmptyLine" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="d8c5b2a5-acc2-03f1-a439-a5d612999144" name="TestIndentedIFExpr" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="3e730bac-3553-4968-86b8-a261d95a9690" name="TestLineBreak" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="e6d78fab-cdbc-0532-f489-1d5cff2ed90d" name="TestLineBreakNoWhiteSpace" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="a12ca9c8-7b16-f42c-fc00-8a0e86317cd9" name="TestNewlineNormalizationInTemplateStringPC" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="bcde37da-23f9-163e-ca6a-5ecf50ee9f01" name="TestCommentOnlyLineGivesNoOutput2" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="6753404b-e7d9-9259-1d80-4d46a2fff330" name="TestTrimNewlineInSubtemplates" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="455413a0-af02-59bc-bc41-43e60d3f5f2a" name="TestCommentOnlyLineGivesNoOutput" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="577f5745-e9b8-cc96-174b-b0f7e7434c11" name="TestLeaveNewlineOnEndInSubtemplates" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="50435d35-e6fc-faf5-7506-803336700c31" name="TestNewlineNormalizationInAttribute" storage="antlr4.test.stringtemplate\bin\debug\antlr4.test.stringtemplate.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+diff --git a/Antlr3/Antlr3.csproj b/Antlr3/Antlr3.csproj
+index fce3691..6cdbd61 100644
+--- a/Antlr3/Antlr3.csproj
++++ b/Antlr3/Antlr3.csproj
+@@ -77,6 +77,9 @@
+<Compile Include="Analysis\Transition.cs" />
+<Compile Include="Codegen\CodeGenerator.cs" />
+<Compile Include="Codegen\Target.cs" />
++    <Compile Include="Grammars\LeftRecursiveRuleWalker.g3.cs">
++      <DependentUpon>LeftRecursiveRuleWalker.g3</DependentUpon>
++    </Compile>
+<Compile Include="Misc\Barrier.cs" />
+<Compile Include="Misc\BitSet.cs" />
+<Compile Include="Misc\Interval.cs" />
+@@ -89,6 +92,7 @@
+<Compile Include="Tool\ErrorManager.cs" />
+<Compile Include="Tool\Grammar.cs" />
+<Compile Include="Tool\GrammarAST.cs" />
++    <Compile Include="Tool\LeftRecursiveRuleAnalyzer.cs" />
+<Compile Include="Tool\Message.cs" />
+<Compile Include="Tool\Rule.cs" />
+<Compile Include="Tool\ToolMessage.cs" />
+@@ -506,7 +510,14 @@
+<Link>Codegen\Templates\Ruby\ST.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
++    <EmbeddedResource Include="..\..\..\antlr\main\tool\src\main\resources\org\antlr\codegen\templates\LeftRecursiveRules.stg">
++      <Link>Codegen\Templates\LeftRecursiveRules.stg</Link>
++      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
++    </EmbeddedResource>
+<None Include="app.config" />
++    <Antlr3 Include="Grammars\LeftRecursiveRuleWalker.g3">
++      <Generator>MSBuild:Compile</Generator>
++    </Antlr3>
+<None Include="Key.snk" />
+</ItemGroup>
+<ItemGroup>
+diff --git a/Antlr3/AntlrTool.cs b/Antlr3/AntlrTool.cs
+index cc32633..3de776b 100644
+--- a/Antlr3/AntlrTool.cs
++++ b/Antlr3/AntlrTool.cs
+@@ -567,42 +567,44 @@ namespace Antlr3
+continue;
+}
+
+-                    Grammar grammar = GetRootGrammar( grammarFileName );
++                    Grammar rootGrammar = GetRootGrammar( grammarFileName );
+// we now have all grammars read in as ASTs
+// (i.e., root and all delegates)
+-                    grammar.composite.AssignTokenTypes();
+-                    grammar.composite.DefineGrammarSymbols();
+-                    grammar.composite.CreateNFAs();
++                    rootGrammar.composite.AssignTokenTypes();
++                    rootGrammar.composite.TranslateLeftRecursiveRules();
++                    rootGrammar.AddRulesForSyntacticPredicates();
++                    rootGrammar.composite.DefineGrammarSymbols();
++                    rootGrammar.composite.CreateNFAs();
+
+-                    GenerateRecognizer( grammar );
++                    GenerateRecognizer( rootGrammar );
+
+if ( PrintGrammar )
+{
+-                        grammar.PrintGrammar( Console.Out );
++                        rootGrammar.PrintGrammar( Console.Out );
+}
+
+if (Report)
+{
+-                        GrammarReport2 greport = new GrammarReport2(grammar);
++                        GrammarReport2 greport = new GrammarReport2(rootGrammar);
+Console.WriteLine(greport.ToString());
+}
+
+if ( Profile )
+{
+-                        GrammarReport report = new GrammarReport(grammar);
++                        GrammarReport report = new GrammarReport(rootGrammar);
+Stats.WriteReport( GrammarReport.GRAMMAR_STATS_FILENAME,
+report.ToNotifyString() );
+}
+
+// now handle the lexer if one was created for a merged spec
+-                    string lexerGrammarStr = grammar.GetLexerGrammar();
++                    string lexerGrammarStr = rootGrammar.GetLexerGrammar();
+//JSystem.@out.println("lexer grammar:\n"+lexerGrammarStr);
+-                    if ( grammar.type == GrammarType.Combined && lexerGrammarStr != null )
++                    if ( rootGrammar.type == GrammarType.Combined && lexerGrammarStr != null )
+{
+-                        lexerGrammarFileName = grammar.ImplicitlyGeneratedLexerFileName;
++                        lexerGrammarFileName = rootGrammar.ImplicitlyGeneratedLexerFileName;
+try
+{
+-                            TextWriter w = GetOutputFile( grammar, lexerGrammarFileName );
++                            TextWriter w = GetOutputFile( rootGrammar, lexerGrammarFileName );
+w.Write( lexerGrammarStr );
+w.Close();
+}
+@@ -624,12 +626,13 @@ namespace Antlr3
+FileInfo lexerGrammarFullFile = new FileInfo( System.IO.Path.Combine( GetFileDirectory( lexerGrammarFileName ), lexerGrammarFileName ) );
+lexerGrammar.FileName = lexerGrammarFullFile.ToString();
+
+-                            lexerGrammar.ImportTokenVocabulary( grammar );
++                            lexerGrammar.ImportTokenVocabulary( rootGrammar );
+lexerGrammar.ParseAndBuildAST( sr );
+
+sr.Close();
+
+lexerGrammar.composite.AssignTokenTypes();
++                            lexerGrammar.AddRulesForSyntacticPredicates();
+lexerGrammar.composite.DefineGrammarSymbols();
+lexerGrammar.composite.CreateNFAs();
+
+diff --git a/Antlr3/Codegen/CodeGenerator.cs b/Antlr3/Codegen/CodeGenerator.cs
+index 4e0c411..8d1287b 100644
+--- a/Antlr3/Codegen/CodeGenerator.cs
++++ b/Antlr3/Codegen/CodeGenerator.cs
+@@ -116,7 +116,7 @@ namespace Antlr3.Codegen
+
+public static readonly int DefaultMaxSwitchCaseLabels = 300;
+public static readonly int DefaultMinSwitchAlts = 3;
+-        public static readonly int DefaultMaxAcyclicDfaStatesInline = 10;
++        public static readonly int DefaultMaxAcyclicDfaStatesInline = 50;
+
+public static int MaxSwitchCaseLabels = DefaultMaxSwitchCaseLabels;
+public static int MinSwitchAlts = DefaultMinSwitchAlts;
+diff --git a/Antlr3/Grammars/ANTLR.g3 b/Antlr3/Grammars/ANTLR.g3
+index 2bb0825..34fe615 100644
+--- a/Antlr3/Grammars/ANTLR.g3
++++ b/Antlr3/Grammars/ANTLR.g3
+@@ -73,6 +73,8 @@ tokens
+TREE='tree';
+
+RULE;
++	PREC_RULE;
++	RECURSIVE_RULE_REF; // flip recursive RULE_REF to RECURSIVE_RULE_REF in prec rules
+BLOCK;
+OPTIONAL;
+CLOSURE;
+@@ -104,6 +106,7 @@ tokens
+BACKTRACK_SEMPRED; // auto backtracking mode syn pred converted to sempred
+FRAGMENT='fragment';
+DOT;
++	REWRITES;
+}
+
+@lexer::header {
+@@ -220,7 +223,7 @@ delegateGrammar
+
+tokensSpec
+:	TOKENS^
+-			( tokenSpec	)+
++			tokenSpec*
+RCURLY!
+;
+
+@@ -246,7 +249,7 @@ rule
+@init
+{
+GrammarAST eob=null;
+-	int start = ((CommonToken)LT(1)).TokenIndex;
++	CommonToken start = (CommonToken)LT(1);
+int startLine = LT(1).Line;
+}
+:
+@@ -271,7 +274,7 @@ rule
+scopes=ruleScopeSpec
+(ruleActions)?
+COLON
+-		altList[$optionsSpec.opts]
++		ruleAltList[$optionsSpec.opts]
+SEMI
+( ex=exceptionGroup )?
+->	^(	RULE[$ruleName.start, "rule"]
+@@ -284,11 +287,12 @@ rule
+optionsSpec?
+$scopes
+ruleActions?
+-				altList
++				ruleAltList
+$ex?
+EOR[$SEMI,"<end-of-rule>"])
+)
+{
++		$tree.SetTreeEnclosingRuleNameDeeply(currentRuleName);
+((GrammarAST)$tree.GetChild(0)).BlockOptions = $optionsSpec.opts;
+}
+;
+@@ -312,6 +316,32 @@ ruleScopeSpec
+-> ^(SCOPE[$start,"scope"] ruleActions? ACTION? idList*)
+;
+
++ruleAltList[IDictionary<string, object> opts]
++@init
++{
++	GrammarAST blkRoot = null;
++	GrammarAST save = currentBlockAST;
++}
++	:	( -> BLOCK[input.LT(-1),"BLOCK"] )
++		{
++			blkRoot = (GrammarAST)$tree.GetChild(0);
++			blkRoot.BlockOptions = $opts;
++			currentBlockAST = blkRoot;
++		}
++		(	a1=alternative r1=rewrite
++			{if (LA(1)==OR||(LA(2)==QUESTION||LA(2)==PLUS||LA(2)==STAR)) PrefixWithSynPred($a1.tree);}
++			-> $a1 $r1?
++		)
++		(	(	OR a2=alternative r2=rewrite
++				{if (LA(1)==OR||(LA(2)==QUESTION||LA(2)==PLUS||LA(2)==STAR)) PrefixWithSynPred($a2.tree);}
++				-> $ruleAltList $a2 $r2?
++			)+
++		|
++		)
++		-> ^({blkRoot} $ruleAltList EOB["<end-of-block>"])
++	;
++finally { currentBlockAST = save; }
++
+/** Build #(BLOCK ( #(ALT ...) EOB )+ ) */
+block
+@init
+@@ -351,35 +381,12 @@ block
+;
+finally { currentBlockAST = save; }
+
+-altList[IDictionary<string, object> opts]
+-@init
+-{
+-	GrammarAST blkRoot = null;
+-	GrammarAST save = currentBlockAST;
+-}
+-	:	( -> BLOCK[input.LT(-1),"BLOCK"] )
+-		{
+-			blkRoot = (GrammarAST)$tree.GetChild(0);
+-			blkRoot.BlockOptions = $opts;
+-			currentBlockAST = blkRoot;
+-		}
+-		(	a1=alternative r1=rewrite
+-			{if (LA(1)==OR||(LA(2)==QUESTION||LA(2)==PLUS||LA(2)==STAR)) PrefixWithSynPred($a1.tree);}
+-			-> $a1 $r1?
+-		)
+-		(	OR a2=alternative r2=rewrite
+-			{if (LA(1)==OR||(LA(2)==QUESTION||LA(2)==PLUS||LA(2)==STAR)) PrefixWithSynPred($a2.tree);}
+-			-> $altList $a2 $r2?
+-		)*
+-		-> ^({blkRoot} $altList EOB["<end-of-block>"])
+-	;
+-finally { currentBlockAST = save; }
+-
++// ALT and EOA have indexes tracking start/stop of entire alt
+alternative
+:	element+
+-		-> ^(ALT[$start,"ALT"] element+ EOA["<end-of-alt>"])
++		-> ^(ALT[$start,"ALT"] element+ EOA[input.LT(-1),"<end-of-alt>"])
+|	// epsilon alt
+-		-> ^(ALT[$start,"ALT"] EPSILON[input.LT(-1),"epsilon"] EOA["<end-of-alt>"])
++		-> ^(ALT[$start,"ALT"] EPSILON[input.LT(-1),"epsilon"] EOA[input.LT(-1),"<end-of-alt>"])
+;
+
+exceptionGroup
+@@ -588,7 +595,7 @@ id
+rewrite
+:	rewrite_with_sempred*
+REWRITE rewrite_alternative
+-		-> rewrite_with_sempred* ^(REWRITE rewrite_alternative)
++		-> ^(REWRITES rewrite_with_sempred* ^(REWRITE rewrite_alternative))
+|
+;
+
+diff --git a/Antlr3/Grammars/ANTLRParserHelper.cs b/Antlr3/Grammars/ANTLRParserHelper.cs
+index c1fd6e4..d6f9f49 100644
+--- a/Antlr3/Grammars/ANTLRParserHelper.cs
++++ b/Antlr3/Grammars/ANTLRParserHelper.cs
+@@ -307,8 +307,10 @@ namespace Antlr3.Grammars
+return p;
+}
+
+-        public virtual GrammarAST CreateSimpleRuleAST( string name, GrammarAST block, bool fragment )
++        public static GrammarAST CreateSimpleRuleAST( string name, GrammarAST block, bool fragment )
+{
++            var adaptor = new grammar_Adaptor(null);
++
+GrammarAST modifier = null;
+if ( fragment )
+{
+diff --git a/Antlr3/Grammars/ANTLRTreePrinter.g3 b/Antlr3/Grammars/ANTLRTreePrinter.g3
+index a462b6d..1a988c4 100644
+--- a/Antlr3/Grammars/ANTLRTreePrinter.g3
++++ b/Antlr3/Grammars/ANTLRTreePrinter.g3
+@@ -155,7 +155,7 @@ delegateGrammars
+;
+
+tokensSpec
+-	:	^( TOKENS ( tokenSpec )+ )
++	:	^(TOKENS tokenSpec*)
+;
+
+tokenSpec
+@@ -164,7 +164,7 @@ tokenSpec
+;
+
+rules
+-	:	( rule )+
++	:	( rule | precRule )+
+;
+
+rule
+@@ -188,6 +188,27 @@ rule
+)
+;
+
++precRule
++	:	^(	PREC_RULE id=ID
++			(modifier)?
++			{@out($id.text);}
++			^(ARG (arg=ARG_ACTION {@out("["+$arg.text+"]");} )? )
++			^(RET (ret=ARG_ACTION {@out(" returns ["+$ret.text+"]");} )? )
++			(throwsSpec)?
++			(optionsSpec)?
++			(ruleScopeSpec)?
++			(ruleAction)*
++			{@out(" :");}
++			{
++				if ( input.LA(5) == NOT || input.LA(5) == ASSIGN )
++					@out(" ");
++			}
++			b=block[false]
++			(exceptionGroup)?
++			EOR {@out(";\n");}
++		)
++	;
++
+ruleAction
+:	^(AMPERSAND id=ID a=ACTION )
+{if ( showActions ) @out("@"+$id.text+"{"+$a.text+"}");}
+@@ -285,7 +306,8 @@ rewrite_template
+;
+
+rewrite
+-	:	(single_rewrite)*
++	:	^(REWRITES (single_rewrite)*)
++	|
+;
+
+element
+diff --git a/Antlr3/Grammars/AssignTokenTypesWalker.g3 b/Antlr3/Grammars/AssignTokenTypesWalker.g3
+index 0ec5b8a..5898001 100644
+--- a/Antlr3/Grammars/AssignTokenTypesWalker.g3
++++ b/Antlr3/Grammars/AssignTokenTypesWalker.g3
+@@ -178,7 +178,7 @@ delegateGrammars
+;
+
+tokensSpec
+-	:	^( TOKENS tokenSpec+ )
++	:	^(TOKENS tokenSpec*)
+;
+
+tokenSpec
+@@ -196,19 +196,23 @@ rules
+;
+
+rule
+-	:	^(	RULE id=ID {currentRuleName=$id.text;}
+-			(m=modifier)?
+-			^(ARG (ARG_ACTION)?)
+-			^(RET (ARG_ACTION)?)
+-			(throwsSpec)?
+-			(optionsSpec)?
+-			(ruleScopeSpec)?
+-			( ^(AMPERSAND .*) )*
+-			b=block
+-			(exceptionGroup)?
+-			EOR
+-			{TrackTokenRule($id,$m.start,$b.start);}
+-		)
++	:	^(RULE ruleBody)
++	|	^(PREC_RULE ruleBody)
++	;
++
++ruleBody
++	:	id=ID {currentRuleName=$id.text;}
++		(m=modifier)?
++		^(ARG (ARG_ACTION)?)
++		^(RET (ARG_ACTION)?)
++		(throwsSpec)?
++		(optionsSpec)?
++		(ruleScopeSpec)?
++		( ^(AMPERSAND .*) )*
++		b=block
++		(exceptionGroup)?
++		EOR
++		{TrackTokenRule($id,$m.start,$b.start);}
+;
+
+modifier
+@@ -252,7 +256,8 @@ finallyClause
+;
+
+rewrite
+-	:	( ^(REWRITE .*) )*
++	:	^(REWRITES ( ^(REWRITE .*) )* )
++	|
+;
+
+element
+diff --git a/Antlr3/Grammars/CodeGenTreeWalker.g3 b/Antlr3/Grammars/CodeGenTreeWalker.g3
+index 2e4218c..d8e3c12 100644
+--- a/Antlr3/Grammars/CodeGenTreeWalker.g3
++++ b/Antlr3/Grammars/CodeGenTreeWalker.g3
+@@ -147,6 +147,7 @@ rules[StringTemplate recognizerST]
+}
+}
+|	^(RULE .*)
++			|	^(PREC_RULE .*) // ignore
+)
+{{
+if ( input.LA(1) == RULE )
+@@ -340,10 +341,11 @@ options { k=1; }
+// add the rewrite code as just another element in the alt :)
+// (unless it's a " -> ..." rewrite
+// ( -> ... )
++					GrammarAST firstRewriteAST = (GrammarAST)$rew.start.FindFirstType(REWRITE);
+bool etc =
+-						$rew.start.Type==REWRITE &&
+-						$rew.start.GetChild(0)!=null &&
+-						$rew.start.GetChild(0).Type==ETC;
++						$rew.start.Type==REWRITES &&
++						firstRewriteAST.GetChild(0)!=null &&
++						firstRewriteAST.GetChild(0).Type==ETC;
+if ( $rew.code!=null && !etc )
+{
+$alt.code.SetAttribute("rew", $rew.code);
+@@ -389,10 +391,10 @@ setBlock returns [StringTemplate code=null]
+setcode = GetTokenElementST("matchSet", "set", $s, null, null);
+}
+setcode.SetAttribute("elementIndex", i);
+-			if ( grammar.type!=GrammarType.Lexer )
+-			{
+-				generator.GenerateLocalFollow($s,"set",currentRuleName,i);
+-			}
++			//if ( grammar.type!=GrammarType.Lexer )
++			//{
++			//	generator.GenerateLocalFollow($s,"set",currentRuleName,i);
++			//}
+setcode.SetAttribute("s",
+generator.GenSetExpr(templates,$s.SetValue,1,false));
+StringTemplate altcode=templates.GetInstanceOf("alt");
+@@ -443,22 +445,6 @@ alternative returns [StringTemplate code]
+if ( state.backtracking == 0 )
+{
+$code = templates.GetInstanceOf("alt");
+-		/*
+-		// TODO: can we use Rule.altsWithRewrites???
+-		if ( blockNestingLevel==RULE_BLOCK_NESTING_LEVEL ) {
+-			GrammarAST aRewriteNode = #alternative.findFirstType(REWRITE);
+-			if ( grammar.buildAST() &&
+-				 (aRewriteNode!=null||
+-				 (#alternative.getNextSibling()!=null &&
+-				  #alternative.getNextSibling().getType()==REWRITE)) )
+-			{
+-				currentAltHasASTRewrite = true;
+-			}
+-			else {
+-				currentAltHasASTRewrite = false;
+-			}
+-		}
+-		*/
+if ( blockNestingLevel==RULE_BLOCK_NESTING_LEVEL && grammar.BuildAST )
+{
+Rule r = grammar.GetRule(currentRuleName);
+@@ -969,7 +955,7 @@ rewrite returns [StringTemplate code=null]
+{
+if ( state.backtracking == 0 )
+{
+-		if ( $start.Type==REWRITE )
++		if ( $start.Type==REWRITES )
+{
+if ( generator.grammar.BuildTemplate )
+{
+@@ -1014,27 +1000,30 @@ rewrite returns [StringTemplate code=null]
+}
+}
+}
+-	:	(
+-			{rewriteRuleRefs = new HashSet<object>();}
+-			^( r=REWRITE (pred=SEMPRED)? alt=rewrite_alternative )
+-			{
+-				rewriteBlockNestingLevel = OUTER_REWRITE_NESTING_LEVEL;
+-				IList predChunks = null;
+-				if ( $pred!=null )
++	:	^(	REWRITES
++			(
++				{rewriteRuleRefs = new HashSet<object>();}
++				^( r=REWRITE (pred=SEMPRED)? alt=rewrite_alternative)
+{
+-					//predText = #pred.getText();
+-					predChunks = generator.TranslateAction(currentRuleName,$pred);
++					rewriteBlockNestingLevel = OUTER_REWRITE_NESTING_LEVEL;
++					IList predChunks = null;
++					if ( $pred!=null )
++					{
++						//predText = #pred.getText();
++						predChunks = generator.TranslateAction(currentRuleName,$pred);
++					}
++					string description =
++						grammar.GrammarTreeToString($r,false);
++					description = generator.target.GetTargetStringLiteralFromString(description);
++					$code.SetAttribute("alts.{pred,alt,description}",
++									  predChunks,
++									  alt,
++									  description);
++					pred=null;
+}
+-				string description =
+-					grammar.GrammarTreeToString($r,false);
+-				description = generator.target.GetTargetStringLiteralFromString(description);
+-				$code.SetAttribute("alts.{pred,alt,description}",
+-								  predChunks,
+-								  alt,
+-								  description);
+-				pred=null;
+-			}
+-		)*
++			)*
++		)
++	|
+;
+
+rewrite_block[string blockTemplateName] returns [StringTemplate code=null]
+diff --git a/Antlr3/Grammars/CodeGenTreeWalkerHelper.cs b/Antlr3/Grammars/CodeGenTreeWalkerHelper.cs
+index 94ce7da..dbcef53 100644
+--- a/Antlr3/Grammars/CodeGenTreeWalkerHelper.cs
++++ b/Antlr3/Grammars/CodeGenTreeWalkerHelper.cs
+@@ -252,26 +252,20 @@ namespace Antlr3.Grammars
+protected IList<string> GetTokenTypesAsTargetLabels( HashSet<GrammarAST> refs )
+{
+if ( refs == null || refs.Count == 0 )
+-            {
+return null;
+-            }
++
+IList<string> labels = new List<string>( refs.Count );
+foreach ( GrammarAST t in refs )
+{
+string label;
+-                if ( t.Type == ANTLRParser.RULE_REF )
+-                {
+-                    label = t.Text;
+-                }
+-                else if ( t.Type == ANTLRParser.LABEL )
++                if ( t.Type == ANTLRParser.RULE_REF || t.Type == ANTLRParser.TOKEN_REF || t.Type == ANTLRParser.LABEL)
+{
+label = t.Text;
+}
+else
+{
+// must be char or string literal
+-                    label = generator.GetTokenTypeAsTargetLabel(
+-                                grammar.GetTokenType( t.Text ) );
++                    label = generator.GetTokenTypeAsTargetLabel(grammar.GetTokenType(t.Text));
+}
+labels.Add( label );
+}
+diff --git a/Antlr3/Grammars/DefineGrammarItemsWalker.g3 b/Antlr3/Grammars/DefineGrammarItemsWalker.g3
+index eafe49b..7af2748 100644
+--- a/Antlr3/Grammars/DefineGrammarItemsWalker.g3
++++ b/Antlr3/Grammars/DefineGrammarItemsWalker.g3
+@@ -133,7 +133,7 @@ delegateGrammars
+;
+
+tokensSpec
+-	:	^( TOKENS ( tokenSpec )+ )
++	:	^(TOKENS tokenSpec*)
+;
+
+tokenSpec
+@@ -147,7 +147,7 @@ tokenSpec
+;
+
+rules
+-	:	rule+
++	:	(rule | ^(PREC_RULE .*))+
+;
+
+rule
+@@ -291,28 +291,28 @@ blockAction
+;
+
+alternative
+-@init
+-{
+-	if ( state.backtracking == 0 )
+-	{
+-		if ( grammar.type!=GrammarType.Lexer && grammar.GetOption("output")!=null && blockLevel==1 )
+-		{
+-			GrammarAST aRewriteNode = $start.FindFirstType(REWRITE); // alt itself has rewrite?
+-			GrammarAST rewriteAST = (GrammarAST)$start.Parent.GetChild($start.ChildIndex + 1);
+-			// we have a rewrite if alt uses it inside subrule or this alt has one
+-			// but don't count -> ... rewrites, which mean "do default auto construction"
+-			if ( aRewriteNode!=null||
+-				 (rewriteAST!=null &&
+-				  rewriteAST.Type==REWRITE &&
+-				  rewriteAST.GetChild(0)!=null &&
+-				  rewriteAST.GetChild(0).Type!=ETC) )
+-			{
+-				Rule r = grammar.GetRule(currentRuleName);
+-				r.TrackAltsWithRewrites($start,this.outerAltNum);
+-			}
+-		}
+-	}
+-}
++//@init
++//{
++//	if ( state.backtracking == 0 )
++//	{
++//		if ( grammar.type!=GrammarType.Lexer && grammar.GetOption("output")!=null && blockLevel==1 )
++//		{
++//			GrammarAST aRewriteNode = $start.FindFirstType(REWRITE); // alt itself has rewrite?
++//			GrammarAST rewriteAST = (GrammarAST)$start.Parent.GetChild($start.ChildIndex + 1);
++//			// we have a rewrite if alt uses it inside subrule or this alt has one
++//			// but don't count -> ... rewrites, which mean "do default auto construction"
++//			if ( aRewriteNode!=null||
++//				 (firstRewriteAST!=null &&
++//				  firstRewriteAST.Type==REWRITE &&
++//				  firstRewriteAST.GetChild(0)!=null &&
++//				  firstRewriteAST.GetChild(0).Type!=ETC) )
++//			{
++//				Rule r = grammar.GetRule(currentRuleName);
++//				r.TrackAltsWithRewrites($start,this.outerAltNum);
++//			}
++//		}
++//	}
++//}
+:	^( ALT (element)+ EOA )
+;
+
+@@ -497,24 +497,27 @@ ast_suffix
+rewrite
+@init
+{
++	// track top level REWRITES node, store stuff there
+currentRewriteRule = $start; // has to execute during backtracking
+if ( state.backtracking == 0 )
+{
+if ( grammar.BuildAST )
+-			$start.rewriteRefsDeep = new HashSet<GrammarAST>();
++			currentRewriteRule.rewriteRefsDeep = new HashSet<GrammarAST>(GrammarAST.TreeTokenEqualityComparer.Default);
+}
+}
+-	:	(
+-			^( REWRITE (pred=SEMPRED)? rewrite_alternative )
+-			{
+-				if ( $pred != null )
++	:	^(	REWRITES
++			(	^( REWRITE (pred=SEMPRED)? rewrite_alternative )
+{
+-					$pred.outerAltNum = this.outerAltNum;
+-					TrackInlineAction($pred);
++					if ( $pred != null )
++					{
++						$pred.outerAltNum = this.outerAltNum;
++						TrackInlineAction($pred);
++					}
+}
+-			}
+-		)*
+-		//{System.out.println("-> refs = "+#rewrite.rewriteRefs);}
++			)*
++		)
++		//{System.out.println("-> refs = "+currentRewriteRule.rewriteRefsDeep);}
++	|
+;
+
+rewrite_block
+@@ -525,8 +528,8 @@ rewrite_block
+{
+// don't do if guessing
+currentRewriteBlock=$start; // pts to BLOCK node
+-		currentRewriteBlock.rewriteRefsShallow = new HashSet<GrammarAST>();
+-		currentRewriteBlock.rewriteRefsDeep = new HashSet<GrammarAST>();
++		currentRewriteBlock.rewriteRefsShallow = new HashSet<GrammarAST>(GrammarAST.TreeTokenEqualityComparer.Default);
++		currentRewriteBlock.rewriteRefsDeep = new HashSet<GrammarAST>(GrammarAST.TreeTokenEqualityComparer.Default);
+}
+}
+:   ^( BLOCK rewrite_alternative EOB )
+@@ -588,6 +591,8 @@ rewrite_atom
+currentRewriteBlock.rewriteRefsShallow.Add($start);
+currentRewriteBlock.rewriteRefsDeep.Add($start);
+}
++
++			//System.out.println("adding "+$start.Text+" to "+currentRewriteRule.Text);
+currentRewriteRule.rewriteRefsDeep.Add($start);
+}
+}
+diff --git a/Antlr3/Grammars/DefineGrammarItemsWalkerHelper.cs b/Antlr3/Grammars/DefineGrammarItemsWalkerHelper.cs
+index ee982cd..f90e8eb 100644
+--- a/Antlr3/Grammars/DefineGrammarItemsWalkerHelper.cs
++++ b/Antlr3/Grammars/DefineGrammarItemsWalkerHelper.cs
+@@ -36,6 +36,7 @@ namespace Antlr3.Grammars
+using Antlr.Runtime.JavaExtensions;
+using Antlr.Runtime.Tree;
+using Antlr3.Tool;
++    using System.Linq;
+
+partial class DefineGrammarItemsWalker
+{
+@@ -49,20 +50,8 @@ namespace Antlr3.Grammars
+
+public int CountAltsForRule( CommonTree t )
+{
+-            return CountNodes( ALT, t );
+-        }
+-        int CountNodes( int nodeType, CommonTree tree )
+-        {
+-            int i = ( tree.Type == nodeType ) ? 1 : 0;
+-
+-            var children = tree.Children;
+-            if ( children != null )
+-            {
+-                foreach ( CommonTree child in children )
+-                    i += CountNodes( nodeType, child );
+-            }
+-
+-            return i;
++            CommonTree block = (CommonTree)t.GetFirstChildWithType(BLOCK);
++            return block.Children.Count(i => i.Type == ALT);
+}
+
+protected void Finish()
+diff --git a/Antlr3/Grammars/LeftRecursiveRuleWalker.g3 b/Antlr3/Grammars/LeftRecursiveRuleWalker.g3
+new file mode 100644
+index 0000000..6815451
+--- /dev/null
++++ b/Antlr3/Grammars/LeftRecursiveRuleWalker.g3
+@@ -0,0 +1,251 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2011 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2011 Sam Harwell, Pixel Mine, Inc.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++/** Find left-recursive rules */
++tree grammar LeftRecursiveRuleWalker;
++
++options {
++    language=CSharp3;
++	tokenVocab=ANTLR;
++    ASTLabelType=GrammarAST;
++}
++
++@namespace{Antlr3.Grammars}
++
++@header
++{
++using Antlr3.Analysis;
++using Antlr3.Misc;
++using Antlr3.Tool;
++using Antlr3.Extensions;
++using BitSet = Antlr.Runtime.BitSet;
++using DFA = Antlr.Runtime.DFA;
++using Antlr.Runtime.JavaExtensions;
++}
++
++optionsSpec
++	:	^(OPTIONS option+)
++	;
++
++option
++	:	^(ASSIGN ID optionValue)
++	;
++
++optionValue
++	:	ID
++	|	STRING_LITERAL
++	|	CHAR_LITERAL
++	|	INT
++	;
++
++charSetElement
++	:	CHAR_LITERAL
++	|	^(OR CHAR_LITERAL CHAR_LITERAL)
++	|	^(RANGE CHAR_LITERAL CHAR_LITERAL)
++	;
++
++public
++rec_rule[Grammar g] returns [bool isLeftRec]
++@init
++{
++	grammar = g;
++	outerAlt = 1;
++}
++	:	^(	r=RULE id=ID {ruleName=$id.Text;}
++			modifier?
++			^(ARG ARG_ACTION?)
++			^(RET ARG_ACTION?)
++			optionsSpec?
++			ruleScopeSpec?
++			(^(AMPERSAND .*))*
++			ruleBlock {$isLeftRec = $ruleBlock.isLeftRec;}
++			exceptionGroup?
++			EOR
++		)
++		{if ($ruleBlock.isLeftRec) $r.Type = PREC_RULE;}
++	;
++
++modifier
++	:	'protected'
++	|	'public'
++	|	'private'
++	|	'fragment'
++	;
++
++ruleScopeSpec
++ 	:	^('scope' ACTION? ID*)
++ 	;
++
++ruleBlock returns [bool isLeftRec]
++@init{bool lr=false; this.numAlts = $start.ChildCount;}
++	:	^(	BLOCK
++			optionsSpec?
++			(	outerAlternative
++				{if ($outerAlternative.isLeftRec) $isLeftRec = true;}
++				rewrite?
++				{outerAlt++;}
++			)+
++			EOB
++		)
++	;
++
++block
++    :   ^(  BLOCK
++            optionsSpec?
++            ( ^(ALT element+ EOA) rewrite? )+
++            EOB
++         )
++    ;
++
++/** An alt is either prefix, suffix, binary, or ternary operation or "other" */
++outerAlternative returns [bool isLeftRec]
++@init
++{
++GrammarAST rew=(GrammarAST)$start.getNextSibling();
++if (rew.Type != REWRITES)
++	rew = null;
++}
++    :   (binaryMultipleOp)=> binaryMultipleOp
++                             {BinaryAlt($start, rew, outerAlt); $isLeftRec=true;}
++    |   (binary)=>           binary
++                             {BinaryAlt($start, rew, outerAlt); $isLeftRec=true;}
++    |   (ternary)=>          ternary
++                             {TernaryAlt($start, rew, outerAlt); $isLeftRec=true;}
++    |   (prefix)=>           prefix
++                             {PrefixAlt($start, rew, outerAlt);}
++    |   (suffix)=>           suffix
++                             {SuffixAlt($start, rew, outerAlt); $isLeftRec=true;}
++    |   ^(ALT element+ EOA) // "other" case
++                             {OtherAlt($start, rew, outerAlt);}
++    ;
++
++binary
++	:	^( ALT recurseNoLabel op=token recurse EOA ) {SetTokenPrec($op.t, outerAlt);}
++	;
++
++binaryMultipleOp
++	:	^( ALT recurseNoLabel ^( BLOCK ( ^( ALT op=token EOA {SetTokenPrec($op.t, outerAlt);} ) )+ EOB ) recurse EOA )
++	;
++
++ternary
++	:	^( ALT recurseNoLabel op=token recurse token recurse EOA ) {SetTokenPrec($op.t, outerAlt);}
++	;
++
++prefix : ^( ALT {SetTokenPrec((GrammarAST)input.LT(2), outerAlt);} ({!((CommonTree)input.LT(1)).Text.Equals(ruleName)}? element)+ recurse EOA ) ;
++
++suffix : ^( ALT recurseNoLabel {SetTokenPrec((GrammarAST)input.LT(1), outerAlt);} element+  EOA ) ;
++
++recurse
++	:	^(ASSIGN ID recurseNoLabel)
++	|	^(PLUS_ASSIGN ID recurseNoLabel)
++	|	recurseNoLabel
++	;
++
++recurseNoLabel : {((CommonTree)input.LT(1)).Text.Equals(ruleName)}? RULE_REF;
++
++/*
++elementNotRecursiveRule
++    :   {_t.findFirstType(RULE_REF)!=null && _t.findFirstType(RULE_REF).getText().equals(ruleName)}?
++        e:element
++    ;
++*/
++
++token returns [GrammarAST t=null]
++	:	^(ASSIGN ID s=token {$t = $s.t;})
++	|	^(PLUS_ASSIGN ID s=token {$t = $s.t;})
++	|	^(ROOT s=token {$t = $s.t;})
++	|	^(BANG s=token {$t = $s.t;})
++	|	a=CHAR_LITERAL      {$t = $a;}
++	|	b=STRING_LITERAL    {$t = $b;}
++	|	c=TOKEN_REF         {$t = $c;}
++	;
++
++exceptionGroup
++	:	exceptionHandler+ finallyClause?
++	|	finallyClause
++    ;
++
++exceptionHandler
++	:	^('catch' ARG_ACTION ACTION)
++	;
++
++finallyClause
++	:	^('finally' ACTION)
++	;
++
++rewrite
++	:	^(REWRITES ( ^( REWRITE SEMPRED? (^(ALT .*)|^(TEMPLATE .*)|ACTION|ETC) ) )* )
++	;
++
++element
++	:	^(ROOT element)
++	|	^(BANG element)
++	|	atom
++	|	^(NOT element)
++	|	^(RANGE atom atom)
++	|	^(ASSIGN ID element)
++	|	^(PLUS_ASSIGN ID element)
++	|	ebnf
++	|	tree_
++	|	^(SYNPRED block)
++	|	FORCED_ACTION
++	|	ACTION
++	|	SEMPRED
++	|	SYN_SEMPRED
++	|	BACKTRACK_SEMPRED
++	|	GATED_SEMPRED
++	|	EPSILON
++	;
++
++ebnf:   block
++    |   ^( OPTIONAL block )
++    |   ^( CLOSURE block )
++    |   ^( POSITIVE_CLOSURE block )
++    ;
++
++tree_
++	:	^(TREE_BEGIN element+)
++	;
++
++atom
++	:	^(RULE_REF ARG_ACTION?)
++	|	^(TOKEN_REF ARG_ACTION?)
++	|	CHAR_LITERAL
++	|	STRING_LITERAL
++	|	WILDCARD
++	|	^(DOT ID atom) // scope override on rule
++	;
++
++ast_suffix
++	:	ROOT
++	|	BANG
++	;
+diff --git a/Antlr3/Grammars/LeftRecursiveRuleWalker.g3.cs b/Antlr3/Grammars/LeftRecursiveRuleWalker.g3.cs
+new file mode 100644
+index 0000000..dc26cc0
+--- /dev/null
++++ b/Antlr3/Grammars/LeftRecursiveRuleWalker.g3.cs
+@@ -0,0 +1,89 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2011 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2011 Sam Harwell, Pixel Mine, Inc.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace Antlr3.Grammars
++{
++    using Antlr3.Tool;
++    using Antlr.Runtime;
++
++    partial class LeftRecursiveRuleWalker
++    {
++        protected Grammar grammar;
++        private string ruleName;
++        private int outerAlt; // which outer alt of rule?
++        public int numAlts;  // how many alts for this rule total?
++
++        public override void ReportError(RecognitionException ex)
++        {
++            IToken token = null;
++            if (ex is MismatchedTokenException)
++            {
++                token = ((MismatchedTokenException)ex).Token;
++            }
++            else if (ex is NoViableAltException)
++            {
++                token = ((NoViableAltException)ex).Token;
++            }
++
++            ErrorManager.SyntaxError(
++                ErrorManager.MSG_SYNTAX_ERROR,
++                grammar,
++                token,
++                "assign.types: " + ex.ToString(),
++                ex);
++        }
++
++        public virtual void SetTokenPrec(GrammarAST t, int alt)
++        {
++        }
++
++        public virtual void BinaryAlt(GrammarAST altTree, GrammarAST rewriteTree, int alt)
++        {
++        }
++
++        public virtual void TernaryAlt(GrammarAST altTree, GrammarAST rewriteTree, int alt)
++        {
++        }
++
++        public virtual void PrefixAlt(GrammarAST altTree, GrammarAST rewriteTree, int alt)
++        {
++        }
++
++        public virtual void SuffixAlt(GrammarAST altTree, GrammarAST rewriteTree, int alt)
++        {
++        }
++
++        public virtual void OtherAlt(GrammarAST altTree, GrammarAST rewriteTree, int alt)
++        {
++        }
++    }
++}
+diff --git a/Antlr3/Grammars/TreeToNFAConverter.g3 b/Antlr3/Grammars/TreeToNFAConverter.g3
+index 53a63a4..b835701 100644
+--- a/Antlr3/Grammars/TreeToNFAConverter.g3
++++ b/Antlr3/Grammars/TreeToNFAConverter.g3
+@@ -81,7 +81,7 @@ grammarSpec
+;
+
+rules
+-	: rule+
++	:	(rule | ^(PREC_RULE .*))+
+;
+
+rule
+@@ -203,16 +203,19 @@ finallyClause
+;
+
+rewrite
+-	:	(
+-			{
+-				if ( grammar.GetOption("output")==null )
++	:	^(	REWRITES
++			(
+{
+-					ErrorManager.GrammarError(ErrorManager.MSG_REWRITE_OR_OP_WITH_NO_OUTPUT_OPTION,
+-											  grammar, $start.Token, currentRuleName);
++					if ( grammar.GetOption("output")==null )
++					{
++						ErrorManager.GrammarError(ErrorManager.MSG_REWRITE_OR_OP_WITH_NO_OUTPUT_OPTION,
++												  grammar, $start.Token, currentRuleName);
++					}
+}
+-			}
+-			^(REWRITE .*)
+-		)*
++				^(REWRITE .*)
++			)*
++		)
++	|
+;
+
+element returns [StateCluster g=null]
+diff --git a/Antlr3/Tool/CompositeGrammar.cs b/Antlr3/Tool/CompositeGrammar.cs
+index 6b21186..08bb045 100644
+--- a/Antlr3/Tool/CompositeGrammar.cs
++++ b/Antlr3/Tool/CompositeGrammar.cs
+@@ -409,6 +409,23 @@ namespace Antlr3.Tool
+}
+}
+
++        public virtual void TranslateLeftRecursiveRules()
++        {
++            IList<Grammar> grammars = delegateGrammarTreeRoot.GetPostOrderedGrammarList();
++            for (int i = 0; grammars != null && i < grammars.Count; i++)
++            {
++                Grammar g = (Grammar)grammars[i];
++                if (!(g.type == GrammarType.Parser || g.type == GrammarType.Combined))
++                    continue;
++
++                foreach (GrammarAST r in g.Tree.FindAllType(ANTLRParser.RULE))
++                {
++                    if (Rule.GetRuleType(r.GetChild(0).Text) == RuleType.Parser)
++                        g.TranslateLeftRecursiveRule(r);
++                }
++            }
++        }
++
+public virtual void DefineGrammarSymbols()
+{
+delegateGrammarTreeRoot.TrimLexerImportsIntoCombined();
+@@ -429,22 +446,16 @@ namespace Antlr3.Tool
+public virtual void CreateNFAs()
+{
+if ( ErrorManager.DoNotAttemptAnalysis() )
+-            {
+return;
+-            }
++
+IList<Grammar> grammars = delegateGrammarTreeRoot.GetPostOrderedGrammarList();
+-            IList<string> names = new List<string>();
+-            for ( int i = 0; i < grammars.Count; i++ )
+-            {
+-                Grammar g = (Grammar)grammars[i];
+-                names.Add( g.name );
+-            }
+//System.Console.Out.WriteLine( "### createNFAs for composite; grammars: " + names );
+for ( int i = 0; grammars != null && i < grammars.Count; i++ )
+{
+Grammar g = (Grammar)grammars[i];
+g.CreateRuleStartAndStopNFAStates();
+}
++
+for ( int i = 0; grammars != null && i < grammars.Count; i++ )
+{
+Grammar g = (Grammar)grammars[i];
+diff --git a/Antlr3/Tool/ErrorManager.cs b/Antlr3/Tool/ErrorManager.cs
+index 0796eeb..7904a06 100644
+--- a/Antlr3/Tool/ErrorManager.cs
++++ b/Antlr3/Tool/ErrorManager.cs
+@@ -155,7 +155,8 @@ namespace Antlr3.Tool
+public const int MSG_AST_OP_IN_ALT_WITH_REWRITE = 165;
+public const int MSG_WILDCARD_AS_ROOT = 166;
+public const int MSG_CONFLICTING_OPTION_IN_TREE_FILTER = 167;
+-
++        public const int MSG_ILLEGAL_OPTION_VALUE = 168;
++        public const int MSG_ALL_OPS_NEED_SAME_ASSOC = 169;
+
+// GRAMMAR WARNINGS
+public const int MSG_GRAMMAR_NONDETERMINISM = 200; // A predicts alts 1,2
+diff --git a/Antlr3/Tool/Grammar.cs b/Antlr3/Tool/Grammar.cs
+index 44e059a..ef8f89e 100644
+--- a/Antlr3/Tool/Grammar.cs
++++ b/Antlr3/Tool/Grammar.cs
+@@ -161,7 +161,7 @@ namespace Antlr3.Tool
+*  including whitespace tokens etc...  I use this to extract
+*  lexer rules from combined grammars.
+*/
+-        private Antlr.Runtime.CommonTokenStream tokenBuffer;
++        internal Antlr.Runtime.CommonTokenStream tokenBuffer;
+public const string IGNORE_STRING_IN_GRAMMAR_FILE_NAME = "__";
+public const string AUTO_GENERATED_TOKEN_NAME_PREFIX = "T__";
+
+@@ -310,6 +310,7 @@ namespace Antlr3.Tool
+"class",
+"type",
+"text",
++                "assoc",
+};
+
+public const string defaultTokenOption = "type";
+@@ -363,9 +364,9 @@ namespace Antlr3.Tool
+/** The unique set of all rule references in any rule; set of tree node
+*  objects so two refs to same rule can exist but at different line/position.
+*/
+-        protected internal HashSet<GrammarAST> ruleRefs = new HashSet<GrammarAST>();
++        protected internal HashSet<GrammarAST> ruleRefs = new HashSet<GrammarAST>(GrammarAST.TreeTokenEqualityComparer.Default);
+
+-        protected internal HashSet<GrammarAST> scopedRuleRefs = new HashSet<GrammarAST>();
++        protected internal HashSet<GrammarAST> scopedRuleRefs = new HashSet<GrammarAST>(GrammarAST.TreeTokenEqualityComparer.Default);
+
+/** The unique set of all token ID references in any rule */
+protected internal HashSet<IToken> tokenIDRefs = new HashSet<IToken>();
+@@ -377,7 +378,7 @@ namespace Antlr3.Tool
+
+/** A list of all rules that are in any left-recursive cycle.  There
+*  could be multiple cycles, but this is a flat list of all problematic
+-         *  rules.
++         *  rules. This is stuff we couldn't refactor to precedence rule.
+*/
+protected internal HashSet<Rule> leftRecursiveRules;
+
+@@ -396,6 +397,18 @@ namespace Antlr3.Tool
+*/
+protected List<KeyValuePair<string, GrammarAST>> nameToSynpredASTMap;
+
++        /** Each left-recursive precedence rule must define precedence array
++         *  for binary operators like:
++         *
++         *  	static int[] e_prec = new int[tokenNames.length];
++         *  	static {
++         *  		e_prec[75] = 1;
++         *  	}
++         *  Track and we push into parser later; this is computed
++         *  early when we look for prec rules.
++         */
++        public List<string> precRuleInitCodeBlocks = new List<string>();
++
+/** At least one rule has memoize=true */
+public bool atLeastOneRuleMemoizes;
+
+@@ -512,7 +525,7 @@ namespace Antlr3.Tool
+/** Track decisions with syn preds specified for reporting.
+*  This is the a set of BLOCK type AST nodes.
+*/
+-        public HashSet<GrammarAST> blocksWithSynPreds = new HashSet<GrammarAST>();
++        public HashSet<GrammarAST> blocksWithSynPreds = new HashSet<GrammarAST>(GrammarAST.TreeTokenEqualityComparer.Default);
+
+/** Track decisions that actually use the syn preds in the DFA.
+*  Computed during NFA to DFA conversion.
+@@ -530,7 +543,7 @@ namespace Antlr3.Tool
+/** Track decisions with syn preds specified for reporting.
+*  This is the a set of BLOCK type AST nodes.
+*/
+-        public HashSet<GrammarAST> blocksWithSemPreds = new HashSet<GrammarAST>();
++        public HashSet<GrammarAST> blocksWithSemPreds = new HashSet<GrammarAST>(GrammarAST.TreeTokenEqualityComparer.Default);
+
+/** Track decisions that actually use the syn preds in the DFA. */
+public HashSet<DFA> decisionsWhoseDFAsUsesSemPreds = new HashSet<DFA>();
+@@ -1012,7 +1025,6 @@ namespace Antlr3.Tool
+_discard = (int[])tokenKinds.Clone();
+}
+
+-            #region TokenSource Members
+public IToken NextToken()
+{
+IToken next = _source.NextToken();
+@@ -1021,6 +1033,7 @@ namespace Antlr3.Tool
+
+return next;
+}
++
+public string SourceName
+{
+get
+@@ -1028,6 +1041,7 @@ namespace Antlr3.Tool
+return _source.SourceName;
+}
+}
++
+public string[] TokenNames
+{
+get
+@@ -1035,7 +1049,6 @@ namespace Antlr3.Tool
+return _source.TokenNames;
+}
+}
+-            #endregion
+}
+
+public virtual void ParseAndBuildAST( TextReader r )
+@@ -1089,22 +1102,17 @@ namespace Antlr3.Tool
+}
+
+grammarTree = result.Tree;
++            if (grammarTree != null && AntlrTool.internalOption_PrintGrammarTree)
++                Console.WriteLine("grammar tree: " + grammarTree.ToStringTree());
++
++            grammarTree.SetUnknownTokenBoundaries();
++
+FileName = lexer.Filename; // the lexer #src might change name
+if ( grammarTree == null || grammarTree.FindFirstType( ANTLRParser.RULE ) == null )
+{
+ErrorManager.Error( ErrorManager.MSG_NO_RULES, FileName );
+return;
+}
+-
+-            // Get syn pred rules and add to existing tree
+-            IList<GrammarAST> synpredRules =
+-                GetArtificialRulesForSyntacticPredicates( parser,
+-                                                         nameToSynpredASTMap );
+-            for ( int i = 0; i < synpredRules.Count; i++ )
+-            {
+-                GrammarAST rAST = (GrammarAST)synpredRules[i];
+-                grammarTree.AddChild( rAST );
+-            }
+}
+
+protected virtual void DealWithTreeFilterMode()
+@@ -1147,6 +1155,38 @@ namespace Antlr3.Tool
+}
+}
+
++        public void TranslateLeftRecursiveRule(GrammarAST ruleAST)
++        {
++            var input = new Antlr.Runtime.Tree.CommonTreeNodeStream(ruleAST);
++            LeftRecursiveRuleAnalyzer leftRecursiveRuleWalker = new LeftRecursiveRuleAnalyzer(input, this, ruleAST.enclosingRuleName);
++            bool isLeftRec = false;
++            try
++            {
++                //System.out.println("TESTING "+ruleAST.enclosingRuleName);
++                isLeftRec = leftRecursiveRuleWalker.rec_rule(this);
++            }
++            catch (RecognitionException re)
++            {
++                ErrorManager.Error(ErrorManager.MSG_BAD_AST_STRUCTURE, re);
++            }
++
++            if (!isLeftRec)
++                return;
++
++            List<string> rules = new List<string>();
++            rules.Add(leftRecursiveRuleWalker.GetArtificialPrecStartRule());
++            rules.Add(leftRecursiveRuleWalker.GetArtificialOpPrecRule());
++            rules.Add(leftRecursiveRuleWalker.GetArtificialPrimaryRule());
++            foreach (string r in rules)
++            {
++                GrammarAST t = ParseArtificialRule(r);
++                AddRule(grammarTree, t);
++                //System.out.println(t.toStringTree());
++            }
++
++            //precRuleInitCodeBlocks.add( precRuleWalker.getOpPrecJavaCode() );
++        }
++
+public virtual void DefineGrammarSymbols()
+{
+if ( Tool.internalOption_PrintGrammarTree )
+@@ -1299,71 +1339,120 @@ namespace Antlr3.Tool
+}
+//JSystem.@out.println("tokens rule: "+matchTokenRuleST.toString());
+
+-            //ANTLRLexer lexer = new ANTLRLexer( new StringReader( matchTokenRuleST.toString() ) );
+-            //lexer.setTokenObjectClass( "antlr.TokenWithIndex" );
+-            //TokenStreamRewriteEngine tokbuf =
+-            //    new TokenStreamRewriteEngine( lexer );
+-            //tokbuf.discard( ANTLRParser.WS );
+-            //tokbuf.discard( ANTLRParser.ML_COMMENT );
+-            //tokbuf.discard( ANTLRParser.COMMENT );
+-            //tokbuf.discard( ANTLRParser.SL_COMMENT );
+-            //ANTLRParser parser = new ANTLRParser( tokbuf );
+-            ANTLRLexer lexer = new ANTLRLexer( new Antlr.Runtime.ANTLRStringStream( matchTokenRuleST.ToString() ) );
+-            TokenStreamRewriteEngine tokbuf = new TokenStreamRewriteEngine( lexer );
+-            tokbuf.Discard( ANTLRParser.WS, ANTLRParser.ML_COMMENT, ANTLRParser.COMMENT, ANTLRParser.SL_COMMENT );
+-            ANTLRParser parser = new ANTLRParser( new Antlr.Runtime.CommonTokenStream( tokbuf ) );
++            ////ANTLRLexer lexer = new ANTLRLexer( new StringReader( matchTokenRuleST.toString() ) );
++            ////lexer.setTokenObjectClass( "antlr.TokenWithIndex" );
++            ////TokenStreamRewriteEngine tokbuf =
++            ////    new TokenStreamRewriteEngine( lexer );
++            ////tokbuf.discard( ANTLRParser.WS );
++            ////tokbuf.discard( ANTLRParser.ML_COMMENT );
++            ////tokbuf.discard( ANTLRParser.COMMENT );
++            ////tokbuf.discard( ANTLRParser.SL_COMMENT );
++            ////ANTLRParser parser = new ANTLRParser( tokbuf );
++            //ANTLRLexer lexer = new ANTLRLexer( new Antlr.Runtime.ANTLRStringStream( matchTokenRuleST.ToString() ) );
++            //TokenStreamRewriteEngine tokbuf = new TokenStreamRewriteEngine( lexer );
++            //tokbuf.Discard( ANTLRParser.WS, ANTLRParser.ML_COMMENT, ANTLRParser.COMMENT, ANTLRParser.SL_COMMENT );
++            //ANTLRParser parser = new ANTLRParser( new Antlr.Runtime.CommonTokenStream( tokbuf ) );
++
++            //parser.Grammar = this;
++            //parser.GrammarType = GrammarType.Lexer;
++            //ANTLRParser.rule_return result = null;
++            //try
++            //{
++            //    result = parser.rule();
++            //    if ( Tool.internalOption_PrintGrammarTree )
++            //    {
++            //        Console.Out.WriteLine( "Tokens rule: " + ( (ITree)result.Tree ).ToStringTree() );
++            //    }
++            //    GrammarAST p = grammarAST;
++            //    while ( p.Type != ANTLRParser.LEXER_GRAMMAR )
++            //    {
++            //        p = (GrammarAST)p.getNextSibling();
++            //    }
++            //    p.AddChild( (Antlr.Runtime.Tree.ITree)result.Tree );
++            //}
++            //catch ( Exception e )
++            //{
++            //    ErrorManager.Error( ErrorManager.MSG_ERROR_CREATING_ARTIFICIAL_RULE,
++            //                       e );
++            //}
++            //return (GrammarAST)result.Tree;
+
++            GrammarAST r = ParseArtificialRule(matchTokenRuleST.ToString());
++            AddRule(grammarAST, r);
++            //addRule((GrammarAST)parser.getAST());
++            //return (GrammarAST)parser.getAST();
++            return r;
++        }
++
++        public GrammarAST ParseArtificialRule(string ruleText)
++        {
++            ANTLRLexer lexer = new ANTLRLexer(new Antlr.Runtime.ANTLRStringStream(ruleText));
++            TokenStreamRewriteEngine tokbuf = new TokenStreamRewriteEngine(lexer);
++            tokbuf.Discard(ANTLRParser.WS, ANTLRParser.ML_COMMENT, ANTLRParser.COMMENT, ANTLRParser.SL_COMMENT);
++            ANTLRParser parser = new ANTLRParser(new Antlr.Runtime.CommonTokenStream(tokbuf));
+parser.Grammar = this;
+-            parser.GrammarType = GrammarType.Lexer;
+-            ANTLRParser.rule_return result = null;
++            parser.GrammarType = this.type;
+try
+{
+-                result = parser.rule();
+-                if ( Tool.internalOption_PrintGrammarTree )
+-                {
+-                    Console.Out.WriteLine( "Tokens rule: " + ( (ITree)result.Tree ).ToStringTree() );
+-                }
+-                GrammarAST p = grammarAST;
+-                while ( p.Type != ANTLRParser.LEXER_GRAMMAR )
+-                {
+-                    p = (GrammarAST)p.getNextSibling();
+-                }
+-                p.AddChild( (Antlr.Runtime.Tree.ITree)result.Tree );
++                ANTLRParser.rule_return result = parser.rule();
++                return result.Tree;
+}
+-            catch ( Exception e )
++            catch (Exception e)
++            {
++                ErrorManager.Error(ErrorManager.MSG_ERROR_CREATING_ARTIFICIAL_RULE, e);
++                return null;
++            }
++        }
++
++        public void AddRule(GrammarAST grammarTree, GrammarAST t)
++        {
++            GrammarAST p = null;
++            for (int i = 0; i < grammarTree.ChildCount; i++)
+{
+-                ErrorManager.Error( ErrorManager.MSG_ERROR_CREATING_ARTIFICIAL_RULE,
+-                                   e );
++                p = (GrammarAST)grammarTree.GetChild(i);
++                if (p == null || p.Type == ANTLRParser.RULE || p.Type == ANTLRParser.PREC_RULE)
++                    break;
+}
+-            return (GrammarAST)result.Tree;
++
++            if (p != null)
++                grammarTree.AddChild(t);
+}
+
+/** for any syntactic predicates, we need to define rules for them; they will get
+*  defined automatically like any other rule. :)
+*/
+[CLSCompliant(false)]
+-        protected virtual IList<GrammarAST> GetArtificialRulesForSyntacticPredicates(ANTLRParser parser,
+-                                                                IEnumerable<KeyValuePair<string, GrammarAST>> nameToSynpredASTMap )
++        protected virtual IList<GrammarAST> GetArtificialRulesForSyntacticPredicates(IEnumerable<KeyValuePair<string, GrammarAST>> nameToSynpredASTMap)
+{
+IList<GrammarAST> rules = new List<GrammarAST>();
+-            if ( nameToSynpredASTMap == null )
++            if (nameToSynpredASTMap == null)
+{
+return rules;
+}
++
+bool isLexer = grammarTree.Type == ANTLRParser.LEXER_GRAMMAR;
+-            foreach ( var synpred in nameToSynpredASTMap )
++            foreach (var synpred in nameToSynpredASTMap)
+{
+string synpredName = synpred.Key;
+-                GrammarAST fragmentAST = (GrammarAST)synpred.Value;
+-                GrammarAST ruleAST =
+-                    parser.CreateSimpleRuleAST( synpredName,
+-                                               fragmentAST,
+-                                               isLexer );
+-                rules.Add( ruleAST );
++                GrammarAST fragmentAST = synpred.Value;
++                GrammarAST ruleAST = ANTLRParser.CreateSimpleRuleAST(synpredName, fragmentAST, isLexer);
++                rules.Add(ruleAST);
+}
++
+return rules;
+}
+
++        public void AddRulesForSyntacticPredicates()
++        {
++            // Get syn pred rules and add to existing tree
++            IList<GrammarAST> synpredRules = GetArtificialRulesForSyntacticPredicates(nameToSynpredASTMap);
++            for (int i = 0; i < synpredRules.Count; i++)
++            {
++                GrammarAST rAST = synpredRules[i];
++                grammarTree.AddChild(rAST);
++            }
++        }
++
+#if false
+/** Walk the list of options, altering this Grammar object according
+*  to any I recognize.
+@@ -2394,6 +2483,9 @@ namespace Antlr3.Tool
+{
+string labelName = el.Text;
+Rule enclosingRule = GetLocallyDefinedRule( el.enclosingRuleName );
++                    if (enclosingRule == null)
++                        continue;
++
+LabelElementPair pair = enclosingRule.GetLabel( labelName );
+/*
+// if tree grammar and we have a wildcard, only notice it
+diff --git a/Antlr3/Tool/GrammarAST.cs b/Antlr3/Tool/GrammarAST.cs
+index 3338898..a73b9a8 100644
+--- a/Antlr3/Tool/GrammarAST.cs
++++ b/Antlr3/Tool/GrammarAST.cs
+@@ -42,10 +42,11 @@ namespace Antlr3.Tool
+using CommonToken = Antlr.Runtime.CommonToken;
+using DFA = Antlr3.Analysis.DFA;
+using IIntSet = Antlr3.Misc.IIntSet;
++    using Interval = Antlr3.Misc.Interval;
+using IToken = Antlr.Runtime.IToken;
+using ITree = Antlr.Runtime.Tree.ITree;
++    using Math = System.Math;
+using NFAState = Antlr3.Analysis.NFAState;
+-    using Obsolete = System.ObsoleteAttribute;
+using StringTemplate = Antlr3.ST.StringTemplate;
+
+/** Grammars are first converted to ASTs using this class and then are
+@@ -134,6 +135,8 @@ namespace Antlr3.Tool
+*/
+public StringTemplate code;
+
++        private string _text;
++
+public GrammarAST()
+{
+}
+@@ -220,15 +223,16 @@ namespace Antlr3.Tool
+public virtual void Initialize( int i, string s )
+{
+Token = new CommonToken( i, s );
++            Token.TokenIndex = -1;
+}
+
+public virtual void Initialize( ITree ast )
+{
+GrammarAST t = ( (GrammarAST)ast );
+this.Token = t.Token;
+-            this.enclosingRuleName = t.enclosingRuleName;
+this.TokenStartIndex = ast.TokenStartIndex;
+this.TokenStopIndex = ast.TokenStopIndex;
++            this.enclosingRuleName = t.enclosingRuleName;
+this.setValue = t.setValue;
+this.blockOptions = t.blockOptions;
+this.outerAltNum = t.outerAltNum;
+@@ -237,6 +241,11 @@ namespace Antlr3.Tool
+public virtual void Initialize( IToken token )
+{
+this.Token = token;
++            if (Token != null)
++            {
++                TokenStartIndex = token.TokenIndex;
++                TokenStopIndex = TokenStartIndex;
++            }
+}
+
+/** Save the option key/value pair and process it; return the key
+@@ -319,16 +328,21 @@ namespace Antlr3.Tool
+{
+get
+{
++                if (_text != null)
++                    return _text;
++
+if ( Token == null )
+return string.Empty;
+
+return Token.Text;
+}
++
+set
+{
+-                Token.Text = value;
++                _text = value;
+}
+}
++
+public override int Type
+{
+get
+@@ -338,11 +352,13 @@ namespace Antlr3.Tool
+
+return Token.Type;
+}
++
+set
+{
+Token.Type = value;
+}
+}
++
+public override int Line
+{
+get
+@@ -452,30 +468,25 @@ namespace Antlr3.Tool
+return Descendants( this ).OfType<GrammarAST>().FirstOrDefault( child => child.Type == ttype );
+}
+
+-        /** Make nodes unique based upon Token so we can add them to a Set; if
+-         *  not a GrammarAST, check type.
+-         */
+-        public override bool Equals( object ast )
++        public List<GrammarAST> FindAllType(int ttype)
+{
+-            if ( this == ast )
+-            {
+-                return true;
+-            }
+-
+-            GrammarAST t = (GrammarAST)ast;
+-            if ( t == null )
+-            {
+-                ITree a = ast as ITree;
+-                return a != null && Type == a.Type;
+-            }
+-
+-            return Token.Line == t.Line &&
+-                   Token.CharPositionInLine == t.CharPositionInLine;
++            List<GrammarAST> nodes = new List<GrammarAST>();
++            FindAllTypeImpl(ttype, nodes);
++            return nodes;
+}
+
+-        public override int GetHashCode()
++        public void FindAllTypeImpl(int ttype, List<GrammarAST> nodes)
+{
+-            return ObjectExtensions.ShiftPrimeXOR( Token.Line, Token.CharPositionInLine );
++            // check this node (the root) first
++            if (this.Type == ttype)
++                nodes.Add(this);
++
++            // check children
++            for (int i = 0; i < ChildCount; i++)
++            {
++                GrammarAST child = (GrammarAST)GetChild(i);
++                child.FindAllTypeImpl(ttype, nodes);
++            }
+}
+
+/** See if tree has exact token types and structure; no text */
+@@ -492,9 +503,8 @@ namespace Antlr3.Tool
+public static GrammarAST Dup( ITree t )
+{
+if ( t == null )
+-            {
+return null;
+-            }
++
+GrammarAST dup_t = new GrammarAST();
+dup_t.Initialize( t );
+return dup_t;
+@@ -539,6 +549,24 @@ namespace Antlr3.Tool
+return d;
+}
+
++        public static GrammarAST DupTree(GrammarAST t)
++        {
++            if (t == null)
++                return null;
++
++            // make copy of root
++            GrammarAST root = Dup(t);
++
++            // copy all children of root.
++            for (int i = 0; i < t.ChildCount; i++)
++            {
++                GrammarAST child = (GrammarAST)t.GetChild(i);
++                root.AddChild(DupTree(child));
++            }
++
++            return root;
++        }
++
+public void SetTreeEnclosingRuleNameDeeply( string rname )
+{
+enclosingRuleName = rname;
+@@ -550,5 +578,114 @@ namespace Antlr3.Tool
+{
+throw new System.NotImplementedException();
+}
++
++        /** Track start/stop token for subtree root created for a rule.
++         *  Only works with Tree nodes.  For rules that match nothing,
++         *  seems like this will yield start=i and stop=i-1 in a nil node.
++         *  Might be useful info so I'll not force to be i..i.
++         */
++        public void SetTokenBoundaries(IToken startToken, IToken stopToken)
++        {
++            if (startToken != null)
++                startIndex = startToken.TokenIndex;
++            if (stopToken != null)
++                stopIndex = stopToken.TokenIndex;
++        }
++
++        ///** For every node in this subtree, make sure it's start/stop token's
++        // *  are set.  Walk depth first, visit bottom up.  Only updates nodes
++        // *  with at least one token index < 0.
++        // */
++        //public new Interval SetUnknownTokenBoundaries()
++        //{
++        //    //		System.out.println(getText()+": START");
++        //    if (ChildCount == 0)
++        //    {
++        //        if (startIndex < 0 || stopIndex < 0)
++        //        {
++        //            startIndex = stopIndex = Token.TokenIndex;
++        //            //System.out.println(getText()+": STOP "+startIndex);
++        //        }
++
++        //        return new Interval(startIndex, stopIndex);
++        //    }
++
++        //    GrammarAST t = (GrammarAST)this.GetChild(0);
++        //    int min = Token.TokenIndex >= 0 ? Token.TokenIndex : int.MaxValue;
++        //    int max = -1;
++        //    while (t != null)
++        //    {
++        //        Interval I = t.SetUnknownTokenBoundaries();
++        //        if (I.a != -1)
++        //            min = Math.Min(min, I.a);
++
++        //        max = Math.Max(max, I.b);
++        //        t = (GrammarAST)t.getNextSibling();
++        //    }
++
++        //    if (startIndex < 0 || min < startIndex)
++        //        startIndex = min;
++
++        //    if (stopIndex < 0 || max > stopIndex)
++        //        stopIndex = max;
++
++        //    //System.out.println(getText()+": STOP "+startIndex+".."+stopIndex);
++        //    return new Interval(startIndex, stopIndex);
++        //}
++
++        public GrammarAST GetBlockAlt(int i)
++        {
++            if (this.Type != ANTLRParser.BLOCK)
++                return null;
++
++            int alts = 0;
++            for (int j = 0; j < ChildCount; j++)
++            {
++                if (GetChild(j).Type == ANTLRParser.ALT)
++                    alts++;
++                if (alts == i)
++                    return (GrammarAST)GetChild(j);
++            }
++
++            return null;
++        }
++
++        //	@Override
++        //	public String toString() {
++        //		if ( startIndex==-1 && stopIndex==-1 ) return getText();
++        //		return getText()+":"+startIndex+".."+stopIndex;
++        //	}
++
++        /** Make nodes unique based upon Token so we can add them to a Set; if
++         *  not a GrammarAST, check type.
++         */
++        public class TreeTokenEqualityComparer : EqualityComparer<GrammarAST>
++        {
++            public static new readonly TreeTokenEqualityComparer Default = new TreeTokenEqualityComparer();
++
++            public override bool Equals(GrammarAST x, GrammarAST y)
++            {
++                if (x == y)
++                    return true;
++
++                GrammarAST t = y as GrammarAST;
++                if (t == null)
++                {
++                    ITree a = y as ITree;
++                    return a != null && x.Type == a.Type;
++                }
++
++                return x.Token.Line == t.Line &&
++                       x.Token.CharPositionInLine == t.CharPositionInLine;
++            }
++
++            public override int GetHashCode(GrammarAST obj)
++            {
++                if (obj == null)
++                    return 0;
++
++                return ObjectExtensions.ShiftPrimeXOR(obj.Token.Line, obj.Token.CharPositionInLine);
++            }
++        }
+}
+}
+diff --git a/Antlr3/Tool/LeftRecursiveRuleAnalyzer.cs b/Antlr3/Tool/LeftRecursiveRuleAnalyzer.cs
+new file mode 100644
+index 0000000..bc67283
+--- /dev/null
++++ b/Antlr3/Tool/LeftRecursiveRuleAnalyzer.cs
+@@ -0,0 +1,383 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2011 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2011 Sam Harwell, Pixel Mine, Inc.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace Antlr3.Tool
++{
++    using System.Collections.Generic;
++    using Antlr.Runtime.JavaExtensions;
++    using Antlr.Runtime.Tree;
++    using Antlr3.Codegen;
++    using Antlr3.Grammars;
++    using Antlr3.ST;
++    using AngleBracketTemplateLexer = Antlr3.ST.Language.AngleBracketTemplateLexer;
++    using Console = System.Console;
++    using StringBuilder = System.Text.StringBuilder;
++    using StringTemplateGroup = Antlr3.ST.StringTemplateGroup;
++    using StringTemplateGroupLoader = Antlr3.ST.IStringTemplateGroupLoader;
++
++    [System.CLSCompliant(false)]
++    public class LeftRecursiveRuleAnalyzer : LeftRecursiveRuleWalker
++    {
++        public enum ASSOC
++        {
++            left,
++            right
++        }
++
++        public Grammar g;
++        public CodeGenerator generator;
++        public string ruleName;
++        IDictionary<int, int> tokenToPrec = new Dictionary<int, int>();
++        public Dictionary<int, string> binaryAlts = new Dictionary<int, string>();
++        public Dictionary<int, string> ternaryAlts = new Dictionary<int, string>();
++        public Dictionary<int, string> suffixAlts = new Dictionary<int, string>();
++        public List<string> prefixAlts = new List<string>();
++        public List<string> otherAlts = new List<string>();
++
++        public StringTemplateGroup recRuleTemplates;
++        public string language;
++
++        public IDictionary<int, ASSOC> altAssociativity = new Dictionary<int, ASSOC>();
++
++        public LeftRecursiveRuleAnalyzer(ITreeNodeStream input, Grammar g, string ruleName)
++            : base(input)
++        {
++            this.g = g;
++            this.ruleName = ruleName;
++            language = (string)g.GetOption("language");
++            generator = new CodeGenerator(g.tool, g, language);
++            generator.LoadTemplates(language);
++            LoadPrecRuleTemplates();
++        }
++
++        public void LoadPrecRuleTemplates()
++        {
++            string templateDirs = g.Tool.TemplatesDirectory;
++            //+":" + Path.Combine(g.Tool.TemplatesDirectory);
++            StringTemplateGroupLoader loader = new CommonGroupLoader(templateDirs, ErrorManager.GetStringTemplateErrorListener());
++            StringTemplateGroup.RegisterGroupLoader(loader);
++            StringTemplateGroup.RegisterDefaultLexer(typeof(AngleBracketTemplateLexer));
++
++            recRuleTemplates = StringTemplateGroup.LoadGroup("LeftRecursiveRules");
++            if (recRuleTemplates == null)
++            {
++                ErrorManager.Error(ErrorManager.MSG_MISSING_CODE_GEN_TEMPLATES, "PrecRules");
++                return;
++            }
++        }
++
++        public override void SetTokenPrec(GrammarAST t, int alt)
++        {
++            int ttype = g.GetTokenType(t.Text);
++            //tokenToPrec.Add(ttype, alt);
++            tokenToPrec[ttype] = alt;
++
++            ASSOC assoc = ASSOC.left;
++            if (t.terminalOptions != null)
++            {
++                string a = (string)t.terminalOptions.get("assoc");
++                if (a != null)
++                {
++                    if (a.Equals(ASSOC.right.ToString()))
++                    {
++                        assoc = ASSOC.right;
++                    }
++                    else
++                    {
++                        ErrorManager.Error(ErrorManager.MSG_ILLEGAL_OPTION_VALUE, "assoc", assoc);
++                    }
++                }
++            }
++
++            ASSOC currentAssociativity;
++            if (altAssociativity.TryGetValue(alt, out currentAssociativity))
++            {
++                if (currentAssociativity != assoc)
++                    ErrorManager.Error(ErrorManager.MSG_ALL_OPS_NEED_SAME_ASSOC, alt);
++            }
++            else
++            {
++                altAssociativity.Add(alt, assoc);
++            }
++
++            //System.out.println("op " + alt + ": " + t.getText()+", assoc="+assoc);
++        }
++
++        public override void BinaryAlt(GrammarAST altTree, GrammarAST rewriteTree, int alt)
++        {
++            altTree = GrammarAST.DupTree(altTree);
++            rewriteTree = GrammarAST.DupTree(rewriteTree);
++
++            StripLeftRecursion(altTree);
++
++            // rewrite e to be e_[rec_arg]
++            int nextPrec = NextPrecedence(alt);
++            StringTemplate refST = recRuleTemplates.GetInstanceOf("recRuleRef");
++            refST.SetAttribute("ruleName", ruleName);
++            refST.SetAttribute("arg", nextPrec);
++            altTree = ReplaceRuleRefs(altTree, refST.ToString());
++
++            string altText = Text(altTree);
++            altText = altText.Trim();
++            altText += "{}"; // add empty alt to prevent pred hoisting
++            StringTemplate nameST = recRuleTemplates.GetInstanceOf("recRuleName");
++            nameST.SetAttribute("ruleName", ruleName);
++            rewriteTree = ReplaceRuleRefs(rewriteTree, "$" + nameST.ToString());
++            string rewriteText = Text(rewriteTree);
++            binaryAlts.Add(alt, altText + (rewriteText != null ? " " + rewriteText : ""));
++            //System.out.println("binaryAlt " + alt + ": " + altText + ", rewrite=" + rewriteText);
++        }
++
++        /** Convert e ? e : e  ->  ? e : e_[nextPrec] */
++        public override void TernaryAlt(GrammarAST altTree, GrammarAST rewriteTree, int alt)
++        {
++            altTree = GrammarAST.DupTree(altTree);
++            rewriteTree = GrammarAST.DupTree(rewriteTree);
++
++            StripLeftRecursion(altTree);
++
++            int nextPrec = NextPrecedence(alt);
++            StringTemplate refST = recRuleTemplates.GetInstanceOf("recRuleRef");
++            refST.SetAttribute("ruleName", ruleName);
++            refST.SetAttribute("arg", nextPrec);
++            altTree = ReplaceLastRuleRef(altTree, refST.ToString());
++
++            string altText = Text(altTree);
++            altText = altText.Trim();
++            altText += "{}"; // add empty alt to prevent pred hoisting
++            StringTemplate nameST = recRuleTemplates.GetInstanceOf("recRuleName");
++            nameST.SetAttribute("ruleName", ruleName);
++            rewriteTree = ReplaceRuleRefs(rewriteTree, "$" + nameST.ToString());
++            string rewriteText = Text(rewriteTree);
++            ternaryAlts.Add(alt, altText + (rewriteText != null ? " " + rewriteText : ""));
++            //System.out.println("ternaryAlt " + alt + ": " + altText + ", rewrite=" + rewriteText);
++        }
++
++        public override void PrefixAlt(GrammarAST altTree, GrammarAST rewriteTree, int alt)
++        {
++            altTree = GrammarAST.DupTree(altTree);
++            rewriteTree = GrammarAST.DupTree(rewriteTree);
++
++            int nextPrec = Precedence(alt);
++            // rewrite e to be e_[rec_arg]
++            StringTemplate refST = recRuleTemplates.GetInstanceOf("recRuleRef");
++            refST.SetAttribute("ruleName", ruleName);
++            refST.SetAttribute("arg", nextPrec);
++            altTree = ReplaceRuleRefs(altTree, refST.ToString());
++            string altText = Text(altTree);
++            altText = altText.Trim();
++            altText += "{}"; // add empty alt to prevent pred hoisting
++
++            StringTemplate nameST = recRuleTemplates.GetInstanceOf("recRuleName");
++            nameST.SetAttribute("ruleName", ruleName);
++            rewriteTree = ReplaceRuleRefs(rewriteTree, nameST.ToString());
++            string rewriteText = Text(rewriteTree);
++
++            prefixAlts.Add(altText + (rewriteText != null ? " " + rewriteText : ""));
++            //System.out.println("prefixAlt " + alt + ": " + altText + ", rewrite=" + rewriteText);
++        }
++
++        public override void SuffixAlt(GrammarAST altTree, GrammarAST rewriteTree, int alt)
++        {
++            altTree = GrammarAST.DupTree(altTree);
++            rewriteTree = GrammarAST.DupTree(rewriteTree);
++            StripLeftRecursion(altTree);
++            StringTemplate nameST = recRuleTemplates.GetInstanceOf("recRuleName");
++            nameST.SetAttribute("ruleName", ruleName);
++            rewriteTree = ReplaceRuleRefs(rewriteTree, "$" + nameST.ToString());
++            string rewriteText = Text(rewriteTree);
++            string altText = Text(altTree);
++            altText = altText.Trim();
++            suffixAlts.Add(alt, altText + (rewriteText != null ? " " + rewriteText : ""));
++            //		System.out.println("suffixAlt " + alt + ": " + altText + ", rewrite=" + rewriteText);
++        }
++
++        public override void OtherAlt(GrammarAST altTree, GrammarAST rewriteTree, int alt)
++        {
++            altTree = GrammarAST.DupTree(altTree);
++            rewriteTree = GrammarAST.DupTree(rewriteTree);
++            StripLeftRecursion(altTree);
++            string altText = Text(altTree);
++
++            string rewriteText = Text(rewriteTree);
++            otherAlts.Add(altText + (rewriteText != null ? " " + rewriteText : ""));
++            //System.out.println("otherAlt " + alt + ": " + altText + ", rewrite=" + rewriteText);
++        }
++
++        public string GetArtificialOpPrecRule()
++        {
++            StringTemplate ruleST = recRuleTemplates.GetInstanceOf("recRule");
++            ruleST.SetAttribute("ruleName", ruleName);
++            ruleST.SetAttribute("buildAST", grammar.BuildAST);
++            StringTemplate argDefST =
++                generator.Templates.GetInstanceOf("recRuleDefArg");
++            ruleST.SetAttribute("argDef", argDefST);
++            StringTemplate ruleArgST =
++                generator.Templates.GetInstanceOf("recRuleArg");
++            ruleST.SetAttribute("argName", ruleArgST);
++            StringTemplate setResultST =
++                generator.Templates.GetInstanceOf("recRuleSetResultAction");
++            ruleST.SetAttribute("setResultAction", setResultST);
++
++            IDictionary<int, string> opPrecRuleAlts = new Dictionary<int, string>();
++            opPrecRuleAlts.addAll(binaryAlts);
++            opPrecRuleAlts.addAll(ternaryAlts);
++            opPrecRuleAlts.addAll(suffixAlts);
++            foreach (int alt in opPrecRuleAlts.Keys)
++            {
++                string altText = opPrecRuleAlts.get(alt);
++                StringTemplate altST = recRuleTemplates.GetInstanceOf("recRuleAlt");
++                StringTemplate predST =
++                    generator.Templates.GetInstanceOf("recRuleAltPredicate");
++                predST.SetAttribute("opPrec", Precedence(alt));
++                predST.SetAttribute("ruleName", ruleName);
++                altST.SetAttribute("pred", predST);
++                altST.SetAttribute("alt", altText);
++                ruleST.SetAttribute("alts", altST);
++            }
++
++            Console.WriteLine(ruleST);
++
++            return ruleST.ToString();
++        }
++
++        public string GetArtificialPrimaryRule()
++        {
++            StringTemplate ruleST = recRuleTemplates.GetInstanceOf("recPrimaryRule");
++            ruleST.SetAttribute("ruleName", ruleName);
++            ruleST.SetAttribute("alts", prefixAlts);
++            ruleST.SetAttribute("alts", otherAlts);
++            Console.WriteLine(ruleST);
++            return ruleST.ToString();
++        }
++
++        public string GetArtificialPrecStartRule()
++        {
++            StringTemplate ruleST = recRuleTemplates.GetInstanceOf("recRuleStart");
++            ruleST.SetAttribute("ruleName", ruleName);
++            ruleST.SetAttribute("maxPrec", 0);
++
++            Console.WriteLine("start: " + ruleST);
++            return ruleST.ToString();
++        }
++
++        public GrammarAST ReplaceRuleRefs(GrammarAST t, string name)
++        {
++            if (t == null)
++                return null;
++
++            foreach (GrammarAST rref in t.FindAllType(RULE_REF))
++            {
++                if (rref.Text.Equals(ruleName))
++                    rref.Text = name;
++            }
++
++            return t;
++        }
++
++        public GrammarAST ReplaceLastRuleRef(GrammarAST t, string name)
++        {
++            if (t == null)
++                return null;
++            GrammarAST last = null;
++            foreach (GrammarAST rref in t.FindAllType(RULE_REF))
++            {
++                last = rref;
++            }
++            if (last != null && last.Text.Equals(ruleName))
++                last.Text = name;
++            return t;
++        }
++
++        public void StripLeftRecursion(GrammarAST t)
++        {
++            GrammarAST rref = (GrammarAST)t.GetChild(0);
++            if (rref.Type == ANTLRParser.RULE_REF)
++            {
++                // remove rule ref
++                t.setFirstChild(t.GetChild(1));
++
++                // reset index so it prints properly
++                GrammarAST newFirstChild = (GrammarAST)t.GetChild(0);
++                t.TokenStartIndex = newFirstChild.TokenStartIndex;
++            }
++        }
++
++        public string Text(GrammarAST t)
++        {
++            if (t == null)
++                return null;
++
++            return ToOriginalString(g.tokenBuffer, t.TokenStartIndex, t.TokenStopIndex);
++        }
++
++        public int Precedence(int alt)
++        {
++            return numAlts - alt + 1;
++        }
++
++        public int NextPrecedence(int alt)
++        {
++            int p = Precedence(alt);
++            if (altAssociativity.get(alt) == ASSOC.left)
++                p++;
++            return p;
++        }
++
++        public override string ToString()
++        {
++            return "PrecRuleOperatorCollector{" +
++                   "binaryAlts=" + binaryAlts +
++                   ", rec=" + tokenToPrec +
++                   ", ternaryAlts=" + ternaryAlts +
++                   ", suffixAlts=" + suffixAlts +
++                   ", prefixAlts=" + prefixAlts +
++                   ", otherAlts=" + otherAlts +
++                   '}';
++        }
++
++        private static string ToOriginalString(Antlr.Runtime.CommonTokenStream tokenStream, int start, int end)
++        {
++            StringBuilder buf = new StringBuilder();
++            for (int i = start; i >= 0 && i <= end && i < tokenStream.Count; i++)
++            {
++                string s = tokenStream.Get(i).Text;
++                if (tokenStream.Get(i).Type == ANTLRParser.BLOCK)
++                    s = "(";
++
++                buf.Append(s);
++            }
++
++            return buf.ToString();
++        }
++    }
++}
+diff --git a/Antlr3/Tool/Rule.cs b/Antlr3/Tool/Rule.cs
+index 67737d5..a40a600 100644
+--- a/Antlr3/Tool/Rule.cs
++++ b/Antlr3/Tool/Rule.cs
+@@ -78,12 +78,6 @@ namespace Antlr3.Tool
+
+public GrammarAST EORNode;
+
+-        /** The set of all tokens reachable from the start state w/o leaving
+-         *  via the accept state.  If it reaches the accept state, FIRST
+-         *  includes EOR_TOKEN_TYPE.
+-         */
+-        public LookaheadSet FIRST;
+-
+/** The return values of a rule and predefined rule attributes */
+public AttributeScope returnScope;
+
+@@ -169,9 +163,6 @@ namespace Antlr3.Tool
+*/
+private IDictionary<string, IList<GrammarAST>>[] altToRuleRefMap;
+
+-        /** Track which alts have rewrite rules associated with them. 1..n */
+-        private bool[] altsWithRewrites;
+-
+/** Do not generate start, stop etc... in a return value struct unless
+*  somebody references $r.start somewhere.
+*/
+@@ -193,7 +184,6 @@ namespace Antlr3.Tool
+throwsSpec = new HashSet<string>() { "RecognitionException" };
+altToTokenRefMap = new IDictionary<string, IList<GrammarAST>>[numberOfAlts + 1]; //new Map[numberOfAlts + 1];
+altToRuleRefMap = new IDictionary<string, IList<GrammarAST>>[numberOfAlts + 1]; //new Map[numberOfAlts + 1];
+-            altsWithRewrites = new bool[numberOfAlts + 1];
+for ( int alt = 1; alt <= numberOfAlts; alt++ )
+{
+altToTokenRefMap[alt] = new Dictionary<string, IList<GrammarAST>>();
+@@ -472,9 +462,11 @@ namespace Antlr3.Tool
+// return nothing if not generating trees; i.e., don't do for templates
+return tokens;
+}
+-            for ( int i = 1; i <= numberOfAlts; i++ )
++
++            //System.out.println("blk "+tree.findFirstType(ANTLRParser.BLOCK).toStringTree());
++            for (int i = 1; i <= numberOfAlts; i++)
+{
+-                if ( altsWithRewrites[i] )
++                if ( HasRewrite(i) )
+{
+foreach ( string tokenName in altToTokenRefMap[i].Keys )
+{
+@@ -485,6 +477,7 @@ namespace Antlr3.Tool
+}
+}
+}
++
+return tokens;
+}
+
+@@ -500,7 +493,7 @@ namespace Antlr3.Tool
+public virtual ICollection<string> GetAllRuleRefsInAltsWithRewrites()
+{
+var rules = from i in Enumerable.Range( 1, numberOfAlts )
+-                        where altsWithRewrites[i]
++                        where HasRewrite(i)
+select altToRuleRefMap[i].Keys;
+
+return new HashSet<string>( rules.SelectMany( r => r ) );
+@@ -513,33 +506,16 @@ namespace Antlr3.Tool
+
+public virtual bool HasRewrite( int i )
+{
+-            if ( i >= altsWithRewrites.Length )
+-            {
+-                ErrorManager.InternalError( "alt " + i + " exceeds number of " + Name +
+-                                           "'s alts (" + altsWithRewrites.Length + ")" );
+-                return false;
+-            }
+-            return altsWithRewrites[i];
+-        }
++            GrammarAST blk = tree.FindFirstType(ANTLRParser.BLOCK);
++            GrammarAST alt = blk.GetBlockAlt(i);
++            GrammarAST rew = (GrammarAST)alt.getNextSibling();
++            if (rew != null && rew.Type == ANTLRParser.REWRITES)
++                return true;
+
+-        /** Track which rules have rewrite rules.  Pass in the ALT node
+-         *  for the alt so we can check for problems when output=template,
+-         *  rewrite=true, and grammar type is tree parser.
+-         */
+-        public virtual void TrackAltsWithRewrites( GrammarAST altAST, int outerAltNum )
+-        {
+-            if ( grammar.type == GrammarType.TreeParser &&
+-                 grammar.BuildTemplate &&
+-                 grammar.GetOption( "rewrite" ) != null &&
+-                 grammar.GetOption( "rewrite" ).Equals( "true" )
+-                )
+-            {
+-                GrammarAST firstElementAST = (GrammarAST)altAST.GetChild( 0 );
+-                grammar.sanity.EnsureAltIsSimpleNodeOrTree( altAST,
+-                                                           firstElementAST,
+-                                                           outerAltNum );
+-            }
+-            altsWithRewrites[outerAltNum] = true;
++            if (alt.FindFirstType(ANTLRParser.REWRITES) != null)
++                return true;
++
++            return false;
+}
+
+/** Return the scope containing name */
+@@ -591,7 +567,7 @@ namespace Antlr3.Tool
+{
+GrammarAST uniqueRefAST;
+if ( grammar.type != GrammarType.Lexer &&
+-                 char.IsUpper( refdSymbol[0] ) )
++                 Rule.GetRuleType(refdSymbol) == RuleType.Lexer )
+{
+// symbol is a token
+IList tokenRefs = GetTokenRefsInAlt( refdSymbol, outerAltNum );
+@@ -622,7 +598,7 @@ namespace Antlr3.Tool
+labelName = generator.CreateUniqueLabel( refdSymbol );
+CommonToken label = new CommonToken( ANTLRParser.ID, labelName );
+if ( grammar.type != GrammarType.Lexer &&
+-                     char.IsUpper( refdSymbol[0] ) )
++                     Rule.GetRuleType(refdSymbol) == Tool.RuleType.Lexer )
+{
+grammar.DefineTokenRefLabel( Name, label, uniqueRefAST );
+}
+diff --git a/Antlr3/Tool/Strip.cs b/Antlr3/Tool/Strip.cs
+index 8224b0c..f25a959 100644
+--- a/Antlr3/Tool/Strip.cs
++++ b/Antlr3/Tool/Strip.cs
+@@ -250,7 +250,7 @@ namespace Antlr3.Tool
+{
+CommonTree rule = (CommonTree)root.GetChild( 0 );
+//Console.Out.WriteLine( "rule: " + rule );
+-                if ( !char.IsUpper( rule.Text[0] ) )
++                if ( Rule.GetRuleType( rule.Text ) == RuleType.Parser )
+{
+tokens.Delete( t.TokenStartIndex, t.TokenStopIndex );
+KillTrailingNewline( tokens, t.Token.TokenIndex );
+diff --git a/Antlr4.Test.StringTemplate/TestDictionaries.cs b/Antlr4.Test.StringTemplate/TestDictionaries.cs
+index 53301cf..7ff9134 100644
+--- a/Antlr4.Test.StringTemplate/TestDictionaries.cs
++++ b/Antlr4.Test.StringTemplate/TestDictionaries.cs
+@@ -256,6 +256,88 @@ namespace Antlr4.Test.StringTemplate
+Assert.AreEqual(expecting, result);
+}
+
++        [TestMethod]
++        public void TestDictWithoutIteration()
++        {
++            string templates =
++                "t2(adr,line2={<adr.zip> <adr.city>}) ::= <<" + newline +
++                "<adr.firstname> <adr.lastname>" + newline +
++                "<line2>" + newline +
++                ">>";
++
++            writeFile(tmpdir, "test.stg", templates);
++            TemplateGroup group = new TemplateGroupFile(Path.Combine(tmpdir, "test.stg"));
++            Template st = group.GetInstanceOf("t2");
++            st.Add("adr", new Dictionary<string, string>()
++                {
++                    {"firstname","Terence"},
++                    {"lastname","Parr"},
++                    {"zip","99999"},
++                    {"city","San Francisco"},
++                });
++            string expecting =
++                "Terence Parr" + newline +
++                "99999 San Francisco";
++            string result = st.Render();
++            Assert.AreEqual(expecting, result);
++        }
++
++        [TestMethod]
++        public void TestDictWithoutIteration2()
++        {
++            string templates =
++                "t2(adr,line2={<adr.zip> <adr.city>}) ::= <<" + newline +
++                "<adr.firstname> <adr.lastname>" + newline +
++                "<line2>" + newline +
++                ">>";
++
++            writeFile(tmpdir, "test.stg", templates);
++            TemplateGroup group = new TemplateGroupFile(Path.Combine(tmpdir, "test.stg"));
++            Template st = group.GetInstanceOf("t2");
++            st.Add("adr", new Dictionary<string, string>()
++                {
++                    {"firstname","Terence"},
++                    {"lastname","Parr"},
++                    {"zip","99999"},
++                    {"city","San Francisco"},
++                });
++            st.Add("line2", new Template("<adr.city>, <adr.zip>"));
++            string expecting =
++                "Terence Parr" + newline +
++                "San Francisco, 99999";
++            string result = st.Render();
++            Assert.AreEqual(expecting, result);
++        }
++
++        [TestMethod]
++        public void TestDictWithoutIteration3()
++        {
++            string templates =
++                "t2(adr,line2={<adr.zip> <adr.city>}) ::= <<" + newline +
++                "<adr.firstname> <adr.lastname>" + newline +
++                "<line2>" + newline +
++                ">>" + newline +
++                "t3(adr) ::= <<" + newline +
++                "<t2(adr=adr,line2={<adr.city>, <adr.zip>})>" + newline +
++                ">>" + newline;
++
++            writeFile(tmpdir, "test.stg", templates);
++            TemplateGroup group = new TemplateGroupFile(Path.Combine(tmpdir, "test.stg"));
++            Template st = group.GetInstanceOf("t3");
++            st.Add("adr", new Dictionary<string, string>()
++                {
++                    {"firstname","Terence"},
++                    {"lastname","Parr"},
++                    {"zip","99999"},
++                    {"city","San Francisco"},
++                });
++            string expecting =
++                "Terence Parr" + newline +
++                "San Francisco, 99999";
++            string result = st.Render();
++            Assert.AreEqual(expecting, result);
++        }
++
+/**
+* Test that a map can have only the default entry.
+*/
+diff --git a/Antlr4.Test.StringTemplate/TestSyntaxErrors.cs b/Antlr4.Test.StringTemplate/TestSyntaxErrors.cs
+index 8a1a2c2..877eaf3 100644
+--- a/Antlr4.Test.StringTemplate/TestSyntaxErrors.cs
++++ b/Antlr4.Test.StringTemplate/TestSyntaxErrors.cs
+@@ -57,6 +57,25 @@ namespace Antlr4.Test.StringTemplate
+}
+
+[TestMethod]
++        public void TestIt()
++        {
++            string templates = "main() ::= <<\n<@r>a<@end>\n<@r()>\n>>";
++            writeFile(tmpdir, "t.stg", templates);
++            TemplateGroup group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
++            ErrorBuffer errors = new ErrorBuffer();
++            group.Listener = errors;
++
++            // Force the compilation (this led to an NPE earlier that is reported in
++            // the error messages)
++            Template st = group.GetInstanceOf("main");
++
++            // A proper error messages should be written
++            Assert.AreEqual(
++                    "0:-1: region main.r is embedded and thus already implicitly defined" + newline,
++                    errors.ToString());
++        }
++
++        [TestMethod]
+public void TestEmptyExpr2()
+{
+string template = "hi <> ";
+diff --git a/Antlr4.Test.StringTemplate/TestWhitespace.cs b/Antlr4.Test.StringTemplate/TestWhitespace.cs
+index 7485b91..b3fc5fa 100644
+--- a/Antlr4.Test.StringTemplate/TestWhitespace.cs
++++ b/Antlr4.Test.StringTemplate/TestWhitespace.cs
+@@ -295,6 +295,23 @@ namespace Antlr4.Test.StringTemplate
+}
+
+[TestMethod]
++        public void TestIfElseifOnMultipleLines()
++        {
++            Template t = new Template(
++                "begin\n" +
++                "<if(x&&y)>\n" +
++                "foo\n" +
++                "<elseif(x)>\n" +
++                "bar\n" +
++                "<endif>\n" +
++                "end\n");
++            t.Add("x", "x");
++            string expecting = "begin" + newline + "bar" + newline + "end" + newline;
++            string result = t.Render();
++            Assert.AreEqual(expecting, result);
++        }
++
++        [TestMethod]
+public void TestLineBreak()
+{
+Template st = new Template(
+@@ -380,6 +397,31 @@ namespace Antlr4.Test.StringTemplate
+}
+
+[TestMethod]
++        public void TestNullIterationLineGivesNoOutput()
++        {
++            Template t = new Template(
++                "begin\n" +
++                "<items:{x|<x>}>\n" +
++                "end\n");
++            string expecting = "begin" + newline + "end" + newline;
++            string result = t.Render();
++            Assert.AreEqual(expecting, result);
++        }
++
++        [TestMethod]
++        public void TestEmptyIterationLineGivesNoOutput()
++        {
++            Template t = new Template(
++                "begin\n" +
++                "  <items:{x|<x>}>\n" +
++                "end\n");
++            t.Add("items", new List<object>());
++            string expecting = "begin" + newline + "end" + newline;
++            string result = t.Render();
++            Assert.AreEqual(expecting, result);
++        }
++
++        [TestMethod]
+public void TestCommentOnlyLineGivesNoOutput()
+{
+Template t = new Template(
+diff --git a/bin/Bootstrap/Antlr3.Runtime.Debug.dll b/bin/Bootstrap/Antlr3.Runtime.Debug.dll
+index 346df65..67eed91 100644
+Binary files a/bin/Bootstrap/Antlr3.Runtime.Debug.dll and b/bin/Bootstrap/Antlr3.Runtime.Debug.dll differ
+diff --git a/bin/Bootstrap/Antlr3.Runtime.dll b/bin/Bootstrap/Antlr3.Runtime.dll
+index 91d1782..55f9671 100644
+Binary files a/bin/Bootstrap/Antlr3.Runtime.dll and b/bin/Bootstrap/Antlr3.Runtime.dll differ
+diff --git a/bin/Bootstrap/Antlr3.StringTemplate.dll b/bin/Bootstrap/Antlr3.StringTemplate.dll
+index b43a431..ced3302 100644
+Binary files a/bin/Bootstrap/Antlr3.StringTemplate.dll and b/bin/Bootstrap/Antlr3.StringTemplate.dll differ
+diff --git a/bin/Bootstrap/Antlr3.exe b/bin/Bootstrap/Antlr3.exe
+index 7ddcda1..fab1275 100755
+Binary files a/bin/Bootstrap/Antlr3.exe and b/bin/Bootstrap/Antlr3.exe differ
+diff --git a/bin/Bootstrap/AntlrBuildTask.dll b/bin/Bootstrap/AntlrBuildTask.dll
+index 0b1c871..3a8f7dc 100644
+Binary files a/bin/Bootstrap/AntlrBuildTask.dll and b/bin/Bootstrap/AntlrBuildTask.dll differ
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg
+index 63fa4b3..e79cf43 100644
+--- a/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg
+@@ -1056,6 +1056,12 @@ Match(EOF); <checkRuleBacktrackFailure()>
+<endif>
+>>
+
++// used for left-recursive rules
++recRuleDefArg()                       ::= "int <recRuleArg()>"
++recRuleArg()                          ::= "_p"
++recRuleAltPredicate(ruleName,opPrec)  ::= "<recRuleArg()> \<= <opPrec>"
++recRuleSetResultAction()              ::= "root_0=$<ruleName>_primary.tree;"
++
+/** match ^(root children) in tree parser */
+tree(root, actionsAfterRoot, children, nullableChildList,
+enclosingTreeLevel, treeLevel) ::= <<
+diff --git a/bin/Bootstrap/Codegen/Templates/LeftRecursiveRules.stg b/bin/Bootstrap/Codegen/Templates/LeftRecursiveRules.stg
+new file mode 100644
+index 0000000..07c226e
+--- /dev/null
++++ b/bin/Bootstrap/Codegen/Templates/LeftRecursiveRules.stg
+@@ -0,0 +1,59 @@
++/*
++ [The "BSD license"]
++ Copyright (c) 2010 Terence Parr
++ All rights reserved.
++
++ Redistribution and use in source and binary forms, with or without
++ modification, are permitted provided that the following conditions
++ are met:
++ 1. Redistributions of source code must retain the above copyright
++    notice, this list of conditions and the following disclaimer.
++ 2. Redistributions in binary form must reproduce the above copyright
++    notice, this list of conditions and the following disclaimer in the
++    documentation and/or other materials provided with the distribution.
++ 3. The name of the author may not be used to endorse or promote products
++    derived from this software without specific prior written permission.
++
++ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++*/
++
++/** How to generate rules derived from left-recursive rules.
++ *  These rely on recRuleDefArg(), recRuleAltPredicate(),
++ *  recRuleArg(), recRuleSetResultAction() templates in main language.stg
++ */
++group LeftRecursiveRules;
++
++recRuleStart(ruleName, maxPrec) ::= "<ruleName> : <recRuleName(...)>[<maxPrec>] ;"
++
++recRuleName(ruleName) ::= "<ruleName>_"
++
++recRule(ruleName, argDef, argName, alts, setResultAction, buildAST) ::= <<
++<recRuleName(...)>[<argDef>]
++    :   <ruleName>_primary <if(buildAST)>{<setResultAction>}<endif>
++        (
++          ( <alts; separator="\n        | ">
++          )
++        )*
++    ;
++>>
++
++recPrimaryRule(ruleName, alts) ::= <<
++<ruleName>_primary
++options {backtrack=true;}
++    : <alts; separator="\n    | ">
++    ;
++>>
++
++recRuleAlt(alt, pred) ::= "{<pred>}?=> <alt>"
++
++recRuleRef(ruleName, arg) ::= "<recRuleName(...)>[<arg>]"
++
+diff --git a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll
+index ef3acdc..7b3e68d 100644
+Binary files a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll and b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll differ
+diff --git a/bin/Bootstrap/Tool/Templates/messages/languages/en.stg b/bin/Bootstrap/Tool/Templates/messages/languages/en.stg
+index 9decc70..5779807 100644
+--- a/bin/Bootstrap/Tool/Templates/messages/languages/en.stg
++++ b/bin/Bootstrap/Tool/Templates/messages/languages/en.stg
+@@ -154,10 +154,6 @@ RULE_HAS_NO_ARGS(arg) ::=
+"rule <arg> has no defined parameters"
+ARGS_ON_TOKEN_REF(arg) ::=
+"token reference <arg> may not have parameters"
+-/*
+-NONCHAR_RANGE() ::=
+-	"range operator can only be used in the lexer"
+-*/
+ILLEGAL_OPTION(arg) ::=
+"illegal option <arg>"
+LIST_LABEL_INVALID_UNLESS_RETVAL_STRUCT(arg) ::=
+@@ -206,7 +202,7 @@ MISSING_AST_TYPE_IN_TREE_GRAMMAR(arg) ::=
+"tree grammar <arg> has no ASTLabelType option"
+REWRITE_FOR_MULTI_ELEMENT_ALT(arg) ::=
+"with rewrite=true, alt <arg> not simple node or obvious tree element; text attribute for rule not guaranteed to be correct"
+-RULE_INVALID_SET(arg) ::=
++RULE_INVALID_SET(arg) ::=
+"Cannot complement rule <arg>; not a simple set or element"
+HETERO_ILLEGAL_IN_REWRITE_ALT(arg) ::=
+"alts with rewrites can't use heterogeneous types left of ->"
+@@ -230,6 +226,8 @@ AST_OP_IN_ALT_WITH_REWRITE(arg,arg2) ::=
+"rule <arg> alt <arg2> uses rewrite syntax and also an AST operator"
+WILDCARD_AS_ROOT(arg) ::= "Wildcard invalid as root; wildcard can itself be a tree"
+CONFLICTING_OPTION_IN_TREE_FILTER(arg,arg2) ::= "option <arg>=<arg2> conflicts with tree grammar filter mode"
++ILLEGAL_OPTION_VALUE(arg, arg2) ::= "value '<arg2>' invalid for option <arg>"
++ALL_OPS_NEED_SAME_ASSOC(arg) ::= "all operators of alt <alt> of left-recursive rule must have same associativity"
+
+// GRAMMAR WARNINGS
+
+

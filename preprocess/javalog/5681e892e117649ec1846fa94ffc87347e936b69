@@ -1,0 +1,99 @@
+commit 5681e892e117649ec1846fa94ffc87347e936b69
+Author:     parrt <parrt@antlr.org>
+AuthorDate: Thu Jul 14 16:35:38 2011 -0800
+Commit:     parrt <parrt@antlr.org>
+CommitDate: Thu Jul 14 16:35:38 2011 -0800
+
+compile in-VM; much faster
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8857]
+
+diff --git a/tool/src/test/java/org/antlr/test/BaseTest.java b/tool/src/test/java/org/antlr/test/BaseTest.java
+index 6070f84..aae0560 100644
+--- a/tool/src/test/java/org/antlr/test/BaseTest.java
++++ b/tool/src/test/java/org/antlr/test/BaseTest.java
+@@ -43,6 +43,7 @@ import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+
++import javax.tools.*;
+import java.io.*;
+import java.util.*;
+
+@@ -106,49 +107,41 @@ public abstract class BaseTest {
+}
+
+protected boolean compile(String fileName) {
+-		String compiler = "javac";
+String classpathOption = "-classpath";
+
+-		if (jikes!=null) {
+-			compiler = jikes;
+-			classpathOption = "-bootclasspath";
+-		}
+-
+-		String inputFile = tmpdir + File.separator + fileName;
+String[] args = new String[] {
+-					compiler, "-d", tmpdir,
++					"javac", "-d", tmpdir,
+classpathOption, tmpdir+pathSep+CLASSPATH,
+-					inputFile
++					tmpdir+"/"+fileName
+};
+-		String cmdLine = compiler+" -d "+tmpdir+" "+classpathOption+" "+tmpdir+pathSep+CLASSPATH+" "+fileName;
++		String cmdLine = "javac" +" -d "+tmpdir+" "+classpathOption+" "+tmpdir+pathSep+CLASSPATH+" "+fileName;
+//System.out.println("compile: "+cmdLine);
+-		File outputDir = new File(tmpdir);
++
++
++		File f = new File(tmpdir, fileName);
++		JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
++
++		StandardJavaFileManager fileManager =
++			compiler.getStandardFileManager(null, null, null);
++
++		Iterable<? extends JavaFileObject> compilationUnits =
++			fileManager.getJavaFileObjectsFromFiles(Arrays.asList(f));
++
++		Iterable<String> compileOptions =
++			Arrays.asList(new String[]{"-d", tmpdir, "-cp", tmpdir+pathSep+CLASSPATH} );
++
++		JavaCompiler.CompilationTask task =
++			compiler.getTask(null, fileManager, null, compileOptions, null,
++							 compilationUnits);
++		boolean ok = task.call();
++
+try {
+-			Process process =
+-				Runtime.getRuntime().exec(args, null, outputDir);
+-			StreamVacuum stdout = new StreamVacuum(process.getInputStream(), inputFile);
+-			StreamVacuum stderr = new StreamVacuum(process.getErrorStream(), inputFile);
+-			stdout.start();
+-			stderr.start();
+-			process.waitFor();
+-            stdout.join();
+-            stderr.join();
+-			if ( stdout.toString().length()>0 ) {
+-				System.err.println("compile stdout from: "+cmdLine);
+-				System.err.println(stdout);
+-			}
+-			if ( stderr.toString().length()>0 ) {
+-				System.err.println("compile stderr from: "+cmdLine);
+-				System.err.println(stderr);
+-			}
+-			int ret = process.exitValue();
+-			return ret==0;
++			fileManager.close();
+}
+-		catch (Exception e) {
+-			System.err.println("can't exec compilation");
+-			e.printStackTrace(System.err);
+-			return false;
++		catch (IOException ioe) {
++			ioe.printStackTrace(System.err);
+}
++		return ok;
+}
+
+/** Return true if all is ok, no errors */
+

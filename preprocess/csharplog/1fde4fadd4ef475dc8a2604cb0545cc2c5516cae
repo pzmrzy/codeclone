@@ -1,0 +1,35 @@
+commit 1fde4fadd4ef475dc8a2604cb0545cc2c5516cae
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Nov 29 08:07:07 2010 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Nov 29 08:07:07 2010 -0800
+
+(C# 3) Proper string comparison
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7228]
+
+diff --git a/Antlr3/Tool/GrammarReport.cs b/Antlr3/Tool/GrammarReport.cs
+index 9649d09..115be6a 100644
+--- a/Antlr3/Tool/GrammarReport.cs
++++ b/Antlr3/Tool/GrammarReport.cs
+@@ -97,8 +97,7 @@ namespace Antlr3.Tool
+for (Iterator it = rules.iterator(); it.hasNext(); )
+{
+Rule r = (Rule)it.next();
+-                if (!r.Name.ToUpperInvariant()
+-                    .StartsWith(Grammar.SynpredRulePrefix.ToUpperInvariant()))
++                if (!r.Name.StartsWith(Grammar.SynpredRulePrefix, StringComparison.OrdinalIgnoreCase))
+{
+totalNonSynPredProductions += r.numberOfAlts;
+totalNonSynPredRules++;
+@@ -129,8 +128,7 @@ namespace Antlr3.Tool
+continue;
+}
+Rule r = d.dfa.NFADecisionStartState.enclosingRule;
+-                if (r.Name.ToUpperInvariant()
+-                    .StartsWith(Grammar.SynpredRulePrefix.ToUpperInvariant()))
++                if (r.Name.StartsWith(Grammar.SynpredRulePrefix, StringComparison.OrdinalIgnoreCase))
+{
+//System.out.println("dec "+d.decision+" is a synpred");
+continue;
+

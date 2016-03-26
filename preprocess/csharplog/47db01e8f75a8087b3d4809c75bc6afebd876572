@@ -1,0 +1,5502 @@
+commit 47db01e8f75a8087b3d4809c75bc6afebd876572
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Dec 14 11:26:23 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Dec 14 11:26:23 2009 -0800
+
+C# Port:
+* Merge CL6404 (part 1)
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6513]
+
+diff --git a/StringTemplate4/Bytecode.cs b/StringTemplate4/Bytecode.cs
+deleted file mode 100644
+index a939ddc..0000000
+--- a/StringTemplate4/Bytecode.cs
++++ /dev/null
+@@ -1,171 +0,0 @@
+-﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
+- * All rights reserved.
+- *
+- * Conversion to C#:
+- * Copyright (c) 2008-2009 Sam Harwell
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. Redistributions in binary form must reproduce the above copyright
+- *    notice, this list of conditions and the following disclaimer in the
+- *    documentation and/or other materials provided with the distribution.
+- * 3. The name of the author may not be used to endorse or promote products
+- *    derived from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- */
+-
+-namespace StringTemplate
+-{
+-    public class Bytecode
+-    {
+-        public const int MaxOperands = 3;
+-        public const int OPND_SIZE_IN_BYTES = 2;
+-        public const int STRING = 1;
+-        public const int ADDR = 2;
+-        public const int INT = 3;
+-
+-        public class Instruction
+-        {
+-            internal string name; // E.g., "load_str", "new"
+-            internal int[] type = new int[MaxOperands];
+-            internal int n = 0;
+-
+-            public Instruction(string name)
+-                : this(name, 0, 0, 0)
+-            {
+-                n = 0;
+-            }
+-
+-            public Instruction(string name, int a)
+-                : this(name, a, 0, 0)
+-            {
+-                n = 1;
+-            }
+-
+-            public Instruction(string name, int a, int b)
+-                : this(name, a, b, 0)
+-            {
+-                n = 2;
+-            }
+-
+-            public Instruction(string name, int a, int b, int c)
+-            {
+-                this.name = name;
+-                type[0] = a;
+-                type[1] = b;
+-                type[2] = c;
+-                n = 3;
+-            }
+-        }
+-
+-        // TODO: try an enum here
+-
+-        // INSTRUCTION BYTECODES (byte is signed; use a short to keep 0..255)
+-        public const short INSTR_LOAD_STR = 1;
+-        public const short INSTR_LOAD_ATTR = 2;
+-        public const short INSTR_LOAD_LOCAL = 3; // load stuff like it, i, i0
+-        public const short INSTR_LOAD_PROP = 4;
+-        public const short INSTR_LOAD_PROP_IND = 5;
+-        public const short INSTR_STORE_ATTR = 6;
+-        public const short INSTR_STORE_SOLE_ARG = 7;
+-        public const short INSTR_SET_PASS_THRU = 8;
+-        public const short INSTR_STORE_OPTION = 9;
+-        public const short INSTR_NEW = 10;  // create new template instance
+-        public const short INSTR_NEW_IND = 11;  // create new template instance using value on stack
+-        public const short INSTR_SUPER_NEW = 12;  // create new template instance using value on stack
+-        public const short INSTR_WRITE = 13;
+-        public const short INSTR_WRITE_OPT = 14;
+-        public const short INSTR_MAP = 15;  // <a:b()>, <a:b():c()>, <a:{...}>
+-        public const short INSTR_ROT_MAP = 16;  // <a:b(),c()>
+-        public const short INSTR_PAR_MAP = 17;  // <names,phones:{n,p | ...}>
+-        public const short INSTR_BR = 18;
+-        public const short INSTR_BRF = 19;
+-        public const short INSTR_OPTIONS = 20;  // push options block
+-        public const short INSTR_LIST = 21;
+-        public const short INSTR_ADD = 22;
+-        public const short INSTR_TOSTR = 23;
+-        // Predefined functions
+-        public const short INSTR_NOOP = 24; // do nothing
+-        public const short INSTR_FIRST = 25;
+-        public const short INSTR_LAST = 26;
+-        public const short INSTR_REST = 27;
+-        public const short INSTR_TRUNC = 28;
+-        public const short INSTR_STRIP = 29;
+-        public const short INSTR_TRIM = 30;
+-        public const short INSTR_LENGTH = 31;
+-        public const short INSTR_STRLEN = 32;
+-        public const short INSTR_REVERSE = 33;
+-
+-        public const short INSTR_NOT = 34;
+-        public const short INSTR_OR = 35;
+-        public const short INSTR_AND = 36;
+-
+-        public const short INSTR_INDENT = 37;
+-        public const short INSTR_DEDENT = 38;
+-        public const short INSTR_NEWLINE = 39;
+-
+-        /** Used for assembly/disassembly; describes instruction set */
+-        // START: instr
+-        public static Instruction[] instructions =
+-            new Instruction[]
+-            {
+-                null, // <INVALID>
+-                new Instruction("load_str",STRING), // index is the opcode
+-                new Instruction("load_attr",STRING),
+-                new Instruction("load_local",STRING),
+-                new Instruction("load_prop",STRING),
+-                new Instruction("load_prop_ind"),
+-                new Instruction("store_attr",STRING),
+-                new Instruction("store_sole_arg"),
+-                new Instruction("set_pass_thru"),
+-                new Instruction("store_option",INT),
+-                new Instruction("new",STRING),
+-                new Instruction("new_ind"),
+-                new Instruction("super_new",STRING),
+-                new Instruction("write", INT, INT), // write delimiter-start-in-template, stop
+-                new Instruction("write_opt", INT, INT),
+-                new Instruction("map"),
+-                new Instruction("rot_map", INT),
+-                new Instruction("par_map", INT),
+-                new Instruction("br", ADDR),
+-                new Instruction("brf", ADDR),
+-                new Instruction("options"),
+-                new Instruction("list"),
+-                new Instruction("add"),
+-                new Instruction("tostr"),
+-                new Instruction("noop"),
+-                new Instruction("first"),
+-                new Instruction("last"),
+-                new Instruction("rest"),
+-                new Instruction("trunc"),
+-                new Instruction("strip"),
+-                new Instruction("trim"),
+-                new Instruction("length"),
+-                new Instruction("strlen"),
+-                new Instruction("reverse"),
+-                new Instruction("not"),
+-                new Instruction("or"),
+-                new Instruction("and"),
+-                new Instruction("indent", STRING),
+-                new Instruction("dedent"),
+-                new Instruction("newline")
+-            };
+-        // END: instr
+-    }
+-}
+diff --git a/StringTemplate4/BytecodeDisassembler.cs b/StringTemplate4/BytecodeDisassembler.cs
+deleted file mode 100644
+index 6bddbc0..0000000
+--- a/StringTemplate4/BytecodeDisassembler.cs
++++ /dev/null
+@@ -1,194 +0,0 @@
+-﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
+- * All rights reserved.
+- *
+- * Conversion to C#:
+- * Copyright (c) 2008-2009 Sam Harwell
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. Redistributions in binary form must reproduce the above copyright
+- *    notice, this list of conditions and the following disclaimer in the
+- *    documentation and/or other materials provided with the distribution.
+- * 3. The name of the author may not be used to endorse or promote products
+- *    derived from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- */
+-
+-namespace StringTemplate
+-{
+-    using System.Collections.Generic;
+-    using ArgumentException = System.ArgumentException;
+-    using StringBuilder = System.Text.StringBuilder;
+-
+-    public class BytecodeDisassembler
+-    {
+-        // TODO: make disassembler point at compiledST code?
+-        byte[] code;
+-        int codeSize;
+-        protected object[] strings;
+-
+-        public BytecodeDisassembler(byte[] code,
+-                                    int codeSize,
+-                                    string[] strings)
+-        {
+-            this.code = code;
+-            this.codeSize = codeSize;
+-            this.strings = strings;
+-        }
+-
+-        public virtual string Instructions()
+-        {
+-            StringBuilder buf = new StringBuilder();
+-            int ip = 0;
+-            while (ip < codeSize)
+-            {
+-                if (ip > 0)
+-                    buf.Append(", ");
+-                int opcode = code[ip];
+-                Bytecode.Instruction I = Bytecode.instructions[opcode];
+-                buf.Append(I.name);
+-                ip++;
+-                for (int opnd = 0; opnd < I.n; opnd++)
+-                {
+-                    buf.Append(' ');
+-                    buf.Append(GetShort(code, ip));
+-                    ip += Bytecode.OPND_SIZE_IN_BYTES;
+-                }
+-            }
+-            return buf.ToString();
+-        }
+-
+-        public virtual string Disassemble()
+-        {
+-            StringBuilder buf = new StringBuilder();
+-            int i = 0;
+-            while (i < codeSize)
+-            {
+-                i = DisassembleInstruction(buf, i);
+-                buf.Append('\n');
+-            }
+-            return buf.ToString();
+-        }
+-
+-        public virtual int DisassembleInstruction(StringBuilder buf, int ip)
+-        {
+-            int opcode = code[ip];
+-            if (ip >= codeSize)
+-            {
+-                throw new ArgumentException("ip out of range: " + ip);
+-            }
+-            Bytecode.Instruction I =
+-                Bytecode.instructions[opcode];
+-            if (I == null)
+-            {
+-                throw new ArgumentException("no such instruction " + opcode +
+-                    " at address " + ip);
+-            }
+-            string instrName = I.name;
+-            buf.Append(string.Format("{0:0000}:\t{1}", ip, instrName));
+-            ip++;
+-            if (I.n == 0)
+-            {
+-                buf.Append("  ");
+-                return ip;
+-            }
+-            List<string> operands = new List<string>();
+-            for (int i = 0; i < I.n; i++)
+-            {
+-                int opnd = GetShort(code, ip);
+-                ip += Bytecode.OPND_SIZE_IN_BYTES;
+-                switch (I.type[i])
+-                {
+-                case Bytecode.STRING:
+-                    operands.Add(ShowConstPoolOperand(opnd));
+-                    break;
+-                case Bytecode.ADDR:
+-                case Bytecode.INT:
+-                    operands.Add(opnd.ToString());
+-                    break;
+-                default:
+-                    operands.Add(opnd.ToString());
+-                    break;
+-                }
+-            }
+-            for (int i = 0; i < operands.Count; i++)
+-            {
+-                string s = operands[i];
+-                if (i > 0)
+-                    buf.Append(", ");
+-                buf.Append(s);
+-            }
+-            return ip;
+-        }
+-
+-        private string ShowConstPoolOperand(int poolIndex)
+-        {
+-            StringBuilder buf = new StringBuilder();
+-            buf.Append("#");
+-            buf.Append(poolIndex);
+-            string s = "<bad string index>";
+-            if (poolIndex < strings.Length)
+-            {
+-                if (strings[poolIndex] == null)
+-                    s = "null";
+-                else
+-                {
+-                    s = strings[poolIndex].ToString();
+-                    if (strings[poolIndex] is string)
+-                    {
+-                        s = Misc.ReplaceEscapes(s);
+-                        s = '"' + s + '"';
+-                    }
+-                }
+-            }
+-            buf.Append(":");
+-            buf.Append(s);
+-            return buf.ToString();
+-        }
+-
+-        public static int GetShort(byte[] memory, int index)
+-        {
+-            int b1 = memory[index++] & 0xFF; // mask off sign-extended bits
+-            int b2 = memory[index++] & 0xFF;
+-            int word = b1 << (8 * 1) | b2;
+-            return word;
+-        }
+-
+-        public virtual string Strings()
+-        {
+-            StringBuilder buf = new StringBuilder();
+-            int addr = 0;
+-            foreach (object o in strings)
+-            {
+-                if (o is string)
+-                {
+-                    string s = (string)o;
+-                    s = Misc.ReplaceEscapes(s);
+-                    buf.Append(string.Format("{0:0000}: \"{1}\"\n", addr, s));
+-                }
+-                else
+-                {
+-                    buf.Append(string.Format("{0:0000}: {1}\n", addr, o));
+-                }
+-                addr++;
+-            }
+-            return buf.ToString();
+-        }
+-    }
+-}
+diff --git a/StringTemplate4/CompiledTemplate.cs b/StringTemplate4/CompiledTemplate.cs
+deleted file mode 100644
+index 5ba91bb..0000000
+--- a/StringTemplate4/CompiledTemplate.cs
++++ /dev/null
+@@ -1,126 +0,0 @@
+-﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
+- * All rights reserved.
+- *
+- * Conversion to C#:
+- * Copyright (c) 2008-2009 Sam Harwell
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. Redistributions in binary form must reproduce the above copyright
+- *    notice, this list of conditions and the following disclaimer in the
+- *    documentation and/or other materials provided with the distribution.
+- * 3. The name of the author may not be used to endorse or promote products
+- *    derived from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- */
+-
+-namespace StringTemplate
+-{
+-    using System.Collections.Generic;
+-    using System.Diagnostics;
+-    using Console = System.Console;
+-    using StringBuilder = System.Text.StringBuilder;
+-
+-    public class CompiledTemplate
+-    {
+-        protected internal string name;
+-
+-        /** The original, immutable pattern (not really used again after
+-         *  initial "compilation"). Useful for debugging.
+-         */
+-        public string template;
+-
+-        // for subtemplates:
+-        public int embeddedStart = -1;
+-        public int embeddedStop = -1;
+-
+-        protected internal IDictionary<string, FormalArgument> formalArguments;
+-
+-        protected internal List<CompiledTemplate> implicitlyDefinedTemplates;
+-
+-        /** The group that holds this ST definition.  We use it to initiate
+-         *  interpretation via ST.toString().  From there, it becomes field 'group'
+-         *  in interpreter and is fixed until rendering completes.
+-         */
+-        public TemplateGroup nativeGroup = TemplateGroup.defaultGroup;
+-
+-        /** Does this template come from a <@region>...<@end> embedded in
+-         *  another template?
+-         */
+-        protected internal bool isRegion;
+-
+-        /** If someone refs <@r()> in template t, an implicit
+-         *
+-         *   @t.r() ::= ""
+-         *
+-         *  is defined, but you can overwrite this def by defining your
+-         *  own.  We need to prevent more than one manual def though.  Between
+-         *  this var and isEmbeddedRegion we can determine these cases.
+-         */
+-        protected internal Template.RegionType regionDefType;
+-
+-        public string[] strings;
+-        public byte[] instrs;        // byte-addressable code memory.
+-        public int codeSize;
+-
+-        [DebuggerHidden]
+-        public string Disassembly
+-        {
+-            get
+-            {
+-                BytecodeDisassembler dis = new BytecodeDisassembler(instrs, codeSize, strings);
+-                StringBuilder buffer = new StringBuilder();
+-                buffer.AppendLine(dis.Disassemble());
+-                buffer.AppendLine("Strings:");
+-                buffer.AppendLine(dis.Strings());
+-                return buffer.ToString();
+-            }
+-        }
+-
+-        public string Template
+-        {
+-            get
+-            {
+-                return template;
+-            }
+-        }
+-
+-        public bool IsSubtemplate
+-        {
+-            get
+-            {
+-                return name.StartsWith("/" + StringTemplate.Template.SubtemplatePrefix);
+-            }
+-        }
+-
+-        public virtual string Instructions()
+-        {
+-            var disassembler = new BytecodeDisassembler(instrs, codeSize, strings);
+-            return disassembler.Instructions();
+-        }
+-
+-        public virtual void Dump()
+-        {
+-            var disassembler = new BytecodeDisassembler(instrs, codeSize, strings);
+-            Console.WriteLine(disassembler.Disassemble());
+-            Console.WriteLine("Strings:");
+-            Console.WriteLine(disassembler.Strings());
+-        }
+-    }
+-}
+diff --git a/StringTemplate4/Compiler.cs b/StringTemplate4/Compiler.cs
+deleted file mode 100644
+index 334593e..0000000
+--- a/StringTemplate4/Compiler.cs
++++ /dev/null
+@@ -1,315 +0,0 @@
+-﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
+- * All rights reserved.
+- *
+- * Conversion to C#:
+- * Copyright (c) 2008-2009 Sam Harwell
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. Redistributions in binary form must reproduce the above copyright
+- *    notice, this list of conditions and the following disclaimer in the
+- *    documentation and/or other materials provided with the distribution.
+- * 3. The name of the author may not be used to endorse or promote products
+- *    derived from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- */
+-
+-namespace StringTemplate
+-{
+-    using System.Collections.Generic;
+-    using Antlr.Runtime;
+-    using Array = System.Array;
+-    using Console = System.Console;
+-    using IList = System.Collections.IList;
+-    using Math = System.Math;
+-    using Path = System.IO.Path;
+-
+-    /// <summary>
+-    /// A compiler for a single template
+-    /// </summary>
+-    public class Compiler : ICodeGenerator
+-    {
+-        /** Given a template of length n, how much code will result?
+-         *  For now, let's assume n/5. Later, we can test in practice.
+-         */
+-        public static readonly double CODE_SIZE_FACTOR = 5.0;
+-        public static readonly int SUBTEMPLATE_INITIAL_CODE_SIZE = 15;
+-
+-        public static readonly IDictionary<string, int> supportedOptions =
+-            new Dictionary<string, int>()
+-            {
+-                { "anchor",    Interpreter.OPTION_ANCHOR},
+-                { "format",    Interpreter.OPTION_FORMAT},
+-                { "null",      Interpreter.OPTION_NULL},
+-                { "separator", Interpreter.OPTION_SEPARATOR},
+-                { "wrap",      Interpreter.OPTION_WRAP}
+-            };
+-
+-        public static readonly int NUM_OPTIONS = supportedOptions.Count;
+-
+-        public static readonly IDictionary<string, string> defaultOptionValues =
+-            new Dictionary<string, string>()
+-        {
+-            {"anchor", "true"},
+-            {"wrap",   "\n"}
+-        };
+-
+-        public static IDictionary<string, short> funcs =
+-            new Dictionary<string, short>()
+-        {
+-            {"first", Bytecode.INSTR_FIRST},
+-            {"last", Bytecode.INSTR_LAST},
+-            {"rest", Bytecode.INSTR_REST},
+-            {"trunc", Bytecode.INSTR_TRUNC},
+-            {"strip", Bytecode.INSTR_STRIP},
+-            {"trim", Bytecode.INSTR_TRIM},
+-            {"length", Bytecode.INSTR_LENGTH},
+-            {"strlen", Bytecode.INSTR_STRLEN},
+-            {"reverse", Bytecode.INSTR_REVERSE}
+-        };
+-
+-        StringTable strings = new StringTable();
+-        byte[] instrs;
+-        int ip = 0;
+-        CompiledTemplate code = new CompiledTemplate();
+-
+-        /** subdir context.  If we're compiling templates in subdir a/b/c, then
+-         *  /a/b/c is the path prefix to add to all ID refs; it fully qualifies them.
+-         *  It's like resolving x to this.x in Java for field x.
+-         */
+-        private string templatePathPrefix;
+-
+-        private string enclosingTemplateName;
+-
+-        public static int subtemplateCount = 0; // public for testing access
+-
+-        public Compiler()
+-            : this("/", "<unknown>")
+-        {
+-        }
+-
+-        public Compiler(string templatePathPrefix, string enclosingTemplateName)
+-        {
+-            this.templatePathPrefix = templatePathPrefix;
+-            this.enclosingTemplateName = enclosingTemplateName;
+-        }
+-
+-        public string TemplateReferencePrefix
+-        {
+-            get
+-            {
+-                return this.templatePathPrefix;
+-            }
+-        }
+-
+-        public CompiledTemplate Compile(string template)
+-        {
+-            return Compile(template, '<', '>');
+-        }
+-
+-        public CompiledTemplate Compile(string template,
+-                                        char delimiterStartChar,
+-                                        char delimiterStopChar)
+-        {
+-            int initialSize = Math.Max(5, (int)(template.Length / CODE_SIZE_FACTOR));
+-            instrs = new byte[initialSize];
+-            code.template = template;
+-
+-            TemplateLexer lexer = new TemplateLexer(new ANTLRStringStream(template), delimiterStartChar, delimiterStopChar);
+-            UnbufferedTokenStream tokens = new UnbufferedTokenStream(lexer);
+-            TemplateParser parser = new TemplateParser(tokens, this, enclosingTemplateName);
+-            try
+-            {
+-                parser.templateAndEOF(); // parse, trigger compile actions for single expr
+-            }
+-            catch (RecognitionException re)
+-            {
+-                string msg = parser.GetErrorMessage(re, parser.TokenNames);
+-                Console.Error.WriteLine(re.StackTrace);
+-                throw new TemplateRecognitionException(msg, re);
+-            }
+-
+-            if (strings != null)
+-                code.strings = strings.ToArray();
+-            code.instrs = instrs;
+-            code.codeSize = ip;
+-            return code;
+-        }
+-
+-        public CompiledTemplate Compile(ITokenStream tokens, RecognizerSharedState state)
+-        {
+-            instrs = new byte[SUBTEMPLATE_INITIAL_CODE_SIZE];
+-            TemplateParser parser = new TemplateParser(tokens, state, this, enclosingTemplateName);
+-            try
+-            {
+-                parser.template(); // parse, trigger compile actions for single expr
+-            }
+-            catch (RecognitionException re)
+-            {
+-                string msg = parser.GetErrorMessage(re, parser.TokenNames);
+-                Console.Error.WriteLine(re.StackTrace);
+-                throw new TemplateRecognitionException(msg, re);
+-            }
+-
+-            if (strings != null)
+-                code.strings = strings.ToArray();
+-            code.instrs = instrs;
+-            code.codeSize = ip;
+-            return code;
+-        }
+-
+-        public int DefineString(string s)
+-        {
+-            return strings.Add(s);
+-        }
+-
+-        // CodeGenerator interface impl.
+-
+-        public void Emit(short opcode)
+-        {
+-            EnsureCapacity(1);
+-            instrs[ip++] = (byte)opcode;
+-        }
+-
+-        public void Emit(short opcode, int arg)
+-        {
+-            Emit(opcode);
+-            EnsureCapacity(2);
+-            WriteShort(instrs, ip, (short)arg);
+-            ip += 2;
+-        }
+-
+-        public void Emit(short opcode, int arg1, int arg2)
+-        {
+-            Emit(opcode, arg1);
+-            EnsureCapacity(2);
+-            WriteShort(instrs, ip, (short)arg2);
+-            ip += 2;
+-        }
+-
+-        public void Emit(short opcode, string s)
+-        {
+-            int i = DefineString(s);
+-            Emit(opcode, i);
+-        }
+-
+-        public void Write(int addr, short value)
+-        {
+-            WriteShort(instrs, addr, value);
+-        }
+-
+-        public int Address()
+-        {
+-            return ip;
+-        }
+-
+-        public string CompileAnonTemplate(string enclosingTemplateName,
+-                                          ITokenStream input,
+-                                          IList<IToken> argIDs,
+-                                          RecognizerSharedState state)
+-        {
+-            subtemplateCount++;
+-            string name = templatePathPrefix + Template.SubtemplatePrefix + subtemplateCount;
+-            ITokenSource tokenSource = input.TokenSource;
+-            TemplateLexer lexer = tokenSource as TemplateLexer;
+-            int start = -1;
+-            int stop = -1;
+-            if (tokenSource != null)
+-                start = lexer.input.Index;
+-            Compiler c = new Compiler(templatePathPrefix, enclosingTemplateName);
+-            CompiledTemplate sub = c.Compile(input, state);
+-            sub.name = name;
+-            if (lexer != null)
+-            {
+-                stop = lexer.input.Index;
+-                //sub.template = lexer.input.Substring(start, stop - start - 1);
+-                Console.WriteLine(start + ".." + stop);
+-                sub.embeddedStart = start;
+-                sub.embeddedStop = stop - 1;
+-                sub.template = lexer.input.Substring(0, lexer.input.Count - 1);
+-            }
+-            if (code.implicitlyDefinedTemplates == null)
+-                code.implicitlyDefinedTemplates = new List<CompiledTemplate>();
+-            code.implicitlyDefinedTemplates.Add(sub);
+-            if (argIDs != null)
+-            {
+-                sub.formalArguments = new Dictionary<string, FormalArgument>();
+-                foreach (IToken arg in argIDs)
+-                {
+-                    string argName = arg.Text;
+-                    sub.formalArguments[argName] = new FormalArgument(argName);
+-                }
+-            }
+-            return name;
+-        }
+-
+-        public string CompileRegion(string enclosingTemplateName,
+-                                    string regionName,
+-                                    ITokenStream input,
+-                                    RecognizerSharedState state)
+-        {
+-            Compiler c = new Compiler(templatePathPrefix, enclosingTemplateName);
+-            CompiledTemplate sub = c.Compile(input, state);
+-            string fullName = templatePathPrefix + TemplateGroup.GetMangledRegionName(enclosingTemplateName, regionName);
+-            sub.name = fullName;
+-            if (code.implicitlyDefinedTemplates == null)
+-            {
+-                code.implicitlyDefinedTemplates = new List<CompiledTemplate>();
+-            }
+-            code.implicitlyDefinedTemplates.Add(sub);
+-            return fullName;
+-        }
+-
+-        public void DefineBlankRegion(string fullyQualifiedName)
+-        {
+-            // TODO: combine with CompileRegion
+-            CompiledTemplate blank = new CompiledTemplate()
+-            {
+-                isRegion = true,
+-                regionDefType = Template.RegionType.Implicit,
+-                name = fullyQualifiedName
+-            };
+-
+-            if (code.implicitlyDefinedTemplates == null)
+-                code.implicitlyDefinedTemplates = new List<CompiledTemplate>();
+-
+-            code.implicitlyDefinedTemplates.Add(blank);
+-        }
+-
+-        protected void EnsureCapacity(int n)
+-        {
+-            if ((ip + n) >= instrs.Length)
+-            {
+-                // ensure room for full instruction
+-                byte[] c = new byte[instrs.Length * 2];
+-                Array.Copy(instrs, 0, c, 0, instrs.Length);
+-                instrs = c;
+-            }
+-        }
+-
+-        /** Write value at index into a byte array highest to lowest byte,
+-         *  left to right.
+-         */
+-        public static void WriteShort(byte[] memory, int index, short value)
+-        {
+-            memory[index + 0] = (byte)((value >> (8 * 1)) & 0xFF);
+-            memory[index + 1] = (byte)(value & 0xFF);
+-        }
+-    }
+-}
+diff --git a/StringTemplate4/Compiler/Bytecode.cs b/StringTemplate4/Compiler/Bytecode.cs
+new file mode 100644
+index 0000000..a939ddc
+--- /dev/null
++++ b/StringTemplate4/Compiler/Bytecode.cs
+@@ -0,0 +1,171 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace StringTemplate
++{
++    public class Bytecode
++    {
++        public const int MaxOperands = 3;
++        public const int OPND_SIZE_IN_BYTES = 2;
++        public const int STRING = 1;
++        public const int ADDR = 2;
++        public const int INT = 3;
++
++        public class Instruction
++        {
++            internal string name; // E.g., "load_str", "new"
++            internal int[] type = new int[MaxOperands];
++            internal int n = 0;
++
++            public Instruction(string name)
++                : this(name, 0, 0, 0)
++            {
++                n = 0;
++            }
++
++            public Instruction(string name, int a)
++                : this(name, a, 0, 0)
++            {
++                n = 1;
++            }
++
++            public Instruction(string name, int a, int b)
++                : this(name, a, b, 0)
++            {
++                n = 2;
++            }
++
++            public Instruction(string name, int a, int b, int c)
++            {
++                this.name = name;
++                type[0] = a;
++                type[1] = b;
++                type[2] = c;
++                n = 3;
++            }
++        }
++
++        // TODO: try an enum here
++
++        // INSTRUCTION BYTECODES (byte is signed; use a short to keep 0..255)
++        public const short INSTR_LOAD_STR = 1;
++        public const short INSTR_LOAD_ATTR = 2;
++        public const short INSTR_LOAD_LOCAL = 3; // load stuff like it, i, i0
++        public const short INSTR_LOAD_PROP = 4;
++        public const short INSTR_LOAD_PROP_IND = 5;
++        public const short INSTR_STORE_ATTR = 6;
++        public const short INSTR_STORE_SOLE_ARG = 7;
++        public const short INSTR_SET_PASS_THRU = 8;
++        public const short INSTR_STORE_OPTION = 9;
++        public const short INSTR_NEW = 10;  // create new template instance
++        public const short INSTR_NEW_IND = 11;  // create new template instance using value on stack
++        public const short INSTR_SUPER_NEW = 12;  // create new template instance using value on stack
++        public const short INSTR_WRITE = 13;
++        public const short INSTR_WRITE_OPT = 14;
++        public const short INSTR_MAP = 15;  // <a:b()>, <a:b():c()>, <a:{...}>
++        public const short INSTR_ROT_MAP = 16;  // <a:b(),c()>
++        public const short INSTR_PAR_MAP = 17;  // <names,phones:{n,p | ...}>
++        public const short INSTR_BR = 18;
++        public const short INSTR_BRF = 19;
++        public const short INSTR_OPTIONS = 20;  // push options block
++        public const short INSTR_LIST = 21;
++        public const short INSTR_ADD = 22;
++        public const short INSTR_TOSTR = 23;
++        // Predefined functions
++        public const short INSTR_NOOP = 24; // do nothing
++        public const short INSTR_FIRST = 25;
++        public const short INSTR_LAST = 26;
++        public const short INSTR_REST = 27;
++        public const short INSTR_TRUNC = 28;
++        public const short INSTR_STRIP = 29;
++        public const short INSTR_TRIM = 30;
++        public const short INSTR_LENGTH = 31;
++        public const short INSTR_STRLEN = 32;
++        public const short INSTR_REVERSE = 33;
++
++        public const short INSTR_NOT = 34;
++        public const short INSTR_OR = 35;
++        public const short INSTR_AND = 36;
++
++        public const short INSTR_INDENT = 37;
++        public const short INSTR_DEDENT = 38;
++        public const short INSTR_NEWLINE = 39;
++
++        /** Used for assembly/disassembly; describes instruction set */
++        // START: instr
++        public static Instruction[] instructions =
++            new Instruction[]
++            {
++                null, // <INVALID>
++                new Instruction("load_str",STRING), // index is the opcode
++                new Instruction("load_attr",STRING),
++                new Instruction("load_local",STRING),
++                new Instruction("load_prop",STRING),
++                new Instruction("load_prop_ind"),
++                new Instruction("store_attr",STRING),
++                new Instruction("store_sole_arg"),
++                new Instruction("set_pass_thru"),
++                new Instruction("store_option",INT),
++                new Instruction("new",STRING),
++                new Instruction("new_ind"),
++                new Instruction("super_new",STRING),
++                new Instruction("write", INT, INT), // write delimiter-start-in-template, stop
++                new Instruction("write_opt", INT, INT),
++                new Instruction("map"),
++                new Instruction("rot_map", INT),
++                new Instruction("par_map", INT),
++                new Instruction("br", ADDR),
++                new Instruction("brf", ADDR),
++                new Instruction("options"),
++                new Instruction("list"),
++                new Instruction("add"),
++                new Instruction("tostr"),
++                new Instruction("noop"),
++                new Instruction("first"),
++                new Instruction("last"),
++                new Instruction("rest"),
++                new Instruction("trunc"),
++                new Instruction("strip"),
++                new Instruction("trim"),
++                new Instruction("length"),
++                new Instruction("strlen"),
++                new Instruction("reverse"),
++                new Instruction("not"),
++                new Instruction("or"),
++                new Instruction("and"),
++                new Instruction("indent", STRING),
++                new Instruction("dedent"),
++                new Instruction("newline")
++            };
++        // END: instr
++    }
++}
+diff --git a/StringTemplate4/Compiler/BytecodeDisassembler.cs b/StringTemplate4/Compiler/BytecodeDisassembler.cs
+new file mode 100644
+index 0000000..6bddbc0
+--- /dev/null
++++ b/StringTemplate4/Compiler/BytecodeDisassembler.cs
+@@ -0,0 +1,194 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace StringTemplate
++{
++    using System.Collections.Generic;
++    using ArgumentException = System.ArgumentException;
++    using StringBuilder = System.Text.StringBuilder;
++
++    public class BytecodeDisassembler
++    {
++        // TODO: make disassembler point at compiledST code?
++        byte[] code;
++        int codeSize;
++        protected object[] strings;
++
++        public BytecodeDisassembler(byte[] code,
++                                    int codeSize,
++                                    string[] strings)
++        {
++            this.code = code;
++            this.codeSize = codeSize;
++            this.strings = strings;
++        }
++
++        public virtual string Instructions()
++        {
++            StringBuilder buf = new StringBuilder();
++            int ip = 0;
++            while (ip < codeSize)
++            {
++                if (ip > 0)
++                    buf.Append(", ");
++                int opcode = code[ip];
++                Bytecode.Instruction I = Bytecode.instructions[opcode];
++                buf.Append(I.name);
++                ip++;
++                for (int opnd = 0; opnd < I.n; opnd++)
++                {
++                    buf.Append(' ');
++                    buf.Append(GetShort(code, ip));
++                    ip += Bytecode.OPND_SIZE_IN_BYTES;
++                }
++            }
++            return buf.ToString();
++        }
++
++        public virtual string Disassemble()
++        {
++            StringBuilder buf = new StringBuilder();
++            int i = 0;
++            while (i < codeSize)
++            {
++                i = DisassembleInstruction(buf, i);
++                buf.Append('\n');
++            }
++            return buf.ToString();
++        }
++
++        public virtual int DisassembleInstruction(StringBuilder buf, int ip)
++        {
++            int opcode = code[ip];
++            if (ip >= codeSize)
++            {
++                throw new ArgumentException("ip out of range: " + ip);
++            }
++            Bytecode.Instruction I =
++                Bytecode.instructions[opcode];
++            if (I == null)
++            {
++                throw new ArgumentException("no such instruction " + opcode +
++                    " at address " + ip);
++            }
++            string instrName = I.name;
++            buf.Append(string.Format("{0:0000}:\t{1}", ip, instrName));
++            ip++;
++            if (I.n == 0)
++            {
++                buf.Append("  ");
++                return ip;
++            }
++            List<string> operands = new List<string>();
++            for (int i = 0; i < I.n; i++)
++            {
++                int opnd = GetShort(code, ip);
++                ip += Bytecode.OPND_SIZE_IN_BYTES;
++                switch (I.type[i])
++                {
++                case Bytecode.STRING:
++                    operands.Add(ShowConstPoolOperand(opnd));
++                    break;
++                case Bytecode.ADDR:
++                case Bytecode.INT:
++                    operands.Add(opnd.ToString());
++                    break;
++                default:
++                    operands.Add(opnd.ToString());
++                    break;
++                }
++            }
++            for (int i = 0; i < operands.Count; i++)
++            {
++                string s = operands[i];
++                if (i > 0)
++                    buf.Append(", ");
++                buf.Append(s);
++            }
++            return ip;
++        }
++
++        private string ShowConstPoolOperand(int poolIndex)
++        {
++            StringBuilder buf = new StringBuilder();
++            buf.Append("#");
++            buf.Append(poolIndex);
++            string s = "<bad string index>";
++            if (poolIndex < strings.Length)
++            {
++                if (strings[poolIndex] == null)
++                    s = "null";
++                else
++                {
++                    s = strings[poolIndex].ToString();
++                    if (strings[poolIndex] is string)
++                    {
++                        s = Misc.ReplaceEscapes(s);
++                        s = '"' + s + '"';
++                    }
++                }
++            }
++            buf.Append(":");
++            buf.Append(s);
++            return buf.ToString();
++        }
++
++        public static int GetShort(byte[] memory, int index)
++        {
++            int b1 = memory[index++] & 0xFF; // mask off sign-extended bits
++            int b2 = memory[index++] & 0xFF;
++            int word = b1 << (8 * 1) | b2;
++            return word;
++        }
++
++        public virtual string Strings()
++        {
++            StringBuilder buf = new StringBuilder();
++            int addr = 0;
++            foreach (object o in strings)
++            {
++                if (o is string)
++                {
++                    string s = (string)o;
++                    s = Misc.ReplaceEscapes(s);
++                    buf.Append(string.Format("{0:0000}: \"{1}\"\n", addr, s));
++                }
++                else
++                {
++                    buf.Append(string.Format("{0:0000}: {1}\n", addr, o));
++                }
++                addr++;
++            }
++            return buf.ToString();
++        }
++    }
++}
+diff --git a/StringTemplate4/Compiler/CompiledTemplate.cs b/StringTemplate4/Compiler/CompiledTemplate.cs
+new file mode 100644
+index 0000000..5ba91bb
+--- /dev/null
++++ b/StringTemplate4/Compiler/CompiledTemplate.cs
+@@ -0,0 +1,126 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace StringTemplate
++{
++    using System.Collections.Generic;
++    using System.Diagnostics;
++    using Console = System.Console;
++    using StringBuilder = System.Text.StringBuilder;
++
++    public class CompiledTemplate
++    {
++        protected internal string name;
++
++        /** The original, immutable pattern (not really used again after
++         *  initial "compilation"). Useful for debugging.
++         */
++        public string template;
++
++        // for subtemplates:
++        public int embeddedStart = -1;
++        public int embeddedStop = -1;
++
++        protected internal IDictionary<string, FormalArgument> formalArguments;
++
++        protected internal List<CompiledTemplate> implicitlyDefinedTemplates;
++
++        /** The group that holds this ST definition.  We use it to initiate
++         *  interpretation via ST.toString().  From there, it becomes field 'group'
++         *  in interpreter and is fixed until rendering completes.
++         */
++        public TemplateGroup nativeGroup = TemplateGroup.defaultGroup;
++
++        /** Does this template come from a <@region>...<@end> embedded in
++         *  another template?
++         */
++        protected internal bool isRegion;
++
++        /** If someone refs <@r()> in template t, an implicit
++         *
++         *   @t.r() ::= ""
++         *
++         *  is defined, but you can overwrite this def by defining your
++         *  own.  We need to prevent more than one manual def though.  Between
++         *  this var and isEmbeddedRegion we can determine these cases.
++         */
++        protected internal Template.RegionType regionDefType;
++
++        public string[] strings;
++        public byte[] instrs;        // byte-addressable code memory.
++        public int codeSize;
++
++        [DebuggerHidden]
++        public string Disassembly
++        {
++            get
++            {
++                BytecodeDisassembler dis = new BytecodeDisassembler(instrs, codeSize, strings);
++                StringBuilder buffer = new StringBuilder();
++                buffer.AppendLine(dis.Disassemble());
++                buffer.AppendLine("Strings:");
++                buffer.AppendLine(dis.Strings());
++                return buffer.ToString();
++            }
++        }
++
++        public string Template
++        {
++            get
++            {
++                return template;
++            }
++        }
++
++        public bool IsSubtemplate
++        {
++            get
++            {
++                return name.StartsWith("/" + StringTemplate.Template.SubtemplatePrefix);
++            }
++        }
++
++        public virtual string Instructions()
++        {
++            var disassembler = new BytecodeDisassembler(instrs, codeSize, strings);
++            return disassembler.Instructions();
++        }
++
++        public virtual void Dump()
++        {
++            var disassembler = new BytecodeDisassembler(instrs, codeSize, strings);
++            Console.WriteLine(disassembler.Disassemble());
++            Console.WriteLine("Strings:");
++            Console.WriteLine(disassembler.Strings());
++        }
++    }
++}
+diff --git a/StringTemplate4/Compiler/Compiler.cs b/StringTemplate4/Compiler/Compiler.cs
+new file mode 100644
+index 0000000..334593e
+--- /dev/null
++++ b/StringTemplate4/Compiler/Compiler.cs
+@@ -0,0 +1,315 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace StringTemplate
++{
++    using System.Collections.Generic;
++    using Antlr.Runtime;
++    using Array = System.Array;
++    using Console = System.Console;
++    using IList = System.Collections.IList;
++    using Math = System.Math;
++    using Path = System.IO.Path;
++
++    /// <summary>
++    /// A compiler for a single template
++    /// </summary>
++    public class Compiler : ICodeGenerator
++    {
++        /** Given a template of length n, how much code will result?
++         *  For now, let's assume n/5. Later, we can test in practice.
++         */
++        public static readonly double CODE_SIZE_FACTOR = 5.0;
++        public static readonly int SUBTEMPLATE_INITIAL_CODE_SIZE = 15;
++
++        public static readonly IDictionary<string, int> supportedOptions =
++            new Dictionary<string, int>()
++            {
++                { "anchor",    Interpreter.OPTION_ANCHOR},
++                { "format",    Interpreter.OPTION_FORMAT},
++                { "null",      Interpreter.OPTION_NULL},
++                { "separator", Interpreter.OPTION_SEPARATOR},
++                { "wrap",      Interpreter.OPTION_WRAP}
++            };
++
++        public static readonly int NUM_OPTIONS = supportedOptions.Count;
++
++        public static readonly IDictionary<string, string> defaultOptionValues =
++            new Dictionary<string, string>()
++        {
++            {"anchor", "true"},
++            {"wrap",   "\n"}
++        };
++
++        public static IDictionary<string, short> funcs =
++            new Dictionary<string, short>()
++        {
++            {"first", Bytecode.INSTR_FIRST},
++            {"last", Bytecode.INSTR_LAST},
++            {"rest", Bytecode.INSTR_REST},
++            {"trunc", Bytecode.INSTR_TRUNC},
++            {"strip", Bytecode.INSTR_STRIP},
++            {"trim", Bytecode.INSTR_TRIM},
++            {"length", Bytecode.INSTR_LENGTH},
++            {"strlen", Bytecode.INSTR_STRLEN},
++            {"reverse", Bytecode.INSTR_REVERSE}
++        };
++
++        StringTable strings = new StringTable();
++        byte[] instrs;
++        int ip = 0;
++        CompiledTemplate code = new CompiledTemplate();
++
++        /** subdir context.  If we're compiling templates in subdir a/b/c, then
++         *  /a/b/c is the path prefix to add to all ID refs; it fully qualifies them.
++         *  It's like resolving x to this.x in Java for field x.
++         */
++        private string templatePathPrefix;
++
++        private string enclosingTemplateName;
++
++        public static int subtemplateCount = 0; // public for testing access
++
++        public Compiler()
++            : this("/", "<unknown>")
++        {
++        }
++
++        public Compiler(string templatePathPrefix, string enclosingTemplateName)
++        {
++            this.templatePathPrefix = templatePathPrefix;
++            this.enclosingTemplateName = enclosingTemplateName;
++        }
++
++        public string TemplateReferencePrefix
++        {
++            get
++            {
++                return this.templatePathPrefix;
++            }
++        }
++
++        public CompiledTemplate Compile(string template)
++        {
++            return Compile(template, '<', '>');
++        }
++
++        public CompiledTemplate Compile(string template,
++                                        char delimiterStartChar,
++                                        char delimiterStopChar)
++        {
++            int initialSize = Math.Max(5, (int)(template.Length / CODE_SIZE_FACTOR));
++            instrs = new byte[initialSize];
++            code.template = template;
++
++            TemplateLexer lexer = new TemplateLexer(new ANTLRStringStream(template), delimiterStartChar, delimiterStopChar);
++            UnbufferedTokenStream tokens = new UnbufferedTokenStream(lexer);
++            TemplateParser parser = new TemplateParser(tokens, this, enclosingTemplateName);
++            try
++            {
++                parser.templateAndEOF(); // parse, trigger compile actions for single expr
++            }
++            catch (RecognitionException re)
++            {
++                string msg = parser.GetErrorMessage(re, parser.TokenNames);
++                Console.Error.WriteLine(re.StackTrace);
++                throw new TemplateRecognitionException(msg, re);
++            }
++
++            if (strings != null)
++                code.strings = strings.ToArray();
++            code.instrs = instrs;
++            code.codeSize = ip;
++            return code;
++        }
++
++        public CompiledTemplate Compile(ITokenStream tokens, RecognizerSharedState state)
++        {
++            instrs = new byte[SUBTEMPLATE_INITIAL_CODE_SIZE];
++            TemplateParser parser = new TemplateParser(tokens, state, this, enclosingTemplateName);
++            try
++            {
++                parser.template(); // parse, trigger compile actions for single expr
++            }
++            catch (RecognitionException re)
++            {
++                string msg = parser.GetErrorMessage(re, parser.TokenNames);
++                Console.Error.WriteLine(re.StackTrace);
++                throw new TemplateRecognitionException(msg, re);
++            }
++
++            if (strings != null)
++                code.strings = strings.ToArray();
++            code.instrs = instrs;
++            code.codeSize = ip;
++            return code;
++        }
++
++        public int DefineString(string s)
++        {
++            return strings.Add(s);
++        }
++
++        // CodeGenerator interface impl.
++
++        public void Emit(short opcode)
++        {
++            EnsureCapacity(1);
++            instrs[ip++] = (byte)opcode;
++        }
++
++        public void Emit(short opcode, int arg)
++        {
++            Emit(opcode);
++            EnsureCapacity(2);
++            WriteShort(instrs, ip, (short)arg);
++            ip += 2;
++        }
++
++        public void Emit(short opcode, int arg1, int arg2)
++        {
++            Emit(opcode, arg1);
++            EnsureCapacity(2);
++            WriteShort(instrs, ip, (short)arg2);
++            ip += 2;
++        }
++
++        public void Emit(short opcode, string s)
++        {
++            int i = DefineString(s);
++            Emit(opcode, i);
++        }
++
++        public void Write(int addr, short value)
++        {
++            WriteShort(instrs, addr, value);
++        }
++
++        public int Address()
++        {
++            return ip;
++        }
++
++        public string CompileAnonTemplate(string enclosingTemplateName,
++                                          ITokenStream input,
++                                          IList<IToken> argIDs,
++                                          RecognizerSharedState state)
++        {
++            subtemplateCount++;
++            string name = templatePathPrefix + Template.SubtemplatePrefix + subtemplateCount;
++            ITokenSource tokenSource = input.TokenSource;
++            TemplateLexer lexer = tokenSource as TemplateLexer;
++            int start = -1;
++            int stop = -1;
++            if (tokenSource != null)
++                start = lexer.input.Index;
++            Compiler c = new Compiler(templatePathPrefix, enclosingTemplateName);
++            CompiledTemplate sub = c.Compile(input, state);
++            sub.name = name;
++            if (lexer != null)
++            {
++                stop = lexer.input.Index;
++                //sub.template = lexer.input.Substring(start, stop - start - 1);
++                Console.WriteLine(start + ".." + stop);
++                sub.embeddedStart = start;
++                sub.embeddedStop = stop - 1;
++                sub.template = lexer.input.Substring(0, lexer.input.Count - 1);
++            }
++            if (code.implicitlyDefinedTemplates == null)
++                code.implicitlyDefinedTemplates = new List<CompiledTemplate>();
++            code.implicitlyDefinedTemplates.Add(sub);
++            if (argIDs != null)
++            {
++                sub.formalArguments = new Dictionary<string, FormalArgument>();
++                foreach (IToken arg in argIDs)
++                {
++                    string argName = arg.Text;
++                    sub.formalArguments[argName] = new FormalArgument(argName);
++                }
++            }
++            return name;
++        }
++
++        public string CompileRegion(string enclosingTemplateName,
++                                    string regionName,
++                                    ITokenStream input,
++                                    RecognizerSharedState state)
++        {
++            Compiler c = new Compiler(templatePathPrefix, enclosingTemplateName);
++            CompiledTemplate sub = c.Compile(input, state);
++            string fullName = templatePathPrefix + TemplateGroup.GetMangledRegionName(enclosingTemplateName, regionName);
++            sub.name = fullName;
++            if (code.implicitlyDefinedTemplates == null)
++            {
++                code.implicitlyDefinedTemplates = new List<CompiledTemplate>();
++            }
++            code.implicitlyDefinedTemplates.Add(sub);
++            return fullName;
++        }
++
++        public void DefineBlankRegion(string fullyQualifiedName)
++        {
++            // TODO: combine with CompileRegion
++            CompiledTemplate blank = new CompiledTemplate()
++            {
++                isRegion = true,
++                regionDefType = Template.RegionType.Implicit,
++                name = fullyQualifiedName
++            };
++
++            if (code.implicitlyDefinedTemplates == null)
++                code.implicitlyDefinedTemplates = new List<CompiledTemplate>();
++
++            code.implicitlyDefinedTemplates.Add(blank);
++        }
++
++        protected void EnsureCapacity(int n)
++        {
++            if ((ip + n) >= instrs.Length)
++            {
++                // ensure room for full instruction
++                byte[] c = new byte[instrs.Length * 2];
++                Array.Copy(instrs, 0, c, 0, instrs.Length);
++                instrs = c;
++            }
++        }
++
++        /** Write value at index into a byte array highest to lowest byte,
++         *  left to right.
++         */
++        public static void WriteShort(byte[] memory, int index, short value)
++        {
++            memory[index + 0] = (byte)((value >> (8 * 1)) & 0xFF);
++            memory[index + 1] = (byte)(value & 0xFF);
++        }
++    }
++}
+diff --git a/StringTemplate4/Compiler/FormalArgument.cs b/StringTemplate4/Compiler/FormalArgument.cs
+new file mode 100644
+index 0000000..321e3db
+--- /dev/null
++++ b/StringTemplate4/Compiler/FormalArgument.cs
+@@ -0,0 +1,121 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace StringTemplate
++{
++    using Antlr.Runtime;
++
++    public class FormalArgument
++    {
++        // the following represent bit positions emulating a cardinality bitset.
++        public static readonly int OPTIONAL = 1;     // a?
++        public static readonly int REQUIRED = 2;     // a
++        public static readonly int ZERO_OR_MORE = 4; // a*
++        public static readonly int ONE_OR_MORE = 8;  // a+
++
++        public static readonly string[] suffixes = {
++        null,
++        "?",
++        "",
++        null,
++        "*",
++        null,
++        null,
++        null,
++        "+"
++    };
++
++        public string name;
++        //protected int cardinality = REQUIRED;
++
++        /** If they specified name="value", store the template here */
++        public IToken defaultValueToken;
++        public CompiledTemplate compiledDefaultValue;
++
++        public FormalArgument(string name)
++        {
++            this.name = name;
++        }
++
++        public FormalArgument(string name, IToken defaultValueToken)
++        {
++            this.name = name;
++            this.defaultValueToken = defaultValueToken;
++        }
++
++        /*
++        public static String getCardinalityName(int cardinality) {
++            switch (cardinality) {
++                case OPTIONAL : return "optional";
++                case REQUIRED : return "exactly one";
++                case ZERO_OR_MORE : return "zero-or-more";
++                case ONE_OR_MORE : return "one-or-more";
++                default : return "unknown";
++            }
++        }
++        */
++
++        public override int GetHashCode()
++        {
++            return name.GetHashCode() + defaultValueToken.GetHashCode();
++        }
++
++        public override bool Equals(object o)
++        {
++            if (o == null || !(o is FormalArgument))
++            {
++                return false;
++            }
++            FormalArgument other = (FormalArgument)o;
++            if (!this.name.Equals(other.name))
++            {
++                return false;
++            }
++            // only check if there is a default value; that's all
++            if ((this.defaultValueToken != null && other.defaultValueToken == null) ||
++                 (this.defaultValueToken == null && other.defaultValueToken != null))
++            {
++                return false;
++            }
++            return true;
++        }
++
++        public override string ToString()
++        {
++            if (defaultValueToken != null)
++            {
++                return name + "=" + defaultValueToken.Text;
++            }
++            return name;
++        }
++    }
++}
+diff --git a/StringTemplate4/Compiler/Group.g3 b/StringTemplate4/Compiler/Group.g3
+new file mode 100644
+index 0000000..4a77d4f
+--- /dev/null
++++ b/StringTemplate4/Compiler/Group.g3
+@@ -0,0 +1,218 @@
++﻿/*
++ [The "BSD licence"]
++ Copyright (c) 2003-2009 Terence Parr
++ All rights reserved.
++
++ Redistribution and use in source and binary forms, with or without
++ modification, are permitted provided that the following conditions
++ are met:
++ 1. Redistributions of source code must retain the above copyright
++    notice, this list of conditions and the following disclaimer.
++ 2. Redistributions in binary form must reproduce the above copyright
++    notice, this list of conditions and the following disclaimer in the
++    documentation and/or other materials provided with the distribution.
++ 3. The name of the author may not be used to endorse or promote products
++    derived from this software without specific prior written permission.
++
++ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++*/
++
++/** Match a group of template definitions beginning
++ *  with a group name declaration.  Templates are enclosed
++ *  in double-quotes or <<...>> quotes for multi-line templates.
++ *  Template names have arg lists that indicate the cardinality
++ *  of the attribute: present, optional, zero-or-more, one-or-more.
++ *  Here is a sample group file:
++
++	group nfa;
++
++	// an NFA has edges and states
++	nfa(states,edges) ::= <<
++	digraph NFA {
++	rankdir=LR;
++	<states; separator="\\n">
++	<edges; separator="\\n">
++	}
++	>>
++
++	state(name) ::= "node [shape = circle]; <name>;"
++
++ */
++grammar Group;
++
++options {
++	language=CSharp3;
++}
++
++@lexer::namespace{StringTemplate}
++@parser::namespace{StringTemplate}
++
++@header
++{
++using Console = System.Console;
++}
++
++public
++group[TemplateGroup group, string prefix]
++@init {
++GroupLexer lexer = (GroupLexer)input.TokenSource;
++this._group = lexer._group = $group;
++}
++	:	( templateDef[prefix] | dictDef )+
++    ;
++
++public
++templateDef[string prefix]
++@init {
++    string template=null;
++    string fullName = null;
++    int n=0; // num char to strip from left, right of template def
++}
++	:	(	'@' enclosing=ID '.' region=ID '(' ')'
++			{fullName = TemplateGroup.GetMangledRegionName($enclosing.text, $region.text);}
++		|	name=ID '(' formalArgs? ')' {fullName = $name.text;}
++		)
++		'::='
++		{IToken templateToken = input.LT(1);}
++		(	STRING     {template=$STRING.text; n=1;}
++		|	BIGSTRING  {template=$BIGSTRING.text; n=2;}
++		)
++		{
++		template = Misc.Strip(template, n);
++		if ( templateToken.Type==BIGSTRING ) {
++			template = Misc.TrimOneStartingWS(template);
++		}
++	    try {
++			if ($enclosing != null)
++				this._group.DefineRegion(prefix, $enclosing.text, $region.text, template);
++			else
++				this._group.DefineTemplate(prefix, $name.text, $formalArgs.args, template);
++		}
++        catch (TemplateRecognitionException e) {
++        	RecognitionException re = (RecognitionException)e.InnerException;
++        	int charPosition =
++        		re.charPositionInLine+templateToken.CharPositionInLine+n;
++	        this._group.listener.Error(templateToken.Line+":"+
++                    	  		 charPosition+
++	                             ": "+e.Message, null);
++        }
++	    }
++	|   alias=ID '::=' target=ID
++	;
++
++formalArgs returns[IDictionary<string,FormalArgument> args]
++@init {$args = new Dictionary<string,FormalArgument>();}
++    :	formalArg[$args] ( ',' formalArg[$args] )*
++	;
++
++formalArg[IDictionary<string,FormalArgument> args]
++	:	ID
++		(	'=' a=STRING
++		|	'=' a=ANONYMOUS_TEMPLATE
++		)?
++		{$args[$ID.text] = new FormalArgument($ID.text, $a);}
++    ;
++
++/*
++suffix returns [int cardinality=FormalArgument.REQUIRED]
++    :   OPTIONAL
++    |   STAR
++    |   PLUS
++	|
++    ;
++    */
++
++dictDef
++	:	ID '::=' dict
++        {
++        if ( this._group.dictionaries.ContainsKey($ID.text) ) {
++            Console.Error.WriteLine("redefinition of map: "+$ID.text);
++        }
++        else if ( this._group.templates.ContainsKey($ID.text) ) {
++            Console.Error.WriteLine("redefinition of template as map: "+$ID.text);
++        }
++        else {
++            this._group.DefineDictionary($ID.text, $dict.mapping);
++        }
++        }
++	;
++
++dict returns [IDictionary<string, object> mapping]
++@init {mapping=new Dictionary<string, object>();}
++	:   '[' dictPairs[mapping] ']'
++	;
++
++dictPairs[IDictionary<string, object> mapping]
++    :	keyValuePair[mapping]
++    	(',' keyValuePair[mapping])* (',' defaultValuePair[mapping])?
++    |	defaultValuePair[mapping]
++    ;
++
++defaultValuePair[IDictionary<string,object> mapping]
++	:	'default' ':' keyValue {mapping[TemplateGroup.DEFAULT_KEY] = $keyValue.value;}
++	;
++
++keyValuePair[IDictionary<string,object> mapping]
++	:	STRING ':' keyValue {mapping[Misc.ReplaceEscapes(Misc.Strip($STRING.text, 1))] = $keyValue.value;}
++	;
++
++keyValue returns [object value]
++	:	BIGSTRING			{$value = new Template(Misc.Strip($BIGSTRING.text,2));}
++	|	ANONYMOUS_TEMPLATE	{$value = new Template(Misc.Strip($ANONYMOUS_TEMPLATE.text,1));}
++	|	STRING				{$value = Misc.ReplaceEscapes(Misc.Strip($STRING.text, 1));}
++	|	{input.LT(1).Text.Equals("key")}?=> ID
++							{$value = TemplateGroup.DICT_KEY;}
++	|						{$value = null;}
++	;
++
++ID	:	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'-'|'_')*
++	;
++
++STRING
++	:	'"' ( '\\' '"' | '\\' ~'"' | ~('\\'|'"') )* '"'
++	;
++
++BIGSTRING
++	:	'<<'
++		(	options {greedy=false;}
++		:	'\\' '>'  // \> escape
++		|	'\\' ~'>'
++		|	~'\\'
++		)*
++        '>>'
++        {
++        $text = $text.Replace(@"\>", ">");
++        }
++	;
++
++ANONYMOUS_TEMPLATE
++    :	'{'
++    	{
++		TemplateLexer lexer =
++			new TemplateLexer(input, this._group.delimiterStartChar, this._group.delimiterStopChar);
++		lexer.subtemplateDepth = 1;
++		UnbufferedTokenStream tokens = new UnbufferedTokenStream(lexer);
++        TemplateParser parser = new TemplateParser(tokens, (ICodeGenerator)null, null);
++		parser.template();
++		}
++    	// don't match '}' here; subparser matches it to terminate
++    ;
++
++COMMENT
++    :   '/*' ( options {greedy=false;} : . )* '*/' {Skip();}
++    ;
++
++LINE_COMMENT
++    :	'//' ~('\n'|'\r')* '\r'? '\n' {Skip();}
++    ;
++
++WS  :	(' '|'\r'|'\t'|'\n') {Skip();} ;
+diff --git a/StringTemplate4/Compiler/GroupLexerHelper.cs b/StringTemplate4/Compiler/GroupLexerHelper.cs
+new file mode 100644
+index 0000000..af29d5e
+--- /dev/null
++++ b/StringTemplate4/Compiler/GroupLexerHelper.cs
+@@ -0,0 +1,39 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace StringTemplate
++{
++    partial class GroupLexer
++    {
++        protected internal TemplateGroup _group;
++    }
++}
+diff --git a/StringTemplate4/Compiler/GroupParserHelper.cs b/StringTemplate4/Compiler/GroupParserHelper.cs
+new file mode 100644
+index 0000000..a26063f
+--- /dev/null
++++ b/StringTemplate4/Compiler/GroupParserHelper.cs
+@@ -0,0 +1,39 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace StringTemplate
++{
++    partial class GroupParser
++    {
++        protected internal TemplateGroup _group;
++    }
++}
+diff --git a/StringTemplate4/Compiler/ICodeGenerator.cs b/StringTemplate4/Compiler/ICodeGenerator.cs
+new file mode 100644
+index 0000000..dedd189
+--- /dev/null
++++ b/StringTemplate4/Compiler/ICodeGenerator.cs
+@@ -0,0 +1,69 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace StringTemplate
++{
++    using System.Collections.Generic;
++    using Antlr.Runtime;
++    using IList = System.Collections.IList;
++
++    // TODO: maybe rename; more than code gen now; break into two interfaces?
++    public interface ICodeGenerator
++    {
++        /// <summary>
++        /// If we're compiling templates in subdir or group file under root,
++        /// what's the templatePathPrefix to add?
++        /// </summary>
++        string TemplateReferencePrefix
++        {
++            get;
++        }
++
++        void Emit(short opcode);
++        void Emit(short opcode, int arg);
++        void Emit(short opcode, int arg1, int arg2);
++        void Emit(short opcode, string s);
++        void Write(int addr, short value);
++        /** Return address where next instruction will be written */
++        int Address();
++
++        /** Compile a subtemplate. It's the '...' in this &lt;names:{p | ...}&gt; */
++        string CompileAnonTemplate(string enclosingTemplateName,
++                                   ITokenStream input,
++                                   IList<IToken> ids,
++                                   RecognizerSharedState state);
++
++        string CompileRegion(string enclosingTemplateName, string regionName, ITokenStream input, RecognizerSharedState state);
++
++        void DefineBlankRegion(string fullyQualifiedName);
++    }
++}
+diff --git a/StringTemplate4/Compiler/StringTable.cs b/StringTemplate4/Compiler/StringTable.cs
+new file mode 100644
+index 0000000..7b13278
+--- /dev/null
++++ b/StringTemplate4/Compiler/StringTable.cs
+@@ -0,0 +1,64 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace StringTemplate
++{
++    using System.Collections.Generic;
++    using System.Linq;
++
++    public class StringTable
++    {
++        private readonly Dictionary<string, int> _table = new Dictionary<string, int>();
++        private int _i = -1;
++
++        public int Add(string s)
++        {
++            int i;
++            if (_table.TryGetValue(s, out i))
++                return i;
++
++            i = ++_i;
++            _table[s] = i;
++            return i;
++        }
++
++        public int GetIndex(string s)
++        {
++            return _table[s];
++        }
++
++        public string[] ToArray()
++        {
++            return _table.OrderBy(pair => pair.Value).Select(pair => pair.Key).ToArray();
++        }
++    }
++}
+diff --git a/StringTemplate4/Compiler/TemplateLexer.cs b/StringTemplate4/Compiler/TemplateLexer.cs
+new file mode 100644
+index 0000000..09767be
+--- /dev/null
++++ b/StringTemplate4/Compiler/TemplateLexer.cs
+@@ -0,0 +1,638 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace StringTemplate
++{
++    using System.Collections.Generic;
++    using Antlr.Runtime;
++    using Console = System.Console;
++    using Exception = System.Exception;
++    using NumberStyles = System.Globalization.NumberStyles;
++    using StringBuilder = System.Text.StringBuilder;
++
++    public class TemplateLexer : ITokenSource
++    {
++        public const char EOF = unchecked((char)(-1));            // EOF char
++        public const int EOF_TYPE = CharStreamConstants.EndOfFile;  // EOF token type
++
++        public class TemplateToken : CommonToken
++        {
++            public TemplateToken(ICharStream input, int type, int channel, int start, int stop)
++                : base(input, type, channel, start, stop)
++            {
++            }
++
++            public TemplateToken(int type, string text)
++                : base(type, text)
++            {
++            }
++
++            public override string ToString()
++            {
++                string channelStr = "";
++                if (Channel > 0)
++                {
++                    channelStr = ",channel=" + Channel;
++                }
++                string txt = Text;
++                if (txt != null)
++                {
++                    txt = Misc.ReplaceEscapes(txt);
++                }
++                else
++                {
++                    txt = "<no text>";
++                }
++                return "[@" + TokenIndex + "," + StartIndex + ":" + StopIndex + "='" + txt + "',<" + TemplateParser.tokenNames[Type] + ">" + channelStr + "," + Line + ":" + CharPositionInLine + "]";
++            }
++        }
++
++        public static readonly IToken SKIP = new TemplateToken(-1, "<skip>");
++
++        // TODO: enum?
++        // pasted from STParser
++        public const int RBRACK = 17;
++        public const int LBRACK = 16;
++        public const int ELSE = 5;
++        public const int ELLIPSIS = 11;
++        public const int LCURLY = 20;
++        public const int BANG = 10;
++        public const int EQUALS = 12;
++        public const int TEXT = 22;
++        public const int ID = 25;
++        public const int SEMI = 9;
++        public const int LPAREN = 14;
++        public const int IF = 4;
++        public const int ELSEIF = 6;
++        public const int COLON = 13;
++        public const int RPAREN = 15;
++        public const int WS = 27;
++        public const int COMMA = 18;
++        public const int RCURLY = 21;
++        public const int ENDIF = 7;
++        public const int RDELIM = 24;
++        public const int SUPER = 8;
++        public const int DOT = 19;
++        public const int LDELIM = 23;
++        public const int STRING = 26;
++        public const int PIPE = 28;
++        public const int OR = 29;
++        public const int AND = 30;
++        public const int INDENT = 31;
++        public const int NEWLINE = 32;
++        public const int AT = 33;
++        public const int REGION_END = 34;
++
++        char delimiterStartChar = '<';
++        char delimiterStopChar = '>';
++
++        bool scanningInsideExpr = false;
++        internal int subtemplateDepth = 0; // start out *not* in a {...} subtemplate
++
++        internal ICharStream input;
++        char c;        // current character
++        int startCharIndex;
++        int startLine;
++        int startCharPositionInLine;
++
++        List<IToken> tokens = new List<IToken>();
++
++        public IToken NextToken()
++        {
++            if (tokens.Count > 0)
++            {
++                var result = tokens[0];
++                tokens.RemoveAt(0);
++                return result;
++            }
++            return _nextToken();
++        }
++
++        public TemplateLexer(ANTLRStringStream input)
++            : this(input, '<', '>')
++        {
++        }
++
++        public TemplateLexer(ICharStream input, char delimiterStartChar, char delimiterStopChar)
++        {
++            this.input = input;
++            c = (char)input.LA(1); // prime lookahead
++            this.delimiterStartChar = delimiterStartChar;
++            this.delimiterStopChar = delimiterStopChar;
++        }
++
++        /** Ensure x is next character on the input stream */
++        public void Match(char x)
++        {
++            if (c == x)
++                Consume();
++            else
++                throw new Exception("expecting " + x + "; found " + c);
++        }
++
++        protected void Consume()
++        {
++            input.Consume();
++            c = (char)input.LA(1);
++        }
++
++        public void Emit(IToken token)
++        {
++            tokens.Add(token);
++        }
++
++        public IToken _nextToken()
++        {
++            //System.out.println("nextToken: c="+(char)c+"@"+input.index());
++            while (true)
++            { // lets us avoid recursion when skipping stuff
++                startCharIndex = input.Index;
++                startLine = input.Line;
++                startCharPositionInLine = input.CharPositionInLine;
++
++                if (c == EOF)
++                    return NewToken(EOF_TYPE);
++                IToken t = null;
++                if (scanningInsideExpr)
++                    t = Inside();
++                else
++                    t = Outside();
++                if (t != SKIP)
++                    return t;
++            }
++        }
++
++        protected IToken Outside()
++        {
++            if (input.CharPositionInLine == 0 && (c == ' ' || c == '\t'))
++            {
++                while (c == ' ' || c == '\t')
++                    Consume(); // scarf indent
++                return NewToken(INDENT);
++            }
++            if (c == delimiterStartChar)
++            {
++                Consume();
++                if (c == '!')
++                {
++                    mCOMMENT();
++                    return SKIP;
++                }
++                if (c == '\\')
++                    return ESCAPE(); // <\\> <\uFFFF> <\n> etc...
++                scanningInsideExpr = true;
++                return NewToken(LDELIM);
++            }
++            if (c == '\r')
++            {
++                // \r\n -> \n
++                Consume();
++                Consume();
++                return NewToken(NEWLINE);
++            }
++            if (c == '\n')
++            {
++                Consume();
++                return NewToken(NEWLINE);
++            }
++            if (c == '}' && subtemplateDepth > 0)
++            {
++                scanningInsideExpr = true;
++                subtemplateDepth--;
++                Consume();
++                return NewTokenFromPreviousChar(RCURLY);
++            }
++            return mTEXT();
++        }
++
++        protected IToken Inside()
++        {
++            while (true)
++            {
++                switch (c)
++                {
++                case ' ':
++                case '\t':
++                case '\n':
++                case '\r':
++                    Consume();
++                    continue;
++                case '.':
++                    Consume();
++                    if (input.LA(1) == '.' && input.LA(2) == '.')
++                    {
++                        Consume();
++                        Match('.');
++                        return NewToken(ELLIPSIS);
++                    }
++                    return NewToken(DOT);
++                case ',':
++                    Consume();
++                    return NewToken(COMMA);
++                case ':':
++                    Consume();
++                    return NewToken(COLON);
++                case ';':
++                    Consume();
++                    return NewToken(SEMI);
++                case '(':
++                    Consume();
++                    return NewToken(LPAREN);
++                case ')':
++                    Consume();
++                    return NewToken(RPAREN);
++                case '[':
++                    Consume();
++                    return NewToken(LBRACK);
++                case ']':
++                    Consume();
++                    return NewToken(RBRACK);
++                case '=':
++                    Consume();
++                    return NewToken(EQUALS);
++                case '!':
++                    Consume();
++                    return NewToken(BANG);
++                case '@':
++                    Consume();
++                    if (c == 'e' && input.LA(2) == 'n' && input.LA(3) == 'd')
++                    {
++                        Consume();
++                        Consume();
++                        Consume();
++                        return NewToken(REGION_END);
++                    }
++                    return NewToken(AT);
++                case '"':
++                    return mSTRING();
++                case '&':
++                    Consume();
++                    Match('&');
++                    return NewToken(AND); // &&
++                case '|':
++                    Consume();
++                    Match('|');
++                    return NewToken(OR); // ||
++                case '{':
++                    return SubTemplate();
++                default:
++                    if (c == delimiterStopChar)
++                    {
++                        Consume();
++                        scanningInsideExpr = false;
++                        return NewToken(RDELIM);
++                    }
++                    if (IsIDStartLetter(c))
++                    {
++                        IToken id = mID();
++                        string name = id.Text;
++                        if (name.Equals("if"))
++                            return NewToken(IF);
++                        else if (name.Equals("endif"))
++                            return NewToken(ENDIF);
++                        else if (name.Equals("else"))
++                            return NewToken(ELSE);
++                        else if (name.Equals("elseif"))
++                            return NewToken(ELSEIF);
++                        else if (name.Equals("super"))
++                            return NewToken(SUPER);
++                        return id;
++                    }
++                    RecognitionException re = new NoViableAltException("", 0, 0, input);
++                    if (c == EOF)
++                    {
++                        throw new TemplateRecognitionException("EOF inside ST expression", re);
++                    }
++                    throw new TemplateRecognitionException("invalid character: " + c, re);
++                }
++            }
++        }
++
++        private IToken SubTemplate()
++        {
++            // look for "{ args ID (',' ID)* '|' ..."
++            subtemplateDepth++;
++            int m = input.Mark();
++            int curlyStartChar = startCharIndex;
++            int curlyLine = startLine;
++            int curlyPos = startCharPositionInLine;
++            List<IToken> argTokens = new List<IToken>();
++            Consume();
++            IToken curly = NewTokenFromPreviousChar(LCURLY);
++            mWS();
++            argTokens.Add(mID());
++            mWS();
++            while (c == ',')
++            {
++                Consume();
++                argTokens.Add(NewTokenFromPreviousChar(COMMA));
++                mWS();
++                argTokens.Add(mID());
++                mWS();
++            }
++            mWS();
++            if (c == '|')
++            {
++                Consume();
++                argTokens.Add(NewTokenFromPreviousChar(PIPE));
++                if (IsWS(c))
++                    Consume(); // ignore a single whitespace after |
++                //System.out.println("matched args: "+argTokens);
++                foreach (IToken t in argTokens)
++                    Emit(t);
++                input.Release(m);
++                scanningInsideExpr = false;
++                startCharIndex = curlyStartChar; // reset state
++                startLine = curlyLine;
++                startCharPositionInLine = curlyPos;
++                return curly;
++            }
++            //System.out.println("no match rewind");
++            input.Rewind(m);
++            startCharIndex = curlyStartChar; // reset state
++            startLine = curlyLine;
++            startCharPositionInLine = curlyPos;
++            Consume();
++            scanningInsideExpr = false;
++            return curly;
++        }
++
++        private IToken ESCAPE()
++        {
++            Consume(); // kill \\
++            IToken t = null;
++            switch (c)
++            {
++            case '\\':
++                mLINEBREAK();
++                return SKIP;
++            case 'n':
++                t = NewToken(TEXT, "\n", input.CharPositionInLine - 2);
++                break;
++            case 't':
++                t = NewToken(TEXT, "\t", input.CharPositionInLine - 2);
++                break;
++            case ' ':
++                t = NewToken(TEXT, " ", input.CharPositionInLine - 2);
++                break;
++            case 'u':
++                t = UNICODE();
++                break;
++            default:
++                Console.Error.WriteLine("bad \\ char");
++                break;
++            }
++            Consume();
++            Match(delimiterStopChar);
++            return t;
++        }
++
++        private IToken UNICODE()
++        {
++            Consume();
++            char[] chars = new char[4];
++            if (!IsUnicodeLetter(c))
++                Console.Error.WriteLine("bad unicode char: " + c);
++            chars[0] = c;
++            Consume();
++            if (!IsUnicodeLetter(c))
++                Console.Error.WriteLine("bad unicode char: " + c);
++            chars[1] = c;
++            Consume();
++            if (!IsUnicodeLetter(c))
++                Console.Error.WriteLine("bad unicode char: " + c);
++            chars[2] = c;
++            Consume();
++            if (!IsUnicodeLetter(c))
++                Console.Error.WriteLine("bad unicode char: " + c);
++            chars[3] = c;
++            // ESCAPE kills final char and >
++            char uc = (char)int.Parse(new string(chars), NumberStyles.HexNumber);
++            return NewToken(TEXT, uc.ToString(), input.CharPositionInLine - 6);
++        }
++
++        private IToken mTEXT()
++        {
++            bool modifiedText = false;
++            StringBuilder buf = new StringBuilder();
++            while (c != EOF && c != delimiterStartChar)
++            {
++                if (c == '\r' || c == '\n')
++                    break;
++                if (c == '}' && subtemplateDepth > 0)
++                    break;
++                if (c == '\\')
++                {
++                    if (input.LA(2) == delimiterStartChar ||
++                         input.LA(2) == '}')
++                    {
++                        modifiedText = true;
++                        Consume(); // toss out \ char
++                        buf.Append(c);
++                        Consume();
++                    }
++                    else
++                    {
++                        Consume();
++                    }
++                    continue;
++                }
++                buf.Append(c);
++                Consume();
++            }
++            if (modifiedText)
++                return NewToken(TEXT, buf.ToString());
++            else
++                return NewToken(TEXT);
++        }
++
++        /** ID  :   ('a'..'z'|'A'..'Z'|'_'|'/') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'/')* ; */
++        private IToken mID()
++        {
++            // called from subTemplate; so keep resetting position during speculation
++            startCharIndex = input.Index;
++            startLine = input.Line;
++            startCharPositionInLine = input.CharPositionInLine;
++            Consume();
++            while (IsIDLetter(c))
++            {
++                Consume();
++            }
++            return NewToken(ID);
++        }
++
++        /** STRING : '"' ( '\\' '"' | '\\' ~'"' | ~('\\'|'"') )* '"' ; */
++        private IToken mSTRING()
++        {
++            //{setText(getText().substring(1, getText().length()-1));}
++            bool sawEscape = false;
++            StringBuilder buf = new StringBuilder();
++            buf.Append(c);
++            Consume();
++            while (c != '"')
++            {
++                if (c == '\\')
++                {
++                    sawEscape = true;
++                    Consume();
++                    switch (c)
++                    {
++                    case 'n':
++                        buf.Append('\n');
++                        break;
++                    case 'r':
++                        buf.Append('\r');
++                        break;
++                    case 't':
++                        buf.Append('\t');
++                        break;
++                    default:
++                        buf.Append(c);
++                        break;
++                    }
++                    Consume();
++                    continue;
++                }
++                buf.Append(c);
++                Consume();
++            }
++            buf.Append(c);
++            Consume();
++            if (sawEscape)
++                return NewToken(STRING, buf.ToString());
++            else
++                return NewToken(STRING);
++        }
++
++        private void mWS()
++        {
++            while (c == ' ' || c == '\t' || c == '\n' || c == '\r')
++                Consume();
++        }
++
++        private void mCOMMENT()
++        {
++            Match('!');
++            while (!(c == '!' && input.LA(2) == delimiterStopChar))
++                Consume();
++            Consume();
++            Consume(); // kill !>
++        }
++
++        private void mLINEBREAK()
++        {
++            Match('\\'); // only kill 2nd \ as outside() kills first one
++            Match(delimiterStopChar);
++            while (c == ' ' || c == '\t')
++                Consume(); // scarf WS after <\\>
++            if (c == '\r')
++                Consume();
++            Match('\n');
++            while (c == ' ' || c == '\t')
++                Consume(); // scarf any indent
++            return;
++        }
++
++        public static bool IsIDStartLetter(char c)
++        {
++            return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c == '/';
++        }
++
++        public static bool IsIDLetter(char c)
++        {
++            return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '/';
++        }
++
++        public static bool IsWS(char c)
++        {
++            return c == ' ' || c == '\t' || c == '\n' || c == '\r';
++        }
++
++        public static bool IsUnicodeLetter(char c)
++        {
++            return c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F' || c >= '0' && c <= '9';
++        }
++
++        public IToken NewToken(int ttype)
++        {
++            TemplateToken t = new TemplateToken(input, ttype, Lexer.DefaultTokenChannel,
++                    startCharIndex, input.Index - 1);
++            t.Line = startLine;
++            t.CharPositionInLine = startCharPositionInLine;
++            return t;
++        }
++
++        public IToken NewTokenFromPreviousChar(int ttype)
++        {
++            TemplateToken t =
++                new TemplateToken(input, ttype, Lexer.DefaultTokenChannel,
++                    input.Index - 1, input.Index - 1);
++            t.StartIndex = input.Index - 1;
++            t.Line = input.Line;
++            t.CharPositionInLine = input.CharPositionInLine - 1;
++            return t;
++        }
++
++        public IToken NewToken(int ttype, string text, int pos)
++        {
++            TemplateToken t = new TemplateToken(ttype, text);
++            t.Line = input.Line;
++            t.CharPositionInLine = pos;
++            return t;
++        }
++
++        public IToken NewToken(int ttype, string text)
++        {
++            TemplateToken t = new TemplateToken(ttype, text);
++            t.StartIndex = startCharIndex;
++            t.Line = startLine;
++            t.CharPositionInLine = startCharPositionInLine;
++            return t;
++        }
++
++        public string SourceName
++        {
++            get
++            {
++                return "no idea";
++            }
++        }
++
++        public string[] TokenNames
++        {
++            get
++            {
++                return TemplateParser.tokenNames;
++            }
++        }
++    }
++}
+diff --git a/StringTemplate4/Compiler/TemplateLexer.tokens b/StringTemplate4/Compiler/TemplateLexer.tokens
+new file mode 100644
+index 0000000..d4491a0
+--- /dev/null
++++ b/StringTemplate4/Compiler/TemplateLexer.tokens
+@@ -0,0 +1,54 @@
++RBRACK=17
++LBRACK=16
++ELSE=5
++ELLIPSIS=11
++LCURLY=20
++BANG=10
++EQUALS=12
++TEXT=22
++ID=25
++SEMI=9
++LPAREN=14
++IF=4
++ELSEIF=6
++COLON=13
++RPAREN=15
++WS=27
++COMMA=18
++RCURLY=21
++ENDIF=7
++RDELIM=24
++SUPER=8
++DOT=19
++LDELIM=23
++STRING=26
++PIPE=28
++OR=29
++AND=30
++INDENT=31
++NEWLINE=32
++AT=33
++END=34
++'super'=8
++'|'=28
++'!'=10
++'}'=21
++'else'=5
++'if'=4
++'{'=20
++'...'=11
++'elseif'=6
++';'=9
++'='=12
++':'=13
++'('=14
++'['=16
++','=18
++'.'=19
++'endif'=7
++')'=15
++']'=17
++'||'=29
++'&&'=30
++'@'=33
++'@end'=34
+\ No newline at end of file
+diff --git a/StringTemplate4/Compiler/TemplateParser.g3 b/StringTemplate4/Compiler/TemplateParser.g3
+new file mode 100644
+index 0000000..e3606eb
+--- /dev/null
++++ b/StringTemplate4/Compiler/TemplateParser.g3
+@@ -0,0 +1,336 @@
++﻿/*
++ [The "BSD licence"]
++ Copyright (c) 2009 Terence Parr
++ All rights reserved.
++
++ Redistribution and use in source and binary forms, with or without
++ modification, are permitted provided that the following conditions
++ are met:
++ 1. Redistributions of source code must retain the above copyright
++    notice, this list of conditions and the following disclaimer.
++ 2. Redistributions in binary form must reproduce the above copyright
++    notice, this list of conditions and the following disclaimer in the
++    documentation and/or other materials provided with the distribution.
++ 3. The name of the author may not be used to endorse or promote products
++    derived from this software without specific prior written permission.
++
++ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++*/
++
++/** Recognize a single StringTemplate template text, expressions, and conditionals */
++parser grammar TemplateParser;
++
++options {
++	language=CSharp3;
++	tokenVocab=TemplateLexer;
++	TokenLabelType=CommonToken;
++}
++
++@namespace{StringTemplate}
++@header{using System.Linq;}
++
++@rulecatch {
++   catch (RecognitionException) { throw; }
++}
++
++public
++templateAndEOF
++	:	template EOF
++	;
++
++// TODO: remove backtracking
++public
++template
++	:	element*
++	;
++
++element
++options {backtrack=true; k=2;}
++	:	i=INDENT         {Indent($i.text);}
++		ifOnOneLine      {gen.Emit(Bytecode.INSTR_DEDENT);}
++	|	i=INDENT ifOnMultiLines
++	|	ifOnMultiLines
++	|	i=INDENT       	 {Indent($i.text);}
++		exprTag          {gen.Emit(Bytecode.INSTR_DEDENT);}
++	|	exprTag
++	|	i=INDENT         {Indent($i.text);}
++		text             {gen.Emit(Bytecode.INSTR_DEDENT);}
++	|	text
++	|   (i=INDENT {Indent($i.text);})? region
++						 {
++						 gen.Emit(Bytecode.INSTR_NEW, $region.name);
++						 gen.Emit(Bytecode.INSTR_WRITE, $region.start.StartIndex, $region.stop.StartIndex);
++						 }
++	|	i=INDENT         {Indent($i.text);}
++	 	NEWLINE          {gen.Emit(Bytecode.INSTR_NEWLINE);}
++	 	                 {gen.Emit(Bytecode.INSTR_DEDENT);}
++	|	NEWLINE          {gen.Emit(Bytecode.INSTR_NEWLINE);}
++	;
++
++text
++	:	TEXT
++		{
++		if ( $TEXT.text.Length>0 ) {
++			gen.Emit(Bytecode.INSTR_LOAD_STR, $TEXT.text);
++			gen.Emit(Bytecode.INSTR_WRITE, $TEXT.StartIndex, $TEXT.StopIndex);
++		}
++		}
++	;
++
++exprTag
++	:	LDELIM
++		expr
++		(	';' exprOptions {gen.Emit(Bytecode.INSTR_WRITE_OPT,$LDELIM.StartIndex,input.LT(1).StartIndex);}
++		|	                {gen.Emit(Bytecode.INSTR_WRITE,$LDELIM.StartIndex,input.LT(1).StartIndex);}
++		)
++		RDELIM
++	;
++
++region returns [string name] // match $@foo$...$@end$
++	:	LDELIM '@' ID RDELIM
++		{{ // force exec even when backtracking
++		if (state.backtracking == 0)
++			$name = gen.CompileRegion(_enclosingTemplateName, $ID.text, input, state);
++		else
++			$name = NoopGen.CompileRegion(_enclosingTemplateName, $ID.text, input, state);
++		gen.CompileRegion(_enclosingTemplateName, $ID.text, input, state);
++        }}
++		LDELIM '@end' RDELIM
++	;
++
++subtemplate returns [string name]
++	:	'{' ( ids+=ID (',' ids+=ID)* '|' )?
++		{{ // force exec even when backtracking
++		List<IToken> idTokens = null;
++		if ($ids != null)
++			idTokens = new List<IToken>($ids.Cast<IToken>());
++		if (state.backtracking == 0)
++			$name = gen.CompileAnonTemplate(_enclosingTemplateName, input, idTokens, state);
++		else
++			$name = NoopGen.CompileAnonTemplate(_enclosingTemplateName, input, idTokens, state);
++        }}
++        '}'
++    ;
++
++/** The (...)* loop in rule template doesn't think '}' can follow it because
++ *  we call template in an action (via compileAnonTemplate).  To avoid
++ *  syntax errors upon '}' in rule templatee, we force '}' into FOLLOW set.
++ *  I hope to make ANTLR ignore FOLLOW set for (...)* in future.
++ */
++addTemplateEndTokensToFollowOfTemplateRule : template ('}' | LDELIM '@end') ;
++
++ifOnMultiLines
++@init {
++    /** Tracks address of branch operand (in code block).  It's how
++     *  we backpatch forward references when generating code for IFs.
++     */
++    int prevBranchOperand = -1;
++    /** Branch instruction operands that are forward refs to end of IF.
++     *  We need to update them once we see the endif.
++     */
++    List<int> endRefs = new List<int>();
++}
++	:	LDELIM 'if' '(' conditional ')' RDELIM
++		{
++        prevBranchOperand = gen.Address()+1;
++        gen.Emit(Bytecode.INSTR_BRF, -1); // write placeholder as branch target
++		}
++		template
++		(	INDENT? LDELIM 'elseif'
++			{
++			endRefs.Add(gen.Address()+1);
++			gen.Emit(Bytecode.INSTR_BR, -1); // br end
++			// update previous branch instruction
++			gen.Write(prevBranchOperand, (short)gen.Address());
++			prevBranchOperand = -1;
++			}
++			'(' conditional ')' RDELIM
++			{
++        	prevBranchOperand = gen.Address()+1;
++        	gen.Emit(Bytecode.INSTR_BRF, -1); // write placeholder as branch target
++			}
++			template
++		)*
++		(	INDENT? LDELIM 'else' RDELIM
++			{
++			endRefs.Add(gen.Address()+1);
++			gen.Emit(Bytecode.INSTR_BR, -1); // br end
++			// update previous branch instruction
++			gen.Write(prevBranchOperand, (short)gen.Address());
++			prevBranchOperand = -1;
++			}
++			template
++		)?
++		INDENT? endif=LDELIM 'endif' RDELIM
++		( {true}? NEWLINE )? // kill \on for <endif> on line by itself
++		{
++		if ( prevBranchOperand>=0 ) {
++			gen.Write(prevBranchOperand, (short)gen.Address());
++		}
++        foreach (int opnd in endRefs) gen.Write(opnd, (short)gen.Address());
++		}
++	;
++
++// TODO: code dup but need to call elementsForIfOnOneLine not template inside :(
++ifOnOneLine
++@init {
++    /** Tracks address of branch operand (in code block).  It's how
++     *  we backpatch forward references when generating code for IFs.
++     */
++    int prevBranchOperand = -1;
++    /** Branch instruction operands that are forward refs to end of IF.
++     *  We need to update them once we see the endif.
++     */
++    List<int> endRefs = new List<int>();
++}
++	:	LDELIM 'if' '(' conditional ')' RDELIM
++		{
++        prevBranchOperand = gen.Address()+1;
++        gen.Emit(Bytecode.INSTR_BRF, -1); // write placeholder as branch target
++		}
++		elementsForIfOnOneLine*
++		(	LDELIM 'elseif'
++			{
++			endRefs.Add(gen.Address()+1);
++			gen.Emit(Bytecode.INSTR_BR, -1); // br end
++			// update previous branch instruction
++			gen.Write(prevBranchOperand, (short)gen.Address());
++			prevBranchOperand = -1;
++			}
++			'(' conditional ')' RDELIM
++			{
++        	prevBranchOperand = gen.Address()+1;
++        	gen.Emit(Bytecode.INSTR_BRF, -1); // write placeholder as branch target
++			}
++			elementsForIfOnOneLine*
++		)*
++		(	LDELIM 'else' RDELIM
++			{
++			endRefs.Add(gen.Address()+1);
++			gen.Emit(Bytecode.INSTR_BR, -1); // br end
++			// update previous branch instruction
++			gen.Write(prevBranchOperand, (short)gen.Address());
++			prevBranchOperand = -1;
++			}
++			elementsForIfOnOneLine*
++		)?
++		endif=LDELIM 'endif' RDELIM
++		{
++		if ( prevBranchOperand>=0 ) {
++			gen.Write(prevBranchOperand, (short)gen.Address());
++		}
++        foreach (int opnd in endRefs) gen.Write(opnd, (short)gen.Address());
++		}
++	;
++
++elementsForIfOnOneLine
++	:	exprTag
++	|	text
++	|	ifOnOneLine
++	;
++
++conditional
++	:	andConditional ('||' andConditional {gen.Emit(Bytecode.INSTR_OR);})*
++	;
++
++andConditional
++	:	notConditional ('&&' notConditional {gen.Emit(Bytecode.INSTR_AND);})*
++	;
++
++notConditional
++	:	'!' primary  {gen.Emit(Bytecode.INSTR_NOT);}
++	|	primary
++	;
++
++exprOptions
++	:	{gen.Emit(Bytecode.INSTR_OPTIONS);} option (',' option)*
++	;
++
++option
++	:	ID ( '=' exprNoComma | {DefaultOption($ID);} )
++		{SetOption($ID);}
++	;
++
++exprNoComma
++	:	memberExpr ( ':' templateRef {gen.Emit(Bytecode.INSTR_MAP);} )?
++	|	subtemplate {gen.Emit(Bytecode.INSTR_NEW, $subtemplate.name);}
++	;
++
++expr
++	:	mapExpr
++	|	// <{...}>
++		subtemplate
++		{gen.Emit(Bytecode.INSTR_NEW, PrefixedName($subtemplate.name));}
++	;
++
++mapExpr
++@init {int nt=1, ne=1;}
++	:	memberExpr (c=',' memberExpr {ne++;} )*
++		(	':' templateRef
++			(	(',' templateRef {nt++;})+  {gen.Emit(Bytecode.INSTR_ROT_MAP, nt);}
++			|	{if ( $c!=null ) gen.Emit(Bytecode.INSTR_PAR_MAP, ne);
++				 else gen.Emit(Bytecode.INSTR_MAP);}
++			)
++		)*
++	;
++
++memberExpr
++	:	callExpr
++		(	'.' ID {gen.Emit(Bytecode.INSTR_LOAD_PROP, $ID.text);}
++		|	'.' '(' mapExpr ')' {gen.Emit(Bytecode.INSTR_LOAD_PROP_IND);}
++		)*
++	;
++
++callExpr
++options {k=2;} // prevent full LL(*), which fails, falling back on k=1; need k=2
++	:	{Compiler.funcs.ContainsKey(input.LT(1).Text)}?
++		ID '(' expr ')' {Func($ID);}
++	|	(s='super' '.')? ID
++		{gen.Emit($s!=null?Bytecode.INSTR_SUPER_NEW:Bytecode.INSTR_NEW, PrefixedName($ID.text));}
++		'(' args? ')'
++	|	'@' (s='super' '.')? ID '(' ')'	// convert <@r()> to <region__enclosingTemplate__r()>
++		{
++		string mangled = TemplateGroup.GetMangledRegionName(_enclosingTemplateName, $ID.text);
++		gen.DefineBlankRegion(PrefixedName(mangled));
++		gen.Emit($s!=null?Bytecode.INSTR_SUPER_NEW:Bytecode.INSTR_NEW, PrefixedName(mangled));
++		}
++	|	primary
++	;
++
++primary
++	:	o=ID	  {RefAttr($o);}
++	|	STRING    {gen.Emit(Bytecode.INSTR_LOAD_STR, Misc.Strip($STRING.text,1));}
++	|	list
++	|	'(' expr ')' {gen.Emit(Bytecode.INSTR_TOSTR);}
++		( {gen.Emit(Bytecode.INSTR_NEW_IND);} '(' args? ')' )? // indirect call
++	;
++
++args:	arg (',' arg)* ;
++
++arg :	ID '=' exprNoComma {gen.Emit(Bytecode.INSTR_STORE_ATTR, $ID.text);}
++	|	exprNoComma        {gen.Emit(Bytecode.INSTR_STORE_SOLE_ARG);}
++	|	elip='...'		   {gen.Emit(Bytecode.INSTR_SET_PASS_THRU);}
++	;
++
++templateRef
++	:	ID			{gen.Emit(Bytecode.INSTR_LOAD_STR, PrefixedName($ID.text));}
++	|	subtemplate {gen.Emit(Bytecode.INSTR_LOAD_STR, PrefixedName($subtemplate.name));}
++	|	'(' mapExpr ')' {gen.Emit(Bytecode.INSTR_TOSTR);}
++	;
++
++list:	{gen.Emit(Bytecode.INSTR_LIST);} '[' listElement (',' listElement)* ']'
++	|	{gen.Emit(Bytecode.INSTR_LIST);} '[' ']'
++	;
++
++listElement
++    :   exprNoComma {gen.Emit(Bytecode.INSTR_ADD);}
++    ;
+diff --git a/StringTemplate4/Compiler/TemplateParserHelper.cs b/StringTemplate4/Compiler/TemplateParserHelper.cs
+new file mode 100644
+index 0000000..9140e26
+--- /dev/null
++++ b/StringTemplate4/Compiler/TemplateParserHelper.cs
+@@ -0,0 +1,190 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace StringTemplate
++{
++    using System.Collections.Generic;
++    using Antlr.Runtime;
++    using Console = System.Console;
++    using IList = System.Collections.IList;
++
++    partial class TemplateParser
++    {
++        /** The name of the template we are compiling or the name of the
++         *  enclosing template.  This template could be a subtemplate or region of
++         *  an enclosing template.
++         */
++        private string _enclosingTemplateName;
++
++        private static ICodeGenerator NoopGen = new CodeGenerator();
++        private ICodeGenerator gen = NoopGen;
++
++        public TemplateParser(ITokenStream input, ICodeGenerator gen, string enclosingTemplateName)
++            : this(input, new RecognizerSharedState(), gen, enclosingTemplateName)
++        {
++        }
++
++        public TemplateParser(ITokenStream input, RecognizerSharedState state, ICodeGenerator gen, string enclosingTemplateName)
++            : base(null, null) // overcome bug in ANTLR 3.2
++        {
++            this.input = input;
++            this.state = state;
++            if (gen != null)
++                this.gen = gen;
++            this._enclosingTemplateName = enclosingTemplateName;
++        }
++        protected override object RecoverFromMismatchedToken(IIntStream input, int ttype, BitSet follow)
++        {
++            throw new MismatchedTokenException(ttype, input);
++        }
++
++        public string PrefixedName(string t)
++        {
++            if (t != null && t[0] == '/')
++                return gen.TemplateReferencePrefix + t.Substring(1);
++
++            return gen.TemplateReferencePrefix + t;
++        }
++
++        public void RefAttr(IToken id)
++        {
++            string name = id.Text;
++            if (Interpreter.predefinedAttributes.Contains(name))
++            {
++                gen.Emit(Bytecode.INSTR_LOAD_LOCAL, name);
++            }
++            else
++            {
++                gen.Emit(Bytecode.INSTR_LOAD_ATTR, name);
++            }
++        }
++
++        public void SetOption(IToken id)
++        {
++            int i;
++            if (!Compiler.supportedOptions.TryGetValue(id.Text, out i))
++            {
++                Console.Error.WriteLine("no such option: " + id.Text);
++                return;
++            }
++
++            gen.Emit(Bytecode.INSTR_STORE_OPTION, i);
++        }
++
++        public void DefaultOption(IToken id)
++        {
++            string v;
++            if (!Compiler.defaultOptionValues.TryGetValue(id.Text, out v))
++            {
++                Console.Error.WriteLine("no def value for " + id.Text);
++                return;
++            }
++
++            gen.Emit(Bytecode.INSTR_LOAD_STR, v);
++        }
++
++        public void Func(IToken id)
++        {
++            short funcBytecode;
++            if (!Compiler.funcs.TryGetValue(id.Text, out funcBytecode))
++            {
++                Console.Error.WriteLine("no such fun: " + id);
++                gen.Emit(Bytecode.INSTR_NOOP);
++                return;
++            }
++
++            gen.Emit(funcBytecode);
++        }
++
++        public void Indent(string indent)
++        {
++            gen.Emit(Bytecode.INSTR_INDENT, indent);
++        }
++
++        /// <summary>
++        /// used to parse w/o compilation side-effects
++        /// </summary>
++        private sealed class CodeGenerator : ICodeGenerator
++        {
++            public string TemplateReferencePrefix
++            {
++                get
++                {
++                    return null;
++                }
++            }
++
++            public void Emit(short opcode)
++            {
++            }
++
++            public void Emit(short opcode, int arg)
++            {
++            }
++
++            public void Emit(short opcode, int arg1, int arg2)
++            {
++            }
++
++            public void Emit(short opcode, string s)
++            {
++            }
++
++            public void Write(int addr, short value)
++            {
++            }
++
++            public int Address()
++            {
++                return 0;
++            }
++
++            public string CompileAnonTemplate(string enclosingTemplateName, ITokenStream input, IList<IToken> ids, RecognizerSharedState state)
++            {
++                Compiler c = new Compiler();
++                c.Compile(input, state);
++                return null;
++            }
++
++            public string CompileRegion(string enclosingTemplateName, string regionName, ITokenStream input, RecognizerSharedState state)
++            {
++                Compiler c = new Compiler();
++                c.Compile(input, state);
++                return null;
++            }
++
++            public void DefineBlankRegion(string fullyQualifiedName)
++            {
++            }
++        }
++    }
++}
+diff --git a/StringTemplate4/Compiler/TemplateRecognitionException.cs b/StringTemplate4/Compiler/TemplateRecognitionException.cs
+new file mode 100644
+index 0000000..4fc3043
+--- /dev/null
++++ b/StringTemplate4/Compiler/TemplateRecognitionException.cs
+@@ -0,0 +1,44 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace StringTemplate
++{
++    using Antlr.Runtime;
++
++    public class TemplateRecognitionException : TemplateException
++    {
++        public TemplateRecognitionException(string message, RecognitionException cause)
++            : base(message, cause)
++        {
++        }
++    }
++}
+diff --git a/StringTemplate4/FormalArgument.cs b/StringTemplate4/FormalArgument.cs
+deleted file mode 100644
+index 321e3db..0000000
+--- a/StringTemplate4/FormalArgument.cs
++++ /dev/null
+@@ -1,121 +0,0 @@
+-﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
+- * All rights reserved.
+- *
+- * Conversion to C#:
+- * Copyright (c) 2008-2009 Sam Harwell
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. Redistributions in binary form must reproduce the above copyright
+- *    notice, this list of conditions and the following disclaimer in the
+- *    documentation and/or other materials provided with the distribution.
+- * 3. The name of the author may not be used to endorse or promote products
+- *    derived from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- */
+-
+-namespace StringTemplate
+-{
+-    using Antlr.Runtime;
+-
+-    public class FormalArgument
+-    {
+-        // the following represent bit positions emulating a cardinality bitset.
+-        public static readonly int OPTIONAL = 1;     // a?
+-        public static readonly int REQUIRED = 2;     // a
+-        public static readonly int ZERO_OR_MORE = 4; // a*
+-        public static readonly int ONE_OR_MORE = 8;  // a+
+-
+-        public static readonly string[] suffixes = {
+-        null,
+-        "?",
+-        "",
+-        null,
+-        "*",
+-        null,
+-        null,
+-        null,
+-        "+"
+-    };
+-
+-        public string name;
+-        //protected int cardinality = REQUIRED;
+-
+-        /** If they specified name="value", store the template here */
+-        public IToken defaultValueToken;
+-        public CompiledTemplate compiledDefaultValue;
+-
+-        public FormalArgument(string name)
+-        {
+-            this.name = name;
+-        }
+-
+-        public FormalArgument(string name, IToken defaultValueToken)
+-        {
+-            this.name = name;
+-            this.defaultValueToken = defaultValueToken;
+-        }
+-
+-        /*
+-        public static String getCardinalityName(int cardinality) {
+-            switch (cardinality) {
+-                case OPTIONAL : return "optional";
+-                case REQUIRED : return "exactly one";
+-                case ZERO_OR_MORE : return "zero-or-more";
+-                case ONE_OR_MORE : return "one-or-more";
+-                default : return "unknown";
+-            }
+-        }
+-        */
+-
+-        public override int GetHashCode()
+-        {
+-            return name.GetHashCode() + defaultValueToken.GetHashCode();
+-        }
+-
+-        public override bool Equals(object o)
+-        {
+-            if (o == null || !(o is FormalArgument))
+-            {
+-                return false;
+-            }
+-            FormalArgument other = (FormalArgument)o;
+-            if (!this.name.Equals(other.name))
+-            {
+-                return false;
+-            }
+-            // only check if there is a default value; that's all
+-            if ((this.defaultValueToken != null && other.defaultValueToken == null) ||
+-                 (this.defaultValueToken == null && other.defaultValueToken != null))
+-            {
+-                return false;
+-            }
+-            return true;
+-        }
+-
+-        public override string ToString()
+-        {
+-            if (defaultValueToken != null)
+-            {
+-                return name + "=" + defaultValueToken.Text;
+-            }
+-            return name;
+-        }
+-    }
+-}
+diff --git a/StringTemplate4/Group.g3 b/StringTemplate4/Group.g3
+deleted file mode 100644
+index 4a77d4f..0000000
+--- a/StringTemplate4/Group.g3
++++ /dev/null
+@@ -1,218 +0,0 @@
+-﻿/*
+- [The "BSD licence"]
+- Copyright (c) 2003-2009 Terence Parr
+- All rights reserved.
+-
+- Redistribution and use in source and binary forms, with or without
+- modification, are permitted provided that the following conditions
+- are met:
+- 1. Redistributions of source code must retain the above copyright
+-    notice, this list of conditions and the following disclaimer.
+- 2. Redistributions in binary form must reproduce the above copyright
+-    notice, this list of conditions and the following disclaimer in the
+-    documentation and/or other materials provided with the distribution.
+- 3. The name of the author may not be used to endorse or promote products
+-    derived from this software without specific prior written permission.
+-
+- THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-*/
+-
+-/** Match a group of template definitions beginning
+- *  with a group name declaration.  Templates are enclosed
+- *  in double-quotes or <<...>> quotes for multi-line templates.
+- *  Template names have arg lists that indicate the cardinality
+- *  of the attribute: present, optional, zero-or-more, one-or-more.
+- *  Here is a sample group file:
+-
+-	group nfa;
+-
+-	// an NFA has edges and states
+-	nfa(states,edges) ::= <<
+-	digraph NFA {
+-	rankdir=LR;
+-	<states; separator="\\n">
+-	<edges; separator="\\n">
+-	}
+-	>>
+-
+-	state(name) ::= "node [shape = circle]; <name>;"
+-
+- */
+-grammar Group;
+-
+-options {
+-	language=CSharp3;
+-}
+-
+-@lexer::namespace{StringTemplate}
+-@parser::namespace{StringTemplate}
+-
+-@header
+-{
+-using Console = System.Console;
+-}
+-
+-public
+-group[TemplateGroup group, string prefix]
+-@init {
+-GroupLexer lexer = (GroupLexer)input.TokenSource;
+-this._group = lexer._group = $group;
+-}
+-	:	( templateDef[prefix] | dictDef )+
+-    ;
+-
+-public
+-templateDef[string prefix]
+-@init {
+-    string template=null;
+-    string fullName = null;
+-    int n=0; // num char to strip from left, right of template def
+-}
+-	:	(	'@' enclosing=ID '.' region=ID '(' ')'
+-			{fullName = TemplateGroup.GetMangledRegionName($enclosing.text, $region.text);}
+-		|	name=ID '(' formalArgs? ')' {fullName = $name.text;}
+-		)
+-		'::='
+-		{IToken templateToken = input.LT(1);}
+-		(	STRING     {template=$STRING.text; n=1;}
+-		|	BIGSTRING  {template=$BIGSTRING.text; n=2;}
+-		)
+-		{
+-		template = Misc.Strip(template, n);
+-		if ( templateToken.Type==BIGSTRING ) {
+-			template = Misc.TrimOneStartingWS(template);
+-		}
+-	    try {
+-			if ($enclosing != null)
+-				this._group.DefineRegion(prefix, $enclosing.text, $region.text, template);
+-			else
+-				this._group.DefineTemplate(prefix, $name.text, $formalArgs.args, template);
+-		}
+-        catch (TemplateRecognitionException e) {
+-        	RecognitionException re = (RecognitionException)e.InnerException;
+-        	int charPosition =
+-        		re.charPositionInLine+templateToken.CharPositionInLine+n;
+-	        this._group.listener.Error(templateToken.Line+":"+
+-                    	  		 charPosition+
+-	                             ": "+e.Message, null);
+-        }
+-	    }
+-	|   alias=ID '::=' target=ID
+-	;
+-
+-formalArgs returns[IDictionary<string,FormalArgument> args]
+-@init {$args = new Dictionary<string,FormalArgument>();}
+-    :	formalArg[$args] ( ',' formalArg[$args] )*
+-	;
+-
+-formalArg[IDictionary<string,FormalArgument> args]
+-	:	ID
+-		(	'=' a=STRING
+-		|	'=' a=ANONYMOUS_TEMPLATE
+-		)?
+-		{$args[$ID.text] = new FormalArgument($ID.text, $a);}
+-    ;
+-
+-/*
+-suffix returns [int cardinality=FormalArgument.REQUIRED]
+-    :   OPTIONAL
+-    |   STAR
+-    |   PLUS
+-	|
+-    ;
+-    */
+-
+-dictDef
+-	:	ID '::=' dict
+-        {
+-        if ( this._group.dictionaries.ContainsKey($ID.text) ) {
+-            Console.Error.WriteLine("redefinition of map: "+$ID.text);
+-        }
+-        else if ( this._group.templates.ContainsKey($ID.text) ) {
+-            Console.Error.WriteLine("redefinition of template as map: "+$ID.text);
+-        }
+-        else {
+-            this._group.DefineDictionary($ID.text, $dict.mapping);
+-        }
+-        }
+-	;
+-
+-dict returns [IDictionary<string, object> mapping]
+-@init {mapping=new Dictionary<string, object>();}
+-	:   '[' dictPairs[mapping] ']'
+-	;
+-
+-dictPairs[IDictionary<string, object> mapping]
+-    :	keyValuePair[mapping]
+-    	(',' keyValuePair[mapping])* (',' defaultValuePair[mapping])?
+-    |	defaultValuePair[mapping]
+-    ;
+-
+-defaultValuePair[IDictionary<string,object> mapping]
+-	:	'default' ':' keyValue {mapping[TemplateGroup.DEFAULT_KEY] = $keyValue.value;}
+-	;
+-
+-keyValuePair[IDictionary<string,object> mapping]
+-	:	STRING ':' keyValue {mapping[Misc.ReplaceEscapes(Misc.Strip($STRING.text, 1))] = $keyValue.value;}
+-	;
+-
+-keyValue returns [object value]
+-	:	BIGSTRING			{$value = new Template(Misc.Strip($BIGSTRING.text,2));}
+-	|	ANONYMOUS_TEMPLATE	{$value = new Template(Misc.Strip($ANONYMOUS_TEMPLATE.text,1));}
+-	|	STRING				{$value = Misc.ReplaceEscapes(Misc.Strip($STRING.text, 1));}
+-	|	{input.LT(1).Text.Equals("key")}?=> ID
+-							{$value = TemplateGroup.DICT_KEY;}
+-	|						{$value = null;}
+-	;
+-
+-ID	:	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'-'|'_')*
+-	;
+-
+-STRING
+-	:	'"' ( '\\' '"' | '\\' ~'"' | ~('\\'|'"') )* '"'
+-	;
+-
+-BIGSTRING
+-	:	'<<'
+-		(	options {greedy=false;}
+-		:	'\\' '>'  // \> escape
+-		|	'\\' ~'>'
+-		|	~'\\'
+-		)*
+-        '>>'
+-        {
+-        $text = $text.Replace(@"\>", ">");
+-        }
+-	;
+-
+-ANONYMOUS_TEMPLATE
+-    :	'{'
+-    	{
+-		TemplateLexer lexer =
+-			new TemplateLexer(input, this._group.delimiterStartChar, this._group.delimiterStopChar);
+-		lexer.subtemplateDepth = 1;
+-		UnbufferedTokenStream tokens = new UnbufferedTokenStream(lexer);
+-        TemplateParser parser = new TemplateParser(tokens, (ICodeGenerator)null, null);
+-		parser.template();
+-		}
+-    	// don't match '}' here; subparser matches it to terminate
+-    ;
+-
+-COMMENT
+-    :   '/*' ( options {greedy=false;} : . )* '*/' {Skip();}
+-    ;
+-
+-LINE_COMMENT
+-    :	'//' ~('\n'|'\r')* '\r'? '\n' {Skip();}
+-    ;
+-
+-WS  :	(' '|'\r'|'\t'|'\n') {Skip();} ;
+diff --git a/StringTemplate4/GroupLexerHelper.cs b/StringTemplate4/GroupLexerHelper.cs
+deleted file mode 100644
+index af29d5e..0000000
+--- a/StringTemplate4/GroupLexerHelper.cs
++++ /dev/null
+@@ -1,39 +0,0 @@
+-﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
+- * All rights reserved.
+- *
+- * Conversion to C#:
+- * Copyright (c) 2008-2009 Sam Harwell
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. Redistributions in binary form must reproduce the above copyright
+- *    notice, this list of conditions and the following disclaimer in the
+- *    documentation and/or other materials provided with the distribution.
+- * 3. The name of the author may not be used to endorse or promote products
+- *    derived from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- */
+-
+-namespace StringTemplate
+-{
+-    partial class GroupLexer
+-    {
+-        protected internal TemplateGroup _group;
+-    }
+-}
+diff --git a/StringTemplate4/GroupParserHelper.cs b/StringTemplate4/GroupParserHelper.cs
+deleted file mode 100644
+index a26063f..0000000
+--- a/StringTemplate4/GroupParserHelper.cs
++++ /dev/null
+@@ -1,39 +0,0 @@
+-﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
+- * All rights reserved.
+- *
+- * Conversion to C#:
+- * Copyright (c) 2008-2009 Sam Harwell
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. Redistributions in binary form must reproduce the above copyright
+- *    notice, this list of conditions and the following disclaimer in the
+- *    documentation and/or other materials provided with the distribution.
+- * 3. The name of the author may not be used to endorse or promote products
+- *    derived from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- */
+-
+-namespace StringTemplate
+-{
+-    partial class GroupParser
+-    {
+-        protected internal TemplateGroup _group;
+-    }
+-}
+diff --git a/StringTemplate4/ICodeGenerator.cs b/StringTemplate4/ICodeGenerator.cs
+deleted file mode 100644
+index dedd189..0000000
+--- a/StringTemplate4/ICodeGenerator.cs
++++ /dev/null
+@@ -1,69 +0,0 @@
+-﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
+- * All rights reserved.
+- *
+- * Conversion to C#:
+- * Copyright (c) 2008-2009 Sam Harwell
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. Redistributions in binary form must reproduce the above copyright
+- *    notice, this list of conditions and the following disclaimer in the
+- *    documentation and/or other materials provided with the distribution.
+- * 3. The name of the author may not be used to endorse or promote products
+- *    derived from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- */
+-
+-namespace StringTemplate
+-{
+-    using System.Collections.Generic;
+-    using Antlr.Runtime;
+-    using IList = System.Collections.IList;
+-
+-    // TODO: maybe rename; more than code gen now; break into two interfaces?
+-    public interface ICodeGenerator
+-    {
+-        /// <summary>
+-        /// If we're compiling templates in subdir or group file under root,
+-        /// what's the templatePathPrefix to add?
+-        /// </summary>
+-        string TemplateReferencePrefix
+-        {
+-            get;
+-        }
+-
+-        void Emit(short opcode);
+-        void Emit(short opcode, int arg);
+-        void Emit(short opcode, int arg1, int arg2);
+-        void Emit(short opcode, string s);
+-        void Write(int addr, short value);
+-        /** Return address where next instruction will be written */
+-        int Address();
+-
+-        /** Compile a subtemplate. It's the '...' in this &lt;names:{p | ...}&gt; */
+-        string CompileAnonTemplate(string enclosingTemplateName,
+-                                   ITokenStream input,
+-                                   IList<IToken> ids,
+-                                   RecognizerSharedState state);
+-
+-        string CompileRegion(string enclosingTemplateName, string regionName, ITokenStream input, RecognizerSharedState state);
+-
+-        void DefineBlankRegion(string fullyQualifiedName);
+-    }
+-}
+diff --git a/StringTemplate4/StringTable.cs b/StringTemplate4/StringTable.cs
+deleted file mode 100644
+index 7b13278..0000000
+--- a/StringTemplate4/StringTable.cs
++++ /dev/null
+@@ -1,64 +0,0 @@
+-﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
+- * All rights reserved.
+- *
+- * Conversion to C#:
+- * Copyright (c) 2008-2009 Sam Harwell
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. Redistributions in binary form must reproduce the above copyright
+- *    notice, this list of conditions and the following disclaimer in the
+- *    documentation and/or other materials provided with the distribution.
+- * 3. The name of the author may not be used to endorse or promote products
+- *    derived from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- */
+-
+-namespace StringTemplate
+-{
+-    using System.Collections.Generic;
+-    using System.Linq;
+-
+-    public class StringTable
+-    {
+-        private readonly Dictionary<string, int> _table = new Dictionary<string, int>();
+-        private int _i = -1;
+-
+-        public int Add(string s)
+-        {
+-            int i;
+-            if (_table.TryGetValue(s, out i))
+-                return i;
+-
+-            i = ++_i;
+-            _table[s] = i;
+-            return i;
+-        }
+-
+-        public int GetIndex(string s)
+-        {
+-            return _table[s];
+-        }
+-
+-        public string[] ToArray()
+-        {
+-            return _table.OrderBy(pair => pair.Value).Select(pair => pair.Key).ToArray();
+-        }
+-    }
+-}
+diff --git a/StringTemplate4/StringTemplate4.csproj b/StringTemplate4/StringTemplate4.csproj
+index a940897..e220489 100644
+--- a/StringTemplate4/StringTemplate4.csproj
++++ b/StringTemplate4/StringTemplate4.csproj
+@@ -47,10 +47,15 @@
+<ItemGroup>
+<Compile Include="AutoIndentWriter.cs" />
+<Compile Include="BlankTemplate.cs" />
+-    <Compile Include="Bytecode.cs" />
+-    <Compile Include="BytecodeDisassembler.cs" />
+-    <Compile Include="CompiledTemplate.cs" />
+-    <Compile Include="Compiler.cs" />
++    <Compile Include="Compiler\Bytecode.cs" />
++    <Compile Include="Compiler\BytecodeDisassembler.cs" />
++    <Compile Include="Compiler\CompiledTemplate.cs" />
++    <Compile Include="Compiler\Compiler.cs" />
++    <Compile Include="Compiler\FormalArgument.cs" />
++    <Compile Include="Compiler\ICodeGenerator.cs" />
++    <Compile Include="Compiler\StringTable.cs" />
++    <Compile Include="Compiler\TemplateLexer.cs" />
++    <Compile Include="Compiler\TemplateRecognitionException.cs" />
+<Compile Include="DateTimeRenderer.cs" />
+<Compile Include="Debug\AddAttributeEvent.cs" />
+<Compile Include="Debug\ConstructionEvent.cs" />
+@@ -59,11 +64,13 @@
+<Compile Include="Debug\EvalTemplateEvent.cs" />
+<Compile Include="Debug\InterpEvent.cs" />
+<Compile Include="ErrorTolerance.cs" />
+-    <Compile Include="FormalArgument.cs" />
+-    <Compile Include="GroupLexerHelper.cs" />
+-    <Compile Include="GroupParserHelper.cs" />
++    <Compile Include="Compiler\GroupLexerHelper.cs">
++      <DependentUpon>Group.g3</DependentUpon>
++    </Compile>
++    <Compile Include="Compiler\GroupParserHelper.cs">
++      <DependentUpon>Group.g3</DependentUpon>
++    </Compile>
+<Compile Include="IAttributeRenderer.cs" />
+-    <Compile Include="ICodeGenerator.cs" />
+<Compile Include="Interpreter.cs" />
+<Compile Include="ITemplateErrorListener.cs" />
+<Compile Include="ITemplateWriter.cs" />
+@@ -72,23 +79,22 @@
+<Compile Include="NumberRenderer.cs" />
+<Compile Include="Properties\AssemblyInfo.cs" />
+<Compile Include="StringRenderer.cs" />
+-    <Compile Include="StringTable.cs" />
+<Compile Include="Template.cs" />
+<Compile Include="TemplateException.cs" />
+<Compile Include="TemplateGroup.cs" />
+<Compile Include="TemplateGroupDirectory.cs" />
+<Compile Include="TemplateGroupFile.cs" />
+-    <Compile Include="TemplateLexer.cs" />
+-    <Compile Include="TemplateParserHelper.cs" />
+-    <Compile Include="TemplateRecognitionException.cs" />
++    <Compile Include="Compiler\TemplateParserHelper.cs">
++      <DependentUpon>TemplateParser.g3</DependentUpon>
++    </Compile>
+</ItemGroup>
+<ItemGroup>
+<None Include="..\Antlr3\Key.snk">
+<Link>Key.snk</Link>
+</None>
+-    <AntlrTokens Include="TemplateLexer.tokens" />
+-    <Antlr3 Include="TemplateParser.g3" />
+-    <Antlr3 Include="Group.g3" />
++    <Antlr3 Include="Compiler\Group.g3" />
++    <AntlrTokens Include="Compiler\TemplateLexer.tokens" />
++    <Antlr3 Include="Compiler\TemplateParser.g3" />
+</ItemGroup>
+<ItemGroup>
+<ProjectReference Include="..\..\..\antlr\main\runtime\CSharp3\Sources\Antlr3.Runtime\Antlr3.Runtime.csproj">
+diff --git a/StringTemplate4/TemplateLexer.cs b/StringTemplate4/TemplateLexer.cs
+deleted file mode 100644
+index 09767be..0000000
+--- a/StringTemplate4/TemplateLexer.cs
++++ /dev/null
+@@ -1,638 +0,0 @@
+-﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
+- * All rights reserved.
+- *
+- * Conversion to C#:
+- * Copyright (c) 2008-2009 Sam Harwell
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. Redistributions in binary form must reproduce the above copyright
+- *    notice, this list of conditions and the following disclaimer in the
+- *    documentation and/or other materials provided with the distribution.
+- * 3. The name of the author may not be used to endorse or promote products
+- *    derived from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- */
+-
+-namespace StringTemplate
+-{
+-    using System.Collections.Generic;
+-    using Antlr.Runtime;
+-    using Console = System.Console;
+-    using Exception = System.Exception;
+-    using NumberStyles = System.Globalization.NumberStyles;
+-    using StringBuilder = System.Text.StringBuilder;
+-
+-    public class TemplateLexer : ITokenSource
+-    {
+-        public const char EOF = unchecked((char)(-1));            // EOF char
+-        public const int EOF_TYPE = CharStreamConstants.EndOfFile;  // EOF token type
+-
+-        public class TemplateToken : CommonToken
+-        {
+-            public TemplateToken(ICharStream input, int type, int channel, int start, int stop)
+-                : base(input, type, channel, start, stop)
+-            {
+-            }
+-
+-            public TemplateToken(int type, string text)
+-                : base(type, text)
+-            {
+-            }
+-
+-            public override string ToString()
+-            {
+-                string channelStr = "";
+-                if (Channel > 0)
+-                {
+-                    channelStr = ",channel=" + Channel;
+-                }
+-                string txt = Text;
+-                if (txt != null)
+-                {
+-                    txt = Misc.ReplaceEscapes(txt);
+-                }
+-                else
+-                {
+-                    txt = "<no text>";
+-                }
+-                return "[@" + TokenIndex + "," + StartIndex + ":" + StopIndex + "='" + txt + "',<" + TemplateParser.tokenNames[Type] + ">" + channelStr + "," + Line + ":" + CharPositionInLine + "]";
+-            }
+-        }
+-
+-        public static readonly IToken SKIP = new TemplateToken(-1, "<skip>");
+-
+-        // TODO: enum?
+-        // pasted from STParser
+-        public const int RBRACK = 17;
+-        public const int LBRACK = 16;
+-        public const int ELSE = 5;
+-        public const int ELLIPSIS = 11;
+-        public const int LCURLY = 20;
+-        public const int BANG = 10;
+-        public const int EQUALS = 12;
+-        public const int TEXT = 22;
+-        public const int ID = 25;
+-        public const int SEMI = 9;
+-        public const int LPAREN = 14;
+-        public const int IF = 4;
+-        public const int ELSEIF = 6;
+-        public const int COLON = 13;
+-        public const int RPAREN = 15;
+-        public const int WS = 27;
+-        public const int COMMA = 18;
+-        public const int RCURLY = 21;
+-        public const int ENDIF = 7;
+-        public const int RDELIM = 24;
+-        public const int SUPER = 8;
+-        public const int DOT = 19;
+-        public const int LDELIM = 23;
+-        public const int STRING = 26;
+-        public const int PIPE = 28;
+-        public const int OR = 29;
+-        public const int AND = 30;
+-        public const int INDENT = 31;
+-        public const int NEWLINE = 32;
+-        public const int AT = 33;
+-        public const int REGION_END = 34;
+-
+-        char delimiterStartChar = '<';
+-        char delimiterStopChar = '>';
+-
+-        bool scanningInsideExpr = false;
+-        internal int subtemplateDepth = 0; // start out *not* in a {...} subtemplate
+-
+-        internal ICharStream input;
+-        char c;        // current character
+-        int startCharIndex;
+-        int startLine;
+-        int startCharPositionInLine;
+-
+-        List<IToken> tokens = new List<IToken>();
+-
+-        public IToken NextToken()
+-        {
+-            if (tokens.Count > 0)
+-            {
+-                var result = tokens[0];
+-                tokens.RemoveAt(0);
+-                return result;
+-            }
+-            return _nextToken();
+-        }
+-
+-        public TemplateLexer(ANTLRStringStream input)
+-            : this(input, '<', '>')
+-        {
+-        }
+-
+-        public TemplateLexer(ICharStream input, char delimiterStartChar, char delimiterStopChar)
+-        {
+-            this.input = input;
+-            c = (char)input.LA(1); // prime lookahead
+-            this.delimiterStartChar = delimiterStartChar;
+-            this.delimiterStopChar = delimiterStopChar;
+-        }
+-
+-        /** Ensure x is next character on the input stream */
+-        public void Match(char x)
+-        {
+-            if (c == x)
+-                Consume();
+-            else
+-                throw new Exception("expecting " + x + "; found " + c);
+-        }
+-
+-        protected void Consume()
+-        {
+-            input.Consume();
+-            c = (char)input.LA(1);
+-        }
+-
+-        public void Emit(IToken token)
+-        {
+-            tokens.Add(token);
+-        }
+-
+-        public IToken _nextToken()
+-        {
+-            //System.out.println("nextToken: c="+(char)c+"@"+input.index());
+-            while (true)
+-            { // lets us avoid recursion when skipping stuff
+-                startCharIndex = input.Index;
+-                startLine = input.Line;
+-                startCharPositionInLine = input.CharPositionInLine;
+-
+-                if (c == EOF)
+-                    return NewToken(EOF_TYPE);
+-                IToken t = null;
+-                if (scanningInsideExpr)
+-                    t = Inside();
+-                else
+-                    t = Outside();
+-                if (t != SKIP)
+-                    return t;
+-            }
+-        }
+-
+-        protected IToken Outside()
+-        {
+-            if (input.CharPositionInLine == 0 && (c == ' ' || c == '\t'))
+-            {
+-                while (c == ' ' || c == '\t')
+-                    Consume(); // scarf indent
+-                return NewToken(INDENT);
+-            }
+-            if (c == delimiterStartChar)
+-            {
+-                Consume();
+-                if (c == '!')
+-                {
+-                    mCOMMENT();
+-                    return SKIP;
+-                }
+-                if (c == '\\')
+-                    return ESCAPE(); // <\\> <\uFFFF> <\n> etc...
+-                scanningInsideExpr = true;
+-                return NewToken(LDELIM);
+-            }
+-            if (c == '\r')
+-            {
+-                // \r\n -> \n
+-                Consume();
+-                Consume();
+-                return NewToken(NEWLINE);
+-            }
+-            if (c == '\n')
+-            {
+-                Consume();
+-                return NewToken(NEWLINE);
+-            }
+-            if (c == '}' && subtemplateDepth > 0)
+-            {
+-                scanningInsideExpr = true;
+-                subtemplateDepth--;
+-                Consume();
+-                return NewTokenFromPreviousChar(RCURLY);
+-            }
+-            return mTEXT();
+-        }
+-
+-        protected IToken Inside()
+-        {
+-            while (true)
+-            {
+-                switch (c)
+-                {
+-                case ' ':
+-                case '\t':
+-                case '\n':
+-                case '\r':
+-                    Consume();
+-                    continue;
+-                case '.':
+-                    Consume();
+-                    if (input.LA(1) == '.' && input.LA(2) == '.')
+-                    {
+-                        Consume();
+-                        Match('.');
+-                        return NewToken(ELLIPSIS);
+-                    }
+-                    return NewToken(DOT);
+-                case ',':
+-                    Consume();
+-                    return NewToken(COMMA);
+-                case ':':
+-                    Consume();
+-                    return NewToken(COLON);
+-                case ';':
+-                    Consume();
+-                    return NewToken(SEMI);
+-                case '(':
+-                    Consume();
+-                    return NewToken(LPAREN);
+-                case ')':
+-                    Consume();
+-                    return NewToken(RPAREN);
+-                case '[':
+-                    Consume();
+-                    return NewToken(LBRACK);
+-                case ']':
+-                    Consume();
+-                    return NewToken(RBRACK);
+-                case '=':
+-                    Consume();
+-                    return NewToken(EQUALS);
+-                case '!':
+-                    Consume();
+-                    return NewToken(BANG);
+-                case '@':
+-                    Consume();
+-                    if (c == 'e' && input.LA(2) == 'n' && input.LA(3) == 'd')
+-                    {
+-                        Consume();
+-                        Consume();
+-                        Consume();
+-                        return NewToken(REGION_END);
+-                    }
+-                    return NewToken(AT);
+-                case '"':
+-                    return mSTRING();
+-                case '&':
+-                    Consume();
+-                    Match('&');
+-                    return NewToken(AND); // &&
+-                case '|':
+-                    Consume();
+-                    Match('|');
+-                    return NewToken(OR); // ||
+-                case '{':
+-                    return SubTemplate();
+-                default:
+-                    if (c == delimiterStopChar)
+-                    {
+-                        Consume();
+-                        scanningInsideExpr = false;
+-                        return NewToken(RDELIM);
+-                    }
+-                    if (IsIDStartLetter(c))
+-                    {
+-                        IToken id = mID();
+-                        string name = id.Text;
+-                        if (name.Equals("if"))
+-                            return NewToken(IF);
+-                        else if (name.Equals("endif"))
+-                            return NewToken(ENDIF);
+-                        else if (name.Equals("else"))
+-                            return NewToken(ELSE);
+-                        else if (name.Equals("elseif"))
+-                            return NewToken(ELSEIF);
+-                        else if (name.Equals("super"))
+-                            return NewToken(SUPER);
+-                        return id;
+-                    }
+-                    RecognitionException re = new NoViableAltException("", 0, 0, input);
+-                    if (c == EOF)
+-                    {
+-                        throw new TemplateRecognitionException("EOF inside ST expression", re);
+-                    }
+-                    throw new TemplateRecognitionException("invalid character: " + c, re);
+-                }
+-            }
+-        }
+-
+-        private IToken SubTemplate()
+-        {
+-            // look for "{ args ID (',' ID)* '|' ..."
+-            subtemplateDepth++;
+-            int m = input.Mark();
+-            int curlyStartChar = startCharIndex;
+-            int curlyLine = startLine;
+-            int curlyPos = startCharPositionInLine;
+-            List<IToken> argTokens = new List<IToken>();
+-            Consume();
+-            IToken curly = NewTokenFromPreviousChar(LCURLY);
+-            mWS();
+-            argTokens.Add(mID());
+-            mWS();
+-            while (c == ',')
+-            {
+-                Consume();
+-                argTokens.Add(NewTokenFromPreviousChar(COMMA));
+-                mWS();
+-                argTokens.Add(mID());
+-                mWS();
+-            }
+-            mWS();
+-            if (c == '|')
+-            {
+-                Consume();
+-                argTokens.Add(NewTokenFromPreviousChar(PIPE));
+-                if (IsWS(c))
+-                    Consume(); // ignore a single whitespace after |
+-                //System.out.println("matched args: "+argTokens);
+-                foreach (IToken t in argTokens)
+-                    Emit(t);
+-                input.Release(m);
+-                scanningInsideExpr = false;
+-                startCharIndex = curlyStartChar; // reset state
+-                startLine = curlyLine;
+-                startCharPositionInLine = curlyPos;
+-                return curly;
+-            }
+-            //System.out.println("no match rewind");
+-            input.Rewind(m);
+-            startCharIndex = curlyStartChar; // reset state
+-            startLine = curlyLine;
+-            startCharPositionInLine = curlyPos;
+-            Consume();
+-            scanningInsideExpr = false;
+-            return curly;
+-        }
+-
+-        private IToken ESCAPE()
+-        {
+-            Consume(); // kill \\
+-            IToken t = null;
+-            switch (c)
+-            {
+-            case '\\':
+-                mLINEBREAK();
+-                return SKIP;
+-            case 'n':
+-                t = NewToken(TEXT, "\n", input.CharPositionInLine - 2);
+-                break;
+-            case 't':
+-                t = NewToken(TEXT, "\t", input.CharPositionInLine - 2);
+-                break;
+-            case ' ':
+-                t = NewToken(TEXT, " ", input.CharPositionInLine - 2);
+-                break;
+-            case 'u':
+-                t = UNICODE();
+-                break;
+-            default:
+-                Console.Error.WriteLine("bad \\ char");
+-                break;
+-            }
+-            Consume();
+-            Match(delimiterStopChar);
+-            return t;
+-        }
+-
+-        private IToken UNICODE()
+-        {
+-            Consume();
+-            char[] chars = new char[4];
+-            if (!IsUnicodeLetter(c))
+-                Console.Error.WriteLine("bad unicode char: " + c);
+-            chars[0] = c;
+-            Consume();
+-            if (!IsUnicodeLetter(c))
+-                Console.Error.WriteLine("bad unicode char: " + c);
+-            chars[1] = c;
+-            Consume();
+-            if (!IsUnicodeLetter(c))
+-                Console.Error.WriteLine("bad unicode char: " + c);
+-            chars[2] = c;
+-            Consume();
+-            if (!IsUnicodeLetter(c))
+-                Console.Error.WriteLine("bad unicode char: " + c);
+-            chars[3] = c;
+-            // ESCAPE kills final char and >
+-            char uc = (char)int.Parse(new string(chars), NumberStyles.HexNumber);
+-            return NewToken(TEXT, uc.ToString(), input.CharPositionInLine - 6);
+-        }
+-
+-        private IToken mTEXT()
+-        {
+-            bool modifiedText = false;
+-            StringBuilder buf = new StringBuilder();
+-            while (c != EOF && c != delimiterStartChar)
+-            {
+-                if (c == '\r' || c == '\n')
+-                    break;
+-                if (c == '}' && subtemplateDepth > 0)
+-                    break;
+-                if (c == '\\')
+-                {
+-                    if (input.LA(2) == delimiterStartChar ||
+-                         input.LA(2) == '}')
+-                    {
+-                        modifiedText = true;
+-                        Consume(); // toss out \ char
+-                        buf.Append(c);
+-                        Consume();
+-                    }
+-                    else
+-                    {
+-                        Consume();
+-                    }
+-                    continue;
+-                }
+-                buf.Append(c);
+-                Consume();
+-            }
+-            if (modifiedText)
+-                return NewToken(TEXT, buf.ToString());
+-            else
+-                return NewToken(TEXT);
+-        }
+-
+-        /** ID  :   ('a'..'z'|'A'..'Z'|'_'|'/') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'/')* ; */
+-        private IToken mID()
+-        {
+-            // called from subTemplate; so keep resetting position during speculation
+-            startCharIndex = input.Index;
+-            startLine = input.Line;
+-            startCharPositionInLine = input.CharPositionInLine;
+-            Consume();
+-            while (IsIDLetter(c))
+-            {
+-                Consume();
+-            }
+-            return NewToken(ID);
+-        }
+-
+-        /** STRING : '"' ( '\\' '"' | '\\' ~'"' | ~('\\'|'"') )* '"' ; */
+-        private IToken mSTRING()
+-        {
+-            //{setText(getText().substring(1, getText().length()-1));}
+-            bool sawEscape = false;
+-            StringBuilder buf = new StringBuilder();
+-            buf.Append(c);
+-            Consume();
+-            while (c != '"')
+-            {
+-                if (c == '\\')
+-                {
+-                    sawEscape = true;
+-                    Consume();
+-                    switch (c)
+-                    {
+-                    case 'n':
+-                        buf.Append('\n');
+-                        break;
+-                    case 'r':
+-                        buf.Append('\r');
+-                        break;
+-                    case 't':
+-                        buf.Append('\t');
+-                        break;
+-                    default:
+-                        buf.Append(c);
+-                        break;
+-                    }
+-                    Consume();
+-                    continue;
+-                }
+-                buf.Append(c);
+-                Consume();
+-            }
+-            buf.Append(c);
+-            Consume();
+-            if (sawEscape)
+-                return NewToken(STRING, buf.ToString());
+-            else
+-                return NewToken(STRING);
+-        }
+-
+-        private void mWS()
+-        {
+-            while (c == ' ' || c == '\t' || c == '\n' || c == '\r')
+-                Consume();
+-        }
+-
+-        private void mCOMMENT()
+-        {
+-            Match('!');
+-            while (!(c == '!' && input.LA(2) == delimiterStopChar))
+-                Consume();
+-            Consume();
+-            Consume(); // kill !>
+-        }
+-
+-        private void mLINEBREAK()
+-        {
+-            Match('\\'); // only kill 2nd \ as outside() kills first one
+-            Match(delimiterStopChar);
+-            while (c == ' ' || c == '\t')
+-                Consume(); // scarf WS after <\\>
+-            if (c == '\r')
+-                Consume();
+-            Match('\n');
+-            while (c == ' ' || c == '\t')
+-                Consume(); // scarf any indent
+-            return;
+-        }
+-
+-        public static bool IsIDStartLetter(char c)
+-        {
+-            return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c == '/';
+-        }
+-
+-        public static bool IsIDLetter(char c)
+-        {
+-            return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '/';
+-        }
+-
+-        public static bool IsWS(char c)
+-        {
+-            return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+-        }
+-
+-        public static bool IsUnicodeLetter(char c)
+-        {
+-            return c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F' || c >= '0' && c <= '9';
+-        }
+-
+-        public IToken NewToken(int ttype)
+-        {
+-            TemplateToken t = new TemplateToken(input, ttype, Lexer.DefaultTokenChannel,
+-                    startCharIndex, input.Index - 1);
+-            t.Line = startLine;
+-            t.CharPositionInLine = startCharPositionInLine;
+-            return t;
+-        }
+-
+-        public IToken NewTokenFromPreviousChar(int ttype)
+-        {
+-            TemplateToken t =
+-                new TemplateToken(input, ttype, Lexer.DefaultTokenChannel,
+-                    input.Index - 1, input.Index - 1);
+-            t.StartIndex = input.Index - 1;
+-            t.Line = input.Line;
+-            t.CharPositionInLine = input.CharPositionInLine - 1;
+-            return t;
+-        }
+-
+-        public IToken NewToken(int ttype, string text, int pos)
+-        {
+-            TemplateToken t = new TemplateToken(ttype, text);
+-            t.Line = input.Line;
+-            t.CharPositionInLine = pos;
+-            return t;
+-        }
+-
+-        public IToken NewToken(int ttype, string text)
+-        {
+-            TemplateToken t = new TemplateToken(ttype, text);
+-            t.StartIndex = startCharIndex;
+-            t.Line = startLine;
+-            t.CharPositionInLine = startCharPositionInLine;
+-            return t;
+-        }
+-
+-        public string SourceName
+-        {
+-            get
+-            {
+-                return "no idea";
+-            }
+-        }
+-
+-        public string[] TokenNames
+-        {
+-            get
+-            {
+-                return TemplateParser.tokenNames;
+-            }
+-        }
+-    }
+-}
+diff --git a/StringTemplate4/TemplateLexer.tokens b/StringTemplate4/TemplateLexer.tokens
+deleted file mode 100644
+index d4491a0..0000000
+--- a/StringTemplate4/TemplateLexer.tokens
++++ /dev/null
+@@ -1,54 +0,0 @@
+-RBRACK=17
+-LBRACK=16
+-ELSE=5
+-ELLIPSIS=11
+-LCURLY=20
+-BANG=10
+-EQUALS=12
+-TEXT=22
+-ID=25
+-SEMI=9
+-LPAREN=14
+-IF=4
+-ELSEIF=6
+-COLON=13
+-RPAREN=15
+-WS=27
+-COMMA=18
+-RCURLY=21
+-ENDIF=7
+-RDELIM=24
+-SUPER=8
+-DOT=19
+-LDELIM=23
+-STRING=26
+-PIPE=28
+-OR=29
+-AND=30
+-INDENT=31
+-NEWLINE=32
+-AT=33
+-END=34
+-'super'=8
+-'|'=28
+-'!'=10
+-'}'=21
+-'else'=5
+-'if'=4
+-'{'=20
+-'...'=11
+-'elseif'=6
+-';'=9
+-'='=12
+-':'=13
+-'('=14
+-'['=16
+-','=18
+-'.'=19
+-'endif'=7
+-')'=15
+-']'=17
+-'||'=29
+-'&&'=30
+-'@'=33
+-'@end'=34
+\ No newline at end of file
+diff --git a/StringTemplate4/TemplateParser.g3 b/StringTemplate4/TemplateParser.g3
+deleted file mode 100644
+index e3606eb..0000000
+--- a/StringTemplate4/TemplateParser.g3
++++ /dev/null
+@@ -1,336 +0,0 @@
+-﻿/*
+- [The "BSD licence"]
+- Copyright (c) 2009 Terence Parr
+- All rights reserved.
+-
+- Redistribution and use in source and binary forms, with or without
+- modification, are permitted provided that the following conditions
+- are met:
+- 1. Redistributions of source code must retain the above copyright
+-    notice, this list of conditions and the following disclaimer.
+- 2. Redistributions in binary form must reproduce the above copyright
+-    notice, this list of conditions and the following disclaimer in the
+-    documentation and/or other materials provided with the distribution.
+- 3. The name of the author may not be used to endorse or promote products
+-    derived from this software without specific prior written permission.
+-
+- THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-*/
+-
+-/** Recognize a single StringTemplate template text, expressions, and conditionals */
+-parser grammar TemplateParser;
+-
+-options {
+-	language=CSharp3;
+-	tokenVocab=TemplateLexer;
+-	TokenLabelType=CommonToken;
+-}
+-
+-@namespace{StringTemplate}
+-@header{using System.Linq;}
+-
+-@rulecatch {
+-   catch (RecognitionException) { throw; }
+-}
+-
+-public
+-templateAndEOF
+-	:	template EOF
+-	;
+-
+-// TODO: remove backtracking
+-public
+-template
+-	:	element*
+-	;
+-
+-element
+-options {backtrack=true; k=2;}
+-	:	i=INDENT         {Indent($i.text);}
+-		ifOnOneLine      {gen.Emit(Bytecode.INSTR_DEDENT);}
+-	|	i=INDENT ifOnMultiLines
+-	|	ifOnMultiLines
+-	|	i=INDENT       	 {Indent($i.text);}
+-		exprTag          {gen.Emit(Bytecode.INSTR_DEDENT);}
+-	|	exprTag
+-	|	i=INDENT         {Indent($i.text);}
+-		text             {gen.Emit(Bytecode.INSTR_DEDENT);}
+-	|	text
+-	|   (i=INDENT {Indent($i.text);})? region
+-						 {
+-						 gen.Emit(Bytecode.INSTR_NEW, $region.name);
+-						 gen.Emit(Bytecode.INSTR_WRITE, $region.start.StartIndex, $region.stop.StartIndex);
+-						 }
+-	|	i=INDENT         {Indent($i.text);}
+-	 	NEWLINE          {gen.Emit(Bytecode.INSTR_NEWLINE);}
+-	 	                 {gen.Emit(Bytecode.INSTR_DEDENT);}
+-	|	NEWLINE          {gen.Emit(Bytecode.INSTR_NEWLINE);}
+-	;
+-
+-text
+-	:	TEXT
+-		{
+-		if ( $TEXT.text.Length>0 ) {
+-			gen.Emit(Bytecode.INSTR_LOAD_STR, $TEXT.text);
+-			gen.Emit(Bytecode.INSTR_WRITE, $TEXT.StartIndex, $TEXT.StopIndex);
+-		}
+-		}
+-	;
+-
+-exprTag
+-	:	LDELIM
+-		expr
+-		(	';' exprOptions {gen.Emit(Bytecode.INSTR_WRITE_OPT,$LDELIM.StartIndex,input.LT(1).StartIndex);}
+-		|	                {gen.Emit(Bytecode.INSTR_WRITE,$LDELIM.StartIndex,input.LT(1).StartIndex);}
+-		)
+-		RDELIM
+-	;
+-
+-region returns [string name] // match $@foo$...$@end$
+-	:	LDELIM '@' ID RDELIM
+-		{{ // force exec even when backtracking
+-		if (state.backtracking == 0)
+-			$name = gen.CompileRegion(_enclosingTemplateName, $ID.text, input, state);
+-		else
+-			$name = NoopGen.CompileRegion(_enclosingTemplateName, $ID.text, input, state);
+-		gen.CompileRegion(_enclosingTemplateName, $ID.text, input, state);
+-        }}
+-		LDELIM '@end' RDELIM
+-	;
+-
+-subtemplate returns [string name]
+-	:	'{' ( ids+=ID (',' ids+=ID)* '|' )?
+-		{{ // force exec even when backtracking
+-		List<IToken> idTokens = null;
+-		if ($ids != null)
+-			idTokens = new List<IToken>($ids.Cast<IToken>());
+-		if (state.backtracking == 0)
+-			$name = gen.CompileAnonTemplate(_enclosingTemplateName, input, idTokens, state);
+-		else
+-			$name = NoopGen.CompileAnonTemplate(_enclosingTemplateName, input, idTokens, state);
+-        }}
+-        '}'
+-    ;
+-
+-/** The (...)* loop in rule template doesn't think '}' can follow it because
+- *  we call template in an action (via compileAnonTemplate).  To avoid
+- *  syntax errors upon '}' in rule templatee, we force '}' into FOLLOW set.
+- *  I hope to make ANTLR ignore FOLLOW set for (...)* in future.
+- */
+-addTemplateEndTokensToFollowOfTemplateRule : template ('}' | LDELIM '@end') ;
+-
+-ifOnMultiLines
+-@init {
+-    /** Tracks address of branch operand (in code block).  It's how
+-     *  we backpatch forward references when generating code for IFs.
+-     */
+-    int prevBranchOperand = -1;
+-    /** Branch instruction operands that are forward refs to end of IF.
+-     *  We need to update them once we see the endif.
+-     */
+-    List<int> endRefs = new List<int>();
+-}
+-	:	LDELIM 'if' '(' conditional ')' RDELIM
+-		{
+-        prevBranchOperand = gen.Address()+1;
+-        gen.Emit(Bytecode.INSTR_BRF, -1); // write placeholder as branch target
+-		}
+-		template
+-		(	INDENT? LDELIM 'elseif'
+-			{
+-			endRefs.Add(gen.Address()+1);
+-			gen.Emit(Bytecode.INSTR_BR, -1); // br end
+-			// update previous branch instruction
+-			gen.Write(prevBranchOperand, (short)gen.Address());
+-			prevBranchOperand = -1;
+-			}
+-			'(' conditional ')' RDELIM
+-			{
+-        	prevBranchOperand = gen.Address()+1;
+-        	gen.Emit(Bytecode.INSTR_BRF, -1); // write placeholder as branch target
+-			}
+-			template
+-		)*
+-		(	INDENT? LDELIM 'else' RDELIM
+-			{
+-			endRefs.Add(gen.Address()+1);
+-			gen.Emit(Bytecode.INSTR_BR, -1); // br end
+-			// update previous branch instruction
+-			gen.Write(prevBranchOperand, (short)gen.Address());
+-			prevBranchOperand = -1;
+-			}
+-			template
+-		)?
+-		INDENT? endif=LDELIM 'endif' RDELIM
+-		( {true}? NEWLINE )? // kill \on for <endif> on line by itself
+-		{
+-		if ( prevBranchOperand>=0 ) {
+-			gen.Write(prevBranchOperand, (short)gen.Address());
+-		}
+-        foreach (int opnd in endRefs) gen.Write(opnd, (short)gen.Address());
+-		}
+-	;
+-
+-// TODO: code dup but need to call elementsForIfOnOneLine not template inside :(
+-ifOnOneLine
+-@init {
+-    /** Tracks address of branch operand (in code block).  It's how
+-     *  we backpatch forward references when generating code for IFs.
+-     */
+-    int prevBranchOperand = -1;
+-    /** Branch instruction operands that are forward refs to end of IF.
+-     *  We need to update them once we see the endif.
+-     */
+-    List<int> endRefs = new List<int>();
+-}
+-	:	LDELIM 'if' '(' conditional ')' RDELIM
+-		{
+-        prevBranchOperand = gen.Address()+1;
+-        gen.Emit(Bytecode.INSTR_BRF, -1); // write placeholder as branch target
+-		}
+-		elementsForIfOnOneLine*
+-		(	LDELIM 'elseif'
+-			{
+-			endRefs.Add(gen.Address()+1);
+-			gen.Emit(Bytecode.INSTR_BR, -1); // br end
+-			// update previous branch instruction
+-			gen.Write(prevBranchOperand, (short)gen.Address());
+-			prevBranchOperand = -1;
+-			}
+-			'(' conditional ')' RDELIM
+-			{
+-        	prevBranchOperand = gen.Address()+1;
+-        	gen.Emit(Bytecode.INSTR_BRF, -1); // write placeholder as branch target
+-			}
+-			elementsForIfOnOneLine*
+-		)*
+-		(	LDELIM 'else' RDELIM
+-			{
+-			endRefs.Add(gen.Address()+1);
+-			gen.Emit(Bytecode.INSTR_BR, -1); // br end
+-			// update previous branch instruction
+-			gen.Write(prevBranchOperand, (short)gen.Address());
+-			prevBranchOperand = -1;
+-			}
+-			elementsForIfOnOneLine*
+-		)?
+-		endif=LDELIM 'endif' RDELIM
+-		{
+-		if ( prevBranchOperand>=0 ) {
+-			gen.Write(prevBranchOperand, (short)gen.Address());
+-		}
+-        foreach (int opnd in endRefs) gen.Write(opnd, (short)gen.Address());
+-		}
+-	;
+-
+-elementsForIfOnOneLine
+-	:	exprTag
+-	|	text
+-	|	ifOnOneLine
+-	;
+-
+-conditional
+-	:	andConditional ('||' andConditional {gen.Emit(Bytecode.INSTR_OR);})*
+-	;
+-
+-andConditional
+-	:	notConditional ('&&' notConditional {gen.Emit(Bytecode.INSTR_AND);})*
+-	;
+-
+-notConditional
+-	:	'!' primary  {gen.Emit(Bytecode.INSTR_NOT);}
+-	|	primary
+-	;
+-
+-exprOptions
+-	:	{gen.Emit(Bytecode.INSTR_OPTIONS);} option (',' option)*
+-	;
+-
+-option
+-	:	ID ( '=' exprNoComma | {DefaultOption($ID);} )
+-		{SetOption($ID);}
+-	;
+-
+-exprNoComma
+-	:	memberExpr ( ':' templateRef {gen.Emit(Bytecode.INSTR_MAP);} )?
+-	|	subtemplate {gen.Emit(Bytecode.INSTR_NEW, $subtemplate.name);}
+-	;
+-
+-expr
+-	:	mapExpr
+-	|	// <{...}>
+-		subtemplate
+-		{gen.Emit(Bytecode.INSTR_NEW, PrefixedName($subtemplate.name));}
+-	;
+-
+-mapExpr
+-@init {int nt=1, ne=1;}
+-	:	memberExpr (c=',' memberExpr {ne++;} )*
+-		(	':' templateRef
+-			(	(',' templateRef {nt++;})+  {gen.Emit(Bytecode.INSTR_ROT_MAP, nt);}
+-			|	{if ( $c!=null ) gen.Emit(Bytecode.INSTR_PAR_MAP, ne);
+-				 else gen.Emit(Bytecode.INSTR_MAP);}
+-			)
+-		)*
+-	;
+-
+-memberExpr
+-	:	callExpr
+-		(	'.' ID {gen.Emit(Bytecode.INSTR_LOAD_PROP, $ID.text);}
+-		|	'.' '(' mapExpr ')' {gen.Emit(Bytecode.INSTR_LOAD_PROP_IND);}
+-		)*
+-	;
+-
+-callExpr
+-options {k=2;} // prevent full LL(*), which fails, falling back on k=1; need k=2
+-	:	{Compiler.funcs.ContainsKey(input.LT(1).Text)}?
+-		ID '(' expr ')' {Func($ID);}
+-	|	(s='super' '.')? ID
+-		{gen.Emit($s!=null?Bytecode.INSTR_SUPER_NEW:Bytecode.INSTR_NEW, PrefixedName($ID.text));}
+-		'(' args? ')'
+-	|	'@' (s='super' '.')? ID '(' ')'	// convert <@r()> to <region__enclosingTemplate__r()>
+-		{
+-		string mangled = TemplateGroup.GetMangledRegionName(_enclosingTemplateName, $ID.text);
+-		gen.DefineBlankRegion(PrefixedName(mangled));
+-		gen.Emit($s!=null?Bytecode.INSTR_SUPER_NEW:Bytecode.INSTR_NEW, PrefixedName(mangled));
+-		}
+-	|	primary
+-	;
+-
+-primary
+-	:	o=ID	  {RefAttr($o);}
+-	|	STRING    {gen.Emit(Bytecode.INSTR_LOAD_STR, Misc.Strip($STRING.text,1));}
+-	|	list
+-	|	'(' expr ')' {gen.Emit(Bytecode.INSTR_TOSTR);}
+-		( {gen.Emit(Bytecode.INSTR_NEW_IND);} '(' args? ')' )? // indirect call
+-	;
+-
+-args:	arg (',' arg)* ;
+-
+-arg :	ID '=' exprNoComma {gen.Emit(Bytecode.INSTR_STORE_ATTR, $ID.text);}
+-	|	exprNoComma        {gen.Emit(Bytecode.INSTR_STORE_SOLE_ARG);}
+-	|	elip='...'		   {gen.Emit(Bytecode.INSTR_SET_PASS_THRU);}
+-	;
+-
+-templateRef
+-	:	ID			{gen.Emit(Bytecode.INSTR_LOAD_STR, PrefixedName($ID.text));}
+-	|	subtemplate {gen.Emit(Bytecode.INSTR_LOAD_STR, PrefixedName($subtemplate.name));}
+-	|	'(' mapExpr ')' {gen.Emit(Bytecode.INSTR_TOSTR);}
+-	;
+-
+-list:	{gen.Emit(Bytecode.INSTR_LIST);} '[' listElement (',' listElement)* ']'
+-	|	{gen.Emit(Bytecode.INSTR_LIST);} '[' ']'
+-	;
+-
+-listElement
+-    :   exprNoComma {gen.Emit(Bytecode.INSTR_ADD);}
+-    ;
+diff --git a/StringTemplate4/TemplateParserHelper.cs b/StringTemplate4/TemplateParserHelper.cs
+deleted file mode 100644
+index 9140e26..0000000
+--- a/StringTemplate4/TemplateParserHelper.cs
++++ /dev/null
+@@ -1,190 +0,0 @@
+-﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
+- * All rights reserved.
+- *
+- * Conversion to C#:
+- * Copyright (c) 2008-2009 Sam Harwell
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. Redistributions in binary form must reproduce the above copyright
+- *    notice, this list of conditions and the following disclaimer in the
+- *    documentation and/or other materials provided with the distribution.
+- * 3. The name of the author may not be used to endorse or promote products
+- *    derived from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- */
+-
+-namespace StringTemplate
+-{
+-    using System.Collections.Generic;
+-    using Antlr.Runtime;
+-    using Console = System.Console;
+-    using IList = System.Collections.IList;
+-
+-    partial class TemplateParser
+-    {
+-        /** The name of the template we are compiling or the name of the
+-         *  enclosing template.  This template could be a subtemplate or region of
+-         *  an enclosing template.
+-         */
+-        private string _enclosingTemplateName;
+-
+-        private static ICodeGenerator NoopGen = new CodeGenerator();
+-        private ICodeGenerator gen = NoopGen;
+-
+-        public TemplateParser(ITokenStream input, ICodeGenerator gen, string enclosingTemplateName)
+-            : this(input, new RecognizerSharedState(), gen, enclosingTemplateName)
+-        {
+-        }
+-
+-        public TemplateParser(ITokenStream input, RecognizerSharedState state, ICodeGenerator gen, string enclosingTemplateName)
+-            : base(null, null) // overcome bug in ANTLR 3.2
+-        {
+-            this.input = input;
+-            this.state = state;
+-            if (gen != null)
+-                this.gen = gen;
+-            this._enclosingTemplateName = enclosingTemplateName;
+-        }
+-        protected override object RecoverFromMismatchedToken(IIntStream input, int ttype, BitSet follow)
+-        {
+-            throw new MismatchedTokenException(ttype, input);
+-        }
+-
+-        public string PrefixedName(string t)
+-        {
+-            if (t != null && t[0] == '/')
+-                return gen.TemplateReferencePrefix + t.Substring(1);
+-
+-            return gen.TemplateReferencePrefix + t;
+-        }
+-
+-        public void RefAttr(IToken id)
+-        {
+-            string name = id.Text;
+-            if (Interpreter.predefinedAttributes.Contains(name))
+-            {
+-                gen.Emit(Bytecode.INSTR_LOAD_LOCAL, name);
+-            }
+-            else
+-            {
+-                gen.Emit(Bytecode.INSTR_LOAD_ATTR, name);
+-            }
+-        }
+-
+-        public void SetOption(IToken id)
+-        {
+-            int i;
+-            if (!Compiler.supportedOptions.TryGetValue(id.Text, out i))
+-            {
+-                Console.Error.WriteLine("no such option: " + id.Text);
+-                return;
+-            }
+-
+-            gen.Emit(Bytecode.INSTR_STORE_OPTION, i);
+-        }
+-
+-        public void DefaultOption(IToken id)
+-        {
+-            string v;
+-            if (!Compiler.defaultOptionValues.TryGetValue(id.Text, out v))
+-            {
+-                Console.Error.WriteLine("no def value for " + id.Text);
+-                return;
+-            }
+-
+-            gen.Emit(Bytecode.INSTR_LOAD_STR, v);
+-        }
+-
+-        public void Func(IToken id)
+-        {
+-            short funcBytecode;
+-            if (!Compiler.funcs.TryGetValue(id.Text, out funcBytecode))
+-            {
+-                Console.Error.WriteLine("no such fun: " + id);
+-                gen.Emit(Bytecode.INSTR_NOOP);
+-                return;
+-            }
+-
+-            gen.Emit(funcBytecode);
+-        }
+-
+-        public void Indent(string indent)
+-        {
+-            gen.Emit(Bytecode.INSTR_INDENT, indent);
+-        }
+-
+-        /// <summary>
+-        /// used to parse w/o compilation side-effects
+-        /// </summary>
+-        private sealed class CodeGenerator : ICodeGenerator
+-        {
+-            public string TemplateReferencePrefix
+-            {
+-                get
+-                {
+-                    return null;
+-                }
+-            }
+-
+-            public void Emit(short opcode)
+-            {
+-            }
+-
+-            public void Emit(short opcode, int arg)
+-            {
+-            }
+-
+-            public void Emit(short opcode, int arg1, int arg2)
+-            {
+-            }
+-
+-            public void Emit(short opcode, string s)
+-            {
+-            }
+-
+-            public void Write(int addr, short value)
+-            {
+-            }
+-
+-            public int Address()
+-            {
+-                return 0;
+-            }
+-
+-            public string CompileAnonTemplate(string enclosingTemplateName, ITokenStream input, IList<IToken> ids, RecognizerSharedState state)
+-            {
+-                Compiler c = new Compiler();
+-                c.Compile(input, state);
+-                return null;
+-            }
+-
+-            public string CompileRegion(string enclosingTemplateName, string regionName, ITokenStream input, RecognizerSharedState state)
+-            {
+-                Compiler c = new Compiler();
+-                c.Compile(input, state);
+-                return null;
+-            }
+-
+-            public void DefineBlankRegion(string fullyQualifiedName)
+-            {
+-            }
+-        }
+-    }
+-}
+diff --git a/StringTemplate4/TemplateRecognitionException.cs b/StringTemplate4/TemplateRecognitionException.cs
+deleted file mode 100644
+index 4fc3043..0000000
+--- a/StringTemplate4/TemplateRecognitionException.cs
++++ /dev/null
+@@ -1,44 +0,0 @@
+-﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
+- * All rights reserved.
+- *
+- * Conversion to C#:
+- * Copyright (c) 2008-2009 Sam Harwell
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. Redistributions in binary form must reproduce the above copyright
+- *    notice, this list of conditions and the following disclaimer in the
+- *    documentation and/or other materials provided with the distribution.
+- * 3. The name of the author may not be used to endorse or promote products
+- *    derived from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- */
+-
+-namespace StringTemplate
+-{
+-    using Antlr.Runtime;
+-
+-    public class TemplateRecognitionException : TemplateException
+-    {
+-        public TemplateRecognitionException(string message, RecognitionException cause)
+-            : base(message, cause)
+-        {
+-        }
+-    }
+-}
+

@@ -1,0 +1,29 @@
+commit 4d13d25c8bf19869160cc4b86ddf8963e57eb267
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Tue Jan 1 21:09:19 2013 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Tue Jan 1 21:09:19 2013 -0600
+
+Fix bugs in BaseTree.insertChild
+
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTree.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTree.java
+index defac7f..81620a0 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTree.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTree.java
+@@ -160,10 +160,14 @@ public abstract class BaseTree implements Tree {
+but does NOT collapse nil-rooted t's that come in here like addChild.
+*/
+public void insertChild(int i, Object t) {
+-		if (i < 0 || i >= getChildCount()) {
++		if (i < 0 || i > getChildCount()) {
+throw new IndexOutOfBoundsException(i+" out or range");
+}
+
++		if (children == null) {
++			children = createChildrenList();
++		}
++
+children.add(i, t);
+// walk others to increment their child indexes
+// set index, parent of this one too
+

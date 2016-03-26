@@ -1,0 +1,49 @@
+commit c06f5dff6027a35cd7e2eb2160ae62418e29a313
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sun Apr 10 18:16:03 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sun Apr 10 18:16:03 2011 -0800
+
+(C# 3) Merge CL8149: Improve error messages when referencing implicit attributes out-of-scope
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8162]
+
+diff --git a/Antlr4.StringTemplate/Compiler/CompilationState.cs b/Antlr4.StringTemplate/Compiler/CompilationState.cs
+index 2566c1a..a51416c 100644
+--- a/Antlr4.StringTemplate/Compiler/CompilationState.cs
++++ b/Antlr4.StringTemplate/Compiler/CompilationState.cs
+@@ -82,7 +82,7 @@ namespace Antlr4.StringTemplate.Compiler
+{
+if (Interpreter.predefinedAnonSubtemplateAttributes.Contains(name))
+{
+-                    errMgr.CompiletimeError(ErrorType.NO_SUCH_ATTRIBUTE, templateToken, id.Token);
++                    errMgr.CompiletimeError(ErrorType.REF_TO_IMPLICIT_ATTRIBUTE_OUT_OF_SCOPE, templateToken, id.Token);
+Emit(id, Bytecode.INSTR_NULL);
+}
+else
+diff --git a/Antlr4.StringTemplate/Misc/ErrorType.cs b/Antlr4.StringTemplate/Misc/ErrorType.cs
+index 404d004..58b1158 100644
+--- a/Antlr4.StringTemplate/Misc/ErrorType.cs
++++ b/Antlr4.StringTemplate/Misc/ErrorType.cs
+@@ -42,6 +42,7 @@ namespace Antlr4.StringTemplate.Misc
+public static readonly ErrorType NO_SUCH_TEMPLATE = new ErrorType("no such template: {0}");
+public static readonly ErrorType NO_IMPORTED_TEMPLATE = new ErrorType("no such template: super.{0}");
+public static readonly ErrorType NO_SUCH_ATTRIBUTE = new ErrorType("attribute {0} isn't defined");
++        public static readonly ErrorType REF_TO_IMPLICIT_ATTRIBUTE_OUT_OF_SCOPE = new ErrorType("implicitly-defined attribute {0} not visible");
+public static readonly ErrorType MISSING_FORMAL_ARGUMENTS = new ErrorType("missing argument definitions");
+public static readonly ErrorType NO_SUCH_PROPERTY = new ErrorType("no such property or can't access: {0}");
+public static readonly ErrorType MAP_ARGUMENT_COUNT_MISMATCH = new ErrorType("iterating through {0} values in zip map but template has {1} declared arguments");
+diff --git a/Antlr4.Test.StringTemplate/TestScopes.cs b/Antlr4.Test.StringTemplate/TestScopes.cs
+index f640300..c6c45c4 100644
+--- a/Antlr4.Test.StringTemplate/TestScopes.cs
++++ b/Antlr4.Test.StringTemplate/TestScopes.cs
+@@ -133,7 +133,7 @@ namespace Antlr4.Test.StringTemplate
+string result = st.Render();
+group.GetInstanceOf("u").impl.Dump();
+
+-            string expectedError = "t.stg 2:11: attribute i isn't defined" + newline;
++            string expectedError = "t.stg 2:11: implicitly defined attribute i not visible" + newline;
+Assert.AreEqual(expectedError, errors.ToString());
+
+string expected = ":Ter";
+

@@ -1,0 +1,65 @@
+commit 8dee7aca23ef45daf00459c69de484641c4d879a
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Tue Aug 4 13:12:46 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Tue Aug 4 13:12:46 2009 -0800
+
+C# Port:
+* Code cleanup, mark another assembly CLSCompliant
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6171]
+
+diff --git a/Antlr3.Test/StringTemplateTests.cs b/Antlr3.Test/StringTemplateTests.cs
+index ee30003..2070f3f 100644
+--- a/Antlr3.Test/StringTemplateTests.cs
++++ b/Antlr3.Test/StringTemplateTests.cs
+@@ -105,46 +105,16 @@ namespace AntlrUnitTests
+{
+}
+
+-        private TestContext testContextInstance;
+-
+/// <summary>
+///Gets or sets the test context which provides
+///information about and functionality for the current test run.
+///</summary>
+public TestContext TestContext
+{
+-            get
+-            {
+-                return testContextInstance;
+-            }
+-            set
+-            {
+-                testContextInstance = value;
+-            }
++            get;
++            set;
+}
+
+-        #region Additional test attributes
+-        //
+-        // You can use the following additional attributes as you write your tests:
+-        //
+-        // Use ClassInitialize to run code before running the first test in the class
+-        // [ClassInitialize()]
+-        // public static void MyClassInitialize(TestContext testContext) { }
+-        //
+-        // Use ClassCleanup to run code after all tests in a class have run
+-        // [ClassCleanup()]
+-        // public static void MyClassCleanup() { }
+-        //
+-        // Use TestInitialize to run code before running each test
+-        // [TestInitialize()]
+-        // public void MyTestInitialize() { }
+-        //
+-        // Use TestCleanup to run code after each test has run
+-        // [TestCleanup()]
+-        // public void MyTestCleanup() { }
+-        //
+-        #endregion
+-
+[TestMethod]
+public void TestInterfaceFileFormat()
+{
+

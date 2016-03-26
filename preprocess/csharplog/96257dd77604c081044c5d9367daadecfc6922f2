@@ -1,0 +1,74 @@
+commit 96257dd77604c081044c5d9367daadecfc6922f2
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sun Apr 3 10:12:56 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sun Apr 3 10:12:56 2011 -0800
+
+(C# 3) Merge CL 7960
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8034]
+
+diff --git a/Antlr4.Test.StringTemplate/TestCoreBasics.cs b/Antlr4.Test.StringTemplate/TestCoreBasics.cs
+index 3a52379..3b5c857 100644
+--- a/Antlr4.Test.StringTemplate/TestCoreBasics.cs
++++ b/Antlr4.Test.StringTemplate/TestCoreBasics.cs
+@@ -940,6 +940,58 @@ namespace Antlr4.Test.StringTemplate
+}
+
+[TestMethod]
++        public void TestArrayOfTemplates()
++        {
++            string template = "<foo>!";
++            Template st = new Template(template);
++            Template[] t = new Template[] { new Template("hi"), new Template("mom") };
++            st.Add("foo", t);
++            string expected = "himom!";
++            string result = st.Render();
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
++        public void TestArrayOfTemplatesInTemplate()
++        {
++            string template = "<foo>!";
++            Template st = new Template(template);
++            Template[] t = new Template[] { new Template("hi"), new Template("mom") };
++            st.Add("foo", t);
++            Template wrapper = new Template("<x>");
++            wrapper.Add("x", st);
++            string expected = "himom!";
++            string result = wrapper.Render();
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
++        public void TestListOfTemplates()
++        {
++            string template = "<foo>!";
++            Template st = new Template(template);
++            List<Template> t = new List<Template>() { new Template("hi"), new Template("mom") };
++            st.Add("foo", t);
++            string expected = "himom!";
++            string result = st.Render();
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
++        public void TestListOfTemplatesInTemplate()
++        {
++            string template = "<foo>!";
++            Template st = new Template(template);
++            List<Template> t = new List<Template>() { new Template("hi"), new Template("mom") };
++            st.Add("foo", t);
++            Template wrapper = new Template("<x>");
++            wrapper.Add("x", st);
++            string expected = "himom!";
++            string result = wrapper.Render();
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
+public void Playing()
+{
+string template = "<a:t(x,y),u()>";
+

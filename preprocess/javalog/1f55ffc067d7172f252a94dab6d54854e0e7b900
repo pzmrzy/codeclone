@@ -1,0 +1,42 @@
+commit 1f55ffc067d7172f252a94dab6d54854e0e7b900
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Thu Jan 3 19:52:43 2013 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Thu Jan 3 19:53:34 2013 -0600
+
+Fix AST operator on labeled set of terminals e.g. x=(A|B)^
+
+diff --git a/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLR.g b/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLR.g
+index cedf81e..1ab7ff6 100644
+--- a/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLR.g
++++ b/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLR.g
+@@ -735,10 +735,10 @@ elementNoOptionSpec
+{
+IntSet elements=null;
+}
+-	:	(	(	id (ASSIGN^|PLUS_ASSIGN^) (atom|block)
++	:	(	id (ASSIGN^|PLUS_ASSIGN^)
++			(	atom (sub=ebnfSuffix[root_0,false]! {root_0 = $sub.tree;})?
++			|	ebnf
+)
+-			(	sub=ebnfSuffix[root_0,false]! {root_0 = $sub.tree;}
+-			)?
+|	a=atom
+(	sub2=ebnfSuffix[$a.tree,false]! {root_0=$sub2.tree;}
+)?
+diff --git a/tool/src/test/java/org/antlr/test/TestAutoAST.java b/tool/src/test/java/org/antlr/test/TestAutoAST.java
+index 94eb472..14aeed0 100644
+--- a/tool/src/test/java/org/antlr/test/TestAutoAST.java
++++ b/tool/src/test/java/org/antlr/test/TestAutoAST.java
+@@ -367,9 +367,7 @@ public class TestAutoAST extends BaseTest {
+assertEquals("(+ abc)\n", found);
+}
+
+-	@Ignore
+-    // TODO: FAILS until I rebuild the antlr.g in v3
+-    //
++	@Test
+public void testSetRootWithLabel() throws Exception {
+
+String grammar =
+

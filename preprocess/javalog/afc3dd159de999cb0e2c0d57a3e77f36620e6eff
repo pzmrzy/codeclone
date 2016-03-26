@@ -1,0 +1,22 @@
+commit afc3dd159de999cb0e2c0d57a3e77f36620e6eff
+Author:     Douglas Campos <qmx@qmx.me>
+AuthorDate: Fri Jul 20 02:39:21 2012 -0300
+Commit:     Douglas Campos <qmx@qmx.me>
+CommitDate: Sun Sep 16 12:37:03 2012 -0300
+
+fixing TODO
+
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/Token.java b/runtime/Java/src/main/java/org/antlr/runtime/Token.java
+index b8eb95e..1073276 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/Token.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/Token.java
+@@ -38,8 +38,6 @@ public interface Token {
+public static final int MIN_TOKEN_TYPE = UP+1;
+
+public static final int EOF = CharStream.EOF;
+-    // TODO: remove once we go ANTLR v3.3
+-    public static final Token EOF_TOKEN = new CommonToken(EOF);
+
+public static final int INVALID_TOKEN_TYPE = 0;
+public static final Token INVALID_TOKEN = new CommonToken(INVALID_TOKEN_TYPE);
+

@@ -1,0 +1,447 @@
+commit dc776a27aad3620b048ff202cbd506094cb50481
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Fri Feb 18 14:34:11 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Fri Feb 18 14:34:11 2011 -0800
+
+(C# 3) Remove redundant copyright notices (generated files are no longer checked in)
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7716]
+
+diff --git a/Antlr3/Grammars/ANTLR.g3 b/Antlr3/Grammars/ANTLR.g3
+index 79abbd0..ecc36a5 100644
+--- a/Antlr3/Grammars/ANTLR.g3
++++ b/Antlr3/Grammars/ANTLR.g3
+@@ -106,88 +106,21 @@ tokens
+DOT;
+}
+
+-@lexer::header
+-{
+-/*
+- [The "BSD licence"]
+- Copyright (c) 2005-2008 Terence Parr
+- All rights reserved.
+-
+- Grammar conversion to ANTLR v3 and C#:
+- Copyright (c) 2008 Sam Harwell, Pixel Mine, Inc.
+- All rights reserved.
+-
+- Redistribution and use in source and binary forms, with or without
+- modification, are permitted provided that the following conditions
+- are met:
+- 1. Redistributions of source code must retain the above copyright
+-	notice, this list of conditions and the following disclaimer.
+- 2. Redistributions in binary form must reproduce the above copyright
+-	notice, this list of conditions and the following disclaimer in the
+-	documentation and/or other materials provided with the distribution.
+- 3. The name of the author may not be used to endorse or promote products
+-	derived from this software without specific prior written permission.
+-
+- THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-*/
+-
++@lexer::header {
+using ErrorManager = Antlr3.Tool.ErrorManager;
+using Grammar = Antlr3.Tool.Grammar;
+using StringBuffer = System.Text.StringBuilder;
+}
+
+@parser::header {
+-/*
+- [The "BSD licence"]
+- Copyright (c) 2005-2008 Terence Parr
+- All rights reserved.
+-
+- Grammar conversion to ANTLR v3 and C#:
+- Copyright (c) 2008 Sam Harwell, Pixel Mine, Inc.
+- All rights reserved.
+-
+- Redistribution and use in source and binary forms, with or without
+- modification, are permitted provided that the following conditions
+- are met:
+- 1. Redistributions of source code must retain the above copyright
+-	notice, this list of conditions and the following disclaimer.
+- 2. Redistributions in binary form must reproduce the above copyright
+-	notice, this list of conditions and the following disclaimer in the
+-	documentation and/or other materials provided with the distribution.
+- 3. The name of the author may not be used to endorse or promote products
+-	derived from this software without specific prior written permission.
+-
+- THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-*/
+-
+using ErrorManager = Antlr3.Tool.ErrorManager;
+using Grammar = Antlr3.Tool.Grammar;
+using GrammarAST = Antlr3.Tool.GrammarAST;
+using GrammarType = Antlr3.Tool.GrammarType;
+using IntSet = Antlr3.Misc.IIntSet;
+-using IDictionary = System.Collections.IDictionary;
+using Rule = Antlr3.Tool.Rule;
+using RuleType = Antlr3.Tool.RuleType;
+using StringBuffer = System.Text.StringBuilder;
+-using TokenWithIndex = Antlr.Runtime.CommonToken;
+}
+
+@lexer::namespace{Antlr3.Grammars}
+@@ -384,7 +317,6 @@ block
+@init
+{
+GrammarAST save = currentBlockAST;
+-	IDictionary opts=null;
+}
+:	(	lp=LPAREN
+-> BLOCK[$lp,"BLOCK"]
+diff --git a/Antlr3/Grammars/ANTLRTreePrinter.g3 b/Antlr3/Grammars/ANTLRTreePrinter.g3
+index 89d24d8..a462b6d 100644
+--- a/Antlr3/Grammars/ANTLRTreePrinter.g3
++++ b/Antlr3/Grammars/ANTLRTreePrinter.g3
+@@ -49,38 +49,6 @@ options
+
+@header
+{
+-/*
+- [The "BSD licence"]
+- Copyright (c) 2005-2008 Terence Parr
+- All rights reserved.
+-
+- Grammar conversion to ANTLR v3 and C#:
+- Copyright (c) 2008 Sam Harwell, Pixel Mine, Inc.
+- All rights reserved.
+-
+- Redistribution and use in source and binary forms, with or without
+- modification, are permitted provided that the following conditions
+- are met:
+- 1. Redistributions of source code must retain the above copyright
+-	notice, this list of conditions and the following disclaimer.
+- 2. Redistributions in binary form must reproduce the above copyright
+-	notice, this list of conditions and the following disclaimer in the
+-	documentation and/or other materials provided with the distribution.
+- 3. The name of the author may not be used to endorse or promote products
+-	derived from this software without specific prior written permission.
+-
+- THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-*/
+-
+using Antlr3.Tool;
+}
+
+diff --git a/Antlr3/Grammars/ActionAnalysisLexer.g3 b/Antlr3/Grammars/ActionAnalysisLexer.g3
+index 63f61f0..542dae9 100644
+--- a/Antlr3/Grammars/ActionAnalysisLexer.g3
++++ b/Antlr3/Grammars/ActionAnalysisLexer.g3
+@@ -48,38 +48,6 @@ options
+
+@header
+{
+-/*
+- [The "BSD licence"]
+- Copyright (c) 2005-2008 Terence Parr
+- All rights reserved.
+-
+- Grammar conversion to ANTLR v3 and C#:
+- Copyright (c) 2008 Sam Harwell, Pixel Mine, Inc.
+- All rights reserved.
+-
+- Redistribution and use in source and binary forms, with or without
+- modification, are permitted provided that the following conditions
+- are met:
+- 1. Redistributions of source code must retain the above copyright
+-	notice, this list of conditions and the following disclaimer.
+- 2. Redistributions in binary form must reproduce the above copyright
+-	notice, this list of conditions and the following disclaimer in the
+-	documentation and/or other materials provided with the distribution.
+- 3. The name of the author may not be used to endorse or promote products
+-	derived from this software without specific prior written permission.
+-
+- THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-*/
+-
+using Antlr3.Tool;
+}
+
+diff --git a/Antlr3/Grammars/ActionTranslator.g3 b/Antlr3/Grammars/ActionTranslator.g3
+index a1d6620..e54e7c3 100644
+--- a/Antlr3/Grammars/ActionTranslator.g3
++++ b/Antlr3/Grammars/ActionTranslator.g3
+@@ -42,38 +42,6 @@ options
+
+@lexer::header
+{
+-/*
+- [The "BSD licence"]
+- Copyright (c) 2005-2008 Terence Parr
+- All rights reserved.
+-
+- Grammar conversion to ANTLR v3 and C#:
+- Copyright (c) 2008 Sam Harwell, Pixel Mine, Inc.
+- All rights reserved.
+-
+- Redistribution and use in source and binary forms, with or without
+- modification, are permitted provided that the following conditions
+- are met:
+- 1. Redistributions of source code must retain the above copyright
+-	notice, this list of conditions and the following disclaimer.
+- 2. Redistributions in binary form must reproduce the above copyright
+-	notice, this list of conditions and the following disclaimer in the
+-	documentation and/or other materials provided with the distribution.
+- 3. The name of the author may not be used to endorse or promote products
+-	derived from this software without specific prior written permission.
+-
+- THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-*/
+-
+using Antlr3.Tool;
+using StringTemplate = Antlr3.ST.StringTemplate;
+}
+diff --git a/Antlr3/Grammars/AssignTokenTypesWalker.g3 b/Antlr3/Grammars/AssignTokenTypesWalker.g3
+index e09db7a..0ec5b8a 100644
+--- a/Antlr3/Grammars/AssignTokenTypesWalker.g3
++++ b/Antlr3/Grammars/AssignTokenTypesWalker.g3
+@@ -92,46 +92,11 @@ options
+
+@header
+{
+-/*
+- [The "BSD licence"]
+- Copyright (c) 2005-2008 Terence Parr
+- All rights reserved.
+-
+- Grammar conversion to ANTLR v3 and C#:
+- Copyright (c) 2008 Sam Harwell, Pixel Mine, Inc.
+- All rights reserved.
+-
+- Redistribution and use in source and binary forms, with or without
+- modification, are permitted provided that the following conditions
+- are met:
+- 1. Redistributions of source code must retain the above copyright
+-	notice, this list of conditions and the following disclaimer.
+- 2. Redistributions in binary form must reproduce the above copyright
+-	notice, this list of conditions and the following disclaimer in the
+-	documentation and/or other materials provided with the distribution.
+- 3. The name of the author may not be used to endorse or promote products
+-	derived from this software without specific prior written permission.
+-
+- THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-*/
+-
+using System;
+using Antlr3.Analysis;
+using Antlr3.Misc;
+using Antlr3.Tool;
+-
+using BitSet = Antlr.Runtime.BitSet;
+-using DFA = Antlr.Runtime.DFA;
+-using IDictionary = System.Collections.IDictionary;
+}
+
+public
+@@ -163,11 +128,11 @@ attrScope
+:	^( 'scope' ID ( ^(AMPERSAND .*) )* ACTION )
+;
+
+-optionsSpec returns [IDictionary opts = new Dictionary<object, object>()]
++optionsSpec returns [IDictionary<object, object> opts = new Dictionary<object, object>()]
+:	^( OPTIONS (option[$opts])+ )
+;
+
+-option[IDictionary opts]
++option[IDictionary<object, object> opts]
+:	^( ASSIGN ID optionValue )
+{
+string key = $ID.text;
+diff --git a/Antlr3/Grammars/CodeGenTreeWalker.g3 b/Antlr3/Grammars/CodeGenTreeWalker.g3
+index d46879a..2e4218c 100644
+--- a/Antlr3/Grammars/CodeGenTreeWalker.g3
++++ b/Antlr3/Grammars/CodeGenTreeWalker.g3
+@@ -48,38 +48,6 @@ options
+
+@header
+{
+-/*
+- [The "BSD licence"]
+- Copyright (c) 2005-2008 Terence Parr
+- All rights reserved.
+-
+- Grammar conversion to ANTLR v3 and C#:
+- Copyright (c) 2008 Sam Harwell, Pixel Mine, Inc.
+- All rights reserved.
+-
+- Redistribution and use in source and binary forms, with or without
+- modification, are permitted provided that the following conditions
+- are met:
+- 1. Redistributions of source code must retain the above copyright
+-	notice, this list of conditions and the following disclaimer.
+- 2. Redistributions in binary form must reproduce the above copyright
+-	notice, this list of conditions and the following disclaimer in the
+-	documentation and/or other materials provided with the distribution.
+- 3. The name of the author may not be used to endorse or promote products
+-	derived from this software without specific prior written permission.
+-
+- THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-*/
+-
+using Antlr3.Analysis;
+using Antlr3.Misc;
+using Antlr3.Tool;
+diff --git a/Antlr3/Grammars/DefineGrammarItemsWalker.g3 b/Antlr3/Grammars/DefineGrammarItemsWalker.g3
+index ef46ed5..7f07b86 100644
+--- a/Antlr3/Grammars/DefineGrammarItemsWalker.g3
++++ b/Antlr3/Grammars/DefineGrammarItemsWalker.g3
+@@ -45,44 +45,8 @@ scope AttributeScopeActions
+
+@header
+{
+-/*
+- [The "BSD licence"]
+- Copyright (c) 2005-2008 Terence Parr
+- All rights reserved.
+-
+- Grammar conversion to ANTLR v3 and C#:
+- Copyright (c) 2008 Sam Harwell, Pixel Mine, Inc.
+- All rights reserved.
+-
+- Redistribution and use in source and binary forms, with or without
+- modification, are permitted provided that the following conditions
+- are met:
+- 1. Redistributions of source code must retain the above copyright
+-	notice, this list of conditions and the following disclaimer.
+- 2. Redistributions in binary form must reproduce the above copyright
+-	notice, this list of conditions and the following disclaimer in the
+-	documentation and/or other materials provided with the distribution.
+- 3. The name of the author may not be used to endorse or promote products
+-	derived from this software without specific prior written permission.
+-
+- THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-*/
+-
+using System;
+-
+using Antlr3.Tool;
+-#if DEBUG
+-using Utils = Antlr3.Misc.Utils;
+-#endif
+}
+
+@namespace{Antlr3.Grammars}
+diff --git a/Antlr3/Grammars/TreeToNFAConverter.g3 b/Antlr3/Grammars/TreeToNFAConverter.g3
+index 332d148..b5cdd41 100644
+--- a/Antlr3/Grammars/TreeToNFAConverter.g3
++++ b/Antlr3/Grammars/TreeToNFAConverter.g3
+@@ -42,43 +42,10 @@ options
+
+@header
+{
+-/*
+- [The "BSD licence"]
+- Copyright (c) 2005-2008 Terence Parr
+- All rights reserved.
+-
+- Grammar conversion to ANTLR v3 and C#:
+- Copyright (c) 2008 Sam Harwell, Pixel Mine, Inc.
+- All rights reserved.
+-
+- Redistribution and use in source and binary forms, with or without
+- modification, are permitted provided that the following conditions
+- are met:
+- 1. Redistributions of source code must retain the above copyright
+-	notice, this list of conditions and the following disclaimer.
+- 2. Redistributions in binary form must reproduce the above copyright
+-	notice, this list of conditions and the following disclaimer in the
+-	documentation and/or other materials provided with the distribution.
+- 3. The name of the author may not be used to endorse or promote products
+-	derived from this software without specific prior written permission.
+-
+- THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-*/
+-
+using Antlr3.Analysis;
+using Antlr3.Misc;
+using Antlr3.Tool;
+using Antlr3.Extensions;
+-
+using BitSet = Antlr.Runtime.BitSet;
+using DFA = Antlr.Runtime.DFA;
+}
+

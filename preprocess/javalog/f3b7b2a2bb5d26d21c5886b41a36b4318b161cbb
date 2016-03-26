@@ -1,0 +1,11 @@
+commit f3b7b2a2bb5d26d21c5886b41a36b4318b161cbb
+Merge: 55f404e a79c360
+Author:     Terence Parr <parrt@cs.usfca.edu>
+AuthorDate: Fri Nov 8 07:35:47 2013 -0800
+Commit:     Terence Parr <parrt@cs.usfca.edu>
+CommitDate: Fri Nov 8 07:35:47 2013 -0800
+
+Merge pull request #129 from ibre5041/master
+
+C++ target fixes and improvements
+

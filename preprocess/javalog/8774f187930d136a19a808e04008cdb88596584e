@@ -1,0 +1,146 @@
+commit 8774f187930d136a19a808e04008cdb88596584e
+Author:     parrt <parrt@antlr.org>
+AuthorDate: Thu Apr 21 09:49:02 2011 -0800
+Commit:     parrt <parrt@antlr.org>
+CommitDate: Thu Apr 21 09:49:02 2011 -0800
+
+* Updated for ST v4.0.2 (setting iterateAcrossValues = true as instance var)
+* Needed throws condition for delegatedRules.
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8291]
+
+diff --git a/tool/CHANGES.txt b/tool/CHANGES.txt
+index 5f010ee..27cb1b0 100644
+--- a/tool/CHANGES.txt
++++ b/tool/CHANGES.txt
+@@ -7,6 +7,11 @@ University of San Francisco
+
+CHANGES
+
++April 21, 2011
++
++* Updated for ST v4.0.2 (setting iterateAcrossValues = true as instance var)
++* Needed throws condition for delegatedRules.
++
+April 20, 2011 (Sam Harwell)
+
+* Implement the 'throwsSpec' feature of parser rules for the Java target
+diff --git a/tool/src/main/java/org/antlr/Tool.java b/tool/src/main/java/org/antlr/Tool.java
+index 4d7a168..99ae440 100644
+--- a/tool/src/main/java/org/antlr/Tool.java
++++ b/tool/src/main/java/org/antlr/Tool.java
+@@ -131,8 +131,6 @@ public class Tool {
+}
+
+public Tool(String[] args) {
+-		STGroup.iterateAcrossValues = true; // ST v3 compatibility with Maps
+-
+loadResources();
+
+// Set all the options and pick up all the named grammar files
+diff --git a/tool/src/main/java/org/antlr/codegen/CodeGenerator.java b/tool/src/main/java/org/antlr/codegen/CodeGenerator.java
+index c6dec27..180bd3e 100644
+--- a/tool/src/main/java/org/antlr/codegen/CodeGenerator.java
++++ b/tool/src/main/java/org/antlr/codegen/CodeGenerator.java
+@@ -184,6 +184,7 @@ public class CodeGenerator {
+public void loadTemplates(String language) {
+String langDir = classpathTemplateRootDirectoryName+"/"+language;
+STGroup coreTemplates = new STGroupFile(langDir+"/"+language+".stg");
++
+baseTemplates = coreTemplates;
+if ( coreTemplates ==null ) {
+ErrorManager.error(ErrorManager.MSG_MISSING_CODE_GEN_TEMPLATES,
+@@ -213,6 +214,9 @@ public class CodeGenerator {
+STGroup astDbgTemplates = new STGroupFile(langDir+"/ASTDbg.stg");
+astDbgTemplates.importTemplates(astParserTemplates);
+templates = astDbgTemplates;
++				dbgTemplates.iterateAcrossValues = true; // ST v3 compatibility with Maps
++				astDbgTemplates.iterateAcrossValues = true;
++				astParserTemplates.iterateAcrossValues = true;
+}
+else {
+STGroup astTemplates = new STGroupFile(langDir+"/AST.stg");
+@@ -227,6 +231,8 @@ public class CodeGenerator {
+astParserTemplates.importTemplates(astTemplates);
+}
+templates = astParserTemplates;
++				astTemplates.iterateAcrossValues = true; // ST v3 compatibility with Maps
++				astParserTemplates.iterateAcrossValues = true;
+}
+}
+else if ( outputOption!=null && outputOption.equals("template") ) {
+@@ -237,21 +243,25 @@ public class CodeGenerator {
+STGroup stTemplates = new STGroupFile(langDir+"/ST.stg");
+stTemplates.importTemplates(dbgTemplates);
+templates = stTemplates;
++				dbgTemplates.iterateAcrossValues = true;
+}
+else {
+STGroup stTemplates = new STGroupFile(langDir+"/ST.stg");
+stTemplates.importTemplates(coreTemplates);
+templates = stTemplates;
+}
++			templates.iterateAcrossValues = true; // ST v3 compatibility with Maps
+}
+else if ( debug && grammar.type!=Grammar.LEXER ) {
+STGroup dbgTemplates = new STGroupFile(langDir+"/Dbg.stg");
+dbgTemplates.importTemplates(coreTemplates);
+templates = dbgTemplates;
+baseTemplates = templates;
++			baseTemplates.iterateAcrossValues = true; // ST v3 compatibility with Maps
+}
+else {
+templates = coreTemplates;
++			coreTemplates.iterateAcrossValues = true; // ST v3 compatibility with Maps
+}
+}
+
+diff --git a/tool/src/main/java/org/antlr/codegen/JavaTarget.java b/tool/src/main/java/org/antlr/codegen/JavaTarget.java
+index 809aaf9..3ec7a86 100644
+--- a/tool/src/main/java/org/antlr/codegen/JavaTarget.java
++++ b/tool/src/main/java/org/antlr/codegen/JavaTarget.java
+@@ -32,12 +32,14 @@ import org.antlr.tool.Grammar;
+import org.antlr.tool.Rule;
+import org.stringtemplate.v4.ST;
+
++import java.util.Set;
++
+public class JavaTarget extends Target {
+protected ST chooseWhereCyclicDFAsGo(Tool tool,
+-													 CodeGenerator generator,
+-													 Grammar grammar,
+-													 ST recognizerST,
+-													 ST cyclicDFAST)
++										 CodeGenerator generator,
++										 Grammar grammar,
++										 ST recognizerST,
++										 ST cyclicDFAST)
+{
+return recognizerST;
+}
+@@ -48,5 +50,11 @@ public class JavaTarget extends Target {
+for (Rule rule : grammar.getRules()) {
+rule.throwsSpec.add("RecognitionException");
+}
++		Set<Rule> delegatedRules = grammar.getDelegatedRules();
++		if ( delegatedRules!=null ) {
++			for (Rule rule : delegatedRules) {
++				rule.throwsSpec.add("RecognitionException");
++			}
++		}
+}
+}
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg b/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
+index 3fb24c2..c8ef58c 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
+@@ -248,7 +248,7 @@ public class <grammar.recognizerName> extends <@superClassName><superClass><@end
+appear to be defined in this recognizer. !>
+// Delegated rules
+<grammar.delegatedRules:{ruleDescriptor|
+-    public <returnType()> <ruleDescriptor.name>(<ruleDescriptor.parameterScope:parameterScope()>) throws <ruleDescriptor.throwsSpec:{x|<x>}; separator=", "> { <if(ruleDescriptor.hasReturnValue)>return <endif><ruleDescriptor.grammar:delegateName()>.<ruleDescriptor.name>(<ruleDescriptor.parameterScope.attributes:{a|<a.name>}; separator=", ">); \}}; separator="\n">
++    public <returnType()> <ruleDescriptor.name>(<ruleDescriptor.parameterScope:parameterScope()>) throws <ruleDescriptor.throwsSpec; separator=", "> { <if(ruleDescriptor.hasReturnValue)>return <endif><ruleDescriptor.grammar:delegateName()>.<ruleDescriptor.name>(<ruleDescriptor.parameterScope.attributes:{a|<a.name>}; separator=", ">); \}}; separator="\n">
+
+<synpreds:{p | <synpred(p)>}>
+
+

@@ -1,0 +1,41 @@
+commit 7b573f8dc419d907251878795c01cdee833baeb7
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Sun Mar 17 18:28:54 2013 -0500
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Sun Mar 17 18:29:19 2013 -0500
+
+C# port: Fix CommonTreeNodeStream implementation of IPositionTrackingStream
+
+diff --git a/Antlr3.Runtime/Misc/LookaheadStream.cs b/Antlr3.Runtime/Misc/LookaheadStream.cs
+index 38c26a8..14454a8 100644
+--- a/Antlr3.Runtime/Misc/LookaheadStream.cs
++++ b/Antlr3.Runtime/Misc/LookaheadStream.cs
+@@ -90,9 +90,9 @@ namespace Antlr.Runtime.Misc
+}
+}
+
+-        public override void Clear()
++        public virtual void Reset()
+{
+-            base.Clear();
++            Clear();
+_currentElementIndex = 0;
+_p = 0;
+_previousElement = null;
+diff --git a/Antlr3.Runtime/Tree/CommonTreeNodeStream.cs b/Antlr3.Runtime/Tree/CommonTreeNodeStream.cs
+index 1764d1e..f9cb0a7 100644
+--- a/Antlr3.Runtime/Tree/CommonTreeNodeStream.cs
++++ b/Antlr3.Runtime/Tree/CommonTreeNodeStream.cs
+@@ -149,9 +149,9 @@ namespace Antlr.Runtime.Tree
+
+#endregion
+
+-        public virtual void Reset()
++        public override void Reset()
+{
+-            base.Clear();
++            base.Reset();
+_it.Reset();
+_hasNilRoot = false;
+_level = 0;
+

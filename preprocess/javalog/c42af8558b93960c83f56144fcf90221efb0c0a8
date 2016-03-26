@@ -1,0 +1,72 @@
+commit c42af8558b93960c83f56144fcf90221efb0c0a8
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Fri Nov 30 09:08:47 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Fri Nov 30 09:08:47 2012 -0600
+
+Remove inherited properties
+
+diff --git a/gunit-maven-plugin/pom.xml b/gunit-maven-plugin/pom.xml
+index ef81416..54b3879 100644
+--- a/gunit-maven-plugin/pom.xml
++++ b/gunit-maven-plugin/pom.xml
+@@ -126,8 +126,6 @@
+
+<build>
+
+-        <defaultGoal>install</defaultGoal>
+-
+<plugins>
+
+<plugin>
+diff --git a/gunit/pom.xml b/gunit/pom.xml
+index 2045f36..6126151 100644
+--- a/gunit/pom.xml
++++ b/gunit/pom.xml
+@@ -76,20 +76,6 @@
+</executions>
+</plugin>
+
+-            <plugin>
+-                <artifactId>maven-surefire-plugin</artifactId>
+-            </plugin>
+-
+-            <plugin>
+-                <groupId>org.codehaus.mojo</groupId>
+-                <artifactId>findbugs-maven-plugin</artifactId>
+-                <configuration>
+-                    <findbugsXmlOutput>true</findbugsXmlOutput>
+-                    <findbugsXmlWithMessages>true</findbugsXmlWithMessages>
+-                    <xmlOutput>true</xmlOutput>
+-                </configuration>
+-            </plugin>
+-
+</plugins>
+
+</build>
+diff --git a/runtime/Java/pom.xml b/runtime/Java/pom.xml
+index c6db296..912b755 100644
+--- a/runtime/Java/pom.xml
++++ b/runtime/Java/pom.xml
+@@ -63,20 +63,5 @@
+</dependency>
+
+</dependencies>
+-
+-<build>
+-    <plugins>
+-        <plugin>
+-            <groupId>org.codehaus.mojo</groupId>
+-            <artifactId>findbugs-maven-plugin</artifactId>
+-            <version>2.5.2</version>
+-            <configuration>
+-                <findbugsXmlOutput>true</findbugsXmlOutput>
+-                <findbugsXmlWithMessages>true</findbugsXmlWithMessages>
+-                <xmlOutput>true</xmlOutput>
+-            </configuration>
+-        </plugin>
+-    </plugins>
+-</build>
+
+</project>
+

@@ -1,0 +1,26 @@
+commit c4d819113312ca19faed8caa97aa5d5c4f2f953e
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Fri Dec 7 11:39:03 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Fri Dec 7 11:39:03 2012 -0600
+
+Allow specifying the bootclasspath by the bootclasspath.java5 and bootclasspath.java6 variables
+
+diff --git a/pom.xml b/pom.xml
+index dac5e10..1ffec4c 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -49,8 +49,10 @@
+<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+<java5.home>${env.JAVA5_HOME}</java5.home>
+<java6.home>${env.JAVA6_HOME}</java6.home>
+-        <bootclasspath.compile>${java5.home}/lib/rt.jar</bootclasspath.compile>
+-        <bootclasspath.testCompile>${java6.home}/lib/rt.jar</bootclasspath.testCompile>
++        <bootclasspath.java5>${java5.home}/lib/rt.jar</bootclasspath.java5>
++        <bootclasspath.java6>${java6.home}/lib/rt.jar</bootclasspath.java6>
++        <bootclasspath.compile>${bootclasspath.java5}</bootclasspath.compile>
++        <bootclasspath.testCompile>${bootclasspath.java6}</bootclasspath.testCompile>
+</properties>
+
+<licenses>
+

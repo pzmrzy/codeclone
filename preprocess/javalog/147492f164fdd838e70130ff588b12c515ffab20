@@ -1,0 +1,22 @@
+commit 147492f164fdd838e70130ff588b12c515ffab20
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Wed Dec 12 01:30:49 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Wed Dec 12 01:41:08 2012 -0600
+
+Fix template warning: could not pass through attribute 'scope'
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Java/ASTTreeParser.stg b/tool/src/main/resources/org/antlr/codegen/templates/Java/ASTTreeParser.stg
+index a0d22e6..46ffbec 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Java/ASTTreeParser.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Java/ASTTreeParser.stg
+@@ -353,7 +353,7 @@ _last = (<ASTLabelType>)input.LT(1);
+/** Streams for token refs are tree nodes now; override to
+*  change nextToken to nextNode.
+*/
+-createRewriteNodeFromElement(token,terminalOptions,scope) ::= <<
++createRewriteNodeFromElement(token,terminalOptions,args) ::= <<
+<if(terminalOptions.node)>
+new <terminalOptions.node>(stream_<token>.nextNode())
+<else>
+

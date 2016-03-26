@@ -1,0 +1,377 @@
+commit 6c50da69fdcbc89c3d9bb139d46517e0a8d55503
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Thu Dec 10 20:38:11 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Thu Dec 10 20:38:11 2009 -0800
+
+C# Port:
+* Merge CL6345
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6476]
+
+diff --git a/StringTemplate4/IAttributeRenderer.cs b/StringTemplate4/IAttributeRenderer.cs
+new file mode 100644
+index 0000000..bab8ea6
+--- /dev/null
++++ b/StringTemplate4/IAttributeRenderer.cs
+@@ -0,0 +1,55 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace StringTemplate
++{
++    /** This interface describes an object that knows how to format or otherwise
++     *  render an object appropriately.  Usually this is used for locale changes
++     *  for objects such as Date and floating point numbers...  You can either
++     *  have an object that is sensitive to the locale or have a different object
++     *  per locale.
++     *
++     *  Each template may have a renderer for each object type or can default
++     *  to the group's renderer or the super group's renderer if the group doesn't
++     *  have one.
++     *
++     *  The toString(Object,String) method is used when the user uses the
++     *  format option: $o; format="f"$.  It checks the formatName and applies the
++     *  appropriate formatting.  If the format string passed to the renderer is
++     *  not recognized then simply call toString().
++     */
++    public interface IAttributeRenderer
++    {
++        string ToString(object o);
++        string ToString(object o, string formatName);
++    }
++}
+diff --git a/StringTemplate4/StringTemplate4.csproj b/StringTemplate4/StringTemplate4.csproj
+index 01df53f..5dac4ab 100644
+--- a/StringTemplate4/StringTemplate4.csproj
++++ b/StringTemplate4/StringTemplate4.csproj
+@@ -54,6 +54,7 @@
+<Compile Include="FormalArgument.cs" />
+<Compile Include="GroupLexerHelper.cs" />
+<Compile Include="GroupParserHelper.cs" />
++    <Compile Include="IAttributeRenderer.cs" />
+<Compile Include="ICodeGenerator.cs" />
+<Compile Include="Interpreter.cs" />
+<Compile Include="ITemplateErrorListener.cs" />
+diff --git a/StringTemplate4/TemplateGroup.cs b/StringTemplate4/TemplateGroup.cs
+index 7a8cb2a..531d2f9 100644
+--- a/StringTemplate4/TemplateGroup.cs
++++ b/StringTemplate4/TemplateGroup.cs
+@@ -71,13 +71,6 @@ namespace StringTemplate
+
+public static readonly ITemplateErrorListener DefaultErrorListener = new DefaultErrorListenerImpl();
+
+-        /** The topmost group of templates in the template tree.
+-         *  Point to yourself if group is root; but parent will be null.
+-         */
+-        //public TemplateGroup root;
+-
+-        //public TemplateGroupDirectory parent; // Are we a subdir or group file in dir?
+-
+public string fullyQualifiedRootDirName; // if we're root
+
+/** Load files using what encoding? */
+@@ -119,15 +112,6 @@ namespace StringTemplate
+{
+}
+
+-#if false
+-        public TemplateGroup(string fullyQualifiedRootDirName)
+-        {
+-            this.fullyQualifiedRootDirName = fullyQualifiedRootDirName;
+-            if (Directory.Exists(fullyQualifiedRootDirName))
+-                throw new ArgumentException("No such directory: " + fullyQualifiedRootDirName);
+-        }
+-#endif
+-
+public virtual string Name
+{
+get
+@@ -185,7 +169,7 @@ namespace StringTemplate
+
+protected CompiledTemplate LookupImportedTemplate(string name)
+{
+-            Console.WriteLine("look for " + name + " in " + imports);
++            //Console.WriteLine("look for " + name + " in " + imports);
+
+if (imports == null)
+return null;
+@@ -300,7 +284,7 @@ namespace StringTemplate
+public virtual void LoadGroupFile(string prefix, string fileName)
+{
+string absoluteFileName = Path.Combine(fullyQualifiedRootDirName, fileName);
+-            Console.WriteLine("load group file " + absoluteFileName);
++            //Console.WriteLine("load group file " + absoluteFileName);
+try
+{
+ANTLRFileStream fs = new ANTLRFileStream(absoluteFileName, encoding);
+@@ -315,60 +299,6 @@ namespace StringTemplate
+}
+}
+
+-#if false
+-        protected virtual void _load(string prefix)
+-        {
+-            // walk dir and all subdir to load templates, group files
+-            string dir = Path.Combine(fullyQualifiedRootDirName, prefix);
+-            Console.WriteLine("load dir '" + prefix + "' under " + fullyQualifiedRootDirName);
+-
+-            foreach (var d in Directory.GetDirectories(dir))
+-            {
+-                _load(prefix + Path.GetFileName(d) + "/");
+-            }
+-
+-            foreach (var f in Directory.GetFiles(dir))
+-            {
+-                if (Path.GetExtension(f).Equals(".st", System.StringComparison.OrdinalIgnoreCase))
+-                    loadTemplateFile(prefix, Path.GetFileName(f));
+-                else if (Path.GetExtension(f).Equals(".stg", System.StringComparison.OrdinalIgnoreCase))
+-                    LoadGroupFile(Path.Combine(prefix, Path.GetFileNameWithoutExtension(f)) + Path.DirectorySeparatorChar);
+-            }
+-        }
+-
+-        public virtual CompiledTemplate loadTemplateFile(string prefix, string fileName)
+-        {
+-            // load from disk
+-            string absoluteFileName = Path.Combine(Path.Combine(fullyQualifiedRootDirName, prefix), fileName);
+-            Console.WriteLine("load " + absoluteFileName);
+-            if (!File.Exists(absoluteFileName))
+-            { // TODO: add tolerance check here
+-                return null;
+-            }
+-            try
+-            {
+-                ANTLRFileStream fs = new ANTLRFileStream(absoluteFileName, encoding);
+-                GroupLexer lexer = new GroupLexer(fs);
+-                UnbufferedTokenStream tokens = new UnbufferedTokenStream(lexer);
+-                GroupParser parser = new GroupParser(tokens);
+-                parser._group = this;
+-                parser.templateDef(prefix);
+-
+-                CompiledTemplate code;
+-                if (!templates.TryGetValue("/" + Path.Combine(prefix, Path.GetFileNameWithoutExtension(fileName)), out code))
+-                    return null;
+-
+-                return code;
+-            }
+-            catch (Exception e)
+-            {
+-                Console.Error.WriteLine("can't load template file: " + absoluteFileName);
+-                Console.Error.WriteLine(e.StackTrace);
+-            }
+-            return null;
+-        }
+-#endif
+-
+/// <summary>
+/// StringTemplate object factory; each group can have its own.
+/// </summary>
+@@ -378,20 +308,6 @@ namespace StringTemplate
+return st;
+}
+
+-        public override bool Equals(object obj)
+-        {
+-            TemplateGroup group = obj as TemplateGroup;
+-            if (group != null)
+-                return this.Name == group.Name;
+-
+-            return false;
+-        }
+-
+-        public override int GetHashCode()
+-        {
+-            return this.Name.GetHashCode();
+-        }
+-
+public override string ToString()
+{
+return Name;
+@@ -399,6 +315,9 @@ namespace StringTemplate
+
+public virtual string Show()
+{
++            if (!alreadyLoaded)
++                Load();
++
+StringBuilder buf = new StringBuilder();
+//if ( supergroup!=null ) buf.append(" : "+supergroup);
+foreach (string name in templates.Keys)
+diff --git a/StringTemplate4/TemplateGroupDirectory.cs b/StringTemplate4/TemplateGroupDirectory.cs
+index 5a98709..e570570 100644
+--- a/StringTemplate4/TemplateGroupDirectory.cs
++++ b/StringTemplate4/TemplateGroupDirectory.cs
+@@ -47,7 +47,6 @@ namespace StringTemplate
+public class TemplateGroupDirectory : TemplateGroup
+{
+public string dirName;
+-        public IList<TemplateGroup> children;
+
+public TemplateGroupDirectory(string fullyQualifiedRootDirName)
+{
+@@ -73,22 +72,23 @@ namespace StringTemplate
+}
+}
+
++        /// <summary>
++        /// walk dir and all subdir to load templates, group files
++        /// </summary>
+public override void Load()
+{
+-            // walk dir and all subdir to load templates, group files
+-            _load("/");
++            _Load("/");
+alreadyLoaded = true;
+}
+
+-        protected void _load(string prefix)
++        protected void _Load(string prefix)
+{
+-            // walk dir and all subdir to load templates, group files
+string dir = Path.Combine(fullyQualifiedRootDirName, prefix);
+Console.WriteLine("load dir '" + prefix + "' under " + fullyQualifiedRootDirName);
+
+foreach (var d in Directory.GetDirectories(dir))
+{
+-                _load(Path.Combine(prefix, Path.GetFileName(d)) + "/");
++                _Load(Path.Combine(prefix, Path.GetFileName(d)) + "/");
+}
+
+foreach (var f in Directory.GetFiles(dir))
+@@ -132,13 +132,5 @@ namespace StringTemplate
+}
+return null;
+}
+-
+-        public void AddChild(TemplateGroup g)
+-        {
+-            if (children == null)
+-                children = new List<TemplateGroup>();
+-
+-            children.Add(g);
+-        }
+}
+}
+diff --git a/StringTemplate4/TemplateGroupFile.cs b/StringTemplate4/TemplateGroupFile.cs
+index 4782e24..366100c 100644
+--- a/StringTemplate4/TemplateGroupFile.cs
++++ b/StringTemplate4/TemplateGroupFile.cs
+@@ -54,20 +54,8 @@ namespace StringTemplate
+this.fileName = Path.GetFileName(fullyQualifiedFileName);
+}
+
+-        public TemplateGroupFile(TemplateGroupDirectory parent, string fileName)
+-        {
+-            if (parent == null)
+-            {
+-                throw new ArgumentException("Relative dir " + fileName + " can't have null parent");
+-            }
+-
+-            this.fileName = fileName;
+-            // doubly-link this node; we point at parent and it has us as child
+-            parent.AddChild(this);
+-        }
+-
+-        public TemplateGroupFile(TemplateGroupDirectory parent, string fileName, Encoding encoding)
+-            : this(parent, fileName)
++        public TemplateGroupFile(string fullyQualifiedFileName, Encoding encoding)
++            : this(fullyQualifiedFileName)
+{
+this.encoding = encoding;
+}
+@@ -80,65 +68,10 @@ namespace StringTemplate
+}
+}
+
+-#if false
+-        public override Template GetInstanceOf(string name)
+-        {
+-            if (name[0] != '/')
+-                name = "/" + name;
+-
+-            return base.GetInstanceOf(name);
+-        }
+-#endif
+-
+public override void Load()
+{
+LoadGroupFile("/", fileName);
+alreadyLoaded = true;
+}
+-
+-#if false
+-        public override CompiledTemplate LookupTemplate(string name)
+-        {
+-            if (name.Length > 0 && (name[0] == Path.DirectorySeparatorChar || name[0] == Path.AltDirectorySeparatorChar))
+-            {
+-                // if no root, name must be "/groupfile/templatename"
+-                string[] names = name.Substring(1).Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+-                if (names.Length > 1)
+-                {
+-                    throw new ArgumentException("name must be of form /templatename: " + name);
+-                }
+-                name = names[0];
+-            }
+-            if (name.IndexOfAny(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }) >= 0)
+-            {
+-                throw new ArgumentException("can't use relative template name " + name);
+-            }
+-
+-            // else plain old template name
+-            if (!alreadyLoaded)
+-                Load();
+-
+-            CompiledTemplate code;
+-            if (!templates.TryGetValue(name, out code))
+-            {
+-                code = LookupImportedTemplate(name);
+-                if (code == null)
+-                {
+-                    // TODO: tolerance?
+-                    throw new ArgumentException("no such template: /" + GetAbsoluteTemplateName(name));
+-                }
+-            }
+-
+-            return code;
+-        }
+-#endif
+-
+-        public override string Show()
+-        {
+-            if (!alreadyLoaded)
+-                Load();
+-
+-            return base.Show();
+-        }
+}
+}
+

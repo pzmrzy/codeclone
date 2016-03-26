@@ -1,0 +1,3334 @@
+commit 0d6d4752e7335024239e564cf06f1710e56a0b77
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Apr 6 05:55:49 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Apr 6 05:55:49 2011 -0800
+
+(C# 3) Merge changes from main to antlr3-main
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8079]
+
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/Antlr3.Runtime.Test.csproj b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/Antlr3.Runtime.Test.csproj
+index 7b0a948..678a3d9 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/Antlr3.Runtime.Test.csproj
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/Antlr3.Runtime.Test.csproj
+@@ -68,6 +68,14 @@
+<Antlr3 Include="SimpleExpression.g3">
+<Generator>MSBuild:Compile</Generator>
+</Antlr3>
++  </ItemGroup>
++  <ItemGroup>
++    <Compile Include="SemanticPredicateReduction.g3.lexer.cs">
++      <DependentUpon>SemanticPredicateReduction.g3</DependentUpon>
++    </Compile>
++    <Compile Include="SemanticPredicateReduction.g3.parser.cs">
++      <DependentUpon>SemanticPredicateReduction.g3</DependentUpon>
++    </Compile>
+<Compile Include="SimpleExpressionLexerHelper.cs">
+<DependentUpon>SimpleExpression.g3</DependentUpon>
+</Compile>
+@@ -158,9 +166,12 @@
+<Antlr3 Include="TestActionFeatures.g3">
+<Generator>MSBuild:Compile</Generator>
+</Antlr3>
+-    <Antlr3 Include="TestExpressionFeatures.g3">
++    <Antlr3 Include="SemanticPredicateReduction.g3">
+<Generator>MSBuild:Compile</Generator>
+</Antlr3>
++    <None Include="TestExpressionFeatures.g3">
++      <Generator>MSBuild:Compile</Generator>
++    </None>
+</ItemGroup>
+<ItemGroup>
+<None Include="BuildOptions\ProfileTreeGrammar.g3">
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/FastSimpleExpressionLexer.cs b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/FastSimpleExpressionLexer.cs
+deleted file mode 100644
+index 97ee981..0000000
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/FastSimpleExpressionLexer.cs
++++ /dev/null
+@@ -1,513 +0,0 @@
+-// $ANTLR 3.1.2 FastSimpleExpression.g3 2009-10-18 19:39:56
+-
+-// The variable 'variable' is assigned but its value is never used.
+-#pragma warning disable 219
+-// Unreachable code detected.
+-#pragma warning disable 162
+-
+-
+-using Lexer = Antlr.Runtime.SlimLexer;
+-
+-
+-using System.Collections.Generic;
+-using Antlr.Runtime;
+-using Stack = System.Collections.Generic.Stack<object>;
+-using List = System.Collections.IList;
+-using ArrayList = System.Collections.Generic.List<object>;
+-
+-[System.CodeDom.Compiler.GeneratedCode("ANTLR", "3.1.2")]
+-[System.CLSCompliant(false)]
+-public partial class FastSimpleExpressionLexer : Lexer
+-{
+-	public const int EOF=-1;
+-	public const int T__7=7;
+-	public const int T__8=8;
+-	public const int T__9=9;
+-	public const int T__10=10;
+-	public const int T__11=11;
+-	public const int IDENTIFIER=4;
+-	public const int NUMBER=5;
+-	public const int WS=6;
+-
+-    // delegates
+-    // delegators
+-
+-	public FastSimpleExpressionLexer() {}
+-	public FastSimpleExpressionLexer(ICharStream input )
+-		: this(input, new RecognizerSharedState())
+-	{
+-	}
+-	public FastSimpleExpressionLexer(ICharStream input, RecognizerSharedState state)
+-		: base(input, state)
+-	{
+-
+-	}
+-	public override string GrammarFileName { get { return "FastSimpleExpression.g3"; } }
+-
+-	// $ANTLR start "T__7"
+-	private void mT__7()
+-	{
+-		try
+-		{
+-			int _type = T__7;
+-			int _channel = DefaultTokenChannel;
+-			// FastSimpleExpression.g3:11:8: ( '-' )
+-			// FastSimpleExpression.g3:11:8: '-'
+-			{
+-			Match('-');
+-
+-			}
+-
+-			state.type = _type;
+-			state.channel = _channel;
+-		}
+-		finally
+-		{
+-		}
+-	}
+-	// $ANTLR end "T__7"
+-
+-	// $ANTLR start "T__8"
+-	private void mT__8()
+-	{
+-		try
+-		{
+-			int _type = T__8;
+-			int _channel = DefaultTokenChannel;
+-			// FastSimpleExpression.g3:12:8: ( '%' )
+-			// FastSimpleExpression.g3:12:8: '%'
+-			{
+-			Match('%');
+-
+-			}
+-
+-			state.type = _type;
+-			state.channel = _channel;
+-		}
+-		finally
+-		{
+-		}
+-	}
+-	// $ANTLR end "T__8"
+-
+-	// $ANTLR start "T__9"
+-	private void mT__9()
+-	{
+-		try
+-		{
+-			int _type = T__9;
+-			int _channel = DefaultTokenChannel;
+-			// FastSimpleExpression.g3:13:8: ( '*' )
+-			// FastSimpleExpression.g3:13:8: '*'
+-			{
+-			Match('*');
+-
+-			}
+-
+-			state.type = _type;
+-			state.channel = _channel;
+-		}
+-		finally
+-		{
+-		}
+-	}
+-	// $ANTLR end "T__9"
+-
+-	// $ANTLR start "T__10"
+-	private void mT__10()
+-	{
+-		try
+-		{
+-			int _type = T__10;
+-			int _channel = DefaultTokenChannel;
+-			// FastSimpleExpression.g3:14:9: ( '/' )
+-			// FastSimpleExpression.g3:14:9: '/'
+-			{
+-			Match('/');
+-
+-			}
+-
+-			state.type = _type;
+-			state.channel = _channel;
+-		}
+-		finally
+-		{
+-		}
+-	}
+-	// $ANTLR end "T__10"
+-
+-	// $ANTLR start "T__11"
+-	private void mT__11()
+-	{
+-		try
+-		{
+-			int _type = T__11;
+-			int _channel = DefaultTokenChannel;
+-			// FastSimpleExpression.g3:15:9: ( '+' )
+-			// FastSimpleExpression.g3:15:9: '+'
+-			{
+-			Match('+');
+-
+-			}
+-
+-			state.type = _type;
+-			state.channel = _channel;
+-		}
+-		finally
+-		{
+-		}
+-	}
+-	// $ANTLR end "T__11"
+-
+-	// $ANTLR start "IDENTIFIER"
+-	private void mIDENTIFIER()
+-	{
+-		try
+-		{
+-			int _type = IDENTIFIER;
+-			int _channel = DefaultTokenChannel;
+-			// FastSimpleExpression.g3:78:4: ( ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )* )
+-			// FastSimpleExpression.g3:78:4: ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )*
+-			{
+-			if ((input.LA(1)>='A' && input.LA(1)<='Z')||input.LA(1)=='_'||(input.LA(1)>='a' && input.LA(1)<='z'))
+-			{
+-				input.Consume();
+-
+-			}
+-			else
+-			{
+-				MismatchedSetException mse = new MismatchedSetException(null,input);
+-				Recover(mse);
+-				throw mse;}
+-
+-			// FastSimpleExpression.g3:79:3: ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )*
+-			while (true)
+-			{
+-				int alt1=2;
+-				int LA1_0 = input.LA(1);
+-
+-				if (((LA1_0>='0' && LA1_0<='9')||(LA1_0>='A' && LA1_0<='Z')||LA1_0=='_'||(LA1_0>='a' && LA1_0<='z')))
+-				{
+-					alt1=1;
+-				}
+-
+-
+-				switch ( alt1 )
+-				{
+-				case 1:
+-					// FastSimpleExpression.g3:
+-					{
+-					input.Consume();
+-
+-
+-					}
+-					break;
+-
+-				default:
+-					goto loop1;
+-				}
+-			}
+-
+-			loop1:
+-				;
+-
+-
+-
+-			}
+-
+-			state.type = _type;
+-			state.channel = _channel;
+-		}
+-		finally
+-		{
+-		}
+-	}
+-	// $ANTLR end "IDENTIFIER"
+-
+-	// $ANTLR start "NUMBER"
+-	private void mNUMBER()
+-	{
+-		try
+-		{
+-			int _type = NUMBER;
+-			int _channel = DefaultTokenChannel;
+-			// FastSimpleExpression.g3:83:4: ( ( '0' .. '9' )+ )
+-			// FastSimpleExpression.g3:83:4: ( '0' .. '9' )+
+-			{
+-			// FastSimpleExpression.g3:83:4: ( '0' .. '9' )+
+-			int cnt2=0;
+-			while (true)
+-			{
+-				int alt2=2;
+-				int LA2_0 = input.LA(1);
+-
+-				if (((LA2_0>='0' && LA2_0<='9')))
+-				{
+-					alt2=1;
+-				}
+-
+-
+-				switch (alt2)
+-				{
+-				case 1:
+-					// FastSimpleExpression.g3:
+-					{
+-					input.Consume();
+-
+-
+-					}
+-					break;
+-
+-				default:
+-					if (cnt2 >= 1)
+-						goto loop2;
+-
+-					EarlyExitException eee2 = new EarlyExitException( 2, input );
+-					throw eee2;
+-				}
+-				cnt2++;
+-			}
+-			loop2:
+-				;
+-
+-
+-
+-			}
+-
+-			state.type = _type;
+-			state.channel = _channel;
+-		}
+-		finally
+-		{
+-		}
+-	}
+-	// $ANTLR end "NUMBER"
+-
+-	// $ANTLR start "WS"
+-	private void mWS()
+-	{
+-		try
+-		{
+-			int _type = WS;
+-			int _channel = DefaultTokenChannel;
+-			// FastSimpleExpression.g3:87:4: ( ( ' ' | '\\t' | '\\n' | '\\r' | '\\f' ) )
+-			// FastSimpleExpression.g3:87:4: ( ' ' | '\\t' | '\\n' | '\\r' | '\\f' )
+-			{
+-			if ((input.LA(1)>='\t' && input.LA(1)<='\n')||(input.LA(1)>='\f' && input.LA(1)<='\r')||input.LA(1)==' ')
+-			{
+-				input.Consume();
+-
+-			}
+-			else
+-			{
+-				MismatchedSetException mse = new MismatchedSetException(null,input);
+-				Recover(mse);
+-				throw mse;}
+-
+-			_channel = Hidden;
+-
+-			}
+-
+-			state.type = _type;
+-			state.channel = _channel;
+-		}
+-		finally
+-		{
+-		}
+-	}
+-	// $ANTLR end "WS"
+-
+-	public override void mTokens()
+-	{
+-		// FastSimpleExpression.g3:1:10: ( T__7 | T__8 | T__9 | T__10 | T__11 | IDENTIFIER | NUMBER | WS )
+-		int alt3=8;
+-		switch (input.LA(1))
+-		{
+-		case '-':
+-			{
+-			alt3=1;
+-			}
+-			break;
+-		case '%':
+-			{
+-			alt3=2;
+-			}
+-			break;
+-		case '*':
+-			{
+-			alt3=3;
+-			}
+-			break;
+-		case '/':
+-			{
+-			alt3=4;
+-			}
+-			break;
+-		case '+':
+-			{
+-			alt3=5;
+-			}
+-			break;
+-		case 'A':
+-		case 'B':
+-		case 'C':
+-		case 'D':
+-		case 'E':
+-		case 'F':
+-		case 'G':
+-		case 'H':
+-		case 'I':
+-		case 'J':
+-		case 'K':
+-		case 'L':
+-		case 'M':
+-		case 'N':
+-		case 'O':
+-		case 'P':
+-		case 'Q':
+-		case 'R':
+-		case 'S':
+-		case 'T':
+-		case 'U':
+-		case 'V':
+-		case 'W':
+-		case 'X':
+-		case 'Y':
+-		case 'Z':
+-		case '_':
+-		case 'a':
+-		case 'b':
+-		case 'c':
+-		case 'd':
+-		case 'e':
+-		case 'f':
+-		case 'g':
+-		case 'h':
+-		case 'i':
+-		case 'j':
+-		case 'k':
+-		case 'l':
+-		case 'm':
+-		case 'n':
+-		case 'o':
+-		case 'p':
+-		case 'q':
+-		case 'r':
+-		case 's':
+-		case 't':
+-		case 'u':
+-		case 'v':
+-		case 'w':
+-		case 'x':
+-		case 'y':
+-		case 'z':
+-			{
+-			alt3=6;
+-			}
+-			break;
+-		case '0':
+-		case '1':
+-		case '2':
+-		case '3':
+-		case '4':
+-		case '5':
+-		case '6':
+-		case '7':
+-		case '8':
+-		case '9':
+-			{
+-			alt3=7;
+-			}
+-			break;
+-		case '\t':
+-		case '\n':
+-		case '\f':
+-		case '\r':
+-		case ' ':
+-			{
+-			alt3=8;
+-			}
+-			break;
+-		default:
+-			{
+-				NoViableAltException nvae = new NoViableAltException("", 3, 0, input);
+-
+-				throw nvae;
+-			}
+-		}
+-
+-		switch (alt3)
+-		{
+-		case 1:
+-			// FastSimpleExpression.g3:1:10: T__7
+-			{
+-			mT__7();
+-
+-			}
+-			break;
+-		case 2:
+-			// FastSimpleExpression.g3:1:15: T__8
+-			{
+-			mT__8();
+-
+-			}
+-			break;
+-		case 3:
+-			// FastSimpleExpression.g3:1:20: T__9
+-			{
+-			mT__9();
+-
+-			}
+-			break;
+-		case 4:
+-			// FastSimpleExpression.g3:1:25: T__10
+-			{
+-			mT__10();
+-
+-			}
+-			break;
+-		case 5:
+-			// FastSimpleExpression.g3:1:31: T__11
+-			{
+-			mT__11();
+-
+-			}
+-			break;
+-		case 6:
+-			// FastSimpleExpression.g3:1:37: IDENTIFIER
+-			{
+-			mIDENTIFIER();
+-
+-			}
+-			break;
+-		case 7:
+-			// FastSimpleExpression.g3:1:48: NUMBER
+-			{
+-			mNUMBER();
+-
+-			}
+-			break;
+-		case 8:
+-			// FastSimpleExpression.g3:1:55: WS
+-			{
+-			mWS();
+-
+-			}
+-			break;
+-
+-		}
+-
+-	}
+-
+-
+-	#region DFA
+-
+-	protected override void InitDFAs()
+-	{
+-		base.InitDFAs();
+-	}
+-
+-
+-	#endregion
+-
+-}
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/FastSimpleExpressionParser.cs b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/FastSimpleExpressionParser.cs
+deleted file mode 100644
+index eb41507..0000000
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/FastSimpleExpressionParser.cs
++++ /dev/null
+@@ -1,510 +0,0 @@
+-// $ANTLR 3.1.2 FastSimpleExpression.g3 2009-10-18 19:39:56
+-
+-// The variable 'variable' is assigned but its value is never used.
+-#pragma warning disable 219
+-// Unreachable code detected.
+-#pragma warning disable 162
+-
+-
+-using System.Collections.Generic;
+-using Antlr.Runtime;
+-using Stack = System.Collections.Generic.Stack<object>;
+-using List = System.Collections.IList;
+-using ArrayList = System.Collections.Generic.List<object>;
+-
+-
+-using Antlr.Runtime.Tree;
+-using RewriteRuleITokenStream = Antlr.Runtime.Tree.RewriteRuleTokenStream;
+-
+-[System.CodeDom.Compiler.GeneratedCode("ANTLR", "3.1.2")]
+-[System.CLSCompliant(false)]
+-public partial class FastSimpleExpressionParser : Parser
+-{
+-	internal static readonly string[] tokenNames = new string[] {
+-		"<invalid>", "<EOR>", "<DOWN>", "<UP>", "IDENTIFIER", "NUMBER", "WS", "'-'", "'%'", "'*'", "'/'", "'+'"
+-	};
+-	public const int EOF=-1;
+-	public const int T__7=7;
+-	public const int T__8=8;
+-	public const int T__9=9;
+-	public const int T__10=10;
+-	public const int T__11=11;
+-	public const int IDENTIFIER=4;
+-	public const int NUMBER=5;
+-	public const int WS=6;
+-
+-	// delegates
+-	// delegators
+-
+-	public FastSimpleExpressionParser( ITokenStream input )
+-		: this( input, new RecognizerSharedState() )
+-	{
+-	}
+-	public FastSimpleExpressionParser(ITokenStream input, RecognizerSharedState state)
+-		: base(input, state)
+-	{
+-		InitializeTreeAdaptor();
+-		if ( TreeAdaptor == null )
+-			TreeAdaptor = new CommonTreeAdaptor();
+-	}
+-
+-	// Implement this function in your helper file to use a custom tree adaptor
+-	partial void InitializeTreeAdaptor();
+-	ITreeAdaptor adaptor;
+-
+-	public ITreeAdaptor TreeAdaptor
+-	{
+-		get
+-		{
+-			return adaptor;
+-		}
+-		set
+-		{
+-			this.adaptor = value;
+-		}
+-	}
+-
+-	public override string[] TokenNames { get { return FastSimpleExpressionParser.tokenNames; } }
+-	public override string GrammarFileName { get { return "FastSimpleExpression.g3"; } }
+-
+-
+-	#region Rules
+-	public class expression_return : ParserRuleReturnScope
+-	{
+-		internal CommonTree tree;
+-		public override object Tree { get { return tree; } }
+-	}
+-
+-	// $ANTLR start "expression"
+-	// FastSimpleExpression.g3:49:0: public expression : additive_expression EOF ;
+-	public FastSimpleExpressionParser.expression_return expression()
+-	{
+-		FastSimpleExpressionParser.expression_return retval = new FastSimpleExpressionParser.expression_return();
+-		retval.start = input.LT(1);
+-
+-		CommonTree root_0 = null;
+-
+-		IToken EOF2=null;
+-		FastSimpleExpressionParser.additive_expression_return additive_expression1 = default(FastSimpleExpressionParser.additive_expression_return);
+-
+-		CommonTree EOF2_tree=null;
+-
+-		try
+-		{
+-			// FastSimpleExpression.g3:50:4: ( additive_expression EOF )
+-			// FastSimpleExpression.g3:50:4: additive_expression EOF
+-			{
+-			root_0 = (CommonTree)adaptor.Nil();
+-
+-			PushFollow(Follow._additive_expression_in_expression50);
+-			additive_expression1=additive_expression();
+-			PopFollow();
+-
+-			adaptor.AddChild(root_0, additive_expression1.Tree);
+-			EOF2=(IToken)Match(input,EOF,Follow._EOF_in_expression54);
+-			EOF2_tree = (CommonTree)adaptor.Create(EOF2);
+-			adaptor.AddChild(root_0, EOF2_tree);
+-
+-
+-			}
+-
+-			retval.stop = input.LT(-1);
+-
+-			retval.tree = (CommonTree)adaptor.RulePostProcessing(root_0);
+-			adaptor.SetTokenBoundaries(retval.tree, retval.start, retval.stop);
+-
+-		}
+-		catch (RecognitionException re)
+-		{
+-			ReportError(re);
+-			Recover(input,re);
+-		retval.tree = (CommonTree)adaptor.ErrorNode(input, retval.start, input.LT(-1), re);
+-
+-		}
+-		finally
+-		{
+-		}
+-		return retval;
+-
+-	}
+-	// $ANTLR end "expression"
+-
+-	public class additive_expression_return : ParserRuleReturnScope
+-	{
+-		internal CommonTree tree;
+-		public override object Tree { get { return tree; } }
+-	}
+-
+-	// $ANTLR start "additive_expression"
+-	// FastSimpleExpression.g3:54:0: additive_expression : multiplicative_expression ( ( '+' | '-' ) multiplicative_expression )* ;
+-	private FastSimpleExpressionParser.additive_expression_return additive_expression()
+-	{
+-		FastSimpleExpressionParser.additive_expression_return retval = new FastSimpleExpressionParser.additive_expression_return();
+-		retval.start = input.LT(1);
+-
+-		CommonTree root_0 = null;
+-
+-		IToken char_literal4=null;
+-		IToken char_literal5=null;
+-		FastSimpleExpressionParser.multiplicative_expression_return multiplicative_expression3 = default(FastSimpleExpressionParser.multiplicative_expression_return);
+-		FastSimpleExpressionParser.multiplicative_expression_return multiplicative_expression6 = default(FastSimpleExpressionParser.multiplicative_expression_return);
+-
+-		CommonTree char_literal4_tree=null;
+-		CommonTree char_literal5_tree=null;
+-
+-		try
+-		{
+-			// FastSimpleExpression.g3:55:4: ( multiplicative_expression ( ( '+' | '-' ) multiplicative_expression )* )
+-			// FastSimpleExpression.g3:55:4: multiplicative_expression ( ( '+' | '-' ) multiplicative_expression )*
+-			{
+-			root_0 = (CommonTree)adaptor.Nil();
+-
+-			PushFollow(Follow._multiplicative_expression_in_additive_expression65);
+-			multiplicative_expression3=multiplicative_expression();
+-			PopFollow();
+-
+-			adaptor.AddChild(root_0, multiplicative_expression3.Tree);
+-			// FastSimpleExpression.g3:56:3: ( ( '+' | '-' ) multiplicative_expression )*
+-			while (true)
+-			{
+-				int alt2=2;
+-				int LA2_0 = input.LA(1);
+-
+-				if ((LA2_0==7||LA2_0==11))
+-				{
+-					alt2=1;
+-				}
+-
+-
+-				switch ( alt2 )
+-				{
+-				case 1:
+-					// FastSimpleExpression.g3:56:5: ( '+' | '-' ) multiplicative_expression
+-					{
+-					// FastSimpleExpression.g3:56:5: ( '+' | '-' )
+-					int alt1=2;
+-					int LA1_0 = input.LA(1);
+-
+-					if ((LA1_0==11))
+-					{
+-						alt1=1;
+-					}
+-					else if ((LA1_0==7))
+-					{
+-						alt1=2;
+-					}
+-					else
+-					{
+-						NoViableAltException nvae = new NoViableAltException("", 1, 0, input);
+-
+-						throw nvae;
+-					}
+-					switch (alt1)
+-					{
+-					case 1:
+-						// FastSimpleExpression.g3:56:6: '+'
+-						{
+-						char_literal4=(IToken)Match(input,11,Follow._11_in_additive_expression72);
+-						char_literal4_tree = (CommonTree)adaptor.Create(char_literal4);
+-						root_0 = (CommonTree)adaptor.BecomeRoot(char_literal4_tree, root_0);
+-
+-
+-						}
+-						break;
+-					case 2:
+-						// FastSimpleExpression.g3:56:13: '-'
+-						{
+-						char_literal5=(IToken)Match(input,7,Follow._7_in_additive_expression77);
+-						char_literal5_tree = (CommonTree)adaptor.Create(char_literal5);
+-						root_0 = (CommonTree)adaptor.BecomeRoot(char_literal5_tree, root_0);
+-
+-
+-						}
+-						break;
+-
+-					}
+-
+-					PushFollow(Follow._multiplicative_expression_in_additive_expression84);
+-					multiplicative_expression6=multiplicative_expression();
+-					PopFollow();
+-
+-					adaptor.AddChild(root_0, multiplicative_expression6.Tree);
+-
+-					}
+-					break;
+-
+-				default:
+-					goto loop2;
+-				}
+-			}
+-
+-			loop2:
+-				;
+-
+-
+-
+-			}
+-
+-			retval.stop = input.LT(-1);
+-
+-			retval.tree = (CommonTree)adaptor.RulePostProcessing(root_0);
+-			adaptor.SetTokenBoundaries(retval.tree, retval.start, retval.stop);
+-
+-		}
+-		catch (RecognitionException re)
+-		{
+-			ReportError(re);
+-			Recover(input,re);
+-		retval.tree = (CommonTree)adaptor.ErrorNode(input, retval.start, input.LT(-1), re);
+-
+-		}
+-		finally
+-		{
+-		}
+-		return retval;
+-
+-	}
+-	// $ANTLR end "additive_expression"
+-
+-	public class multiplicative_expression_return : ParserRuleReturnScope
+-	{
+-		internal CommonTree tree;
+-		public override object Tree { get { return tree; } }
+-	}
+-
+-	// $ANTLR start "multiplicative_expression"
+-	// FastSimpleExpression.g3:61:0: multiplicative_expression : atom ( ( '*' | '/' | '%' ) atom )* ;
+-	private FastSimpleExpressionParser.multiplicative_expression_return multiplicative_expression()
+-	{
+-		FastSimpleExpressionParser.multiplicative_expression_return retval = new FastSimpleExpressionParser.multiplicative_expression_return();
+-		retval.start = input.LT(1);
+-
+-		CommonTree root_0 = null;
+-
+-		IToken char_literal8=null;
+-		IToken char_literal9=null;
+-		IToken char_literal10=null;
+-		FastSimpleExpressionParser.atom_return atom7 = default(FastSimpleExpressionParser.atom_return);
+-		FastSimpleExpressionParser.atom_return atom11 = default(FastSimpleExpressionParser.atom_return);
+-
+-		CommonTree char_literal8_tree=null;
+-		CommonTree char_literal9_tree=null;
+-		CommonTree char_literal10_tree=null;
+-
+-		try
+-		{
+-			// FastSimpleExpression.g3:62:4: ( atom ( ( '*' | '/' | '%' ) atom )* )
+-			// FastSimpleExpression.g3:62:4: atom ( ( '*' | '/' | '%' ) atom )*
+-			{
+-			root_0 = (CommonTree)adaptor.Nil();
+-
+-			PushFollow(Follow._atom_in_multiplicative_expression100);
+-			atom7=atom();
+-			PopFollow();
+-
+-			adaptor.AddChild(root_0, atom7.Tree);
+-			// FastSimpleExpression.g3:63:3: ( ( '*' | '/' | '%' ) atom )*
+-			while (true)
+-			{
+-				int alt4=2;
+-				int LA4_0 = input.LA(1);
+-
+-				if (((LA4_0>=8 && LA4_0<=10)))
+-				{
+-					alt4=1;
+-				}
+-
+-
+-				switch ( alt4 )
+-				{
+-				case 1:
+-					// FastSimpleExpression.g3:63:5: ( '*' | '/' | '%' ) atom
+-					{
+-					// FastSimpleExpression.g3:63:5: ( '*' | '/' | '%' )
+-					int alt3=3;
+-					switch (input.LA(1))
+-					{
+-					case 9:
+-						{
+-						alt3=1;
+-						}
+-						break;
+-					case 10:
+-						{
+-						alt3=2;
+-						}
+-						break;
+-					case 8:
+-						{
+-						alt3=3;
+-						}
+-						break;
+-					default:
+-						{
+-							NoViableAltException nvae = new NoViableAltException("", 3, 0, input);
+-
+-							throw nvae;
+-						}
+-					}
+-
+-					switch (alt3)
+-					{
+-					case 1:
+-						// FastSimpleExpression.g3:63:6: '*'
+-						{
+-						char_literal8=(IToken)Match(input,9,Follow._9_in_multiplicative_expression107);
+-						char_literal8_tree = (CommonTree)adaptor.Create(char_literal8);
+-						root_0 = (CommonTree)adaptor.BecomeRoot(char_literal8_tree, root_0);
+-
+-
+-						}
+-						break;
+-					case 2:
+-						// FastSimpleExpression.g3:63:13: '/'
+-						{
+-						char_literal9=(IToken)Match(input,10,Follow._10_in_multiplicative_expression112);
+-						char_literal9_tree = (CommonTree)adaptor.Create(char_literal9);
+-						root_0 = (CommonTree)adaptor.BecomeRoot(char_literal9_tree, root_0);
+-
+-
+-						}
+-						break;
+-					case 3:
+-						// FastSimpleExpression.g3:63:20: '%'
+-						{
+-						char_literal10=(IToken)Match(input,8,Follow._8_in_multiplicative_expression117);
+-						char_literal10_tree = (CommonTree)adaptor.Create(char_literal10);
+-						root_0 = (CommonTree)adaptor.BecomeRoot(char_literal10_tree, root_0);
+-
+-
+-						}
+-						break;
+-
+-					}
+-
+-					PushFollow(Follow._atom_in_multiplicative_expression124);
+-					atom11=atom();
+-					PopFollow();
+-
+-					adaptor.AddChild(root_0, atom11.Tree);
+-
+-					}
+-					break;
+-
+-				default:
+-					goto loop4;
+-				}
+-			}
+-
+-			loop4:
+-				;
+-
+-
+-
+-			}
+-
+-			retval.stop = input.LT(-1);
+-
+-			retval.tree = (CommonTree)adaptor.RulePostProcessing(root_0);
+-			adaptor.SetTokenBoundaries(retval.tree, retval.start, retval.stop);
+-
+-		}
+-		catch (RecognitionException re)
+-		{
+-			ReportError(re);
+-			Recover(input,re);
+-		retval.tree = (CommonTree)adaptor.ErrorNode(input, retval.start, input.LT(-1), re);
+-
+-		}
+-		finally
+-		{
+-		}
+-		return retval;
+-
+-	}
+-	// $ANTLR end "multiplicative_expression"
+-
+-	public class atom_return : ParserRuleReturnScope
+-	{
+-		internal CommonTree tree;
+-		public override object Tree { get { return tree; } }
+-	}
+-
+-	// $ANTLR start "atom"
+-	// FastSimpleExpression.g3:68:0: atom : ( IDENTIFIER | NUMBER );
+-	private FastSimpleExpressionParser.atom_return atom()
+-	{
+-		FastSimpleExpressionParser.atom_return retval = new FastSimpleExpressionParser.atom_return();
+-		retval.start = input.LT(1);
+-
+-		CommonTree root_0 = null;
+-
+-		IToken set12=null;
+-
+-		CommonTree set12_tree=null;
+-
+-		try
+-		{
+-			// FastSimpleExpression.g3:69:4: ( IDENTIFIER | NUMBER )
+-			// FastSimpleExpression.g3:
+-			{
+-			root_0 = (CommonTree)adaptor.Nil();
+-
+-			set12=(IToken)input.LT(1);
+-			if ((input.LA(1)>=IDENTIFIER && input.LA(1)<=NUMBER))
+-			{
+-				input.Consume();
+-				adaptor.AddChild(root_0, (CommonTree)adaptor.Create(set12));
+-				state.errorRecovery=false;
+-			}
+-			else
+-			{
+-				MismatchedSetException mse = new MismatchedSetException(null,input);
+-				throw mse;
+-			}
+-
+-
+-			}
+-
+-			retval.stop = input.LT(-1);
+-
+-			retval.tree = (CommonTree)adaptor.RulePostProcessing(root_0);
+-			adaptor.SetTokenBoundaries(retval.tree, retval.start, retval.stop);
+-
+-		}
+-		catch (RecognitionException re)
+-		{
+-			ReportError(re);
+-			Recover(input,re);
+-		retval.tree = (CommonTree)adaptor.ErrorNode(input, retval.start, input.LT(-1), re);
+-
+-		}
+-		finally
+-		{
+-		}
+-		return retval;
+-
+-	}
+-	// $ANTLR end "atom"
+-	#endregion Rules
+-
+-
+-	#region Follow sets
+-	private static class Follow
+-	{
+-		public static readonly BitSet _additive_expression_in_expression50 = new BitSet(new ulong[]{0x0UL});
+-		public static readonly BitSet _EOF_in_expression54 = new BitSet(new ulong[]{0x2UL});
+-		public static readonly BitSet _multiplicative_expression_in_additive_expression65 = new BitSet(new ulong[]{0x882UL});
+-		public static readonly BitSet _11_in_additive_expression72 = new BitSet(new ulong[]{0x30UL});
+-		public static readonly BitSet _7_in_additive_expression77 = new BitSet(new ulong[]{0x30UL});
+-		public static readonly BitSet _multiplicative_expression_in_additive_expression84 = new BitSet(new ulong[]{0x882UL});
+-		public static readonly BitSet _atom_in_multiplicative_expression100 = new BitSet(new ulong[]{0x702UL});
+-		public static readonly BitSet _9_in_multiplicative_expression107 = new BitSet(new ulong[]{0x30UL});
+-		public static readonly BitSet _10_in_multiplicative_expression112 = new BitSet(new ulong[]{0x30UL});
+-		public static readonly BitSet _8_in_multiplicative_expression117 = new BitSet(new ulong[]{0x30UL});
+-		public static readonly BitSet _atom_in_multiplicative_expression124 = new BitSet(new ulong[]{0x702UL});
+-		public static readonly BitSet _set_in_atom140 = new BitSet(new ulong[]{0x2UL});
+-
+-	}
+-	#endregion Follow sets
+-}
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/JavaCompat/ExprLexer.cs b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/JavaCompat/ExprLexer.cs
+deleted file mode 100644
+index 05b6ee9..0000000
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/JavaCompat/ExprLexer.cs
++++ /dev/null
+@@ -1,619 +0,0 @@
+-// $ANTLR 3.1.2 JavaCompat\\Expr.g3 2009-09-30 13:18:12
+-
+-// The variable 'variable' is assigned but its value is never used.
+-#pragma warning disable 219
+-// Unreachable code detected.
+-#pragma warning disable 162
+-
+-
+-using System.Collections.Generic;
+-using Antlr.Runtime;
+-using Stack = System.Collections.Generic.Stack<object>;
+-using List = System.Collections.IList;
+-using ArrayList = System.Collections.Generic.List<object>;
+-
+-[System.CodeDom.Compiler.GeneratedCode("ANTLR", "3.1.2")]
+-[System.CLSCompliant(false)]
+-public partial class ExprLexer : Lexer
+-{
+-	public const int EOF=-1;
+-	public const int T__8=8;
+-	public const int T__9=9;
+-	public const int T__10=10;
+-	public const int T__11=11;
+-	public const int T__12=12;
+-	public const int T__13=13;
+-	public const int ID=4;
+-	public const int INT=5;
+-	public const int NEWLINE=6;
+-	public const int WS=7;
+-
+-    // delegates
+-    // delegators
+-
+-	public ExprLexer() {}
+-	public ExprLexer( ICharStream input )
+-		: this( input, new RecognizerSharedState() )
+-	{
+-	}
+-	public ExprLexer( ICharStream input, RecognizerSharedState state )
+-		: base( input, state )
+-	{
+-
+-	}
+-	public override string GrammarFileName { get { return "JavaCompat\\Expr.g3"; } }
+-
+-	// $ANTLR start "T__8"
+-	private void mT__8()
+-	{
+-		try
+-		{
+-			int _type = T__8;
+-			int _channel = DefaultTokenChannel;
+-			// JavaCompat\\Expr.g3:7:8: ( '-' )
+-			// JavaCompat\\Expr.g3:7:8: '-'
+-			{
+-			Match('-');
+-
+-			}
+-
+-			state.type = _type;
+-			state.channel = _channel;
+-		}
+-		finally
+-		{
+-		}
+-	}
+-	// $ANTLR end "T__8"
+-
+-	// $ANTLR start "T__9"
+-	private void mT__9()
+-	{
+-		try
+-		{
+-			int _type = T__9;
+-			int _channel = DefaultTokenChannel;
+-			// JavaCompat\\Expr.g3:8:8: ( '(' )
+-			// JavaCompat\\Expr.g3:8:8: '('
+-			{
+-			Match('(');
+-
+-			}
+-
+-			state.type = _type;
+-			state.channel = _channel;
+-		}
+-		finally
+-		{
+-		}
+-	}
+-	// $ANTLR end "T__9"
+-
+-	// $ANTLR start "T__10"
+-	private void mT__10()
+-	{
+-		try
+-		{
+-			int _type = T__10;
+-			int _channel = DefaultTokenChannel;
+-			// JavaCompat\\Expr.g3:9:9: ( ')' )
+-			// JavaCompat\\Expr.g3:9:9: ')'
+-			{
+-			Match(')');
+-
+-			}
+-
+-			state.type = _type;
+-			state.channel = _channel;
+-		}
+-		finally
+-		{
+-		}
+-	}
+-	// $ANTLR end "T__10"
+-
+-	// $ANTLR start "T__11"
+-	private void mT__11()
+-	{
+-		try
+-		{
+-			int _type = T__11;
+-			int _channel = DefaultTokenChannel;
+-			// JavaCompat\\Expr.g3:10:9: ( '*' )
+-			// JavaCompat\\Expr.g3:10:9: '*'
+-			{
+-			Match('*');
+-
+-			}
+-
+-			state.type = _type;
+-			state.channel = _channel;
+-		}
+-		finally
+-		{
+-		}
+-	}
+-	// $ANTLR end "T__11"
+-
+-	// $ANTLR start "T__12"
+-	private void mT__12()
+-	{
+-		try
+-		{
+-			int _type = T__12;
+-			int _channel = DefaultTokenChannel;
+-			// JavaCompat\\Expr.g3:11:9: ( '+' )
+-			// JavaCompat\\Expr.g3:11:9: '+'
+-			{
+-			Match('+');
+-
+-			}
+-
+-			state.type = _type;
+-			state.channel = _channel;
+-		}
+-		finally
+-		{
+-		}
+-	}
+-	// $ANTLR end "T__12"
+-
+-	// $ANTLR start "T__13"
+-	private void mT__13()
+-	{
+-		try
+-		{
+-			int _type = T__13;
+-			int _channel = DefaultTokenChannel;
+-			// JavaCompat\\Expr.g3:12:9: ( '=' )
+-			// JavaCompat\\Expr.g3:12:9: '='
+-			{
+-			Match('=');
+-
+-			}
+-
+-			state.type = _type;
+-			state.channel = _channel;
+-		}
+-		finally
+-		{
+-		}
+-	}
+-	// $ANTLR end "T__13"
+-
+-	// $ANTLR start "ID"
+-	private void mID()
+-	{
+-		try
+-		{
+-			int _type = ID;
+-			int _channel = DefaultTokenChannel;
+-			// JavaCompat\\Expr.g3:107:9: ( ( 'a' .. 'z' | 'A' .. 'Z' )+ )
+-			// JavaCompat\\Expr.g3:107:9: ( 'a' .. 'z' | 'A' .. 'Z' )+
+-			{
+-			// JavaCompat\\Expr.g3:107:9: ( 'a' .. 'z' | 'A' .. 'Z' )+
+-			int cnt1=0;
+-			for ( ; ; )
+-			{
+-				int alt1=2;
+-				int LA1_0 = input.LA(1);
+-
+-				if ( ((LA1_0>='A' && LA1_0<='Z')||(LA1_0>='a' && LA1_0<='z')) )
+-				{
+-					alt1=1;
+-				}
+-
+-
+-				switch ( alt1 )
+-				{
+-				case 1:
+-					// JavaCompat\\Expr.g3:
+-					{
+-					input.Consume();
+-
+-
+-					}
+-					break;
+-
+-				default:
+-					if ( cnt1 >= 1 )
+-						goto loop1;
+-
+-					EarlyExitException eee1 = new EarlyExitException( 1, input );
+-					throw eee1;
+-				}
+-				cnt1++;
+-			}
+-			loop1:
+-				;
+-
+-
+-
+-			}
+-
+-			state.type = _type;
+-			state.channel = _channel;
+-		}
+-		finally
+-		{
+-		}
+-	}
+-	// $ANTLR end "ID"
+-
+-	// $ANTLR start "INT"
+-	private void mINT()
+-	{
+-		try
+-		{
+-			int _type = INT;
+-			int _channel = DefaultTokenChannel;
+-			// JavaCompat\\Expr.g3:108:9: ( ( '0' .. '9' )+ )
+-			// JavaCompat\\Expr.g3:108:9: ( '0' .. '9' )+
+-			{
+-			// JavaCompat\\Expr.g3:108:9: ( '0' .. '9' )+
+-			int cnt2=0;
+-			for ( ; ; )
+-			{
+-				int alt2=2;
+-				int LA2_0 = input.LA(1);
+-
+-				if ( ((LA2_0>='0' && LA2_0<='9')) )
+-				{
+-					alt2=1;
+-				}
+-
+-
+-				switch ( alt2 )
+-				{
+-				case 1:
+-					// JavaCompat\\Expr.g3:
+-					{
+-					input.Consume();
+-
+-
+-					}
+-					break;
+-
+-				default:
+-					if ( cnt2 >= 1 )
+-						goto loop2;
+-
+-					EarlyExitException eee2 = new EarlyExitException( 2, input );
+-					throw eee2;
+-				}
+-				cnt2++;
+-			}
+-			loop2:
+-				;
+-
+-
+-
+-			}
+-
+-			state.type = _type;
+-			state.channel = _channel;
+-		}
+-		finally
+-		{
+-		}
+-	}
+-	// $ANTLR end "INT"
+-
+-	// $ANTLR start "NEWLINE"
+-	private void mNEWLINE()
+-	{
+-		try
+-		{
+-			int _type = NEWLINE;
+-			int _channel = DefaultTokenChannel;
+-			// JavaCompat\\Expr.g3:109:9: ( ( '\\r' )? '\\n' )
+-			// JavaCompat\\Expr.g3:109:9: ( '\\r' )? '\\n'
+-			{
+-			// JavaCompat\\Expr.g3:109:9: ( '\\r' )?
+-			int alt3=2;
+-			int LA3_0 = input.LA(1);
+-
+-			if ( (LA3_0=='\r') )
+-			{
+-				alt3=1;
+-			}
+-			switch ( alt3 )
+-			{
+-			case 1:
+-				// JavaCompat\\Expr.g3:109:0: '\\r'
+-				{
+-				Match('\r');
+-
+-				}
+-				break;
+-
+-			}
+-
+-			Match('\n');
+-
+-			}
+-
+-			state.type = _type;
+-			state.channel = _channel;
+-		}
+-		finally
+-		{
+-		}
+-	}
+-	// $ANTLR end "NEWLINE"
+-
+-	// $ANTLR start "WS"
+-	private void mWS()
+-	{
+-		try
+-		{
+-			int _type = WS;
+-			int _channel = DefaultTokenChannel;
+-			// JavaCompat\\Expr.g3:110:9: ( ( ' ' | '\\t' )+ )
+-			// JavaCompat\\Expr.g3:110:9: ( ' ' | '\\t' )+
+-			{
+-			// JavaCompat\\Expr.g3:110:9: ( ' ' | '\\t' )+
+-			int cnt4=0;
+-			for ( ; ; )
+-			{
+-				int alt4=2;
+-				int LA4_0 = input.LA(1);
+-
+-				if ( (LA4_0=='\t'||LA4_0==' ') )
+-				{
+-					alt4=1;
+-				}
+-
+-
+-				switch ( alt4 )
+-				{
+-				case 1:
+-					// JavaCompat\\Expr.g3:
+-					{
+-					input.Consume();
+-
+-
+-					}
+-					break;
+-
+-				default:
+-					if ( cnt4 >= 1 )
+-						goto loop4;
+-
+-					EarlyExitException eee4 = new EarlyExitException( 4, input );
+-					throw eee4;
+-				}
+-				cnt4++;
+-			}
+-			loop4:
+-				;
+-
+-
+-			Skip();
+-
+-			}
+-
+-			state.type = _type;
+-			state.channel = _channel;
+-		}
+-		finally
+-		{
+-		}
+-	}
+-	// $ANTLR end "WS"
+-
+-	public override void mTokens()
+-	{
+-		// JavaCompat\\Expr.g3:1:10: ( T__8 | T__9 | T__10 | T__11 | T__12 | T__13 | ID | INT | NEWLINE | WS )
+-		int alt5=10;
+-		switch ( input.LA(1) )
+-		{
+-		case '-':
+-			{
+-			alt5=1;
+-			}
+-			break;
+-		case '(':
+-			{
+-			alt5=2;
+-			}
+-			break;
+-		case ')':
+-			{
+-			alt5=3;
+-			}
+-			break;
+-		case '*':
+-			{
+-			alt5=4;
+-			}
+-			break;
+-		case '+':
+-			{
+-			alt5=5;
+-			}
+-			break;
+-		case '=':
+-			{
+-			alt5=6;
+-			}
+-			break;
+-		case 'A':
+-		case 'B':
+-		case 'C':
+-		case 'D':
+-		case 'E':
+-		case 'F':
+-		case 'G':
+-		case 'H':
+-		case 'I':
+-		case 'J':
+-		case 'K':
+-		case 'L':
+-		case 'M':
+-		case 'N':
+-		case 'O':
+-		case 'P':
+-		case 'Q':
+-		case 'R':
+-		case 'S':
+-		case 'T':
+-		case 'U':
+-		case 'V':
+-		case 'W':
+-		case 'X':
+-		case 'Y':
+-		case 'Z':
+-		case 'a':
+-		case 'b':
+-		case 'c':
+-		case 'd':
+-		case 'e':
+-		case 'f':
+-		case 'g':
+-		case 'h':
+-		case 'i':
+-		case 'j':
+-		case 'k':
+-		case 'l':
+-		case 'm':
+-		case 'n':
+-		case 'o':
+-		case 'p':
+-		case 'q':
+-		case 'r':
+-		case 's':
+-		case 't':
+-		case 'u':
+-		case 'v':
+-		case 'w':
+-		case 'x':
+-		case 'y':
+-		case 'z':
+-			{
+-			alt5=7;
+-			}
+-			break;
+-		case '0':
+-		case '1':
+-		case '2':
+-		case '3':
+-		case '4':
+-		case '5':
+-		case '6':
+-		case '7':
+-		case '8':
+-		case '9':
+-			{
+-			alt5=8;
+-			}
+-			break;
+-		case '\n':
+-		case '\r':
+-			{
+-			alt5=9;
+-			}
+-			break;
+-		case '\t':
+-		case ' ':
+-			{
+-			alt5=10;
+-			}
+-			break;
+-		default:
+-			{
+-				NoViableAltException nvae = new NoViableAltException("", 5, 0, input);
+-
+-				throw nvae;
+-			}
+-		}
+-
+-		switch ( alt5 )
+-		{
+-		case 1:
+-			// JavaCompat\\Expr.g3:1:10: T__8
+-			{
+-			mT__8();
+-
+-			}
+-			break;
+-		case 2:
+-			// JavaCompat\\Expr.g3:1:15: T__9
+-			{
+-			mT__9();
+-
+-			}
+-			break;
+-		case 3:
+-			// JavaCompat\\Expr.g3:1:20: T__10
+-			{
+-			mT__10();
+-
+-			}
+-			break;
+-		case 4:
+-			// JavaCompat\\Expr.g3:1:26: T__11
+-			{
+-			mT__11();
+-
+-			}
+-			break;
+-		case 5:
+-			// JavaCompat\\Expr.g3:1:32: T__12
+-			{
+-			mT__12();
+-
+-			}
+-			break;
+-		case 6:
+-			// JavaCompat\\Expr.g3:1:38: T__13
+-			{
+-			mT__13();
+-
+-			}
+-			break;
+-		case 7:
+-			// JavaCompat\\Expr.g3:1:44: ID
+-			{
+-			mID();
+-
+-			}
+-			break;
+-		case 8:
+-			// JavaCompat\\Expr.g3:1:47: INT
+-			{
+-			mINT();
+-
+-			}
+-			break;
+-		case 9:
+-			// JavaCompat\\Expr.g3:1:51: NEWLINE
+-			{
+-			mNEWLINE();
+-
+-			}
+-			break;
+-		case 10:
+-			// JavaCompat\\Expr.g3:1:59: WS
+-			{
+-			mWS();
+-
+-			}
+-			break;
+-
+-		}
+-
+-	}
+-
+-
+-	#region DFA
+-
+-	protected override void InitDFAs()
+-	{
+-		base.InitDFAs();
+-	}
+-
+-
+-	#endregion
+-
+-}
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/JavaCompat/ExprParser.cs b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/JavaCompat/ExprParser.cs
+deleted file mode 100644
+index 8031f5f..0000000
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/JavaCompat/ExprParser.cs
++++ /dev/null
+@@ -1,519 +0,0 @@
+-// $ANTLR 3.1.2 JavaCompat\\Expr.g3 2009-09-30 13:18:11
+-
+-// The variable 'variable' is assigned but its value is never used.
+-#pragma warning disable 219
+-// Unreachable code detected.
+-#pragma warning disable 162
+-
+-
+-// 'member' is obsolete
+-#pragma warning disable 612
+-
+-using Antlr.Runtime.JavaExtensions;
+-using HashMap = System.Collections.Generic.Dictionary<object,object>;
+-using Integer = java.lang.Integer;
+-
+-
+-using System.Collections.Generic;
+-using Antlr.Runtime;
+-using Stack = System.Collections.Generic.Stack<object>;
+-using List = System.Collections.IList;
+-using ArrayList = System.Collections.Generic.List<object>;
+-
+-[System.CodeDom.Compiler.GeneratedCode("ANTLR", "3.1.2")]
+-[System.CLSCompliant(false)]
+-public partial class ExprParser : Parser
+-{
+-	internal static readonly string[] tokenNames = new string[] {
+-		"<invalid>", "<EOR>", "<DOWN>", "<UP>", "ID", "INT", "NEWLINE", "WS", "'-'", "'('", "')'", "'*'", "'+'", "'='"
+-	};
+-	public const int EOF=-1;
+-	public const int T__8=8;
+-	public const int T__9=9;
+-	public const int T__10=10;
+-	public const int T__11=11;
+-	public const int T__12=12;
+-	public const int T__13=13;
+-	public const int ID=4;
+-	public const int INT=5;
+-	public const int NEWLINE=6;
+-	public const int WS=7;
+-
+-	// delegates
+-	// delegators
+-
+-	public ExprParser( ITokenStream input )
+-		: this( input, new RecognizerSharedState() )
+-	{
+-	}
+-	public ExprParser( ITokenStream input, RecognizerSharedState state )
+-		: base( input, state )
+-	{
+-	}
+-
+-
+-	public override string[] TokenNames { get { return ExprParser.tokenNames; } }
+-	public override string GrammarFileName { get { return "JavaCompat\\Expr.g3"; } }
+-
+-
+-	/** Map variable name to Integer object holding value */
+-	HashMap memory = new HashMap();
+-
+-
+-	#region Rules
+-
+-	// $ANTLR start "prog"
+-	// JavaCompat\\Expr.g3:77:0: prog : ( stat )+ ;
+-	private void prog(  )
+-	{
+-		try
+-		{
+-			// JavaCompat\\Expr.g3:77:9: ( ( stat )+ )
+-			// JavaCompat\\Expr.g3:77:9: ( stat )+
+-			{
+-			// JavaCompat\\Expr.g3:77:9: ( stat )+
+-			int cnt1=0;
+-			for ( ; ; )
+-			{
+-				int alt1=2;
+-				int LA1_0 = input.LA(1);
+-
+-				if ( ((LA1_0>=ID && LA1_0<=NEWLINE)||LA1_0==9) )
+-				{
+-					alt1=1;
+-				}
+-
+-
+-				switch ( alt1 )
+-				{
+-				case 1:
+-					// JavaCompat\\Expr.g3:77:0: stat
+-					{
+-					PushFollow(Follow._stat_in_prog40);
+-					stat();
+-
+-					state._fsp--;
+-
+-
+-					}
+-					break;
+-
+-				default:
+-					if ( cnt1 >= 1 )
+-						goto loop1;
+-
+-					EarlyExitException eee1 = new EarlyExitException( 1, input );
+-					throw eee1;
+-				}
+-				cnt1++;
+-			}
+-			loop1:
+-				;
+-
+-
+-
+-			}
+-
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			ReportError(re);
+-			Recover(input,re);
+-		}
+-		finally
+-		{
+-		}
+-		return ;
+-	}
+-	// $ANTLR end "prog"
+-
+-
+-	// $ANTLR start "stat"
+-	// JavaCompat\\Expr.g3:79:0: stat : ( expr NEWLINE | ID '=' expr NEWLINE | NEWLINE );
+-	private void stat(  )
+-	{
+-		IToken ID2=null;
+-		int expr1 = default(int);
+-		int expr3 = default(int);
+-
+-		try
+-		{
+-			// JavaCompat\\Expr.g3:79:9: ( expr NEWLINE | ID '=' expr NEWLINE | NEWLINE )
+-			int alt2=3;
+-			switch ( input.LA(1) )
+-			{
+-			case INT:
+-			case 9:
+-				{
+-				alt2=1;
+-				}
+-				break;
+-			case ID:
+-				{
+-				int LA2_2 = input.LA(2);
+-
+-				if ( (LA2_2==13) )
+-				{
+-					alt2=2;
+-				}
+-				else if ( (LA2_2==NEWLINE||LA2_2==8||(LA2_2>=11 && LA2_2<=12)) )
+-				{
+-					alt2=1;
+-				}
+-				else
+-				{
+-					NoViableAltException nvae = new NoViableAltException("", 2, 2, input);
+-
+-					throw nvae;
+-				}
+-				}
+-				break;
+-			case NEWLINE:
+-				{
+-				alt2=3;
+-				}
+-				break;
+-			default:
+-				{
+-					NoViableAltException nvae = new NoViableAltException("", 2, 0, input);
+-
+-					throw nvae;
+-				}
+-			}
+-
+-			switch ( alt2 )
+-			{
+-			case 1:
+-				// JavaCompat\\Expr.g3:79:9: expr NEWLINE
+-				{
+-				PushFollow(Follow._expr_in_stat51);
+-				expr1=expr();
+-
+-				state._fsp--;
+-
+-				Match(input,NEWLINE,Follow._NEWLINE_in_stat53);
+-				JSystem.@out.println(expr1);
+-
+-				}
+-				break;
+-			case 2:
+-				// JavaCompat\\Expr.g3:80:9: ID '=' expr NEWLINE
+-				{
+-				ID2=(IToken)Match(input,ID,Follow._ID_in_stat65);
+-				Match(input,13,Follow._13_in_stat67);
+-				PushFollow(Follow._expr_in_stat69);
+-				expr3=expr();
+-
+-				state._fsp--;
+-
+-				Match(input,NEWLINE,Follow._NEWLINE_in_stat71);
+-				memory.put((ID2!=null?ID2.Text:null), new Integer(expr3));
+-
+-				}
+-				break;
+-			case 3:
+-				// JavaCompat\\Expr.g3:82:9: NEWLINE
+-				{
+-				Match(input,NEWLINE,Follow._NEWLINE_in_stat91);
+-
+-				}
+-				break;
+-
+-			}
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			ReportError(re);
+-			Recover(input,re);
+-		}
+-		finally
+-		{
+-		}
+-		return ;
+-	}
+-	// $ANTLR end "stat"
+-
+-
+-	// $ANTLR start "expr"
+-	// JavaCompat\\Expr.g3:85:0: expr returns [int value] : e= multExpr ( '+' e= multExpr | '-' e= multExpr )* ;
+-	private int expr(  )
+-	{
+-		int value = default(int);
+-
+-		int e = default(int);
+-
+-		try
+-		{
+-			// JavaCompat\\Expr.g3:86:9: (e= multExpr ( '+' e= multExpr | '-' e= multExpr )* )
+-			// JavaCompat\\Expr.g3:86:9: e= multExpr ( '+' e= multExpr | '-' e= multExpr )*
+-			{
+-			PushFollow(Follow._multExpr_in_expr116);
+-			e=multExpr();
+-
+-			state._fsp--;
+-
+-			value = e;
+-			// JavaCompat\\Expr.g3:87:9: ( '+' e= multExpr | '-' e= multExpr )*
+-			for ( ; ; )
+-			{
+-				int alt3=3;
+-				int LA3_0 = input.LA(1);
+-
+-				if ( (LA3_0==12) )
+-				{
+-					alt3=1;
+-				}
+-				else if ( (LA3_0==8) )
+-				{
+-					alt3=2;
+-				}
+-
+-
+-				switch ( alt3 )
+-				{
+-				case 1:
+-					// JavaCompat\\Expr.g3:87:13: '+' e= multExpr
+-					{
+-					Match(input,12,Follow._12_in_expr132);
+-					PushFollow(Follow._multExpr_in_expr136);
+-					e=multExpr();
+-
+-					state._fsp--;
+-
+-					value += e;
+-
+-					}
+-					break;
+-				case 2:
+-					// JavaCompat\\Expr.g3:88:13: '-' e= multExpr
+-					{
+-					Match(input,8,Follow._8_in_expr152);
+-					PushFollow(Follow._multExpr_in_expr156);
+-					e=multExpr();
+-
+-					state._fsp--;
+-
+-					value -= e;
+-
+-					}
+-					break;
+-
+-				default:
+-					goto loop3;
+-				}
+-			}
+-
+-			loop3:
+-				;
+-
+-
+-
+-			}
+-
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			ReportError(re);
+-			Recover(input,re);
+-		}
+-		finally
+-		{
+-		}
+-		return value;
+-	}
+-	// $ANTLR end "expr"
+-
+-
+-	// $ANTLR start "multExpr"
+-	// JavaCompat\\Expr.g3:92:0: multExpr returns [int value] : e= atom ( '*' e= atom )* ;
+-	private int multExpr(  )
+-	{
+-		int value = default(int);
+-
+-		int e = default(int);
+-
+-		try
+-		{
+-			// JavaCompat\\Expr.g3:93:9: (e= atom ( '*' e= atom )* )
+-			// JavaCompat\\Expr.g3:93:9: e= atom ( '*' e= atom )*
+-			{
+-			PushFollow(Follow._atom_in_multExpr194);
+-			e=atom();
+-
+-			state._fsp--;
+-
+-			value = e;
+-			// JavaCompat\\Expr.g3:93:37: ( '*' e= atom )*
+-			for ( ; ; )
+-			{
+-				int alt4=2;
+-				int LA4_0 = input.LA(1);
+-
+-				if ( (LA4_0==11) )
+-				{
+-					alt4=1;
+-				}
+-
+-
+-				switch ( alt4 )
+-				{
+-				case 1:
+-					// JavaCompat\\Expr.g3:93:38: '*' e= atom
+-					{
+-					Match(input,11,Follow._11_in_multExpr199);
+-					PushFollow(Follow._atom_in_multExpr203);
+-					e=atom();
+-
+-					state._fsp--;
+-
+-					value *= e;
+-
+-					}
+-					break;
+-
+-				default:
+-					goto loop4;
+-				}
+-			}
+-
+-			loop4:
+-				;
+-
+-
+-
+-			}
+-
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			ReportError(re);
+-			Recover(input,re);
+-		}
+-		finally
+-		{
+-		}
+-		return value;
+-	}
+-	// $ANTLR end "multExpr"
+-
+-
+-	// $ANTLR start "atom"
+-	// JavaCompat\\Expr.g3:96:0: atom returns [int value] : ( INT | ID | '(' expr ')' );
+-	private int atom(  )
+-	{
+-		int value = default(int);
+-
+-		IToken INT4=null;
+-		IToken ID5=null;
+-		int expr6 = default(int);
+-
+-		try
+-		{
+-			// JavaCompat\\Expr.g3:97:9: ( INT | ID | '(' expr ')' )
+-			int alt5=3;
+-			switch ( input.LA(1) )
+-			{
+-			case INT:
+-				{
+-				alt5=1;
+-				}
+-				break;
+-			case ID:
+-				{
+-				alt5=2;
+-				}
+-				break;
+-			case 9:
+-				{
+-				alt5=3;
+-				}
+-				break;
+-			default:
+-				{
+-					NoViableAltException nvae = new NoViableAltException("", 5, 0, input);
+-
+-					throw nvae;
+-				}
+-			}
+-
+-			switch ( alt5 )
+-			{
+-			case 1:
+-				// JavaCompat\\Expr.g3:97:9: INT
+-				{
+-				INT4=(IToken)Match(input,INT,Follow._INT_in_atom231);
+-				value = Integer.parseInt((INT4!=null?INT4.Text:null));
+-
+-				}
+-				break;
+-			case 2:
+-				// JavaCompat\\Expr.g3:98:9: ID
+-				{
+-				ID5=(IToken)Match(input,ID,Follow._ID_in_atom243);
+-
+-				        Integer v = (Integer)memory.get((ID5!=null?ID5.Text:null));
+-				        if ( v!=null ) value = v.intValue();
+-				        else JSystem.err.println("undefined variable "+(ID5!=null?ID5.Text:null));
+-
+-
+-				}
+-				break;
+-			case 3:
+-				// JavaCompat\\Expr.g3:104:9: '(' expr ')'
+-				{
+-				Match(input,9,Follow._9_in_atom263);
+-				PushFollow(Follow._expr_in_atom265);
+-				expr6=expr();
+-
+-				state._fsp--;
+-
+-				Match(input,10,Follow._10_in_atom267);
+-				value = expr6;
+-
+-				}
+-				break;
+-
+-			}
+-		}
+-		catch ( RecognitionException re )
+-		{
+-			ReportError(re);
+-			Recover(input,re);
+-		}
+-		finally
+-		{
+-		}
+-		return value;
+-	}
+-	// $ANTLR end "atom"
+-	#endregion Rules
+-
+-
+-	#region Follow sets
+-	private static class Follow
+-	{
+-		public static readonly BitSet _stat_in_prog40 = new BitSet(new ulong[]{0x272UL});
+-		public static readonly BitSet _expr_in_stat51 = new BitSet(new ulong[]{0x40UL});
+-		public static readonly BitSet _NEWLINE_in_stat53 = new BitSet(new ulong[]{0x2UL});
+-		public static readonly BitSet _ID_in_stat65 = new BitSet(new ulong[]{0x2000UL});
+-		public static readonly BitSet _13_in_stat67 = new BitSet(new ulong[]{0x230UL});
+-		public static readonly BitSet _expr_in_stat69 = new BitSet(new ulong[]{0x40UL});
+-		public static readonly BitSet _NEWLINE_in_stat71 = new BitSet(new ulong[]{0x2UL});
+-		public static readonly BitSet _NEWLINE_in_stat91 = new BitSet(new ulong[]{0x2UL});
+-		public static readonly BitSet _multExpr_in_expr116 = new BitSet(new ulong[]{0x1102UL});
+-		public static readonly BitSet _12_in_expr132 = new BitSet(new ulong[]{0x230UL});
+-		public static readonly BitSet _multExpr_in_expr136 = new BitSet(new ulong[]{0x1102UL});
+-		public static readonly BitSet _8_in_expr152 = new BitSet(new ulong[]{0x230UL});
+-		public static readonly BitSet _multExpr_in_expr156 = new BitSet(new ulong[]{0x1102UL});
+-		public static readonly BitSet _atom_in_multExpr194 = new BitSet(new ulong[]{0x802UL});
+-		public static readonly BitSet _11_in_multExpr199 = new BitSet(new ulong[]{0x230UL});
+-		public static readonly BitSet _atom_in_multExpr203 = new BitSet(new ulong[]{0x802UL});
+-		public static readonly BitSet _INT_in_atom231 = new BitSet(new ulong[]{0x2UL});
+-		public static readonly BitSet _ID_in_atom243 = new BitSet(new ulong[]{0x2UL});
+-		public static readonly BitSet _9_in_atom263 = new BitSet(new ulong[]{0x230UL});
+-		public static readonly BitSet _expr_in_atom265 = new BitSet(new ulong[]{0x400UL});
+-		public static readonly BitSet _10_in_atom267 = new BitSet(new ulong[]{0x2UL});
+-
+-	}
+-	#endregion Follow sets
+-}
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/SemanticPredicateReduction.g3 b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/SemanticPredicateReduction.g3
+new file mode 100644
+index 0000000..6593039
+--- /dev/null
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/SemanticPredicateReduction.g3
+@@ -0,0 +1,23 @@
++﻿grammar SemanticPredicateReduction;
++
++options {
++    language=CSharp3;
++    TokenLabelType=CommonToken;
++}
++
++@lexer::namespace{Antlr3.Runtime.Test}
++@parser::namespace{Antlr3.Runtime.Test}
++
++start : mainprog optional? EOF;
++
++mainprog : '(' args ')';
++args : ID ID*;
++
++optional: ':'  args element ':' args element2;
++element : {true}?=>args2;
++element2: {false}?=>args3;
++args2 : ID ID*;
++args3 : ID ID* ;
++
++WS  : (' '|'\t'|'\n'|'\r')+;
++ID  : ('a'..'z')+;
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/SemanticPredicateReduction.g3.lexer.cs b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/SemanticPredicateReduction.g3.lexer.cs
+new file mode 100644
+index 0000000..14e37f3
+--- /dev/null
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/SemanticPredicateReduction.g3.lexer.cs
+@@ -0,0 +1,6 @@
++﻿namespace Antlr3.Runtime.Test
++{
++    partial class SemanticPredicateReductionLexer
++    {
++    }
++}
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/SemanticPredicateReduction.g3.parser.cs b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/SemanticPredicateReduction.g3.parser.cs
+new file mode 100644
+index 0000000..2bb542a
+--- /dev/null
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/SemanticPredicateReduction.g3.parser.cs
+@@ -0,0 +1,6 @@
++﻿namespace Antlr3.Runtime.Test
++{
++    partial class SemanticPredicateReductionParser
++    {
++    }
++}
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/SimpleExpressionLexer.cs b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/SimpleExpressionLexer.cs
+deleted file mode 100644
+index 250044d..0000000
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/SimpleExpressionLexer.cs
++++ /dev/null
+@@ -1,510 +0,0 @@
+-// $ANTLR 3.1.2 SimpleExpression.g3 2009-10-18 19:39:54
+-
+-// The variable 'variable' is assigned but its value is never used.
+-#pragma warning disable 219
+-// Unreachable code detected.
+-#pragma warning disable 162
+-
+-
+-using System.Collections.Generic;
+-using Antlr.Runtime;
+-using Stack = System.Collections.Generic.Stack<object>;
+-using List = System.Collections.IList;
+-using ArrayList = System.Collections.Generic.List<object>;
+-
+-[System.CodeDom.Compiler.GeneratedCode("ANTLR", "3.1.2")]
+-[System.CLSCompliant(false)]
+-public partial class SimpleExpressionLexer : Lexer
+-{
+-	public const int EOF=-1;
+-	public const int T__7=7;
+-	public const int T__8=8;
+-	public const int T__9=9;
+-	public const int T__10=10;
+-	public const int T__11=11;
+-	public const int IDENTIFIER=4;
+-	public const int NUMBER=5;
+-	public const int WS=6;
+-
+-    // delegates
+-    // delegators
+-
+-	public SimpleExpressionLexer() {}
+-	public SimpleExpressionLexer(ICharStream input )
+-		: this(input, new RecognizerSharedState())
+-	{
+-	}
+-	public SimpleExpressionLexer(ICharStream input, RecognizerSharedState state)
+-		: base(input, state)
+-	{
+-
+-	}
+-	public override string GrammarFileName { get { return "SimpleExpression.g3"; } }
+-
+-	// $ANTLR start "T__7"
+-	private void mT__7()
+-	{
+-		try
+-		{
+-			int _type = T__7;
+-			int _channel = DefaultTokenChannel;
+-			// SimpleExpression.g3:7:8: ( '-' )
+-			// SimpleExpression.g3:7:8: '-'
+-			{
+-			Match('-');
+-
+-			}
+-
+-			state.type = _type;
+-			state.channel = _channel;
+-		}
+-		finally
+-		{
+-		}
+-	}
+-	// $ANTLR end "T__7"
+-
+-	// $ANTLR start "T__8"
+-	private void mT__8()
+-	{
+-		try
+-		{
+-			int _type = T__8;
+-			int _channel = DefaultTokenChannel;
+-			// SimpleExpression.g3:8:8: ( '%' )
+-			// SimpleExpression.g3:8:8: '%'
+-			{
+-			Match('%');
+-
+-			}
+-
+-			state.type = _type;
+-			state.channel = _channel;
+-		}
+-		finally
+-		{
+-		}
+-	}
+-	// $ANTLR end "T__8"
+-
+-	// $ANTLR start "T__9"
+-	private void mT__9()
+-	{
+-		try
+-		{
+-			int _type = T__9;
+-			int _channel = DefaultTokenChannel;
+-			// SimpleExpression.g3:9:8: ( '*' )
+-			// SimpleExpression.g3:9:8: '*'
+-			{
+-			Match('*');
+-
+-			}
+-
+-			state.type = _type;
+-			state.channel = _channel;
+-		}
+-		finally
+-		{
+-		}
+-	}
+-	// $ANTLR end "T__9"
+-
+-	// $ANTLR start "T__10"
+-	private void mT__10()
+-	{
+-		try
+-		{
+-			int _type = T__10;
+-			int _channel = DefaultTokenChannel;
+-			// SimpleExpression.g3:10:9: ( '/' )
+-			// SimpleExpression.g3:10:9: '/'
+-			{
+-			Match('/');
+-
+-			}
+-
+-			state.type = _type;
+-			state.channel = _channel;
+-		}
+-		finally
+-		{
+-		}
+-	}
+-	// $ANTLR end "T__10"
+-
+-	// $ANTLR start "T__11"
+-	private void mT__11()
+-	{
+-		try
+-		{
+-			int _type = T__11;
+-			int _channel = DefaultTokenChannel;
+-			// SimpleExpression.g3:11:9: ( '+' )
+-			// SimpleExpression.g3:11:9: '+'
+-			{
+-			Match('+');
+-
+-			}
+-
+-			state.type = _type;
+-			state.channel = _channel;
+-		}
+-		finally
+-		{
+-		}
+-	}
+-	// $ANTLR end "T__11"
+-
+-	// $ANTLR start "IDENTIFIER"
+-	private void mIDENTIFIER()
+-	{
+-		try
+-		{
+-			int _type = IDENTIFIER;
+-			int _channel = DefaultTokenChannel;
+-			// SimpleExpression.g3:72:4: ( ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )* )
+-			// SimpleExpression.g3:72:4: ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )*
+-			{
+-			if ((input.LA(1)>='A' && input.LA(1)<='Z')||input.LA(1)=='_'||(input.LA(1)>='a' && input.LA(1)<='z'))
+-			{
+-				input.Consume();
+-
+-			}
+-			else
+-			{
+-				MismatchedSetException mse = new MismatchedSetException(null,input);
+-				Recover(mse);
+-				throw mse;}
+-
+-			// SimpleExpression.g3:73:3: ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )*
+-			while (true)
+-			{
+-				int alt1=2;
+-				int LA1_0 = input.LA(1);
+-
+-				if (((LA1_0>='0' && LA1_0<='9')||(LA1_0>='A' && LA1_0<='Z')||LA1_0=='_'||(LA1_0>='a' && LA1_0<='z')))
+-				{
+-					alt1=1;
+-				}
+-
+-
+-				switch ( alt1 )
+-				{
+-				case 1:
+-					// SimpleExpression.g3:
+-					{
+-					input.Consume();
+-
+-
+-					}
+-					break;
+-
+-				default:
+-					goto loop1;
+-				}
+-			}
+-
+-			loop1:
+-				;
+-
+-
+-
+-			}
+-
+-			state.type = _type;
+-			state.channel = _channel;
+-		}
+-		finally
+-		{
+-		}
+-	}
+-	// $ANTLR end "IDENTIFIER"
+-
+-	// $ANTLR start "NUMBER"
+-	private void mNUMBER()
+-	{
+-		try
+-		{
+-			int _type = NUMBER;
+-			int _channel = DefaultTokenChannel;
+-			// SimpleExpression.g3:77:4: ( ( '0' .. '9' )+ )
+-			// SimpleExpression.g3:77:4: ( '0' .. '9' )+
+-			{
+-			// SimpleExpression.g3:77:4: ( '0' .. '9' )+
+-			int cnt2=0;
+-			while (true)
+-			{
+-				int alt2=2;
+-				int LA2_0 = input.LA(1);
+-
+-				if (((LA2_0>='0' && LA2_0<='9')))
+-				{
+-					alt2=1;
+-				}
+-
+-
+-				switch (alt2)
+-				{
+-				case 1:
+-					// SimpleExpression.g3:
+-					{
+-					input.Consume();
+-
+-
+-					}
+-					break;
+-
+-				default:
+-					if (cnt2 >= 1)
+-						goto loop2;
+-
+-					EarlyExitException eee2 = new EarlyExitException( 2, input );
+-					throw eee2;
+-				}
+-				cnt2++;
+-			}
+-			loop2:
+-				;
+-
+-
+-
+-			}
+-
+-			state.type = _type;
+-			state.channel = _channel;
+-		}
+-		finally
+-		{
+-		}
+-	}
+-	// $ANTLR end "NUMBER"
+-
+-	// $ANTLR start "WS"
+-	private void mWS()
+-	{
+-		try
+-		{
+-			int _type = WS;
+-			int _channel = DefaultTokenChannel;
+-			// SimpleExpression.g3:81:4: ( ( ' ' | '\\t' | '\\n' | '\\r' | '\\f' ) )
+-			// SimpleExpression.g3:81:4: ( ' ' | '\\t' | '\\n' | '\\r' | '\\f' )
+-			{
+-			if ((input.LA(1)>='\t' && input.LA(1)<='\n')||(input.LA(1)>='\f' && input.LA(1)<='\r')||input.LA(1)==' ')
+-			{
+-				input.Consume();
+-
+-			}
+-			else
+-			{
+-				MismatchedSetException mse = new MismatchedSetException(null,input);
+-				Recover(mse);
+-				throw mse;}
+-
+-			_channel = Hidden;
+-
+-			}
+-
+-			state.type = _type;
+-			state.channel = _channel;
+-		}
+-		finally
+-		{
+-		}
+-	}
+-	// $ANTLR end "WS"
+-
+-	public override void mTokens()
+-	{
+-		// SimpleExpression.g3:1:10: ( T__7 | T__8 | T__9 | T__10 | T__11 | IDENTIFIER | NUMBER | WS )
+-		int alt3=8;
+-		switch (input.LA(1))
+-		{
+-		case '-':
+-			{
+-			alt3=1;
+-			}
+-			break;
+-		case '%':
+-			{
+-			alt3=2;
+-			}
+-			break;
+-		case '*':
+-			{
+-			alt3=3;
+-			}
+-			break;
+-		case '/':
+-			{
+-			alt3=4;
+-			}
+-			break;
+-		case '+':
+-			{
+-			alt3=5;
+-			}
+-			break;
+-		case 'A':
+-		case 'B':
+-		case 'C':
+-		case 'D':
+-		case 'E':
+-		case 'F':
+-		case 'G':
+-		case 'H':
+-		case 'I':
+-		case 'J':
+-		case 'K':
+-		case 'L':
+-		case 'M':
+-		case 'N':
+-		case 'O':
+-		case 'P':
+-		case 'Q':
+-		case 'R':
+-		case 'S':
+-		case 'T':
+-		case 'U':
+-		case 'V':
+-		case 'W':
+-		case 'X':
+-		case 'Y':
+-		case 'Z':
+-		case '_':
+-		case 'a':
+-		case 'b':
+-		case 'c':
+-		case 'd':
+-		case 'e':
+-		case 'f':
+-		case 'g':
+-		case 'h':
+-		case 'i':
+-		case 'j':
+-		case 'k':
+-		case 'l':
+-		case 'm':
+-		case 'n':
+-		case 'o':
+-		case 'p':
+-		case 'q':
+-		case 'r':
+-		case 's':
+-		case 't':
+-		case 'u':
+-		case 'v':
+-		case 'w':
+-		case 'x':
+-		case 'y':
+-		case 'z':
+-			{
+-			alt3=6;
+-			}
+-			break;
+-		case '0':
+-		case '1':
+-		case '2':
+-		case '3':
+-		case '4':
+-		case '5':
+-		case '6':
+-		case '7':
+-		case '8':
+-		case '9':
+-			{
+-			alt3=7;
+-			}
+-			break;
+-		case '\t':
+-		case '\n':
+-		case '\f':
+-		case '\r':
+-		case ' ':
+-			{
+-			alt3=8;
+-			}
+-			break;
+-		default:
+-			{
+-				NoViableAltException nvae = new NoViableAltException("", 3, 0, input);
+-
+-				throw nvae;
+-			}
+-		}
+-
+-		switch (alt3)
+-		{
+-		case 1:
+-			// SimpleExpression.g3:1:10: T__7
+-			{
+-			mT__7();
+-
+-			}
+-			break;
+-		case 2:
+-			// SimpleExpression.g3:1:15: T__8
+-			{
+-			mT__8();
+-
+-			}
+-			break;
+-		case 3:
+-			// SimpleExpression.g3:1:20: T__9
+-			{
+-			mT__9();
+-
+-			}
+-			break;
+-		case 4:
+-			// SimpleExpression.g3:1:25: T__10
+-			{
+-			mT__10();
+-
+-			}
+-			break;
+-		case 5:
+-			// SimpleExpression.g3:1:31: T__11
+-			{
+-			mT__11();
+-
+-			}
+-			break;
+-		case 6:
+-			// SimpleExpression.g3:1:37: IDENTIFIER
+-			{
+-			mIDENTIFIER();
+-
+-			}
+-			break;
+-		case 7:
+-			// SimpleExpression.g3:1:48: NUMBER
+-			{
+-			mNUMBER();
+-
+-			}
+-			break;
+-		case 8:
+-			// SimpleExpression.g3:1:55: WS
+-			{
+-			mWS();
+-
+-			}
+-			break;
+-
+-		}
+-
+-	}
+-
+-
+-	#region DFA
+-
+-	protected override void InitDFAs()
+-	{
+-		base.InitDFAs();
+-	}
+-
+-
+-	#endregion
+-
+-}
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/SimpleExpressionParser.cs b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/SimpleExpressionParser.cs
+deleted file mode 100644
+index a87c876..0000000
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/SimpleExpressionParser.cs
++++ /dev/null
+@@ -1,510 +0,0 @@
+-// $ANTLR 3.1.2 SimpleExpression.g3 2009-10-18 19:39:54
+-
+-// The variable 'variable' is assigned but its value is never used.
+-#pragma warning disable 219
+-// Unreachable code detected.
+-#pragma warning disable 162
+-
+-
+-using System.Collections.Generic;
+-using Antlr.Runtime;
+-using Stack = System.Collections.Generic.Stack<object>;
+-using List = System.Collections.IList;
+-using ArrayList = System.Collections.Generic.List<object>;
+-
+-
+-using Antlr.Runtime.Tree;
+-using RewriteRuleITokenStream = Antlr.Runtime.Tree.RewriteRuleTokenStream;
+-
+-[System.CodeDom.Compiler.GeneratedCode("ANTLR", "3.1.2")]
+-[System.CLSCompliant(false)]
+-public partial class SimpleExpressionParser : Parser
+-{
+-	internal static readonly string[] tokenNames = new string[] {
+-		"<invalid>", "<EOR>", "<DOWN>", "<UP>", "IDENTIFIER", "NUMBER", "WS", "'-'", "'%'", "'*'", "'/'", "'+'"
+-	};
+-	public const int EOF=-1;
+-	public const int T__7=7;
+-	public const int T__8=8;
+-	public const int T__9=9;
+-	public const int T__10=10;
+-	public const int T__11=11;
+-	public const int IDENTIFIER=4;
+-	public const int NUMBER=5;
+-	public const int WS=6;
+-
+-	// delegates
+-	// delegators
+-
+-	public SimpleExpressionParser( ITokenStream input )
+-		: this( input, new RecognizerSharedState() )
+-	{
+-	}
+-	public SimpleExpressionParser(ITokenStream input, RecognizerSharedState state)
+-		: base(input, state)
+-	{
+-		InitializeTreeAdaptor();
+-		if ( TreeAdaptor == null )
+-			TreeAdaptor = new CommonTreeAdaptor();
+-	}
+-
+-	// Implement this function in your helper file to use a custom tree adaptor
+-	partial void InitializeTreeAdaptor();
+-	ITreeAdaptor adaptor;
+-
+-	public ITreeAdaptor TreeAdaptor
+-	{
+-		get
+-		{
+-			return adaptor;
+-		}
+-		set
+-		{
+-			this.adaptor = value;
+-		}
+-	}
+-
+-	public override string[] TokenNames { get { return SimpleExpressionParser.tokenNames; } }
+-	public override string GrammarFileName { get { return "SimpleExpression.g3"; } }
+-
+-
+-	#region Rules
+-	public class expression_return : ParserRuleReturnScope
+-	{
+-		internal CommonTree tree;
+-		public override object Tree { get { return tree; } }
+-	}
+-
+-	// $ANTLR start "expression"
+-	// SimpleExpression.g3:43:0: public expression : additive_expression EOF ;
+-	public SimpleExpressionParser.expression_return expression()
+-	{
+-		SimpleExpressionParser.expression_return retval = new SimpleExpressionParser.expression_return();
+-		retval.start = input.LT(1);
+-
+-		CommonTree root_0 = null;
+-
+-		IToken EOF2=null;
+-		SimpleExpressionParser.additive_expression_return additive_expression1 = default(SimpleExpressionParser.additive_expression_return);
+-
+-		CommonTree EOF2_tree=null;
+-
+-		try
+-		{
+-			// SimpleExpression.g3:44:4: ( additive_expression EOF )
+-			// SimpleExpression.g3:44:4: additive_expression EOF
+-			{
+-			root_0 = (CommonTree)adaptor.Nil();
+-
+-			PushFollow(Follow._additive_expression_in_expression39);
+-			additive_expression1=additive_expression();
+-			PopFollow();
+-
+-			adaptor.AddChild(root_0, additive_expression1.Tree);
+-			EOF2=(IToken)Match(input,EOF,Follow._EOF_in_expression43);
+-			EOF2_tree = (CommonTree)adaptor.Create(EOF2);
+-			adaptor.AddChild(root_0, EOF2_tree);
+-
+-
+-			}
+-
+-			retval.stop = input.LT(-1);
+-
+-			retval.tree = (CommonTree)adaptor.RulePostProcessing(root_0);
+-			adaptor.SetTokenBoundaries(retval.tree, retval.start, retval.stop);
+-
+-		}
+-		catch (RecognitionException re)
+-		{
+-			ReportError(re);
+-			Recover(input,re);
+-		retval.tree = (CommonTree)adaptor.ErrorNode(input, retval.start, input.LT(-1), re);
+-
+-		}
+-		finally
+-		{
+-		}
+-		return retval;
+-
+-	}
+-	// $ANTLR end "expression"
+-
+-	public class additive_expression_return : ParserRuleReturnScope
+-	{
+-		internal CommonTree tree;
+-		public override object Tree { get { return tree; } }
+-	}
+-
+-	// $ANTLR start "additive_expression"
+-	// SimpleExpression.g3:48:0: additive_expression : multiplicative_expression ( ( '+' | '-' ) multiplicative_expression )* ;
+-	private SimpleExpressionParser.additive_expression_return additive_expression()
+-	{
+-		SimpleExpressionParser.additive_expression_return retval = new SimpleExpressionParser.additive_expression_return();
+-		retval.start = input.LT(1);
+-
+-		CommonTree root_0 = null;
+-
+-		IToken char_literal4=null;
+-		IToken char_literal5=null;
+-		SimpleExpressionParser.multiplicative_expression_return multiplicative_expression3 = default(SimpleExpressionParser.multiplicative_expression_return);
+-		SimpleExpressionParser.multiplicative_expression_return multiplicative_expression6 = default(SimpleExpressionParser.multiplicative_expression_return);
+-
+-		CommonTree char_literal4_tree=null;
+-		CommonTree char_literal5_tree=null;
+-
+-		try
+-		{
+-			// SimpleExpression.g3:49:4: ( multiplicative_expression ( ( '+' | '-' ) multiplicative_expression )* )
+-			// SimpleExpression.g3:49:4: multiplicative_expression ( ( '+' | '-' ) multiplicative_expression )*
+-			{
+-			root_0 = (CommonTree)adaptor.Nil();
+-
+-			PushFollow(Follow._multiplicative_expression_in_additive_expression54);
+-			multiplicative_expression3=multiplicative_expression();
+-			PopFollow();
+-
+-			adaptor.AddChild(root_0, multiplicative_expression3.Tree);
+-			// SimpleExpression.g3:50:3: ( ( '+' | '-' ) multiplicative_expression )*
+-			while (true)
+-			{
+-				int alt2=2;
+-				int LA2_0 = input.LA(1);
+-
+-				if ((LA2_0==7||LA2_0==11))
+-				{
+-					alt2=1;
+-				}
+-
+-
+-				switch ( alt2 )
+-				{
+-				case 1:
+-					// SimpleExpression.g3:50:5: ( '+' | '-' ) multiplicative_expression
+-					{
+-					// SimpleExpression.g3:50:5: ( '+' | '-' )
+-					int alt1=2;
+-					int LA1_0 = input.LA(1);
+-
+-					if ((LA1_0==11))
+-					{
+-						alt1=1;
+-					}
+-					else if ((LA1_0==7))
+-					{
+-						alt1=2;
+-					}
+-					else
+-					{
+-						NoViableAltException nvae = new NoViableAltException("", 1, 0, input);
+-
+-						throw nvae;
+-					}
+-					switch (alt1)
+-					{
+-					case 1:
+-						// SimpleExpression.g3:50:6: '+'
+-						{
+-						char_literal4=(IToken)Match(input,11,Follow._11_in_additive_expression61);
+-						char_literal4_tree = (CommonTree)adaptor.Create(char_literal4);
+-						root_0 = (CommonTree)adaptor.BecomeRoot(char_literal4_tree, root_0);
+-
+-
+-						}
+-						break;
+-					case 2:
+-						// SimpleExpression.g3:50:13: '-'
+-						{
+-						char_literal5=(IToken)Match(input,7,Follow._7_in_additive_expression66);
+-						char_literal5_tree = (CommonTree)adaptor.Create(char_literal5);
+-						root_0 = (CommonTree)adaptor.BecomeRoot(char_literal5_tree, root_0);
+-
+-
+-						}
+-						break;
+-
+-					}
+-
+-					PushFollow(Follow._multiplicative_expression_in_additive_expression73);
+-					multiplicative_expression6=multiplicative_expression();
+-					PopFollow();
+-
+-					adaptor.AddChild(root_0, multiplicative_expression6.Tree);
+-
+-					}
+-					break;
+-
+-				default:
+-					goto loop2;
+-				}
+-			}
+-
+-			loop2:
+-				;
+-
+-
+-
+-			}
+-
+-			retval.stop = input.LT(-1);
+-
+-			retval.tree = (CommonTree)adaptor.RulePostProcessing(root_0);
+-			adaptor.SetTokenBoundaries(retval.tree, retval.start, retval.stop);
+-
+-		}
+-		catch (RecognitionException re)
+-		{
+-			ReportError(re);
+-			Recover(input,re);
+-		retval.tree = (CommonTree)adaptor.ErrorNode(input, retval.start, input.LT(-1), re);
+-
+-		}
+-		finally
+-		{
+-		}
+-		return retval;
+-
+-	}
+-	// $ANTLR end "additive_expression"
+-
+-	public class multiplicative_expression_return : ParserRuleReturnScope
+-	{
+-		internal CommonTree tree;
+-		public override object Tree { get { return tree; } }
+-	}
+-
+-	// $ANTLR start "multiplicative_expression"
+-	// SimpleExpression.g3:55:0: multiplicative_expression : atom ( ( '*' | '/' | '%' ) atom )* ;
+-	private SimpleExpressionParser.multiplicative_expression_return multiplicative_expression()
+-	{
+-		SimpleExpressionParser.multiplicative_expression_return retval = new SimpleExpressionParser.multiplicative_expression_return();
+-		retval.start = input.LT(1);
+-
+-		CommonTree root_0 = null;
+-
+-		IToken char_literal8=null;
+-		IToken char_literal9=null;
+-		IToken char_literal10=null;
+-		SimpleExpressionParser.atom_return atom7 = default(SimpleExpressionParser.atom_return);
+-		SimpleExpressionParser.atom_return atom11 = default(SimpleExpressionParser.atom_return);
+-
+-		CommonTree char_literal8_tree=null;
+-		CommonTree char_literal9_tree=null;
+-		CommonTree char_literal10_tree=null;
+-
+-		try
+-		{
+-			// SimpleExpression.g3:56:4: ( atom ( ( '*' | '/' | '%' ) atom )* )
+-			// SimpleExpression.g3:56:4: atom ( ( '*' | '/' | '%' ) atom )*
+-			{
+-			root_0 = (CommonTree)adaptor.Nil();
+-
+-			PushFollow(Follow._atom_in_multiplicative_expression89);
+-			atom7=atom();
+-			PopFollow();
+-
+-			adaptor.AddChild(root_0, atom7.Tree);
+-			// SimpleExpression.g3:57:3: ( ( '*' | '/' | '%' ) atom )*
+-			while (true)
+-			{
+-				int alt4=2;
+-				int LA4_0 = input.LA(1);
+-
+-				if (((LA4_0>=8 && LA4_0<=10)))
+-				{
+-					alt4=1;
+-				}
+-
+-
+-				switch ( alt4 )
+-				{
+-				case 1:
+-					// SimpleExpression.g3:57:5: ( '*' | '/' | '%' ) atom
+-					{
+-					// SimpleExpression.g3:57:5: ( '*' | '/' | '%' )
+-					int alt3=3;
+-					switch (input.LA(1))
+-					{
+-					case 9:
+-						{
+-						alt3=1;
+-						}
+-						break;
+-					case 10:
+-						{
+-						alt3=2;
+-						}
+-						break;
+-					case 8:
+-						{
+-						alt3=3;
+-						}
+-						break;
+-					default:
+-						{
+-							NoViableAltException nvae = new NoViableAltException("", 3, 0, input);
+-
+-							throw nvae;
+-						}
+-					}
+-
+-					switch (alt3)
+-					{
+-					case 1:
+-						// SimpleExpression.g3:57:6: '*'
+-						{
+-						char_literal8=(IToken)Match(input,9,Follow._9_in_multiplicative_expression96);
+-						char_literal8_tree = (CommonTree)adaptor.Create(char_literal8);
+-						root_0 = (CommonTree)adaptor.BecomeRoot(char_literal8_tree, root_0);
+-
+-
+-						}
+-						break;
+-					case 2:
+-						// SimpleExpression.g3:57:13: '/'
+-						{
+-						char_literal9=(IToken)Match(input,10,Follow._10_in_multiplicative_expression101);
+-						char_literal9_tree = (CommonTree)adaptor.Create(char_literal9);
+-						root_0 = (CommonTree)adaptor.BecomeRoot(char_literal9_tree, root_0);
+-
+-
+-						}
+-						break;
+-					case 3:
+-						// SimpleExpression.g3:57:20: '%'
+-						{
+-						char_literal10=(IToken)Match(input,8,Follow._8_in_multiplicative_expression106);
+-						char_literal10_tree = (CommonTree)adaptor.Create(char_literal10);
+-						root_0 = (CommonTree)adaptor.BecomeRoot(char_literal10_tree, root_0);
+-
+-
+-						}
+-						break;
+-
+-					}
+-
+-					PushFollow(Follow._atom_in_multiplicative_expression113);
+-					atom11=atom();
+-					PopFollow();
+-
+-					adaptor.AddChild(root_0, atom11.Tree);
+-
+-					}
+-					break;
+-
+-				default:
+-					goto loop4;
+-				}
+-			}
+-
+-			loop4:
+-				;
+-
+-
+-
+-			}
+-
+-			retval.stop = input.LT(-1);
+-
+-			retval.tree = (CommonTree)adaptor.RulePostProcessing(root_0);
+-			adaptor.SetTokenBoundaries(retval.tree, retval.start, retval.stop);
+-
+-		}
+-		catch (RecognitionException re)
+-		{
+-			ReportError(re);
+-			Recover(input,re);
+-		retval.tree = (CommonTree)adaptor.ErrorNode(input, retval.start, input.LT(-1), re);
+-
+-		}
+-		finally
+-		{
+-		}
+-		return retval;
+-
+-	}
+-	// $ANTLR end "multiplicative_expression"
+-
+-	public class atom_return : ParserRuleReturnScope
+-	{
+-		internal CommonTree tree;
+-		public override object Tree { get { return tree; } }
+-	}
+-
+-	// $ANTLR start "atom"
+-	// SimpleExpression.g3:62:0: atom : ( IDENTIFIER | NUMBER );
+-	private SimpleExpressionParser.atom_return atom()
+-	{
+-		SimpleExpressionParser.atom_return retval = new SimpleExpressionParser.atom_return();
+-		retval.start = input.LT(1);
+-
+-		CommonTree root_0 = null;
+-
+-		IToken set12=null;
+-
+-		CommonTree set12_tree=null;
+-
+-		try
+-		{
+-			// SimpleExpression.g3:63:4: ( IDENTIFIER | NUMBER )
+-			// SimpleExpression.g3:
+-			{
+-			root_0 = (CommonTree)adaptor.Nil();
+-
+-			set12=(IToken)input.LT(1);
+-			if ((input.LA(1)>=IDENTIFIER && input.LA(1)<=NUMBER))
+-			{
+-				input.Consume();
+-				adaptor.AddChild(root_0, (CommonTree)adaptor.Create(set12));
+-				state.errorRecovery=false;
+-			}
+-			else
+-			{
+-				MismatchedSetException mse = new MismatchedSetException(null,input);
+-				throw mse;
+-			}
+-
+-
+-			}
+-
+-			retval.stop = input.LT(-1);
+-
+-			retval.tree = (CommonTree)adaptor.RulePostProcessing(root_0);
+-			adaptor.SetTokenBoundaries(retval.tree, retval.start, retval.stop);
+-
+-		}
+-		catch (RecognitionException re)
+-		{
+-			ReportError(re);
+-			Recover(input,re);
+-		retval.tree = (CommonTree)adaptor.ErrorNode(input, retval.start, input.LT(-1), re);
+-
+-		}
+-		finally
+-		{
+-		}
+-		return retval;
+-
+-	}
+-	// $ANTLR end "atom"
+-	#endregion Rules
+-
+-
+-	#region Follow sets
+-	private static class Follow
+-	{
+-		public static readonly BitSet _additive_expression_in_expression39 = new BitSet(new ulong[]{0x0UL});
+-		public static readonly BitSet _EOF_in_expression43 = new BitSet(new ulong[]{0x2UL});
+-		public static readonly BitSet _multiplicative_expression_in_additive_expression54 = new BitSet(new ulong[]{0x882UL});
+-		public static readonly BitSet _11_in_additive_expression61 = new BitSet(new ulong[]{0x30UL});
+-		public static readonly BitSet _7_in_additive_expression66 = new BitSet(new ulong[]{0x30UL});
+-		public static readonly BitSet _multiplicative_expression_in_additive_expression73 = new BitSet(new ulong[]{0x882UL});
+-		public static readonly BitSet _atom_in_multiplicative_expression89 = new BitSet(new ulong[]{0x702UL});
+-		public static readonly BitSet _9_in_multiplicative_expression96 = new BitSet(new ulong[]{0x30UL});
+-		public static readonly BitSet _10_in_multiplicative_expression101 = new BitSet(new ulong[]{0x30UL});
+-		public static readonly BitSet _8_in_multiplicative_expression106 = new BitSet(new ulong[]{0x30UL});
+-		public static readonly BitSet _atom_in_multiplicative_expression113 = new BitSet(new ulong[]{0x702UL});
+-		public static readonly BitSet _set_in_atom129 = new BitSet(new ulong[]{0x2UL});
+-
+-	}
+-	#endregion Follow sets
+-}
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime/BaseRecognizer.cs b/runtime/CSharp3/Sources/Antlr3.Runtime/BaseRecognizer.cs
+index f4a4c6d..5ba18f5 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime/BaseRecognizer.cs
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime/BaseRecognizer.cs
+@@ -1045,7 +1045,6 @@ namespace Antlr.Runtime
+return n;
+}
+
+-        [Conditional("ANTLR_TRACE")]
+public virtual void TraceIn(string ruleName, int ruleIndex, object inputSymbol)
+{
+if (TraceDestination == null)
+@@ -1059,7 +1058,6 @@ namespace Antlr.Runtime
+TraceDestination.WriteLine();
+}
+
+-        [Conditional("ANTLR_TRACE")]
+public virtual void TraceOut(string ruleName, int ruleIndex, object inputSymbol)
+{
+if (TraceDestination == null)
+

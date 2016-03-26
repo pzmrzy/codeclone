@@ -1,0 +1,20 @@
+commit a52b2fc4136cef938237180933081a713b409117
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Fri Apr 10 09:14:23 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Fri Apr 10 09:14:23 2009 -0800
+
+C# Port:
+* Check in the vsscc file so Visual Studio stops complaining
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6008]
+
+diff --git a/Antlr3.vsscc b/Antlr3.vsscc
+new file mode 100644
+index 0000000..731fd75
+--- /dev/null
++++ b/Antlr3.vsscc
+@@ -0,0 +1 @@
++Jay0antlrcs\main
+\ No newline at end of file
+

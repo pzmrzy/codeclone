@@ -1,0 +1,37 @@
+commit a94d5ba6822c96db76d3968c925b7563964e518b
+Author:     Jim Idle <jimi@temporal-wave.com>
+AuthorDate: Sun Apr 3 11:44:09 2011 -0800
+Commit:     Jim Idle <jimi@temporal-wave.com>
+CommitDate: Sun Apr 3 11:44:09 2011 -0800
+
+Fix a deferring of freeing up the input stream name in the input stream reuse code
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8036]
+
+diff --git a/runtime/C/src/antlr3inputstream.c b/runtime/C/src/antlr3inputstream.c
+index 42efffd..e3f1c26 100644
+--- a/runtime/C/src/antlr3inputstream.c
++++ b/runtime/C/src/antlr3inputstream.c
+@@ -291,10 +291,18 @@ antlr38BitReuse(pANTLR3_INPUT_STREAM input, pANTLR3_UINT8 inString, ANTLR3_UINT3
+input->data		= inString;
+input->sizeBuf	= size;
+
+-    // Now we can set up the file name
++    // Now we can set up the file name. As we are reusing the stream, there may already
++    // be a string that we can reuse for holding the filename.
+//
+-    input->istream->streamName	= input->strFactory->newStr(input->strFactory, name == NULL ? (pANTLR3_UINT8)"-memory-" : name);
+-    input->fileName		= input->istream->streamName;
++	if	(input->istream->streamName == NULL)
++	{
++		input->istream->streamName	= input->strFactory->newStr(input->strFactory, name == NULL ? (pANTLR3_UINT8)"-memory-" : name);
++		input->fileName		= input->istream->streamName;
++	}
++	else
++	{
++		input->istream->streamName->set(input->istream->streamName,  (name == NULL ? (const char *)"-memory-" : (const char *)name));
++	}
+
+input->reset(input);
+}
+

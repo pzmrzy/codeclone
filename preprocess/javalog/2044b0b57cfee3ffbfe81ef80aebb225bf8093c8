@@ -1,0 +1,26 @@
+commit 2044b0b57cfee3ffbfe81ef80aebb225bf8093c8
+Author:     Ivan Brezina <ibre5041@ibrezina.net>
+AuthorDate: Wed Mar 13 17:02:32 2013 +0100
+Commit:     Ivan Brezina <ibre5041@ibrezina.net>
+CommitDate: Wed Jun 26 15:49:56 2013 +0200
+
+Remove some C target relicts in Cpp target
+- fixes lexer member functions
+- fixes fragment alias inside lexer rule
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Cpp/Cpp.stg b/tool/src/main/resources/org/antlr/codegen/templates/Cpp/Cpp.stg
+index b5dcc92..cbf17a8 100755
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Cpp/Cpp.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Cpp/Cpp.stg
+@@ -1694,8 +1694,8 @@ matchSetAndListLabel(s,label,elementIndex,postmatchCode) ::= <<
+/** Match a string literal */
+lexerStringRef(string,label,elementIndex) ::= <<
+<if(label)>
+-<label>Start = this->getCharIndex();
+-MATCHS(<string>);
++ANTLR_MARKER <label>Start = this->getCharIndex();
++this->matchs(<string>);
+<checkRuleBacktrackFailure()>
+<label> = new CommonTokenType;
+<label>->set_type( CommonTokenType::TOKEN_INVALID );
+

@@ -1,0 +1,44 @@
+commit 865eda9bc6fb4bf05475636e9788e0991ee2b3b8
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sat Nov 20 21:39:21 2010 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sat Nov 20 21:39:21 2010 -0800
+
+Merge CL6890
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7076]
+
+diff --git a/Antlr3.Test/TestTreeGrammarRewriteAST.cs b/Antlr3.Test/TestTreeGrammarRewriteAST.cs
+index af268ab..8b3c766 100644
+--- a/Antlr3.Test/TestTreeGrammarRewriteAST.cs
++++ b/Antlr3.Test/TestTreeGrammarRewriteAST.cs
+@@ -1163,5 +1163,28 @@ namespace AntlrUnitTests
+treeGrammar, "TP", "TLexer", "a", "s", "1 2 3" );
+assertEquals( "(2 3) (2 3)" + NewLine, found );
+}
++
++        [TestMethod]
++        public void TestRuleResultAsRoot()
++        {
++            string grammar =
++                "grammar T;\n" +
++                "options {output=AST;}\n" +
++                "a : ID '=' INT -> ^('=' ID INT);\n" +
++                "ID : 'a'..'z'+ ;\n" +
++                "INT : '0'..'9'+;\n" +
++                "COLON : ':' ;\n" +
++                "WS : (' '|'\\n') {$channel=HIDDEN;} ;\n";
++
++            string treeGrammar =
++                "tree grammar TP;\n" +
++                "options {output=AST; rewrite=true; ASTLabelType=CommonTree; tokenVocab=T;}\n" +
++                "a : ^(eq e1=ID e2=.) -> ^(eq $e2 $e1) ;\n" +
++                "eq : '=' | ':' {;} ;\n";  // bug in set match, doesn't add to tree!! booh. force nonset.
++
++            string found = execTreeParser("T.g", grammar, "TParser", "TP.g",
++                                          treeGrammar, "TP", "TLexer", "a", "a", "abc = 34");
++            Assert.AreEqual("(= 34 abc)" + NewLine, found);
++        }
+}
+}
+

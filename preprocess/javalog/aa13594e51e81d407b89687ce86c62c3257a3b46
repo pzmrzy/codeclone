@@ -1,0 +1,766 @@
+commit aa13594e51e81d407b89687ce86c62c3257a3b46
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Thu Aug 4 09:29:52 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Thu Aug 4 09:29:52 2011 -0800
+
+(C# 2, 3) Template fixes:
+* Move <parserCtorBody()> after delegate creation to fix tree adapter initialization errors
+* Fix Topdown() and Bottomup() generated overrides for tree filters without output=AST
+* Fix synpred fragment methods in tree parsers with output=AST
+* Fix "-> ..." in tree parsers with output=AST
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8986]
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/AST.stg b/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/AST.stg
+index 35fdebd..a898b69 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/AST.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/AST.stg
+@@ -196,10 +196,8 @@ root_0 = (<ASTLabelType>)adaptor.Nil();
+<! if tree parser and rewrite=true !>
+<if(TREE_PARSER&&rewriteMode)>
+<prevRuleRootRef()>.Tree = (<ASTLabelType>)adaptor.RulePostProcessing(root_0);
+-input.ReplaceChildren(adaptor.GetParent(retval.Start),
+-                      adaptor.GetChildIndex(retval.Start),
+-                      adaptor.GetChildIndex(_last),
+-                      retval.Tree);
++if (<prevRuleRootRef()>.Tree != null)
++	input.ReplaceChildren(adaptor.GetParent(retval.Start), adaptor.GetChildIndex(retval.Start), adaptor.GetChildIndex(_last), retval.Tree);
+<endif>
+<! if parser or tree-parser && rewrite!=true, we need to set result !>
+<if(!TREE_PARSER||!rewriteMode)>
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/ASTTreeParser.stg b/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/ASTTreeParser.stg
+index d749fa6..fc6df64 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/ASTTreeParser.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/ASTTreeParser.stg
+@@ -44,14 +44,17 @@
+/** Add a variable to track last element matched */
+ruleDeclarations() ::= <<
+<super.ruleDeclarations()>
++<if(!ruleDescriptor.isSynPred)>
+<ASTLabelType> _first_0 = default(<ASTLabelType>);
+-<ASTLabelType> _last = default(<ASTLabelType>);<\n>
++<ASTLabelType> _last = default(<ASTLabelType>);
++<endif>
+>>
+
+/** What to emit when there is no rewrite rule.  For auto build
+*  mode, does nothing.
+*/
+noRewrite(rewriteBlockLevel, treeLevel) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+<if(backtracking)>if (<actions.(actionScope).synpredgate>) {<endif>
+<if(rewriteMode)>
+retval.Tree = (<ASTLabelType>)_first_0;
+@@ -59,6 +62,7 @@ if (adaptor.GetParent(retval.Tree)!=null && adaptor.IsNil(adaptor.GetParent(retv
+retval.Tree = (<ASTLabelType>)adaptor.GetParent(retval.Tree);
+<endif>
+<if(backtracking)>}<endif>
++<endif>
+>>
+
+/** match ^(root children) in tree parser; override here to
+@@ -66,6 +70,7 @@ if (adaptor.GetParent(retval.Tree)!=null && adaptor.IsNil(adaptor.GetParent(retv
+*/
+tree(root, actionsAfterRoot, children, nullableChildList,
+enclosingTreeLevel, treeLevel) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+{
+<ASTLabelType> _save_last_<treeLevel> = _last;
+@@ -98,7 +103,10 @@ Match(input, TokenTypes.Up, null); <checkRuleBacktrackFailure()>
+adaptor.AddChild(root_<enclosingTreeLevel>, root_<treeLevel>);
+<endif>
+_last = _save_last_<treeLevel>;
+-}<\n>
++}
++<else>
++<super.tree(...)>
++<endif>
+>>
+
+// TOKEN AST STUFF
+@@ -107,12 +115,17 @@ _last = _save_last_<treeLevel>;
+*  setting of _last
+*/
+tokenRefBang(token,label,elementIndex,terminalOptions) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.tokenRef(...)>
++<else>
++<super.tokenRefBang(...)>
++<endif>
+>>
+
+/** ID auto construct */
+tokenRef(token,label,elementIndex,terminalOptions) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.tokenRef(...)>
+<if(!rewriteMode)>
+@@ -128,16 +141,24 @@ adaptor.AddChild(root_<treeLevel>, <label>_tree);
+<if(backtracking)>if (<actions.(actionScope).synpredgate>)<endif>
+if (_first_<treeLevel> == null) _first_<treeLevel> = <label>;
+<endif>
++<else>
++<super.tokenRef(...)>
++<endif>
+>>
+
+/** label+=TOKEN auto construct */
+tokenRefAndListLabel(token,label,elementIndex,terminalOptions) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+<tokenRef(...)>
+<listLabelElem(elem=label,...)>
++<else>
++<super.tokenRefAndListLabel(...)>
++<endif>
+>>
+
+/** ^(ID ...) auto construct */
+tokenRefRuleRoot(token,label,elementIndex,terminalOptions) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.tokenRef(...)>
+<if(!rewriteMode)>
+@@ -150,16 +171,24 @@ _last = (<ASTLabelType>)input.LT(1);
+root_<treeLevel> = (<ASTLabelType>)adaptor.BecomeRoot(<label>_tree, root_<treeLevel>);
+<if(backtracking)>}<endif>
+<endif>
++<else>
++<super.tokenRefRuleRoot(...)>
++<endif>
+>>
+
+/** Match ^(label+=TOKEN ...) auto construct */
+tokenRefRuleRootAndListLabel(token,label,elementIndex,terminalOptions) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+<tokenRefRuleRoot(...)>
+<listLabelElem(elem=label,...)>
++<else>
++<super.tokenRefRuleRootAndListLabel(...)>
++<endif>
+>>
+
+/** Match . wildcard and auto dup the node/subtree */
+wildcard(token,label,elementIndex,terminalOptions) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.wildcard(...)>
+<if(!rewriteMode)>
+@@ -171,11 +200,15 @@ adaptor.AddChild(root_<treeLevel>, <label>_tree);
+<if(backtracking)>if (<actions.(actionScope).synpredgate>)<endif>
+if (_first_<treeLevel> == null) _first_<treeLevel> = <label>;
+<endif>
++<else>
++<super.wildcard(...)>
++<endif>
+>>
+
+// SET AST
+
+matchSet(s,label,terminalOptions,elementIndex,postmatchCode) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.matchSet(postmatchCode={
+<if(!rewriteMode)>
+@@ -190,19 +223,31 @@ adaptor.AddChild(root_<treeLevel>, <label>_tree);
+<endif>
+}, ...
+)>
++<else>
++<super.matchSet(...)>
++<endif>
+>>
+
+matchRuleBlockSet(s,label,terminalOptions,elementIndex,postmatchCode,treeLevel="0") ::= <<
++<if(!ruleDescriptor.isSynPred)>
+<matchSet(...)>
+<noRewrite(...)> <! set return tree !>
++<else>
++<super.matchRuleBlockSet(...)>
++<endif>
+>>
+
+matchSetBang(s,label,terminalOptions,elementIndex,postmatchCode) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.matchSet(...)>
++<else>
++<super.matchSetBang(...)>
++<endif>
+>>
+
+matchSetRuleRoot(s,label,terminalOptions,elementIndex,debug) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+<super.matchSet(postmatchCode={
+<if(!rewriteMode)>
+<if(backtracking)>if (<actions.(actionScope).synpredgate>) {<endif>
+@@ -216,12 +261,16 @@ root_<treeLevel> = (<ASTLabelType>)adaptor.BecomeRoot(<label>_tree, root_<treeLe
+<endif>
+}, ...
+)>
++<else>
++<super.matchSetRuleRoot(...)>
++<endif>
+>>
+
+// RULE REF AST
+
+/** rule auto construct */
+ruleRef(rule,label,elementIndex,args,scope) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.ruleRef(...)>
+<if(backtracking)>if (<actions.(actionScope).synpredgate>)<endif>
+@@ -230,51 +279,82 @@ adaptor.AddChild(root_<treeLevel>, <label>.Tree);
+<else> <! rewrite mode !>
+if (_first_<treeLevel> == null) _first_<treeLevel> = <label>.Tree;
+<endif>
++<else>
++<super.ruleRef(...)>
++<endif>
+>>
+
+/** x+=rule auto construct */
+ruleRefAndListLabel(rule,label,elementIndex,args,scope) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+<ruleRef(...)>
+<listLabelElem(elem={<label>.Tree},...)>
++<else>
++<super.ruleRefAndListLabel(...)>
++<endif>
+>>
+
+/** ^(rule ...) auto construct */
+ruleRefRuleRoot(rule,label,elementIndex,args,scope) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.ruleRef(...)>
+<if(!rewriteMode)>
+<if(backtracking)>if (<actions.(actionScope).synpredgate>) <endif>root_<treeLevel> = (<ASTLabelType>)adaptor.BecomeRoot(<label>.Tree, root_<treeLevel>);
+<endif>
++<else>
++<super.ruleRefRuleRoot(...)>
++<endif>
+>>
+
+/** ^(x+=rule ...) auto construct */
+ruleRefRuleRootAndListLabel(rule,label,elementIndex,args,scope) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+<ruleRefRuleRoot(...)>
+<listLabelElem(elem={<label>.Tree},...)>
++<else>
++<super.ruleRefRuleRootAndListLabel(...)>
++<endif>
+>>
+
+/** rule when output=AST and tracking for rewrite */
+ruleRefTrack(rule,label,elementIndex,args,scope) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.ruleRefTrack(...)>
++<else>
++<super.ruleRefTrack(...)>
++<endif>
+>>
+
+/** x+=rule when output=AST and tracking for rewrite */
+ruleRefTrackAndListLabel(rule,label,elementIndex,args,scope) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.ruleRefTrackAndListLabel(...)>
++<else>
++<super.ruleRefTrackAndListLabel(...)>
++<endif>
+>>
+
+/** ^(rule ...) rewrite */
+ruleRefRuleRootTrack(rule,label,elementIndex,args,scope) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.ruleRefRootTrack(...)>
++<else>
++<super.ruleRefRuleRootTrack(...)>
++<endif>
+>>
+
+/** ^(x+=rule ...) rewrite */
+ruleRefRuleRootTrackAndListLabel(rule,label,elementIndex,args,scope) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.ruleRefRuleRootTrackAndListLabel(...)>
++<else>
++<super.ruleRefRuleRootTrackAndListLabel(...)>
++<endif>
+>>
+
+/** Streams for token refs are tree nodes now; override to
+@@ -290,9 +370,11 @@ stream_<token>.NextNode()
+
+ruleCleanUp() ::= <<
+<super.ruleCleanUp()>
++<if(!ruleDescriptor.isSynPred)>
+<if(!rewriteMode)>
+<if(backtracking)>if (<actions.(actionScope).synpredgate>) {<endif>
+retval.Tree = (<ASTLabelType>)adaptor.RulePostProcessing(root_0);
+<if(backtracking)>}<endif>
+<endif>
++<endif>
+>>
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/CSharp2.stg b/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/CSharp2.stg
+index 2e82edd..a63c037 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/CSharp2.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/CSharp2.stg
+@@ -370,7 +370,6 @@ genericParser(grammar, name, scopes, tokens, tokenNames, rules, numRules,
+<actions.(actionScope).ctorModifier; null="public"> <grammar.recognizerName>(<inputStreamType> input, RecognizerSharedState state<grammar.delegators:{g|, <g.recognizerName> <g:delegateName()>}>)
+: base(input, state)
+{
+-	<parserCtorBody()>
+<if(grammar.directDelegates)>
+<grammar.directDelegates:
+{g|<g:delegateName()> = new <g.recognizerName>(input, state<trunc(g.delegators):{p|, <p:delegateName()>}>, this);}; separator="\n">
+@@ -381,6 +380,7 @@ genericParser(grammar, name, scopes, tokens, tokenNames, rules, numRules,
+<if(grammar.delegators)>
+<last(grammar.delegators):{g|gParent = <g:delegateName()>;}>
+<endif>
++	<parserCtorBody()>
+OnCreated();
+}
+>>
+@@ -509,13 +509,13 @@ ruleWrapperMap ::= [
+
+ruleWrapperBottomup() ::= <<
+<if(TREE_PARSER && filterMode)>
+-public override IAstRuleReturnScope Bottomup() { return bottomup(); }
++protected override <if(buildAST)>IAstRuleReturnScope<else>void<endif> Bottomup() { return bottomup(); }
+<endif>
+>>
+
+ruleWrapperTopdown() ::= <<
+<if(TREE_PARSER && filterMode)>
+-public override IAstRuleReturnScope Topdown() { return topdown(); }
++protected override <if(buildAST)>IAstRuleReturnScope<else>void<endif> Topdown() { return topdown(); }
+<endif>
+>>
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/Dbg.stg b/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/Dbg.stg
+index efad5b5..16f6de2 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/Dbg.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/Dbg.stg
+@@ -95,9 +95,9 @@ ctorForRootGrammar() ::= <<
+<actions.(actionScope).ctorModifier; null="public"> <name>( <inputStreamType> input, int port, RecognizerSharedState state )
+: base( input, state )
+{
+-	<parserCtorBody()>
+<createListenerAndHandshake()>
+<grammar.directDelegates:{g|<g:delegateName()> = new <g.recognizerName>( input, dbg, this.state, this<grammar.delegators:{g|, <g:delegateName()>}> );}; separator="\n">
++	<parserCtorBody()>
+<@finally()>
+}<\n>
+>>
+@@ -113,9 +113,9 @@ ctorForProfilingRootGrammar() ::= <<
+{
+Profiler p = (Profiler)dbg;
+p.setParser(this);
+-	<parserCtorBody()>
+<grammar.directDelegates:
+{g|<g:delegateName()> = new <g.recognizerName>( input, dbg, this.state, this<grammar.delegators:{g|, <g:delegateName()>}> );}; separator="\n">
++	<parserCtorBody()>
+<@finally()>
+}
+<\n>
+@@ -126,9 +126,9 @@ ctorForDelegateGrammar() ::= <<
+<actions.(actionScope).ctorModifier; null="public"> <name>( <inputStreamType> input, IDebugEventListener dbg, RecognizerSharedState state<grammar.delegators:{g|, <g.recognizerName> <g:delegateName()>}> )
+: base( input, dbg, state )
+{
+-	<parserCtorBody()>
+<grammar.directDelegates:
+{g|<g:delegateName()> = new <g.recognizerName>( input, this, this.state<grammar.delegators:{g|, <g:delegateName()>}> );}; separator="\n">
++	<parserCtorBody()>
+}<\n>
+>>
+
+@@ -140,8 +140,8 @@ ctorForPredefinedListener() ::= <<
+Profiler p = (Profiler)dbg;
+p.setParser(this);
+<endif>
+-	<parserCtorBody()>
+<grammar.directDelegates:{g|<g:delegateName()> = new <g.recognizerName>(input, dbg, this.state, this<grammar.delegators:{g|, <g:delegateName()>}>);}; separator="\n">
++	<parserCtorBody()>
+<@finally()>
+}<\n>
+>>
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/AST.stg b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/AST.stg
+index 0243429..5eba4ed 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/AST.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/AST.stg
+@@ -194,10 +194,8 @@ root_0 = (<ASTLabelType>)adaptor.Nil();
+<! if tree parser and rewrite=true !>
+<if(TREE_PARSER&&rewriteMode)>
+<prevRuleRootRef()>.Tree = (<ASTLabelType>)adaptor.RulePostProcessing(root_0);
+-input.ReplaceChildren(adaptor.GetParent(retval.Start),
+-                      adaptor.GetChildIndex(retval.Start),
+-                      adaptor.GetChildIndex(_last),
+-                      retval.Tree);
++if (<prevRuleRootRef()>.Tree != null)
++	input.ReplaceChildren(adaptor.GetParent(retval.Start), adaptor.GetChildIndex(retval.Start), adaptor.GetChildIndex(_last), retval.Tree);
+<endif>
+<! if parser or tree-parser && rewrite!=true, we need to set result !>
+<if(!TREE_PARSER||!rewriteMode)>
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/ASTTreeParser.stg b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/ASTTreeParser.stg
+index 3be82ed..676ba00 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/ASTTreeParser.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/ASTTreeParser.stg
+@@ -45,14 +45,17 @@
+/** Add a variable to track last element matched */
+ruleDeclarations() ::= <<
+<super.ruleDeclarations()>
++<if(!ruleDescriptor.isSynPred)>
+<ASTLabelType> _first_0 = default(<ASTLabelType>);
+-<ASTLabelType> _last = default(<ASTLabelType>);<\n>
++<ASTLabelType> _last = default(<ASTLabelType>);
++<endif>
+>>
+
+/** What to emit when there is no rewrite rule.  For auto build
+*  mode, does nothing.
+*/
+noRewrite(rewriteBlockLevel, treeLevel) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+<if(backtracking)>if (<actions.(actionScope).synpredgate>) {<endif>
+<if(rewriteMode)>
+retval.Tree = (<ASTLabelType>)_first_0;
+@@ -60,6 +63,7 @@ if (adaptor.GetParent(retval.Tree)!=null && adaptor.IsNil(adaptor.GetParent(retv
+retval.Tree = (<ASTLabelType>)adaptor.GetParent(retval.Tree);
+<endif>
+<if(backtracking)>}<endif>
++<endif>
+>>
+
+/** match ^(root children) in tree parser; override here to
+@@ -67,6 +71,7 @@ if (adaptor.GetParent(retval.Tree)!=null && adaptor.IsNil(adaptor.GetParent(retv
+*/
+tree(root, actionsAfterRoot, children, nullableChildList,
+enclosingTreeLevel, treeLevel) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+{
+<ASTLabelType> _save_last_<treeLevel> = _last;
+@@ -99,7 +104,10 @@ Match(input, TokenTypes.Up, null); <checkRuleBacktrackFailure()>
+adaptor.AddChild(root_<enclosingTreeLevel>, root_<treeLevel>);
+<endif>
+_last = _save_last_<treeLevel>;
+-}<\n>
++}
++<else>
++<super.tree(...)>
++<endif>
+>>
+
+// TOKEN AST STUFF
+@@ -108,12 +116,17 @@ _last = _save_last_<treeLevel>;
+*  setting of _last
+*/
+tokenRefBang(token,label,elementIndex,terminalOptions) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.tokenRef(...)>
++<else>
++<super.tokenRefBang(...)>
++<endif>
+>>
+
+/** ID auto construct */
+tokenRef(token,label,elementIndex,terminalOptions) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.tokenRef(...)>
+<if(!rewriteMode)>
+@@ -129,16 +142,24 @@ adaptor.AddChild(root_<treeLevel>, <label>_tree);
+<if(backtracking)>if (<actions.(actionScope).synpredgate>)<endif>
+if (_first_<treeLevel> == null) _first_<treeLevel> = <label>;
+<endif>
++<else>
++<super.tokenRef(...)>
++<endif>
+>>
+
+/** label+=TOKEN auto construct */
+tokenRefAndListLabel(token,label,elementIndex,terminalOptions) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+<tokenRef(...)>
+<listLabelElem(elem=label,...)>
++<else>
++<super.tokenRefAndListLabel(...)>
++<endif>
+>>
+
+/** ^(ID ...) auto construct */
+tokenRefRuleRoot(token,label,elementIndex,terminalOptions) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.tokenRef(...)>
+<if(!rewriteMode)>
+@@ -151,16 +172,24 @@ _last = (<ASTLabelType>)input.LT(1);
+root_<treeLevel> = (<ASTLabelType>)adaptor.BecomeRoot(<label>_tree, root_<treeLevel>);
+<if(backtracking)>}<endif>
+<endif>
++<else>
++<super.tokenRefRuleRoot(...)>
++<endif>
+>>
+
+/** Match ^(label+=TOKEN ...) auto construct */
+tokenRefRuleRootAndListLabel(token,label,elementIndex,terminalOptions) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+<tokenRefRuleRoot(...)>
+<listLabelElem(elem=label,...)>
++<else>
++<super.tokenRefRuleRootAndListLabel(...)>
++<endif>
+>>
+
+/** Match . wildcard and auto dup the node/subtree */
+wildcard(token,label,elementIndex,terminalOptions) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.wildcard(...)>
+<if(!rewriteMode)>
+@@ -172,11 +201,15 @@ adaptor.AddChild(root_<treeLevel>, <label>_tree);
+<if(backtracking)>if (<actions.(actionScope).synpredgate>)<endif>
+if (_first_<treeLevel> == null) _first_<treeLevel> = <label>;
+<endif>
++<else>
++<super.wildcard(...)>
++<endif>
+>>
+
+// SET AST
+
+matchSet(s,label,terminalOptions,elementIndex,postmatchCode) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.matchSet(postmatchCode={
+<if(!rewriteMode)>
+@@ -191,19 +224,31 @@ adaptor.AddChild(root_<treeLevel>, <label>_tree);
+<endif>
+}, ...
+)>
++<else>
++<super.matchSet(...)>
++<endif>
+>>
+
+matchRuleBlockSet(s,label,terminalOptions,elementIndex,postmatchCode,treeLevel="0") ::= <<
++<if(!ruleDescriptor.isSynPred)>
+<matchSet(...)>
+<noRewrite(...)> <! set return tree !>
++<else>
++<super.matchRuleBlockSet(...)>
++<endif>
+>>
+
+matchSetBang(s,label,terminalOptions,elementIndex,postmatchCode) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.matchSet(...)>
++<else>
++<super.matchSetBang(...)>
++<endif>
+>>
+
+matchSetRuleRoot(s,label,terminalOptions,elementIndex,debug) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+<super.matchSet(postmatchCode={
+<if(!rewriteMode)>
+<if(backtracking)>if (<actions.(actionScope).synpredgate>) {<endif>
+@@ -217,12 +262,16 @@ root_<treeLevel> = (<ASTLabelType>)adaptor.BecomeRoot(<label>_tree, root_<treeLe
+<endif>
+}, ...
+)>
++<else>
++<super.matchSetRuleRoot(...)>
++<endif>
+>>
+
+// RULE REF AST
+
+/** rule auto construct */
+ruleRef(rule,label,elementIndex,args,scope) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.ruleRef(...)>
+<if(backtracking)>if (<actions.(actionScope).synpredgate>)<endif>
+@@ -231,27 +280,42 @@ adaptor.AddChild(root_<treeLevel>, <label>.Tree);
+<else> <! rewrite mode !>
+if (_first_<treeLevel> == null) _first_<treeLevel> = <label>.Tree;
+<endif>
++<else>
++<super.ruleRef(...)>
++<endif>
+>>
+
+/** x+=rule auto construct */
+ruleRefAndListLabel(rule,label,elementIndex,args,scope) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+<ruleRef(...)>
+<listLabelElem(elem={<label>.Tree},...)>
++<else>
++<super.ruleRefAndListLabel(...)>
++<endif>
+>>
+
+/** ^(rule ...) auto construct */
+ruleRefRuleRoot(rule,label,elementIndex,args,scope) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.ruleRef(...)>
+<if(!rewriteMode)>
+<if(backtracking)>if (<actions.(actionScope).synpredgate>) <endif>root_<treeLevel> = (<ASTLabelType>)adaptor.BecomeRoot(<label>.Tree, root_<treeLevel>);
+<endif>
++<else>
++<super.ruleRefRuleRoot(...)>
++<endif>
+>>
+
+/** ^(x+=rule ...) auto construct */
+ruleRefRuleRootAndListLabel(rule,label,elementIndex,args,scope) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+<ruleRefRuleRoot(...)>
+<listLabelElem(elem={<label>.Tree},...)>
++<else>
++<super.ruleRefRuleRootAndListLabel(...)>
++<endif>
+>>
+
+/** rule when output=AST and tracking for rewrite */
+@@ -262,20 +326,32 @@ _last = (<ASTLabelType>)input.LT(1);
+
+/** x+=rule when output=AST and tracking for rewrite */
+ruleRefTrackAndListLabel(rule,label,elementIndex,args,scope) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.ruleRefTrackAndListLabel(...)>
++<else>
++<super.ruleRefTrackAndListLabel(...)>
++<endif>
+>>
+
+/** ^(rule ...) rewrite */
+ruleRefRuleRootTrack(rule,label,elementIndex,args,scope) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.ruleRefRootTrack(...)>
++<else>
++<super.ruleRefRuleRootTrack(...)>
++<endif>
+>>
+
+/** ^(x+=rule ...) rewrite */
+ruleRefRuleRootTrackAndListLabel(rule,label,elementIndex,args,scope) ::= <<
++<if(!ruleDescriptor.isSynPred)>
+_last = (<ASTLabelType>)input.LT(1);
+<super.ruleRefRuleRootTrackAndListLabel(...)>
++<else>
++<super.ruleRefRuleRootTrackAndListLabel(...)>
++<endif>
+>>
+
+/** Streams for token refs are tree nodes now; override to
+@@ -291,9 +367,11 @@ stream_<token>.NextNode()
+
+ruleCleanUp() ::= <<
+<super.ruleCleanUp()>
++<if(!ruleDescriptor.isSynPred)>
+<if(!rewriteMode)>
+<if(backtracking)>if (<actions.(actionScope).synpredgate>) {<endif>
+retval.Tree = (<ASTLabelType>)adaptor.RulePostProcessing(root_0);
+<if(backtracking)>}<endif>
+<endif>
++<endif>
+>>
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg
+index 63f5e22..64251c8 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg
+@@ -352,7 +352,6 @@ genericParser(grammar, name, scopes, tokens, tokenNames, rules, numRules,
+<actions.(actionScope).ctorModifier; null="public"> <grammar.recognizerName>(<inputStreamType> input, RecognizerSharedState state<grammar.delegators:{g|, <g.recognizerName> <g:delegateName()>}>)
+: base(input, state)
+{
+-	<parserCtorBody()>
+<if(grammar.directDelegates)>
+<grammar.directDelegates:
+{g|<g:delegateName()> = new <g.recognizerName>(input, state<trunc(g.delegators):{p|, <p:delegateName()>}>, this);}; separator="\n">
+@@ -363,6 +362,7 @@ genericParser(grammar, name, scopes, tokens, tokenNames, rules, numRules,
+<if(grammar.delegators)>
+<last(grammar.delegators):{g|gParent = <g:delegateName()>;}>
+<endif>
++	<parserCtorBody()>
+OnCreated();
+}
+>>
+@@ -490,13 +490,13 @@ ruleWrapperMap ::= [
+
+ruleWrapperBottomup() ::= <<
+<if(TREE_PARSER && filterMode)>
+-public override IAstRuleReturnScope Bottomup() { return bottomup(); }
++protected override <if(buildAST)>IAstRuleReturnScope<else>void<endif> Bottomup() { <if(buildAST)>return <endif>bottomup(); }
+<endif>
+>>
+
+ruleWrapperTopdown() ::= <<
+<if(TREE_PARSER && filterMode)>
+-public override IAstRuleReturnScope Topdown() { return topdown(); }
++protected override <if(buildAST)>IAstRuleReturnScope<else>void<endif> Topdown() { <if(buildAST)>return <endif>topdown(); }
+<endif>
+>>
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/Dbg.stg b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/Dbg.stg
+index 3841a8f..c16a848 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/Dbg.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/Dbg.stg
+@@ -94,9 +94,9 @@ ctorForRootGrammar() ::= <<
+<actions.(actionScope).ctorModifier; null="public"> <name>( <inputStreamType> input, int port, RecognizerSharedState state )
+: base( input, state )
+{
+-	<parserCtorBody()>
+<createListenerAndHandshake()>
+<grammar.directDelegates:{g|<g:delegateName()> = new <g.recognizerName>( input, dbg, this.state, this<grammar.delegators:{g|, <g:delegateName()>}> );}; separator="\n">
++	<parserCtorBody()>
+<@finally()>
+}<\n>
+>>
+@@ -112,9 +112,9 @@ ctorForProfilingRootGrammar() ::= <<
+{
+Profiler p = (Profiler)dbg;
+p.setParser(this);
+-	<parserCtorBody()>
+<grammar.directDelegates:
+{g|<g:delegateName()> = new <g.recognizerName>( input, dbg, this.state, this<grammar.delegators:{g|, <g:delegateName()>}> );}; separator="\n">
++	<parserCtorBody()>
+<@finally()>
+}
+<\n>
+@@ -125,9 +125,9 @@ ctorForDelegateGrammar() ::= <<
+<actions.(actionScope).ctorModifier; null="public"> <name>( <inputStreamType> input, IDebugEventListener dbg, RecognizerSharedState state<grammar.delegators:{g|, <g.recognizerName> <g:delegateName()>}> )
+: base( input, dbg, state )
+{
+-	<parserCtorBody()>
+<grammar.directDelegates:
+{g|<g:delegateName()> = new <g.recognizerName>( input, this, this.state<grammar.delegators:{g|, <g:delegateName()>}> );}; separator="\n">
++	<parserCtorBody()>
+}<\n>
+>>
+
+@@ -139,8 +139,8 @@ ctorForPredefinedListener() ::= <<
+Profiler p = (Profiler)dbg;
+p.setParser(this);
+<endif>
+-	<parserCtorBody()>
+<grammar.directDelegates:{g|<g:delegateName()> = new <g.recognizerName>(input, dbg, this.state, this<grammar.delegators:{g|, <g:delegateName()>}>);}; separator="\n">
++	<parserCtorBody()>
+<@finally()>
+}<\n>
+>>
+

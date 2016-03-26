@@ -1,0 +1,257 @@
+commit b9fe175ed9029739b70eff281232db4c791906ee
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Dec 14 01:06:40 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Dec 14 01:06:40 2009 -0800
+
+C# Port:
+* Merge 6396-6398
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6503]
+
+diff --git a/STViz/Window1.xaml b/STViz/Window1.xaml
+index e8e2d2d..089ece2 100644
+--- a/STViz/Window1.xaml
++++ b/STViz/Window1.xaml
+@@ -27,19 +27,28 @@
+</MenuItem>
+</Menu>
+<Grid Name="grid1">
+-            <RichTextBox Height="159" Margin="0,0,6,6" Name="txtTemplate" VerticalAlignment="Bottom" IsReadOnly="True" HorizontalAlignment="Right" Width="201" VerticalScrollBarVisibility="Auto" DataContextChanged="OnTextTemplateDataContextChanged">
+-                <RichTextBox.DataContext>
+-                    <Binding ElementName="templatesTree" Path="SelectedItem" Mode="OneWay" />
+-                    <!--<Binding ElementName="templatesTree" Path="SelectedValue" />-->
+-                </RichTextBox.DataContext>
+-                <!--<RichTextBox.>
++            <RichTextBox Margin="204,6,6,171" Name="txtOutput" IsReadOnly="True" Height="285" Width="359" />
++            <ListBox Margin="6,0,0,6" Name="lstAttributes" DataContext="{Binding ElementName=templatesTree, Path=SelectedItem, Mode=OneWay}" ItemsSource="{Binding Path=Template.Attributes}" ItemTemplate="{StaticResource AttributeListItemTemplate}" Height="217" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="192" />
++            <TreeView Margin="6,6,0,229" Name="templatesTree" ItemsSource="{Binding}" ItemTemplate="{StaticResource TemplateEventsItemTemplate}" HorizontalAlignment="Left" Width="192" SelectedItemChanged="OnTemplatesTreeSelectedItemChanged" />
++            <TabControl Height="159" Margin="204,0,6,6" Name="tabControl1" VerticalAlignment="Bottom">
++                <TabItem Header="template" Name="tabItem1">
++                        <RichTextBox Name="txtTemplate" IsReadOnly="True" VerticalScrollBarVisibility="Auto" DataContextChanged="OnTextTemplateDataContextChanged">
++                            <RichTextBox.DataContext>
++                                <Binding ElementName="templatesTree" Path="SelectedItem" Mode="OneWay" />
++                                <!--<Binding ElementName="templatesTree" Path="SelectedValue" />-->
++                            </RichTextBox.DataContext>
++                            <!--<RichTextBox.>
+<Binding Path="CompiledTemplate.Template" Mode="OneWay"/>
+</RichTextBox.Text>-->
+-            </RichTextBox>
+-            <RichTextBox Margin="164,6,6,171" Name="txtOutput" IsReadOnly="True" />
+-            <ListBox Margin="6,0,0,6" Name="lstStack" DataContext="{Binding ElementName=templatesTree, Path=SelectedItem, Mode=OneWay}" ItemsSource="{Binding Path=Template.EnclosingInstanceStack}" ItemTemplate="{StaticResource TemplateStackListItemTemplate}" HorizontalAlignment="Left" Width="152" Height="217" VerticalAlignment="Bottom" />
+-            <ListBox Margin="164,0,213,6" Name="lstAttributes" DataContext="{Binding ElementName=templatesTree, Path=SelectedItem, Mode=OneWay}" ItemsSource="{Binding Path=Template.Attributes}" ItemTemplate="{StaticResource AttributeListItemTemplate}" Height="159" VerticalAlignment="Bottom" />
+-            <TreeView Margin="6,6,0,229" Name="templatesTree" ItemsSource="{Binding}" ItemTemplate="{StaticResource TemplateEventsItemTemplate}" HorizontalAlignment="Left" Width="152" SelectedItemChanged="OnTemplatesTreeSelectedItemChanged" />
++                        </RichTextBox>
++                </TabItem>
++                <TabItem Header="stack trace" >
++                    <ListBox Name="lstStack" DataContext="{Binding ElementName=templatesTree, Path=SelectedItem, Mode=OneWay}" ItemsSource="{Binding Path=Template.EnclosingInstanceStack}" ItemTemplate="{StaticResource TemplateStackListItemTemplate}" />
++                </TabItem>
++                <TabItem Header="bytecode">
++                    <TextBox DataContext="{Binding ElementName=templatesTree, Path=SelectedItem, Mode=OneWay}" Text="{Binding Mode=OneWay, Path=Template.CompiledTemplate.Disassembly}" IsReadOnly="True" VerticalScrollBarVisibility="Auto" />
++                </TabItem>
++            </TabControl>
+</Grid>
+</DockPanel>
+</Window>
+diff --git a/StringTemplate4/BytecodeDisassembler.cs b/StringTemplate4/BytecodeDisassembler.cs
+index d67e6db..6bddbc0 100644
+--- a/StringTemplate4/BytecodeDisassembler.cs
++++ b/StringTemplate4/BytecodeDisassembler.cs
+@@ -42,7 +42,6 @@ namespace StringTemplate
+byte[] code;
+int codeSize;
+protected object[] strings;
+-        Bytecode def;
+
+public BytecodeDisassembler(byte[] code,
+int codeSize,
+@@ -102,7 +101,7 @@ namespace StringTemplate
+" at address " + ip);
+}
+string instrName = I.name;
+-            buf.Append(string.Format("%04d:\t%-14s", ip, instrName));
++            buf.Append(string.Format("{0:0000}:\t{1}", ip, instrName));
+ip++;
+if (I.n == 0)
+{
+@@ -181,11 +180,11 @@ namespace StringTemplate
+{
+string s = (string)o;
+s = Misc.ReplaceEscapes(s);
+-                    buf.Append(string.Format("%04d: \"%s\"\n", addr, s));
++                    buf.Append(string.Format("{0:0000}: \"{1}\"\n", addr, s));
+}
+else
+{
+-                    buf.Append(string.Format("%04d: %s\n", addr, o));
++                    buf.Append(string.Format("{0:0000}: {1}\n", addr, o));
+}
+addr++;
+}
+diff --git a/StringTemplate4/CompiledTemplate.cs b/StringTemplate4/CompiledTemplate.cs
+index 1d056aa..5ba91bb 100644
+--- a/StringTemplate4/CompiledTemplate.cs
++++ b/StringTemplate4/CompiledTemplate.cs
+@@ -33,7 +33,9 @@
+namespace StringTemplate
+{
+using System.Collections.Generic;
++    using System.Diagnostics;
+using Console = System.Console;
++    using StringBuilder = System.Text.StringBuilder;
+
+public class CompiledTemplate
+{
+@@ -77,6 +79,20 @@ namespace StringTemplate
+public byte[] instrs;        // byte-addressable code memory.
+public int codeSize;
+
++        [DebuggerHidden]
++        public string Disassembly
++        {
++            get
++            {
++                BytecodeDisassembler dis = new BytecodeDisassembler(instrs, codeSize, strings);
++                StringBuilder buffer = new StringBuilder();
++                buffer.AppendLine(dis.Disassemble());
++                buffer.AppendLine("Strings:");
++                buffer.AppendLine(dis.Strings());
++                return buffer.ToString();
++            }
++        }
++
+public string Template
+{
+get
+diff --git a/StringTemplate4/Debug/Event.cs b/StringTemplate4/Debug/Event.cs
+index 63d4da1..122b6ff 100644
+--- a/StringTemplate4/Debug/Event.cs
++++ b/StringTemplate4/Debug/Event.cs
+@@ -40,7 +40,43 @@ namespace StringTemplate
+
+public Event()
+{
+-            this.stack = new StackTrace();
++            this.stack = new StackTrace(true);
++        }
++
++        public string FileName
++        {
++            get
++            {
++                return TemplateEntryPoint.GetFileName();
++            }
++        }
++
++        public int Line
++        {
++            get
++            {
++                return TemplateEntryPoint.GetFileLineNumber();
++            }
++        }
++
++        public StackFrame TemplateEntryPoint
++        {
++            get
++            {
++                var frames = stack.GetFrames();
++                foreach (var frame in frames)
++                {
++                    var method = frame.GetMethod();
++
++                    if (method.Name == "Main")
++                        return frame;
++
++                    if (!method.DeclaringType.Namespace.StartsWith("StringTemplate"))
++                        return frame;
++                }
++
++                return frames[0];
++            }
+}
+}
+}
+diff --git a/StringTemplate4/StringTemplate4.csproj b/StringTemplate4/StringTemplate4.csproj
+index 04d3d78..f357509 100644
+--- a/StringTemplate4/StringTemplate4.csproj
++++ b/StringTemplate4/StringTemplate4.csproj
+@@ -52,7 +52,7 @@
+<Compile Include="CompiledTemplate.cs" />
+<Compile Include="Compiler.cs" />
+<Compile Include="DateTimeRenderer.cs" />
+-    <Compile Include="Debug\DebugTemplate.cs" />
++    <None Include="Debug\DebugTemplate.cs" />
+<Compile Include="Debug\Event.cs" />
+<Compile Include="ErrorTolerance.cs" />
+<Compile Include="FormalArgument.cs" />
+diff --git a/StringTemplate4/Template.cs b/StringTemplate4/Template.cs
+index f7fcdad..4f9e699 100644
+--- a/StringTemplate4/Template.cs
++++ b/StringTemplate4/Template.cs
+@@ -61,6 +61,12 @@ namespace StringTemplate
+// TEMPORARY! TODO move to DebugTemplate
+public IList<Interpreter.DebugEvent> events = new List<Interpreter.DebugEvent>();
+
++        /** Track add attribute "events"; used for ST user-level debugging;
++         *  Avoid polluting ST with this field when not debugging.
++         */
++        public IDictionary<string, ICollection<AddAttributeEvent>> addEvents;
++        //public List<AddAttributeEvent> addEvents;
++
+/** Enclosing instance if I'm embedded within another template.
+*  IF-subtemplates are considered embedded as well.
+*/
+@@ -175,6 +181,21 @@ namespace StringTemplate
+if (value is Template)
+((Template)value).enclosingInstance = this;
+
++            if (true)
++            {
++                if (addEvents == null)
++                    addEvents = new Dictionary<string, ICollection<AddAttributeEvent>>();
++
++                ICollection<AddAttributeEvent> collection;
++                if (!addEvents.TryGetValue(name, out collection))
++                {
++                    collection = new List<AddAttributeEvent>();
++                    addEvents[name] = collection;
++                }
++
++                collection.Add(new AddAttributeEvent(this, name, value));
++            }
++
+object curvalue = null;
+if (attributes == null || !attributes.ContainsKey(name))
+{ // new attribute
+@@ -385,5 +406,29 @@ namespace StringTemplate
+Embedded,
+Explicit
+}
++
++        public class AddAttributeEvent : Event
++        {
++            Template self;
++            string name;
++            object value;
++
++            public AddAttributeEvent(Template self, string name, object value)
++            {
++                this.self = self;
++                this.name = name;
++                this.value = value;
++            }
++
++            public override string ToString()
++            {
++                return "addEvent{" +
++                    "self=" + self +
++                    ", name='" + name + '\'' +
++                    ", value=" + value +
++                    ", location=" + FileName + ":" + Line +
++                    '}';
++            }
++        }
+}
+}
+

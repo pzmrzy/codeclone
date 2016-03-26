@@ -1,0 +1,21 @@
+commit 7c35516ad7883c82ef06ca73a7780a8552819bf1
+Author:     Mike Lischke <mike@lischke-online.de>
+AuthorDate: Mon Sep 24 10:14:24 2012 +0200
+Commit:     Mike Lischke <mike@lischke-online.de>
+CommitDate: Mon Sep 24 10:14:24 2012 +0200
+
+Signed contributors list
+
+diff --git a/contributors.txt b/contributors.txt
+index 7aed1b1..4c38aaa 100644
+--- a/contributors.txt
++++ b/contributors.txt
+@@ -52,4 +52,5 @@ YYYY/MM/DD, github id, Full name, email
+2012/08/08, Zannick, Benjamin S Wolf, jokeserver@gmail.com
+2012/09/15, martint, Martin Traverso, mtraverso@gmail.com
+2012/09/16, qmx, Douglas Campos, qmx@qmx.me
+-2012/09/17, ksgokul, Gokulakannan Somasundaram, gokul007@gmail.com
+\ No newline at end of file
++2012/09/17, ksgokul, Gokulakannan Somasundaram, gokul007@gmail.com
++2012/09/24, mike-lischke, Mike Lischke, mike@lischke-online.de
+

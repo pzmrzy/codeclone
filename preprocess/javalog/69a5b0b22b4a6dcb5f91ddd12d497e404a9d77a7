@@ -1,0 +1,109 @@
+commit 69a5b0b22b4a6dcb5f91ddd12d497e404a9d77a7
+Author:     Alan Condit <acondit@ipns.com>
+AuthorDate: Thu Apr 19 15:43:45 2012 -0700
+Commit:     Alan Condit <acondit@ipns.com>
+CommitDate: Thu Apr 19 15:43:45 2012 -0700
+
+Fixed Hashing to allow passing in HashableUser in testing.
+
+diff --git a/runtime/ObjC/Framework/HashMap.h b/runtime/ObjC/Framework/HashMap.h
+index f4a3778..b8e64bd 100644
+--- a/runtime/ObjC/Framework/HashMap.h
++++ b/runtime/ObjC/Framework/HashMap.h
+@@ -132,7 +132,7 @@
+- (BOOL) contains:(id)o;
+- (BOOL) remove:(id)o;
+- (void) clear;
+-- (NSArray *)toArray;
++- (AMutableArray *)toArray;
+@end
+
+@interface Values : PtrBuffer
+@@ -151,7 +151,7 @@
+- (NSUInteger) count;
+- (BOOL) contains:(id)o;
+- (void) clear;
+-- (NSArray *)toArray;
++- (AMutableArray *)toArray;
+@end
+
+@interface HMEntrySet : NSSet
+diff --git a/runtime/ObjC/Framework/HashMap.m b/runtime/ObjC/Framework/HashMap.m
+index 1f1fa7c..11583d8 100644
+--- a/runtime/ObjC/Framework/HashMap.m
++++ b/runtime/ObjC/Framework/HashMap.m
+@@ -91,7 +91,7 @@ static NSInteger itIndex;
+
+- (NSInteger) hashCode
+{
+-    return (key == nil ? 0 : [key hashCode]) ^ (value == nil ? 0 : [value hash]);
++    return (key == nil ? 0 : [key hash]) ^ (value == nil ? 0 : [value hash]);
+}
+
+- (NSString *) description
+@@ -311,7 +311,7 @@ static NSInteger itIndex;
+[hm clear];
+}
+
+-- (NSArray *)toArray
++- (AMutableArray *)toArray
+{
+return anArray;
+}
+@@ -362,7 +362,7 @@ static NSInteger itIndex;
+[hm clear];
+}
+
+-- (NSArray *)toArray
++- (AMutableArray *)toArray
+{
+return anArray;
+}
+@@ -709,6 +709,7 @@ float const DEFAULT_LOAD_FACTOR = 0.75f;
+
+- (NSUInteger)count
+{
++/*
+NSUInteger aCnt = 0;
+
+for (NSUInteger i = 0; i < Capacity; i++) {
+@@ -717,6 +718,8 @@ float const DEFAULT_LOAD_FACTOR = 0.75f;
+}
+}
+return aCnt;
++ */
++    return count;
+}
+
+- (NSInteger) size
+@@ -1127,7 +1130,8 @@ float const DEFAULT_LOAD_FACTOR = 0.75f;
+{
+if (key == nil)
+return [self getForNullKey];
+-    NSInteger hash = [self hashInt:[self hash:key]];
++    //    NSInteger hash = [self hashInt:[self hash:key]];
++    NSInteger hash = [self hashInt:[key hash]];
+
+for (HMEntry *e = (HMEntry *)ptrBuffer[[self indexFor:hash length:[self capacity]]]; e != nil; e = e.next) {
+NSString *k;
+@@ -1159,7 +1163,8 @@ float const DEFAULT_LOAD_FACTOR = 0.75f;
+*/
+- (HMEntry *) getEntry:(NSString *)key
+{
+-    NSInteger hash = (key == nil) ? 0 : [self hashInt:[self hash:key]];
++    //    NSInteger hash = (key == nil) ? 0 : [self hashInt:[self hash:key]];
++    NSInteger hash = (key == nil) ? 0 : [self hashInt:[key hash]];
+
+for (HMEntry *e = (HMEntry *)ptrBuffer[[self indexFor:hash length:Capacity]]; e != nil; e = e.next) {
+NSString *k;
+@@ -1187,7 +1192,8 @@ float const DEFAULT_LOAD_FACTOR = 0.75f;
+{
+if (key == nil)
+return [self putForNullKey:value];
+-    NSInteger hash = [self hashInt:[self hash:key]];
++//    NSInteger hash = [self hashInt:[self hash:key]];
++    NSInteger hash = [self hashInt:[key hash]];
+NSInteger i = [self indexFor:hash length:[self capacity]];
+
+for (HMEntry *e = (HMEntry *)ptrBuffer[i]; e != nil; e = e.next) {
+

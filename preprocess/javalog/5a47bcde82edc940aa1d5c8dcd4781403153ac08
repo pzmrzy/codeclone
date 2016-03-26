@@ -1,0 +1,9 @@
+commit 5a47bcde82edc940aa1d5c8dcd4781403153ac08
+Merge: 380d773 f7d15a7
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Fri Nov 30 12:12:14 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Fri Nov 30 12:12:23 2012 -0600
+
+Merge branch 'maven-updates' into master
+

@@ -1,0 +1,3919 @@
+commit 9f1a56c8e4adc30612c12de1300c365e775ec3d8
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Thu Mar 19 14:43:45 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Thu Mar 19 14:43:45 2009 -0800
+
+C# Port:
+* Begin work on compiled expressions in StringTemplate's ActionEvaluator. A quite complete implementation using System.Func<T> is included that passes all unit tests (except ones that also failed before this code), and a quite incomplete implementation using DynamicMethod is included. Profiling shows that formal arguments *need* to be fully resolved before the functors are assembled. Code is excluded from the build via the preprocessor for now.
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 5952]
+
+diff --git a/Antlr3.StringTemplate/Language/ASTExpr.cs b/Antlr3.StringTemplate/Language/ASTExpr.cs
+index 66d4b9b..cc06eb7 100644
+--- a/Antlr3.StringTemplate/Language/ASTExpr.cs
++++ b/Antlr3.StringTemplate/Language/ASTExpr.cs
+@@ -50,6 +50,11 @@ namespace Antlr3.ST.Language
+using MethodInfo = System.Reflection.MethodInfo;
+using RecognitionException = Antlr.Runtime.RecognitionException;
+using StringWriter = System.IO.StringWriter;
++#if COMPILE_EXPRESSIONS
++    using DynamicMethod = System.Reflection.Emit.DynamicMethod;
++    using OpCodes = System.Reflection.Emit.OpCodes;
++    using ParameterAttributes = System.Reflection.ParameterAttributes;
++#endif
+
+/** <summary>
+*  A single string template expression enclosed in $...; separator=...$
+@@ -131,8 +136,24 @@ namespace Antlr3.ST.Language
+/** <summary>A cached value of option format=expr</summary> */
+string _formatString;
+
+-        public ASTExpr( StringTemplate enclosingTemplate, ITree exprTree, IDictionary<string, object> options ) :
+-            base( enclosingTemplate )
++#if COMPILE_EXPRESSIONS
++        public class HoldsActionFuncAndChunk
++        {
++            public System.Func<ASTExpr, StringTemplate, IStringTemplateWriter, int> func;
++            public ASTExpr chunk;
++        }
++        public static bool EnableDynamicMethods = true;
++        public static bool UseFunctionalMethods = true;
++        static int _evaluatorNumber = 0;
++#if CACHE_FUNCTORS
++        static Dictionary<ITree, DynamicMethod> _methods = new Dictionary<ITree, DynamicMethod>();
++#endif
++
++        System.Func<StringTemplate, IStringTemplateWriter, int> EvaluateAction;
++#endif
++
++        public ASTExpr( StringTemplate enclosingTemplate, ITree exprTree, IDictionary<string, object> options )
++            : base( enclosingTemplate )
+{
+this._exprTree = exprTree;
+this._options = options;
+@@ -149,6 +170,69 @@ namespace Antlr3.ST.Language
+}
+#endregion
+
++#if COMPILE_EXPRESSIONS
++        public static int CallFunctionalActionEvaluator( HoldsActionFuncAndChunk data, StringTemplate self, IStringTemplateWriter writer )
++        {
++            return data.func( data.chunk, self, writer );
++        }
++        static System.Func<StringTemplate, IStringTemplateWriter, int> GetEvaluator( ASTExpr chunk, ITree condition )
++        {
++            if ( EnableDynamicMethods )
++            {
++                try
++                {
++                    if ( UseFunctionalMethods )
++                    {
++                        ActionEvaluator evalFunctional = new ActionEvaluator( null, chunk, null, condition );
++                        var functionalEvaluator = evalFunctional.actionFunctional();
++                        HoldsActionFuncAndChunk holder = new HoldsActionFuncAndChunk()
++                        {
++                            func = functionalEvaluator,
++                            chunk = chunk
++                        };
++                        return (System.Func<StringTemplate, IStringTemplateWriter, int>)System.Delegate.CreateDelegate( typeof( System.Func<StringTemplate, IStringTemplateWriter, int> ), holder, typeof( ASTExpr ).GetMethod( "CallFunctionalActionEvaluator" ) );
++                    }
++                    else
++                    {
++                        DynamicMethod method = null;
++#if CACHE_FUNCTORS
++                        if ( !_methods.TryGetValue( condition, out method ) )
++#endif
++                        {
++                            Type[] parameterTypes = { typeof( ASTExpr ), typeof( StringTemplate ), typeof( IStringTemplateWriter ) };
++                            method = new DynamicMethod( "ActionEvaluator" + _evaluatorNumber, typeof( int ), parameterTypes, typeof( ConditionalExpr ), true );
++                            method.DefineParameter( 1, ParameterAttributes.None, "chunk" );
++                            method.DefineParameter( 2, ParameterAttributes.None, "self" );
++                            method.DefineParameter( 3, ParameterAttributes.None, "writer" );
++                            _evaluatorNumber++;
++
++                            var gen = method.GetILGenerator();
++                            ActionEvaluator evalCompiled = new ActionEvaluator( null, chunk, null, condition );
++                            evalCompiled.actionCompiled( gen );
++                            gen.Emit( OpCodes.Ret );
++#if CACHE_FUNCTORS
++                            _methods[condition] = method;
++#endif
++                        }
++
++                        var dynamicEvaluator = (System.Func<StringTemplate, IStringTemplateWriter, int>)method.CreateDelegate( typeof( System.Func<StringTemplate, IStringTemplateWriter, int> ), chunk );
++                        return dynamicEvaluator;
++                    }
++                }
++                catch
++                {
++                    // fall back to interpreted version
++                }
++            }
++
++            return ( self, writer ) =>
++                {
++                    ActionEvaluator eval = new ActionEvaluator( self, chunk, writer, condition );
++                    return eval.action();
++                };
++        }
++#endif
++
+/** <summary>
+*  To write out the value of an ASTExpr, invoke the evaluator in eval.g
+*  to walk the tree writing out the values.  For efficiency, don't
+@@ -178,13 +262,22 @@ namespace Antlr3.ST.Language
+@out.PushIndentation( Indentation );
+HandleExprOptions( self );
+//System.out.println("evaluating tree: "+exprTree.toStringList());
++#if COMPILE_EXPRESSIONS
++            if ( EvaluateAction == null )
++                EvaluateAction = GetEvaluator( this, AST );
++#else
+ActionEvaluator eval =
+new ActionEvaluator( self, this, @out, _exprTree );
++#endif
+int n = 0;
+try
+{
++                // eval and write out tree
++#if COMPILE_EXPRESSIONS
++                n = EvaluateAction( self, @out );
++#else
+n = eval.action();
+-                //n = eval.action( exprTree ); // eval and write out tree
++#endif
+}
+catch ( RecognitionException re )
+{
+@@ -451,7 +544,7 @@ namespace Antlr3.ST.Language
+// "it" as a convenience like they said
+// $list:template(arg=it)$
+var argNames = formalArgs.Select( fa => fa.name );
+-                    soleArgName = (string)argNames.ToArray()[0];
++                    soleArgName = argNames.ToArray()[0];
+argumentContext[soleArgName] = ithValue;
+}
+}
+@@ -956,6 +1049,10 @@ namespace Antlr3.ST.Language
+return n;
+}
+
++#if COMPILE_EXPRESSIONS && CACHE_FUNCTORS
++        Dictionary<object, System.Func<StringTemplate, IStringTemplateWriter, int>> _evaluators = new Dictionary<object,Func<StringTemplate,IStringTemplateWriter,int>>();
++#endif
++
+/** <summary>
+*  A expr is normally just a string literal, but is still an AST that
+*  we must evaluate.  The expr can be any expression such as a template
+@@ -973,17 +1070,35 @@ namespace Antlr3.ST.Language
+}
+if ( expr is StringTemplateAST )
+{
++#if COMPILE_EXPRESSIONS
++                System.Func<StringTemplate, IStringTemplateWriter, int> value;
++#if CACHE_FUNCTORS
++                if ( !_evaluators.TryGetValue( expr, out value ) )
++#endif
++                {
++                    StringTemplateAST exprAST = (StringTemplateAST)expr;
++                    value = GetEvaluator( this, exprAST );
++#if CACHE_FUNCTORS
++                    _evaluators[expr] = value;
++#endif
++                }
++#else
+StringTemplateAST exprAST = (StringTemplateAST)expr;
++#endif
+// must evaluate, writing to a string so we can hang on to it
+StringWriter buf = new StringWriter();
+IStringTemplateWriter sw =
+self.Group.GetStringTemplateWriter( buf );
+{
+-                    ActionEvaluator eval =
+-                            new ActionEvaluator( self, this, sw, exprAST );
+try
+{
+-                        eval.action(); // eval tree
++#if COMPILE_EXPRESSIONS
++                        value( self, sw );
++#else
++                        ActionEvaluator eval = new ActionEvaluator( self, this, sw, exprAST );
++                        // eval tree
++                        eval.action();
++#endif
+}
+catch ( RecognitionException re )
+{
+diff --git a/Antlr3.StringTemplate/Language/ActionEvaluator.cs b/Antlr3.StringTemplate/Language/ActionEvaluator.cs
+index 6612921..f629e4b 100644
+--- a/Antlr3.StringTemplate/Language/ActionEvaluator.cs
++++ b/Antlr3.StringTemplate/Language/ActionEvaluator.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Language\\ActionEvaluator.g3 2009-03-18 18:21:39
++// $ANTLR 3.1.2 Language\\ActionEvaluator.g3 2009-03-19 17:26:07
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -1628,6 +1628,2484 @@ public partial class ActionEvaluator : TreeParser
+return ;
+}
+// $ANTLR end "argumentAssignment"
++
++
++	// $ANTLR start "actionCompiled"
++	// Language\\ActionEvaluator.g3:375:0: public actionCompiled[System.Reflection.Emit.ILGenerator gen] : exprCompiled[$gen] ;
++	public void actionCompiled( System.Reflection.Emit.ILGenerator gen )
++	{
++		try
++		{
++			// Language\\ActionEvaluator.g3:376:4: ( exprCompiled[$gen] )
++			// Language\\ActionEvaluator.g3:376:4: exprCompiled[$gen]
++			{
++			PushFollow(Follow._exprCompiled_in_actionCompiled893);
++			exprCompiled(gen);
++
++			state._fsp--;
++
++
++			#if COMPILE_EXPRESSIONS
++						EmitWriteAttribute(gen);
++			#endif
++
++
++			}
++
++		}
++		catch ( RecognitionException re )
++		{
++			ReportError(re);
++			Recover(input,re);
++		}
++		finally
++		{
++		}
++		return ;
++	}
++	// $ANTLR end "actionCompiled"
++
++
++	// $ANTLR start "actionFunctional"
++	// Language\\ActionEvaluator.g3:385:0: public actionFunctional returns [System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,int> func] : exprFunctional ;
++	public System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,int> actionFunctional(  )
++	{
++
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,int> func = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,int>);
++
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> exprFunctional12 = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>);
++
++		try
++		{
++			// Language\\ActionEvaluator.g3:386:4: ( exprFunctional )
++			// Language\\ActionEvaluator.g3:386:4: exprFunctional
++			{
++			PushFollow(Follow._exprFunctional_in_actionFunctional915);
++			exprFunctional12=exprFunctional();
++
++			state._fsp--;
++
++
++			#if COMPILE_EXPRESSIONS
++						func = (chunk,self,writer) => chunk.WriteAttribute(self,exprFunctional12(chunk,self,writer),writer);
++			#endif
++
++
++			}
++
++		}
++		catch ( RecognitionException re )
++		{
++			ReportError(re);
++			Recover(input,re);
++		}
++		finally
++		{
++		}
++		return func;
++	}
++	// $ANTLR end "actionFunctional"
++
++
++	// $ANTLR start "ifConditionCompiled"
++	// Language\\ActionEvaluator.g3:395:0: public ifConditionCompiled[System.Reflection.Emit.ILGenerator gen] : ( ifAtomCompiled[$gen] | ^( NOT ifAtomCompiled[$gen] ) );
++	public void ifConditionCompiled( System.Reflection.Emit.ILGenerator gen )
++	{
++		try
++		{
++			// Language\\ActionEvaluator.g3:396:4: ( ifAtomCompiled[$gen] | ^( NOT ifAtomCompiled[$gen] ) )
++			int alt15=2;
++			int LA15_0 = input.LA(1);
++
++			if ( ((LA15_0>=ANONYMOUS_TEMPLATE && LA15_0<=APPLY)||LA15_0==DOT||(LA15_0>=FUNCTION && LA15_0<=INT)||LA15_0==LIST||LA15_0==MULTI_APPLY||LA15_0==PLUS||LA15_0==STRING||LA15_0==VALUE) )
++			{
++				alt15=1;
++			}
++			else if ( (LA15_0==NOT) )
++			{
++				alt15=2;
++			}
++			else
++			{
++				NoViableAltException nvae = new NoViableAltException("", 15, 0, input);
++
++				throw nvae;
++			}
++			switch ( alt15 )
++			{
++			case 1:
++				// Language\\ActionEvaluator.g3:396:4: ifAtomCompiled[$gen]
++				{
++				PushFollow(Follow._ifAtomCompiled_in_ifConditionCompiled933);
++				ifAtomCompiled(gen);
++
++				state._fsp--;
++
++
++				}
++				break;
++			case 2:
++				// Language\\ActionEvaluator.g3:397:4: ^( NOT ifAtomCompiled[$gen] )
++				{
++				Match(input,NOT,Follow._NOT_in_ifConditionCompiled940);
++
++				Match(input, TokenConstants.DOWN, null);
++				PushFollow(Follow._ifAtomCompiled_in_ifConditionCompiled942);
++				ifAtomCompiled(gen);
++
++				state._fsp--;
++
++
++				Match(input, TokenConstants.UP, null);
++
++				#if COMPILE_EXPRESSIONS
++							EmitNot(gen);
++				#endif
++
++
++				}
++				break;
++
++			}
++		}
++		catch ( RecognitionException re )
++		{
++			ReportError(re);
++			Recover(input,re);
++		}
++		finally
++		{
++		}
++		return ;
++	}
++	// $ANTLR end "ifConditionCompiled"
++
++
++	// $ANTLR start "ifConditionFunctional"
++	// Language\\ActionEvaluator.g3:406:0: public ifConditionFunctional returns [System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,bool> func] : ( ifAtomFunctional | ^( NOT ifAtomFunctional ) );
++	public System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,bool> ifConditionFunctional(  )
++	{
++
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,bool> func = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,bool>);
++
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,bool> ifAtomFunctional13 = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,bool>);
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,bool> ifAtomFunctional14 = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,bool>);
++
++		try
++		{
++			// Language\\ActionEvaluator.g3:407:4: ( ifAtomFunctional | ^( NOT ifAtomFunctional ) )
++			int alt16=2;
++			int LA16_0 = input.LA(1);
++
++			if ( ((LA16_0>=ANONYMOUS_TEMPLATE && LA16_0<=APPLY)||LA16_0==DOT||(LA16_0>=FUNCTION && LA16_0<=INT)||LA16_0==LIST||LA16_0==MULTI_APPLY||LA16_0==PLUS||LA16_0==STRING||LA16_0==VALUE) )
++			{
++				alt16=1;
++			}
++			else if ( (LA16_0==NOT) )
++			{
++				alt16=2;
++			}
++			else
++			{
++				NoViableAltException nvae = new NoViableAltException("", 16, 0, input);
++
++				throw nvae;
++			}
++			switch ( alt16 )
++			{
++			case 1:
++				// Language\\ActionEvaluator.g3:407:4: ifAtomFunctional
++				{
++				PushFollow(Follow._ifAtomFunctional_in_ifConditionFunctional965);
++				ifAtomFunctional13=ifAtomFunctional();
++
++				state._fsp--;
++
++
++				#if COMPILE_EXPRESSIONS
++							func = ifAtomFunctional13;
++				#endif
++
++
++				}
++				break;
++			case 2:
++				// Language\\ActionEvaluator.g3:413:4: ^( NOT ifAtomFunctional )
++				{
++				Match(input,NOT,Follow._NOT_in_ifConditionFunctional975);
++
++				Match(input, TokenConstants.DOWN, null);
++				PushFollow(Follow._ifAtomFunctional_in_ifConditionFunctional977);
++				ifAtomFunctional14=ifAtomFunctional();
++
++				state._fsp--;
++
++
++				Match(input, TokenConstants.UP, null);
++
++				#if COMPILE_EXPRESSIONS
++							func = (chunk,self,writer) => !(ifAtomFunctional14(chunk,self,writer));
++				#endif
++
++
++				}
++				break;
++
++			}
++		}
++		catch ( RecognitionException re )
++		{
++			ReportError(re);
++			Recover(input,re);
++		}
++		finally
++		{
++		}
++		return func;
++	}
++	// $ANTLR end "ifConditionFunctional"
++
++
++	// $ANTLR start "ifAtomCompiled"
++	// Language\\ActionEvaluator.g3:421:0: ifAtomCompiled[System.Reflection.Emit.ILGenerator gen] : exprCompiled[$gen] ;
++	private void ifAtomCompiled( System.Reflection.Emit.ILGenerator gen )
++	{
++		try
++		{
++			// Language\\ActionEvaluator.g3:422:4: ( exprCompiled[$gen] )
++			// Language\\ActionEvaluator.g3:422:4: exprCompiled[$gen]
++			{
++			PushFollow(Follow._exprCompiled_in_ifAtomCompiled994);
++			exprCompiled(gen);
++
++			state._fsp--;
++
++
++			#if COMPILE_EXPRESSIONS
++						EmitTest(gen);
++			#endif
++
++
++			}
++
++		}
++		catch ( RecognitionException re )
++		{
++			ReportError(re);
++			Recover(input,re);
++		}
++		finally
++		{
++		}
++		return ;
++	}
++	// $ANTLR end "ifAtomCompiled"
++
++
++	// $ANTLR start "ifAtomFunctional"
++	// Language\\ActionEvaluator.g3:430:0: ifAtomFunctional returns [System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,bool> func] : exprFunctional ;
++	private System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,bool> ifAtomFunctional(  )
++	{
++
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,bool> func = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,bool>);
++
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> exprFunctional15 = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>);
++
++		try
++		{
++			// Language\\ActionEvaluator.g3:431:4: ( exprFunctional )
++			// Language\\ActionEvaluator.g3:431:4: exprFunctional
++			{
++			PushFollow(Follow._exprFunctional_in_ifAtomFunctional1014);
++			exprFunctional15=exprFunctional();
++
++			state._fsp--;
++
++
++			#if COMPILE_EXPRESSIONS
++						func = (chunk,self,writer) => chunk.TestAttributeTrue(exprFunctional15(chunk,self,writer));
++			#endif
++
++
++			}
++
++		}
++		catch ( RecognitionException re )
++		{
++			ReportError(re);
++			Recover(input,re);
++		}
++		finally
++		{
++		}
++		return func;
++	}
++	// $ANTLR end "ifAtomFunctional"
++
++
++	// $ANTLR start "exprCompiled"
++	// Language\\ActionEvaluator.g3:439:0: exprCompiled[System.Reflection.Emit.ILGenerator gen] : ( ^( PLUS exprCompiled[$gen] exprCompiled[$gen] ) | templateApplicationCompiled[$gen] | attributeCompiled[$gen] | templateIncludeCompiled[$gen] | functionCompiled[$gen] | listCompiled[$gen] | ^( VALUE exprCompiled[$gen] ) );
++	private void exprCompiled( System.Reflection.Emit.ILGenerator gen )
++	{
++		try
++		{
++			// Language\\ActionEvaluator.g3:440:4: ( ^( PLUS exprCompiled[$gen] exprCompiled[$gen] ) | templateApplicationCompiled[$gen] | attributeCompiled[$gen] | templateIncludeCompiled[$gen] | functionCompiled[$gen] | listCompiled[$gen] | ^( VALUE exprCompiled[$gen] ) )
++			int alt17=7;
++			switch ( input.LA(1) )
++			{
++			case PLUS:
++				{
++				alt17=1;
++				}
++				break;
++			case APPLY:
++			case MULTI_APPLY:
++				{
++				alt17=2;
++				}
++				break;
++			case ANONYMOUS_TEMPLATE:
++			case DOT:
++			case ID:
++			case INT:
++			case STRING:
++				{
++				alt17=3;
++				}
++				break;
++			case INCLUDE:
++				{
++				alt17=4;
++				}
++				break;
++			case FUNCTION:
++				{
++				alt17=5;
++				}
++				break;
++			case LIST:
++				{
++				alt17=6;
++				}
++				break;
++			case VALUE:
++				{
++				alt17=7;
++				}
++				break;
++			default:
++				{
++					NoViableAltException nvae = new NoViableAltException("", 17, 0, input);
++
++					throw nvae;
++				}
++			}
++
++			switch ( alt17 )
++			{
++			case 1:
++				// Language\\ActionEvaluator.g3:440:4: ^( PLUS exprCompiled[$gen] exprCompiled[$gen] )
++				{
++				Match(input,PLUS,Follow._PLUS_in_exprCompiled1031);
++
++				Match(input, TokenConstants.DOWN, null);
++				PushFollow(Follow._exprCompiled_in_exprCompiled1033);
++				exprCompiled(gen);
++
++				state._fsp--;
++
++				PushFollow(Follow._exprCompiled_in_exprCompiled1036);
++				exprCompiled(gen);
++
++				state._fsp--;
++
++
++				Match(input, TokenConstants.UP, null);
++
++				#if COMPILE_EXPRESSIONS
++							EmitAdd(gen);
++				#endif
++
++
++				}
++				break;
++			case 2:
++				// Language\\ActionEvaluator.g3:446:4: templateApplicationCompiled[$gen]
++				{
++				PushFollow(Follow._templateApplicationCompiled_in_exprCompiled1047);
++				templateApplicationCompiled(gen);
++
++				state._fsp--;
++
++
++				}
++				break;
++			case 3:
++				// Language\\ActionEvaluator.g3:447:4: attributeCompiled[$gen]
++				{
++				PushFollow(Follow._attributeCompiled_in_exprCompiled1053);
++				attributeCompiled(gen);
++
++				state._fsp--;
++
++
++				}
++				break;
++			case 4:
++				// Language\\ActionEvaluator.g3:448:4: templateIncludeCompiled[$gen]
++				{
++				PushFollow(Follow._templateIncludeCompiled_in_exprCompiled1059);
++				templateIncludeCompiled(gen);
++
++				state._fsp--;
++
++
++				}
++				break;
++			case 5:
++				// Language\\ActionEvaluator.g3:449:4: functionCompiled[$gen]
++				{
++				PushFollow(Follow._functionCompiled_in_exprCompiled1065);
++				functionCompiled(gen);
++
++				state._fsp--;
++
++
++				}
++				break;
++			case 6:
++				// Language\\ActionEvaluator.g3:450:4: listCompiled[$gen]
++				{
++				PushFollow(Follow._listCompiled_in_exprCompiled1071);
++				listCompiled(gen);
++
++				state._fsp--;
++
++
++				}
++				break;
++			case 7:
++				// Language\\ActionEvaluator.g3:451:4: ^( VALUE exprCompiled[$gen] )
++				{
++				Match(input,VALUE,Follow._VALUE_in_exprCompiled1078);
++
++				Match(input, TokenConstants.DOWN, null);
++				PushFollow(Follow._exprCompiled_in_exprCompiled1080);
++				exprCompiled(gen);
++
++				state._fsp--;
++
++
++				Match(input, TokenConstants.UP, null);
++
++				#if COMPILE_EXPRESSIONS
++							EmitWriteToString(gen);
++				#endif
++
++
++				}
++				break;
++
++			}
++		}
++		catch ( RecognitionException re )
++		{
++			ReportError(re);
++			Recover(input,re);
++		}
++		finally
++		{
++		}
++		return ;
++	}
++	// $ANTLR end "exprCompiled"
++
++
++	// $ANTLR start "exprFunctional"
++	// Language\\ActionEvaluator.g3:459:0: exprFunctional returns [System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> func] : ( ^( PLUS a= exprFunctional b= exprFunctional ) | templateApplicationFunctional | attributeFunctional | templateIncludeFunctional | functionFunctional | listFunctional | ^( VALUE a= exprFunctional ) );
++	private System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> exprFunctional(  )
++	{
++
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> func = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>);
++
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> a = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>);
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> b = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>);
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> templateApplicationFunctional16 = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>);
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> attributeFunctional17 = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>);
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> templateIncludeFunctional18 = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>);
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> functionFunctional19 = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>);
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> listFunctional20 = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>);
++
++		try
++		{
++			// Language\\ActionEvaluator.g3:460:4: ( ^( PLUS a= exprFunctional b= exprFunctional ) | templateApplicationFunctional | attributeFunctional | templateIncludeFunctional | functionFunctional | listFunctional | ^( VALUE a= exprFunctional ) )
++			int alt18=7;
++			switch ( input.LA(1) )
++			{
++			case PLUS:
++				{
++				alt18=1;
++				}
++				break;
++			case APPLY:
++			case MULTI_APPLY:
++				{
++				alt18=2;
++				}
++				break;
++			case ANONYMOUS_TEMPLATE:
++			case DOT:
++			case ID:
++			case INT:
++			case STRING:
++				{
++				alt18=3;
++				}
++				break;
++			case INCLUDE:
++				{
++				alt18=4;
++				}
++				break;
++			case FUNCTION:
++				{
++				alt18=5;
++				}
++				break;
++			case LIST:
++				{
++				alt18=6;
++				}
++				break;
++			case VALUE:
++				{
++				alt18=7;
++				}
++				break;
++			default:
++				{
++					NoViableAltException nvae = new NoViableAltException("", 18, 0, input);
++
++					throw nvae;
++				}
++			}
++
++			switch ( alt18 )
++			{
++			case 1:
++				// Language\\ActionEvaluator.g3:460:4: ^( PLUS a= exprFunctional b= exprFunctional )
++				{
++				Match(input,PLUS,Follow._PLUS_in_exprFunctional1102);
++
++				Match(input, TokenConstants.DOWN, null);
++				PushFollow(Follow._exprFunctional_in_exprFunctional1106);
++				a=exprFunctional();
++
++				state._fsp--;
++
++				PushFollow(Follow._exprFunctional_in_exprFunctional1110);
++				b=exprFunctional();
++
++				state._fsp--;
++
++
++				Match(input, TokenConstants.UP, null);
++
++				#if COMPILE_EXPRESSIONS
++							func = (chunk,self,writer) => chunk.Add(a(chunk,self,writer),b(chunk,self,writer));
++				#endif
++
++
++				}
++				break;
++			case 2:
++				// Language\\ActionEvaluator.g3:466:4: templateApplicationFunctional
++				{
++				PushFollow(Follow._templateApplicationFunctional_in_exprFunctional1120);
++				templateApplicationFunctional16=templateApplicationFunctional();
++
++				state._fsp--;
++
++
++				#if COMPILE_EXPRESSIONS
++							func = templateApplicationFunctional16;
++				#endif
++
++
++				}
++				break;
++			case 3:
++				// Language\\ActionEvaluator.g3:472:4: attributeFunctional
++				{
++				PushFollow(Follow._attributeFunctional_in_exprFunctional1129);
++				attributeFunctional17=attributeFunctional();
++
++				state._fsp--;
++
++
++				#if COMPILE_EXPRESSIONS
++							func = attributeFunctional17;
++				#endif
++
++
++				}
++				break;
++			case 4:
++				// Language\\ActionEvaluator.g3:478:4: templateIncludeFunctional
++				{
++				PushFollow(Follow._templateIncludeFunctional_in_exprFunctional1138);
++				templateIncludeFunctional18=templateIncludeFunctional();
++
++				state._fsp--;
++
++
++				#if COMPILE_EXPRESSIONS
++							func = templateIncludeFunctional18;
++				#endif
++
++
++				}
++				break;
++			case 5:
++				// Language\\ActionEvaluator.g3:484:4: functionFunctional
++				{
++				PushFollow(Follow._functionFunctional_in_exprFunctional1147);
++				functionFunctional19=functionFunctional();
++
++				state._fsp--;
++
++
++				#if COMPILE_EXPRESSIONS
++							func = functionFunctional19;
++				#endif
++
++
++				}
++				break;
++			case 6:
++				// Language\\ActionEvaluator.g3:490:4: listFunctional
++				{
++				PushFollow(Follow._listFunctional_in_exprFunctional1156);
++				listFunctional20=listFunctional();
++
++				state._fsp--;
++
++
++				#if COMPILE_EXPRESSIONS
++							func = listFunctional20;
++				#endif
++
++
++				}
++				break;
++			case 7:
++				// Language\\ActionEvaluator.g3:496:4: ^( VALUE a= exprFunctional )
++				{
++				Match(input,VALUE,Follow._VALUE_in_exprFunctional1166);
++
++				Match(input, TokenConstants.DOWN, null);
++				PushFollow(Follow._exprFunctional_in_exprFunctional1170);
++				a=exprFunctional();
++
++				state._fsp--;
++
++
++				Match(input, TokenConstants.UP, null);
++
++				#if COMPILE_EXPRESSIONS
++							func = (chunk,self,writer) =>
++								{
++									var value = a(chunk,self,writer);
++									StringWriter buf = new StringWriter();
++									IStringTemplateWriter sw = self.Group.GetStringTemplateWriter( buf );
++									int n = chunk.WriteAttribute( self, value, sw );
++									if ( n > 0 )
++										return buf.ToString();
++									return value;
++								};
++				#endif
++
++
++				}
++				break;
++
++			}
++		}
++		catch ( RecognitionException re )
++		{
++			ReportError(re);
++			Recover(input,re);
++		}
++		finally
++		{
++		}
++		return func;
++	}
++	// $ANTLR end "exprFunctional"
++
++
++	// $ANTLR start "templateApplicationCompiled"
++	// Language\\ActionEvaluator.g3:513:0: templateApplicationCompiled[System.Reflection.Emit.ILGenerator gen] : ( ^( APPLY a= expr ( template[templatesToApply] )+ ) | ^( MULTI_APPLY ( exprCompiled[$gen] )+ COLON ANONYMOUS_TEMPLATE ) );
++	private void templateApplicationCompiled( System.Reflection.Emit.ILGenerator gen )
++	{
++		object a = default(object);
++
++
++			var templatesToApply = new System.Collections.Generic.List<StringTemplate>();
++
++		try
++		{
++			// Language\\ActionEvaluator.g3:518:4: ( ^( APPLY a= expr ( template[templatesToApply] )+ ) | ^( MULTI_APPLY ( exprCompiled[$gen] )+ COLON ANONYMOUS_TEMPLATE ) )
++			int alt21=2;
++			int LA21_0 = input.LA(1);
++
++			if ( (LA21_0==APPLY) )
++			{
++				alt21=1;
++			}
++			else if ( (LA21_0==MULTI_APPLY) )
++			{
++				alt21=2;
++			}
++			else
++			{
++				NoViableAltException nvae = new NoViableAltException("", 21, 0, input);
++
++				throw nvae;
++			}
++			switch ( alt21 )
++			{
++			case 1:
++				// Language\\ActionEvaluator.g3:518:4: ^( APPLY a= expr ( template[templatesToApply] )+ )
++				{
++				Match(input,APPLY,Follow._APPLY_in_templateApplicationCompiled1194);
++
++				Match(input, TokenConstants.DOWN, null);
++				PushFollow(Follow._expr_in_templateApplicationCompiled1198);
++				a=expr();
++
++				state._fsp--;
++
++				// Language\\ActionEvaluator.g3:519:4: ( template[templatesToApply] )+
++				int cnt19=0;
++				for ( ; ; )
++				{
++					int alt19=2;
++					int LA19_0 = input.LA(1);
++
++					if ( (LA19_0==TEMPLATE) )
++					{
++						alt19=1;
++					}
++
++
++					switch ( alt19 )
++					{
++					case 1:
++						// Language\\ActionEvaluator.g3:519:5: template[templatesToApply]
++						{
++						PushFollow(Follow._template_in_templateApplicationCompiled1204);
++						template(templatesToApply);
++
++						state._fsp--;
++
++
++						}
++						break;
++
++					default:
++						if ( cnt19 >= 1 )
++							goto loop19;
++
++						EarlyExitException eee19 = new EarlyExitException( 19, input );
++						throw eee19;
++					}
++					cnt19++;
++				}
++				loop19:
++					;
++
++
++
++				#if COMPILE_EXPRESSIONS
++								throw new System.NotImplementedException();
++				#endif
++
++
++				Match(input, TokenConstants.UP, null);
++
++				}
++				break;
++			case 2:
++				// Language\\ActionEvaluator.g3:527:4: ^( MULTI_APPLY ( exprCompiled[$gen] )+ COLON ANONYMOUS_TEMPLATE )
++				{
++				Match(input,MULTI_APPLY,Follow._MULTI_APPLY_in_templateApplicationCompiled1227);
++
++				Match(input, TokenConstants.DOWN, null);
++				// Language\\ActionEvaluator.g3:527:19: ( exprCompiled[$gen] )+
++				int cnt20=0;
++				for ( ; ; )
++				{
++					int alt20=2;
++					int LA20_0 = input.LA(1);
++
++					if ( ((LA20_0>=ANONYMOUS_TEMPLATE && LA20_0<=APPLY)||LA20_0==DOT||(LA20_0>=FUNCTION && LA20_0<=INT)||LA20_0==LIST||LA20_0==MULTI_APPLY||LA20_0==PLUS||LA20_0==STRING||LA20_0==VALUE) )
++					{
++						alt20=1;
++					}
++
++
++					switch ( alt20 )
++					{
++					case 1:
++						// Language\\ActionEvaluator.g3:527:20: exprCompiled[$gen]
++						{
++						PushFollow(Follow._exprCompiled_in_templateApplicationCompiled1230);
++						exprCompiled(gen);
++
++						state._fsp--;
++
++
++						}
++						break;
++
++					default:
++						if ( cnt20 >= 1 )
++							goto loop20;
++
++						EarlyExitException eee20 = new EarlyExitException( 20, input );
++						throw eee20;
++					}
++					cnt20++;
++				}
++				loop20:
++					;
++
++
++				Match(input,COLON,Follow._COLON_in_templateApplicationCompiled1235);
++				Match(input,ANONYMOUS_TEMPLATE,Follow._ANONYMOUS_TEMPLATE_in_templateApplicationCompiled1240);
++
++				#if COMPILE_EXPRESSIONS
++								throw new System.NotImplementedException();
++				#endif
++
++
++				Match(input, TokenConstants.UP, null);
++
++				}
++				break;
++
++			}
++		}
++		catch ( RecognitionException re )
++		{
++			ReportError(re);
++			Recover(input,re);
++		}
++		finally
++		{
++		}
++		return ;
++	}
++	// $ANTLR end "templateApplicationCompiled"
++
++
++	// $ANTLR start "templateApplicationFunctional"
++	// Language\\ActionEvaluator.g3:544:0: templateApplicationFunctional returns [System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> func] : ( ^( APPLY a= exprFunctional ( templateFunctional[templateApplicators] )+ ) | ^( MULTI_APPLY (a= exprFunctional )+ COLON ANONYMOUS_TEMPLATE ) );
++	private System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> templateApplicationFunctional(  )
++	{
++
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> func = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>);
++
++		StringTemplateAST ANONYMOUS_TEMPLATE21=null;
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> a = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>);
++
++
++			var  templateApplicators = new List<System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,StringTemplate>>();
++		#if COMPILE_EXPRESSIONS
++			List<System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>> attributes = new List<System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>>();
++		#endif
++
++		try
++		{
++			// Language\\ActionEvaluator.g3:552:4: ( ^( APPLY a= exprFunctional ( templateFunctional[templateApplicators] )+ ) | ^( MULTI_APPLY (a= exprFunctional )+ COLON ANONYMOUS_TEMPLATE ) )
++			int alt24=2;
++			int LA24_0 = input.LA(1);
++
++			if ( (LA24_0==APPLY) )
++			{
++				alt24=1;
++			}
++			else if ( (LA24_0==MULTI_APPLY) )
++			{
++				alt24=2;
++			}
++			else
++			{
++				NoViableAltException nvae = new NoViableAltException("", 24, 0, input);
++
++				throw nvae;
++			}
++			switch ( alt24 )
++			{
++			case 1:
++				// Language\\ActionEvaluator.g3:552:4: ^( APPLY a= exprFunctional ( templateFunctional[templateApplicators] )+ )
++				{
++				Match(input,APPLY,Follow._APPLY_in_templateApplicationFunctional1299);
++
++				Match(input, TokenConstants.DOWN, null);
++				PushFollow(Follow._exprFunctional_in_templateApplicationFunctional1303);
++				a=exprFunctional();
++
++				state._fsp--;
++
++				// Language\\ActionEvaluator.g3:553:4: ( templateFunctional[templateApplicators] )+
++				int cnt22=0;
++				for ( ; ; )
++				{
++					int alt22=2;
++					int LA22_0 = input.LA(1);
++
++					if ( (LA22_0==TEMPLATE) )
++					{
++						alt22=1;
++					}
++
++
++					switch ( alt22 )
++					{
++					case 1:
++						// Language\\ActionEvaluator.g3:553:5: templateFunctional[templateApplicators]
++						{
++						PushFollow(Follow._templateFunctional_in_templateApplicationFunctional1309);
++						templateFunctional(templateApplicators);
++
++						state._fsp--;
++
++
++						}
++						break;
++
++					default:
++						if ( cnt22 >= 1 )
++							goto loop22;
++
++						EarlyExitException eee22 = new EarlyExitException( 22, input );
++						throw eee22;
++					}
++					cnt22++;
++				}
++				loop22:
++					;
++
++
++
++				#if COMPILE_EXPRESSIONS
++								func = (chunk,self,writer) =>
++									{
++										var templatesToApply =	( from applicator in templateApplicators
++																  let st = applicator(chunk,self,writer)
++																  where st != null
++																  select st )
++																.ToList();
++										return chunk.ApplyListOfAlternatingTemplates( self, a(chunk,self,writer), templatesToApply );
++									};
++				#endif
++
++
++				Match(input, TokenConstants.UP, null);
++
++				}
++				break;
++			case 2:
++				// Language\\ActionEvaluator.g3:568:4: ^( MULTI_APPLY (a= exprFunctional )+ COLON ANONYMOUS_TEMPLATE )
++				{
++				Match(input,MULTI_APPLY,Follow._MULTI_APPLY_in_templateApplicationFunctional1328);
++
++				Match(input, TokenConstants.DOWN, null);
++				// Language\\ActionEvaluator.g3:569:4: (a= exprFunctional )+
++				int cnt23=0;
++				for ( ; ; )
++				{
++					int alt23=2;
++					int LA23_0 = input.LA(1);
++
++					if ( ((LA23_0>=ANONYMOUS_TEMPLATE && LA23_0<=APPLY)||LA23_0==DOT||(LA23_0>=FUNCTION && LA23_0<=INT)||LA23_0==LIST||LA23_0==MULTI_APPLY||LA23_0==PLUS||LA23_0==STRING||LA23_0==VALUE) )
++					{
++						alt23=1;
++					}
++
++
++					switch ( alt23 )
++					{
++					case 1:
++						// Language\\ActionEvaluator.g3:569:6: a= exprFunctional
++						{
++						PushFollow(Follow._exprFunctional_in_templateApplicationFunctional1337);
++						a=exprFunctional();
++
++						state._fsp--;
++
++
++						#if COMPILE_EXPRESSIONS
++											attributes.Add(a);
++						#endif
++
++
++						}
++						break;
++
++					default:
++						if ( cnt23 >= 1 )
++							goto loop23;
++
++						EarlyExitException eee23 = new EarlyExitException( 23, input );
++						throw eee23;
++					}
++					cnt23++;
++				}
++				loop23:
++					;
++
++
++				Match(input,COLON,Follow._COLON_in_templateApplicationFunctional1354);
++				ANONYMOUS_TEMPLATE21=(StringTemplateAST)Match(input,ANONYMOUS_TEMPLATE,Follow._ANONYMOUS_TEMPLATE_in_templateApplicationFunctional1356);
++
++				#if COMPILE_EXPRESSIONS
++								StringTemplate anonymous = ANONYMOUS_TEMPLATE21.StringTemplate;
++								func = (chunk,self,writer) =>
++									{
++										var attr =	from f in attributes
++													select f(chunk,self,writer);
++										return chunk.ApplyTemplateToListOfAttributes( self, attr.ToList(), anonymous );
++									};
++				#endif
++
++
++				Match(input, TokenConstants.UP, null);
++
++				}
++				break;
++
++			}
++		}
++		catch ( RecognitionException re )
++		{
++			ReportError(re);
++			Recover(input,re);
++		}
++		finally
++		{
++		}
++		return func;
++	}
++	// $ANTLR end "templateApplicationFunctional"
++
++
++	// $ANTLR start "attributeCompiled"
++	// Language\\ActionEvaluator.g3:591:0: attributeCompiled[System.Reflection.Emit.ILGenerator gen] : ( ^( DOT exprCompiled[$gen] (id= ID | ^( VALUE exprCompiled[$gen] ) ) ) |id= ID | INT | STRING | ANONYMOUS_TEMPLATE );
++	private void attributeCompiled( System.Reflection.Emit.ILGenerator gen )
++	{
++		StringTemplateAST id=null;
++		StringTemplateAST INT22=null;
++		StringTemplateAST STRING23=null;
++		StringTemplateAST ANONYMOUS_TEMPLATE24=null;
++
++		try
++		{
++			// Language\\ActionEvaluator.g3:592:4: ( ^( DOT exprCompiled[$gen] (id= ID | ^( VALUE exprCompiled[$gen] ) ) ) |id= ID | INT | STRING | ANONYMOUS_TEMPLATE )
++			int alt26=5;
++			switch ( input.LA(1) )
++			{
++			case DOT:
++				{
++				alt26=1;
++				}
++				break;
++			case ID:
++				{
++				alt26=2;
++				}
++				break;
++			case INT:
++				{
++				alt26=3;
++				}
++				break;
++			case STRING:
++				{
++				alt26=4;
++				}
++				break;
++			case ANONYMOUS_TEMPLATE:
++				{
++				alt26=5;
++				}
++				break;
++			default:
++				{
++					NoViableAltException nvae = new NoViableAltException("", 26, 0, input);
++
++					throw nvae;
++				}
++			}
++
++			switch ( alt26 )
++			{
++			case 1:
++				// Language\\ActionEvaluator.g3:592:4: ^( DOT exprCompiled[$gen] (id= ID | ^( VALUE exprCompiled[$gen] ) ) )
++				{
++				Match(input,DOT,Follow._DOT_in_attributeCompiled1379);
++
++				Match(input, TokenConstants.DOWN, null);
++				PushFollow(Follow._exprCompiled_in_attributeCompiled1381);
++				exprCompiled(gen);
++
++				state._fsp--;
++
++				// Language\\ActionEvaluator.g3:593:4: (id= ID | ^( VALUE exprCompiled[$gen] ) )
++				int alt25=2;
++				int LA25_0 = input.LA(1);
++
++				if ( (LA25_0==ID) )
++				{
++					alt25=1;
++				}
++				else if ( (LA25_0==VALUE) )
++				{
++					alt25=2;
++				}
++				else
++				{
++					NoViableAltException nvae = new NoViableAltException("", 25, 0, input);
++
++					throw nvae;
++				}
++				switch ( alt25 )
++				{
++				case 1:
++					// Language\\ActionEvaluator.g3:593:6: id= ID
++					{
++					id=(StringTemplateAST)Match(input,ID,Follow._ID_in_attributeCompiled1391);
++
++					#if COMPILE_EXPRESSIONS
++										EmitLoadString(gen,(id!=null?id.Text:null));
++					#endif
++
++
++					}
++					break;
++				case 2:
++					// Language\\ActionEvaluator.g3:599:6: ^( VALUE exprCompiled[$gen] )
++					{
++					Match(input,VALUE,Follow._VALUE_in_attributeCompiled1405);
++
++					Match(input, TokenConstants.DOWN, null);
++					PushFollow(Follow._exprCompiled_in_attributeCompiled1407);
++					exprCompiled(gen);
++
++					state._fsp--;
++
++
++					Match(input, TokenConstants.UP, null);
++
++					}
++					break;
++
++				}
++
++
++				#if COMPILE_EXPRESSIONS
++								EmitObjectProperty(gen);
++				#endif
++
++
++				Match(input, TokenConstants.UP, null);
++
++				}
++				break;
++			case 2:
++				// Language\\ActionEvaluator.g3:608:4: id= ID
++				{
++				id=(StringTemplateAST)Match(input,ID,Follow._ID_in_attributeCompiled1431);
++
++				#if COMPILE_EXPRESSIONS
++							EmitAttribute(gen,(id!=null?id.Text:null));
++				#endif
++
++
++				}
++				break;
++			case 3:
++				// Language\\ActionEvaluator.g3:615:4: INT
++				{
++				INT22=(StringTemplateAST)Match(input,INT,Follow._INT_in_attributeCompiled1441);
++
++				#if COMPILE_EXPRESSIONS
++							EmitLoadIntAsObject(gen,int.Parse((INT22!=null?INT22.Text:null)));
++				#endif
++
++
++				}
++				break;
++			case 4:
++				// Language\\ActionEvaluator.g3:622:4: STRING
++				{
++				STRING23=(StringTemplateAST)Match(input,STRING,Follow._STRING_in_attributeCompiled1451);
++
++				#if COMPILE_EXPRESSIONS
++							EmitLoadString(gen,(STRING23!=null?STRING23.Text:null));
++				#endif
++
++
++				}
++				break;
++			case 5:
++				// Language\\ActionEvaluator.g3:629:4: ANONYMOUS_TEMPLATE
++				{
++				ANONYMOUS_TEMPLATE24=(StringTemplateAST)Match(input,ANONYMOUS_TEMPLATE,Follow._ANONYMOUS_TEMPLATE_in_attributeCompiled1461);
++
++				#if COMPILE_EXPRESSIONS
++							EmitAnonymousTemplate(gen,(ANONYMOUS_TEMPLATE24!=null?ANONYMOUS_TEMPLATE24.Text:null));
++				#endif
++
++
++				}
++				break;
++
++			}
++		}
++		catch ( RecognitionException re )
++		{
++			ReportError(re);
++			Recover(input,re);
++		}
++		finally
++		{
++		}
++		return ;
++	}
++	// $ANTLR end "attributeCompiled"
++
++
++	// $ANTLR start "attributeFunctional"
++	// Language\\ActionEvaluator.g3:637:0: attributeFunctional returns [System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> func] : ( ^( DOT a= exprFunctional (id= ID | ^( VALUE b= exprFunctional ) ) ) |id= ID | INT | STRING | ANONYMOUS_TEMPLATE );
++	private System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> attributeFunctional(  )
++	{
++
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> func = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>);
++
++		StringTemplateAST id=null;
++		StringTemplateAST INT25=null;
++		StringTemplateAST STRING26=null;
++		StringTemplateAST ANONYMOUS_TEMPLATE27=null;
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> a = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>);
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> b = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>);
++
++		try
++		{
++			// Language\\ActionEvaluator.g3:638:4: ( ^( DOT a= exprFunctional (id= ID | ^( VALUE b= exprFunctional ) ) ) |id= ID | INT | STRING | ANONYMOUS_TEMPLATE )
++			int alt28=5;
++			switch ( input.LA(1) )
++			{
++			case DOT:
++				{
++				alt28=1;
++				}
++				break;
++			case ID:
++				{
++				alt28=2;
++				}
++				break;
++			case INT:
++				{
++				alt28=3;
++				}
++				break;
++			case STRING:
++				{
++				alt28=4;
++				}
++				break;
++			case ANONYMOUS_TEMPLATE:
++				{
++				alt28=5;
++				}
++				break;
++			default:
++				{
++					NoViableAltException nvae = new NoViableAltException("", 28, 0, input);
++
++					throw nvae;
++				}
++			}
++
++			switch ( alt28 )
++			{
++			case 1:
++				// Language\\ActionEvaluator.g3:638:4: ^( DOT a= exprFunctional (id= ID | ^( VALUE b= exprFunctional ) ) )
++				{
++				Match(input,DOT,Follow._DOT_in_attributeFunctional1482);
++
++				Match(input, TokenConstants.DOWN, null);
++				PushFollow(Follow._exprFunctional_in_attributeFunctional1486);
++				a=exprFunctional();
++
++				state._fsp--;
++
++				// Language\\ActionEvaluator.g3:639:4: (id= ID | ^( VALUE b= exprFunctional ) )
++				int alt27=2;
++				int LA27_0 = input.LA(1);
++
++				if ( (LA27_0==ID) )
++				{
++					alt27=1;
++				}
++				else if ( (LA27_0==VALUE) )
++				{
++					alt27=2;
++				}
++				else
++				{
++					NoViableAltException nvae = new NoViableAltException("", 27, 0, input);
++
++					throw nvae;
++				}
++				switch ( alt27 )
++				{
++				case 1:
++					// Language\\ActionEvaluator.g3:639:6: id= ID
++					{
++					id=(StringTemplateAST)Match(input,ID,Follow._ID_in_attributeFunctional1495);
++
++					#if COMPILE_EXPRESSIONS
++										string text = (id!=null?id.Text:null);
++										func = (chunk,self,writer) => chunk.GetObjectProperty( self, a(chunk,self,writer), text );
++					#endif
++
++
++					}
++					break;
++				case 2:
++					// Language\\ActionEvaluator.g3:646:6: ^( VALUE b= exprFunctional )
++					{
++					Match(input,VALUE,Follow._VALUE_in_attributeFunctional1509);
++
++					Match(input, TokenConstants.DOWN, null);
++					PushFollow(Follow._exprFunctional_in_attributeFunctional1513);
++					b=exprFunctional();
++
++					state._fsp--;
++
++
++					Match(input, TokenConstants.UP, null);
++
++					#if COMPILE_EXPRESSIONS
++										func = (chunk,self,writer) => chunk.GetObjectProperty( self, a(chunk,self,writer), b(chunk,self,writer) );
++					#endif
++
++
++					}
++					break;
++
++				}
++
++
++				Match(input, TokenConstants.UP, null);
++
++				}
++				break;
++			case 2:
++				// Language\\ActionEvaluator.g3:655:4: id= ID
++				{
++				id=(StringTemplateAST)Match(input,ID,Follow._ID_in_attributeFunctional1537);
++
++				#if COMPILE_EXPRESSIONS
++							string text = (id!=null?id.Text:null);
++							func = (chunk,self,writer) => self.GetAttribute( text );
++				#endif
++
++
++				}
++				break;
++			case 3:
++				// Language\\ActionEvaluator.g3:663:4: INT
++				{
++				INT25=(StringTemplateAST)Match(input,INT,Follow._INT_in_attributeFunctional1547);
++
++				#if COMPILE_EXPRESSIONS
++							int i = int.Parse((INT25!=null?INT25.Text:null));
++							func = (chunk,self,writer) => i;
++				#endif
++
++
++				}
++				break;
++			case 4:
++				// Language\\ActionEvaluator.g3:671:4: STRING
++				{
++				STRING26=(StringTemplateAST)Match(input,STRING,Follow._STRING_in_attributeFunctional1557);
++
++				#if COMPILE_EXPRESSIONS
++							string text = (STRING26!=null?STRING26.Text:null);
++							func = (chunk,self,writer) => text;
++				#endif
++
++
++				}
++				break;
++			case 5:
++				// Language\\ActionEvaluator.g3:679:4: ANONYMOUS_TEMPLATE
++				{
++				ANONYMOUS_TEMPLATE27=(StringTemplateAST)Match(input,ANONYMOUS_TEMPLATE,Follow._ANONYMOUS_TEMPLATE_in_attributeFunctional1567);
++
++				#if COMPILE_EXPRESSIONS
++							string text = (ANONYMOUS_TEMPLATE27!=null?ANONYMOUS_TEMPLATE27.Text:null);
++							if ( text != null )
++							{
++								func = (chunk,self,writer) =>
++									new StringTemplate( self.Group, text )
++									{
++										EnclosingInstance = self,
++										Name = "<anonymous template argument>"
++									};
++							}
++							else
++							{
++								func = (chunk,self,writer) => null;
++							}
++				#endif
++
++
++				}
++				break;
++
++			}
++		}
++		catch ( RecognitionException re )
++		{
++			ReportError(re);
++			Recover(input,re);
++		}
++		finally
++		{
++		}
++		return func;
++	}
++	// $ANTLR end "attributeFunctional"
++
++
++	// $ANTLR start "templateIncludeCompiled"
++	// Language\\ActionEvaluator.g3:700:0: templateIncludeCompiled[System.Reflection.Emit.ILGenerator gen] : ^( INCLUDE ( ID args= . | ^( VALUE exprCompiled[$gen] args= . ) ) ) ;
++	private void templateIncludeCompiled( System.Reflection.Emit.ILGenerator gen )
++	{
++		StringTemplateAST ID28=null;
++		StringTemplateAST args=null;
++
++		try
++		{
++			// Language\\ActionEvaluator.g3:701:4: ( ^( INCLUDE ( ID args= . | ^( VALUE exprCompiled[$gen] args= . ) ) ) )
++			// Language\\ActionEvaluator.g3:701:4: ^( INCLUDE ( ID args= . | ^( VALUE exprCompiled[$gen] args= . ) ) )
++			{
++			Match(input,INCLUDE,Follow._INCLUDE_in_templateIncludeCompiled1585);
++
++			Match(input, TokenConstants.DOWN, null);
++			// Language\\ActionEvaluator.g3:702:4: ( ID args= . | ^( VALUE exprCompiled[$gen] args= . ) )
++			int alt29=2;
++			int LA29_0 = input.LA(1);
++
++			if ( (LA29_0==ID) )
++			{
++				alt29=1;
++			}
++			else if ( (LA29_0==VALUE) )
++			{
++				alt29=2;
++			}
++			else
++			{
++				NoViableAltException nvae = new NoViableAltException("", 29, 0, input);
++
++				throw nvae;
++			}
++			switch ( alt29 )
++			{
++			case 1:
++				// Language\\ActionEvaluator.g3:702:6: ID args= .
++				{
++				ID28=(StringTemplateAST)Match(input,ID,Follow._ID_in_templateIncludeCompiled1592);
++				args=(StringTemplateAST)input.LT(1);
++				MatchAny(input);
++
++				#if COMPILE_EXPRESSIONS
++									EmitLoadString( gen, (ID28!=null?ID28.Text:null) );
++				#endif
++
++
++				}
++				break;
++			case 2:
++				// Language\\ActionEvaluator.g3:708:6: ^( VALUE exprCompiled[$gen] args= . )
++				{
++				Match(input,VALUE,Follow._VALUE_in_templateIncludeCompiled1611);
++
++				Match(input, TokenConstants.DOWN, null);
++				PushFollow(Follow._exprCompiled_in_templateIncludeCompiled1613);
++				exprCompiled(gen);
++
++				state._fsp--;
++
++				args=(StringTemplateAST)input.LT(1);
++				MatchAny(input);
++
++				Match(input, TokenConstants.UP, null);
++
++				}
++				break;
++
++			}
++
++
++			Match(input, TokenConstants.UP, null);
++
++			#if COMPILE_EXPRESSIONS
++						EmitTemplateInclude( gen, args );
++			#endif
++
++
++			}
++
++		}
++		catch ( RecognitionException re )
++		{
++			ReportError(re);
++			Recover(input,re);
++		}
++		finally
++		{
++		}
++		return ;
++	}
++	// $ANTLR end "templateIncludeCompiled"
++
++
++	// $ANTLR start "templateIncludeFunctional"
++	// Language\\ActionEvaluator.g3:718:0: templateIncludeFunctional returns [System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> func] : ^( INCLUDE ( ID args= . | ^( VALUE exprFunctional args= . ) ) ) ;
++	private System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> templateIncludeFunctional(  )
++	{
++
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> func = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>);
++
++		StringTemplateAST ID29=null;
++		StringTemplateAST args=null;
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> exprFunctional30 = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>);
++
++		try
++		{
++			// Language\\ActionEvaluator.g3:719:4: ( ^( INCLUDE ( ID args= . | ^( VALUE exprFunctional args= . ) ) ) )
++			// Language\\ActionEvaluator.g3:719:4: ^( INCLUDE ( ID args= . | ^( VALUE exprFunctional args= . ) ) )
++			{
++			Match(input,INCLUDE,Follow._INCLUDE_in_templateIncludeFunctional1650);
++
++			Match(input, TokenConstants.DOWN, null);
++			// Language\\ActionEvaluator.g3:720:4: ( ID args= . | ^( VALUE exprFunctional args= . ) )
++			int alt30=2;
++			int LA30_0 = input.LA(1);
++
++			if ( (LA30_0==ID) )
++			{
++				alt30=1;
++			}
++			else if ( (LA30_0==VALUE) )
++			{
++				alt30=2;
++			}
++			else
++			{
++				NoViableAltException nvae = new NoViableAltException("", 30, 0, input);
++
++				throw nvae;
++			}
++			switch ( alt30 )
++			{
++			case 1:
++				// Language\\ActionEvaluator.g3:720:6: ID args= .
++				{
++				ID29=(StringTemplateAST)Match(input,ID,Follow._ID_in_templateIncludeFunctional1657);
++				args=(StringTemplateAST)input.LT(1);
++				MatchAny(input);
++
++				}
++				break;
++			case 2:
++				// Language\\ActionEvaluator.g3:721:6: ^( VALUE exprFunctional args= . )
++				{
++				Match(input,VALUE,Follow._VALUE_in_templateIncludeFunctional1670);
++
++				Match(input, TokenConstants.DOWN, null);
++				PushFollow(Follow._exprFunctional_in_templateIncludeFunctional1672);
++				exprFunctional30=exprFunctional();
++
++				state._fsp--;
++
++				args=(StringTemplateAST)input.LT(1);
++				MatchAny(input);
++
++				Match(input, TokenConstants.UP, null);
++
++				}
++				break;
++
++			}
++
++
++			Match(input, TokenConstants.UP, null);
++
++			#if COMPILE_EXPRESSIONS
++						if ( ID29 != null )
++						{
++							string name = (ID29!=null?ID29.Text:null);
++							if ( name != null )
++							{
++								func = (chunk,self,writer) =>
++									{
++										return chunk.GetTemplateInclude( self, name, args );
++									};
++							}
++							else
++							{
++								func = (chunk,self,writer) => null;
++							}
++						}
++						else
++						{
++							func = (chunk,self,writer) =>
++								{
++									var value = exprFunctional30(chunk,self,writer);
++									if ( value == null )
++										return null;
++
++									string name = value.ToString();
++									if ( name != null )
++									{
++										return chunk.GetTemplateInclude( self, name, args );
++									}
++									return null;
++								};
++						}
++			#endif
++
++
++			}
++
++		}
++		catch ( RecognitionException re )
++		{
++			ReportError(re);
++			Recover(input,re);
++		}
++		finally
++		{
++		}
++		return func;
++	}
++	// $ANTLR end "templateIncludeFunctional"
++
++
++	// $ANTLR start "functionCompiled"
++	// Language\\ActionEvaluator.g3:761:0: functionCompiled[System.Reflection.Emit.ILGenerator gen] : ^( FUNCTION ( 'first' singleFunctionArgCompiled[$gen] | 'rest' singleFunctionArgCompiled[$gen] | 'last' singleFunctionArgCompiled[$gen] | 'length' singleFunctionArgCompiled[$gen] | 'strip' singleFunctionArgCompiled[$gen] | 'trunc' singleFunctionArgCompiled[$gen] ) ) ;
++	private void functionCompiled( System.Reflection.Emit.ILGenerator gen )
++	{
++		try
++		{
++			// Language\\ActionEvaluator.g3:762:4: ( ^( FUNCTION ( 'first' singleFunctionArgCompiled[$gen] | 'rest' singleFunctionArgCompiled[$gen] | 'last' singleFunctionArgCompiled[$gen] | 'length' singleFunctionArgCompiled[$gen] | 'strip' singleFunctionArgCompiled[$gen] | 'trunc' singleFunctionArgCompiled[$gen] ) ) )
++			// Language\\ActionEvaluator.g3:762:4: ^( FUNCTION ( 'first' singleFunctionArgCompiled[$gen] | 'rest' singleFunctionArgCompiled[$gen] | 'last' singleFunctionArgCompiled[$gen] | 'length' singleFunctionArgCompiled[$gen] | 'strip' singleFunctionArgCompiled[$gen] | 'trunc' singleFunctionArgCompiled[$gen] ) )
++			{
++			Match(input,FUNCTION,Follow._FUNCTION_in_functionCompiled1705);
++
++			Match(input, TokenConstants.DOWN, null);
++			// Language\\ActionEvaluator.g3:763:4: ( 'first' singleFunctionArgCompiled[$gen] | 'rest' singleFunctionArgCompiled[$gen] | 'last' singleFunctionArgCompiled[$gen] | 'length' singleFunctionArgCompiled[$gen] | 'strip' singleFunctionArgCompiled[$gen] | 'trunc' singleFunctionArgCompiled[$gen] )
++			int alt31=6;
++			switch ( input.LA(1) )
++			{
++			case FIRST:
++				{
++				alt31=1;
++				}
++				break;
++			case REST:
++				{
++				alt31=2;
++				}
++				break;
++			case LAST:
++				{
++				alt31=3;
++				}
++				break;
++			case LENGTH:
++				{
++				alt31=4;
++				}
++				break;
++			case STRIP:
++				{
++				alt31=5;
++				}
++				break;
++			case TRUNC:
++				{
++				alt31=6;
++				}
++				break;
++			default:
++				{
++					NoViableAltException nvae = new NoViableAltException("", 31, 0, input);
++
++					throw nvae;
++				}
++			}
++
++			switch ( alt31 )
++			{
++			case 1:
++				// Language\\ActionEvaluator.g3:763:6: 'first' singleFunctionArgCompiled[$gen]
++				{
++				Match(input,FIRST,Follow._FIRST_in_functionCompiled1712);
++				PushFollow(Follow._singleFunctionArgCompiled_in_functionCompiled1715);
++				singleFunctionArgCompiled(gen);
++
++				state._fsp--;
++
++
++				#if COMPILE_EXPRESSIONS
++									EmitFunctionFirst(gen);
++				#endif
++
++
++				}
++				break;
++			case 2:
++				// Language\\ActionEvaluator.g3:769:6: 'rest' singleFunctionArgCompiled[$gen]
++				{
++				Match(input,REST,Follow._REST_in_functionCompiled1729);
++				PushFollow(Follow._singleFunctionArgCompiled_in_functionCompiled1732);
++				singleFunctionArgCompiled(gen);
++
++				state._fsp--;
++
++
++				#if COMPILE_EXPRESSIONS
++									EmitFunctionRest(gen);
++				#endif
++
++
++				}
++				break;
++			case 3:
++				// Language\\ActionEvaluator.g3:775:6: 'last' singleFunctionArgCompiled[$gen]
++				{
++				Match(input,LAST,Follow._LAST_in_functionCompiled1746);
++				PushFollow(Follow._singleFunctionArgCompiled_in_functionCompiled1749);
++				singleFunctionArgCompiled(gen);
++
++				state._fsp--;
++
++
++				#if COMPILE_EXPRESSIONS
++									EmitFunctionLast(gen);
++				#endif
++
++
++				}
++				break;
++			case 4:
++				// Language\\ActionEvaluator.g3:781:6: 'length' singleFunctionArgCompiled[$gen]
++				{
++				Match(input,LENGTH,Follow._LENGTH_in_functionCompiled1763);
++				PushFollow(Follow._singleFunctionArgCompiled_in_functionCompiled1765);
++				singleFunctionArgCompiled(gen);
++
++				state._fsp--;
++
++
++				#if COMPILE_EXPRESSIONS
++									EmitFunctionLength(gen);
++				#endif
++
++
++				}
++				break;
++			case 5:
++				// Language\\ActionEvaluator.g3:787:6: 'strip' singleFunctionArgCompiled[$gen]
++				{
++				Match(input,STRIP,Follow._STRIP_in_functionCompiled1779);
++				PushFollow(Follow._singleFunctionArgCompiled_in_functionCompiled1782);
++				singleFunctionArgCompiled(gen);
++
++				state._fsp--;
++
++
++				#if COMPILE_EXPRESSIONS
++									EmitFunctionStrip(gen);
++				#endif
++
++
++				}
++				break;
++			case 6:
++				// Language\\ActionEvaluator.g3:793:6: 'trunc' singleFunctionArgCompiled[$gen]
++				{
++				Match(input,TRUNC,Follow._TRUNC_in_functionCompiled1796);
++				PushFollow(Follow._singleFunctionArgCompiled_in_functionCompiled1799);
++				singleFunctionArgCompiled(gen);
++
++				state._fsp--;
++
++
++				#if COMPILE_EXPRESSIONS
++									EmitFunctionTrunc(gen);
++				#endif
++
++
++				}
++				break;
++
++			}
++
++
++			Match(input, TokenConstants.UP, null);
++
++			}
++
++		}
++		catch ( RecognitionException re )
++		{
++			ReportError(re);
++			Recover(input,re);
++		}
++		finally
++		{
++		}
++		return ;
++	}
++	// $ANTLR end "functionCompiled"
++
++
++	// $ANTLR start "functionFunctional"
++	// Language\\ActionEvaluator.g3:803:0: functionFunctional returns [System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> func] : ^( FUNCTION ( 'first' a= singleFunctionArgFunctional | 'rest' a= singleFunctionArgFunctional | 'last' a= singleFunctionArgFunctional | 'length' a= singleFunctionArgFunctional | 'strip' a= singleFunctionArgFunctional | 'trunc' a= singleFunctionArgFunctional ) ) ;
++	private System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> functionFunctional(  )
++	{
++
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> func = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>);
++
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> a = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>);
++
++		try
++		{
++			// Language\\ActionEvaluator.g3:804:4: ( ^( FUNCTION ( 'first' a= singleFunctionArgFunctional | 'rest' a= singleFunctionArgFunctional | 'last' a= singleFunctionArgFunctional | 'length' a= singleFunctionArgFunctional | 'strip' a= singleFunctionArgFunctional | 'trunc' a= singleFunctionArgFunctional ) ) )
++			// Language\\ActionEvaluator.g3:804:4: ^( FUNCTION ( 'first' a= singleFunctionArgFunctional | 'rest' a= singleFunctionArgFunctional | 'last' a= singleFunctionArgFunctional | 'length' a= singleFunctionArgFunctional | 'strip' a= singleFunctionArgFunctional | 'trunc' a= singleFunctionArgFunctional ) )
++			{
++			Match(input,FUNCTION,Follow._FUNCTION_in_functionFunctional1832);
++
++			Match(input, TokenConstants.DOWN, null);
++			// Language\\ActionEvaluator.g3:805:4: ( 'first' a= singleFunctionArgFunctional | 'rest' a= singleFunctionArgFunctional | 'last' a= singleFunctionArgFunctional | 'length' a= singleFunctionArgFunctional | 'strip' a= singleFunctionArgFunctional | 'trunc' a= singleFunctionArgFunctional )
++			int alt32=6;
++			switch ( input.LA(1) )
++			{
++			case FIRST:
++				{
++				alt32=1;
++				}
++				break;
++			case REST:
++				{
++				alt32=2;
++				}
++				break;
++			case LAST:
++				{
++				alt32=3;
++				}
++				break;
++			case LENGTH:
++				{
++				alt32=4;
++				}
++				break;
++			case STRIP:
++				{
++				alt32=5;
++				}
++				break;
++			case TRUNC:
++				{
++				alt32=6;
++				}
++				break;
++			default:
++				{
++					NoViableAltException nvae = new NoViableAltException("", 32, 0, input);
++
++					throw nvae;
++				}
++			}
++
++			switch ( alt32 )
++			{
++			case 1:
++				// Language\\ActionEvaluator.g3:805:6: 'first' a= singleFunctionArgFunctional
++				{
++				Match(input,FIRST,Follow._FIRST_in_functionFunctional1839);
++				PushFollow(Follow._singleFunctionArgFunctional_in_functionFunctional1844);
++				a=singleFunctionArgFunctional();
++
++				state._fsp--;
++
++
++				#if COMPILE_EXPRESSIONS
++									func = (chunk,self,writer) => chunk.First( a(chunk,self,writer) );
++				#endif
++
++
++				}
++				break;
++			case 2:
++				// Language\\ActionEvaluator.g3:811:6: 'rest' a= singleFunctionArgFunctional
++				{
++				Match(input,REST,Follow._REST_in_functionFunctional1857);
++				PushFollow(Follow._singleFunctionArgFunctional_in_functionFunctional1862);
++				a=singleFunctionArgFunctional();
++
++				state._fsp--;
++
++
++				#if COMPILE_EXPRESSIONS
++									func = (chunk,self,writer) => chunk.Rest( a(chunk,self,writer) );
++				#endif
++
++
++				}
++				break;
++			case 3:
++				// Language\\ActionEvaluator.g3:817:6: 'last' a= singleFunctionArgFunctional
++				{
++				Match(input,LAST,Follow._LAST_in_functionFunctional1875);
++				PushFollow(Follow._singleFunctionArgFunctional_in_functionFunctional1880);
++				a=singleFunctionArgFunctional();
++
++				state._fsp--;
++
++
++				#if COMPILE_EXPRESSIONS
++									func = (chunk,self,writer) => chunk.Last( a(chunk,self,writer) );
++				#endif
++
++
++				}
++				break;
++			case 4:
++				// Language\\ActionEvaluator.g3:823:6: 'length' a= singleFunctionArgFunctional
++				{
++				Match(input,LENGTH,Follow._LENGTH_in_functionFunctional1893);
++				PushFollow(Follow._singleFunctionArgFunctional_in_functionFunctional1897);
++				a=singleFunctionArgFunctional();
++
++				state._fsp--;
++
++
++				#if COMPILE_EXPRESSIONS
++									func = (chunk,self,writer) => chunk.Length( a(chunk,self,writer) );
++				#endif
++
++
++				}
++				break;
++			case 5:
++				// Language\\ActionEvaluator.g3:829:6: 'strip' a= singleFunctionArgFunctional
++				{
++				Match(input,STRIP,Follow._STRIP_in_functionFunctional1910);
++				PushFollow(Follow._singleFunctionArgFunctional_in_functionFunctional1915);
++				a=singleFunctionArgFunctional();
++
++				state._fsp--;
++
++
++				#if COMPILE_EXPRESSIONS
++									func = (chunk,self,writer) => chunk.Strip( a(chunk,self,writer) );
++				#endif
++
++
++				}
++				break;
++			case 6:
++				// Language\\ActionEvaluator.g3:835:6: 'trunc' a= singleFunctionArgFunctional
++				{
++				Match(input,TRUNC,Follow._TRUNC_in_functionFunctional1928);
++				PushFollow(Follow._singleFunctionArgFunctional_in_functionFunctional1933);
++				a=singleFunctionArgFunctional();
++
++				state._fsp--;
++
++
++				#if COMPILE_EXPRESSIONS
++									func = (chunk,self,writer) => chunk.Trunc( a(chunk,self,writer) );
++				#endif
++
++
++				}
++				break;
++
++			}
++
++
++			Match(input, TokenConstants.UP, null);
++
++			}
++
++		}
++		catch ( RecognitionException re )
++		{
++			ReportError(re);
++			Recover(input,re);
++		}
++		finally
++		{
++		}
++		return func;
++	}
++	// $ANTLR end "functionFunctional"
++
++
++	// $ANTLR start "listCompiled"
++	// Language\\ActionEvaluator.g3:845:0: listCompiled[System.Reflection.Emit.ILGenerator gen] : ^( LIST ( exprCompiled[$gen] | NOTHING )+ ) ;
++	private void listCompiled( System.Reflection.Emit.ILGenerator gen )
++	{
++		try
++		{
++			// Language\\ActionEvaluator.g3:846:4: ( ^( LIST ( exprCompiled[$gen] | NOTHING )+ ) )
++			// Language\\ActionEvaluator.g3:846:4: ^( LIST ( exprCompiled[$gen] | NOTHING )+ )
++			{
++			Match(input,LIST,Follow._LIST_in_listCompiled1962);
++
++			Match(input, TokenConstants.DOWN, null);
++			// Language\\ActionEvaluator.g3:847:4: ( exprCompiled[$gen] | NOTHING )+
++			int cnt33=0;
++			for ( ; ; )
++			{
++				int alt33=3;
++				int LA33_0 = input.LA(1);
++
++				if ( ((LA33_0>=ANONYMOUS_TEMPLATE && LA33_0<=APPLY)||LA33_0==DOT||(LA33_0>=FUNCTION && LA33_0<=INT)||LA33_0==LIST||LA33_0==MULTI_APPLY||LA33_0==PLUS||LA33_0==STRING||LA33_0==VALUE) )
++				{
++					alt33=1;
++				}
++				else if ( (LA33_0==NOTHING) )
++				{
++					alt33=2;
++				}
++
++
++				switch ( alt33 )
++				{
++				case 1:
++					// Language\\ActionEvaluator.g3:847:6: exprCompiled[$gen]
++					{
++					PushFollow(Follow._exprCompiled_in_listCompiled1969);
++					exprCompiled(gen);
++
++					state._fsp--;
++
++
++					}
++					break;
++				case 2:
++					// Language\\ActionEvaluator.g3:848:6: NOTHING
++					{
++					Match(input,NOTHING,Follow._NOTHING_in_listCompiled1977);
++
++					}
++					break;
++
++				default:
++					if ( cnt33 >= 1 )
++						goto loop33;
++
++					EarlyExitException eee33 = new EarlyExitException( 33, input );
++					throw eee33;
++				}
++				cnt33++;
++			}
++			loop33:
++				;
++
++
++
++			Match(input, TokenConstants.UP, null);
++			throw new System.NotImplementedException();
++
++			}
++
++		}
++		catch ( RecognitionException re )
++		{
++			ReportError(re);
++			Recover(input,re);
++		}
++		finally
++		{
++		}
++		return ;
++	}
++	// $ANTLR end "listCompiled"
++
++
++	// $ANTLR start "listFunctional"
++	// Language\\ActionEvaluator.g3:854:0: listFunctional returns [System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> func] : ^( LIST ( exprFunctional | NOTHING )+ ) ;
++	private System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> listFunctional(  )
++	{
++
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> func = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>);
++
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> exprFunctional31 = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>);
++
++
++			List<System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>> elements = new List<System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>>();
++
++		try
++		{
++			// Language\\ActionEvaluator.g3:859:4: ( ^( LIST ( exprFunctional | NOTHING )+ ) )
++			// Language\\ActionEvaluator.g3:859:4: ^( LIST ( exprFunctional | NOTHING )+ )
++			{
++			Match(input,LIST,Follow._LIST_in_listFunctional2013);
++
++			Match(input, TokenConstants.DOWN, null);
++			// Language\\ActionEvaluator.g3:860:4: ( exprFunctional | NOTHING )+
++			int cnt34=0;
++			for ( ; ; )
++			{
++				int alt34=3;
++				int LA34_0 = input.LA(1);
++
++				if ( ((LA34_0>=ANONYMOUS_TEMPLATE && LA34_0<=APPLY)||LA34_0==DOT||(LA34_0>=FUNCTION && LA34_0<=INT)||LA34_0==LIST||LA34_0==MULTI_APPLY||LA34_0==PLUS||LA34_0==STRING||LA34_0==VALUE) )
++				{
++					alt34=1;
++				}
++				else if ( (LA34_0==NOTHING) )
++				{
++					alt34=2;
++				}
++
++
++				switch ( alt34 )
++				{
++				case 1:
++					// Language\\ActionEvaluator.g3:860:6: exprFunctional
++					{
++					PushFollow(Follow._exprFunctional_in_listFunctional2020);
++					exprFunctional31=exprFunctional();
++
++					state._fsp--;
++
++
++					#if COMPILE_EXPRESSIONS
++										if ( exprFunctional31 != null )
++											elements.Add(exprFunctional31);
++					#endif
++
++
++					}
++					break;
++				case 2:
++					// Language\\ActionEvaluator.g3:867:6: NOTHING
++					{
++					Match(input,NOTHING,Follow._NOTHING_in_listFunctional2033);
++
++					#if COMPILE_EXPRESSIONS
++										elements.Add( (chunk,self,writer) => new ArrayList( new object[] { null } ).iterator() );
++					#endif
++
++
++					}
++					break;
++
++				default:
++					if ( cnt34 >= 1 )
++						goto loop34;
++
++					EarlyExitException eee34 = new EarlyExitException( 34, input );
++					throw eee34;
++				}
++				cnt34++;
++			}
++			loop34:
++				;
++
++
++
++			Match(input, TokenConstants.UP, null);
++
++			#if COMPILE_EXPRESSIONS
++						func = (chunk,self,writer) =>
++							new Cat(from f in elements
++									let value = f(chunk,self,writer)
++									where value != null
++									select value
++									);
++			#endif
++
++
++			}
++
++		}
++		catch ( RecognitionException re )
++		{
++			ReportError(re);
++			Recover(input,re);
++		}
++		finally
++		{
++		}
++		return func;
++	}
++	// $ANTLR end "listFunctional"
++
++
++	// $ANTLR start "singleFunctionArgCompiled"
++	// Language\\ActionEvaluator.g3:887:0: singleFunctionArgCompiled[System.Reflection.Emit.ILGenerator gen] : ^( SINGLEVALUEARG exprCompiled[$gen] ) ;
++	private void singleFunctionArgCompiled( System.Reflection.Emit.ILGenerator gen )
++	{
++		try
++		{
++			// Language\\ActionEvaluator.g3:888:4: ( ^( SINGLEVALUEARG exprCompiled[$gen] ) )
++			// Language\\ActionEvaluator.g3:888:4: ^( SINGLEVALUEARG exprCompiled[$gen] )
++			{
++			Match(input,SINGLEVALUEARG,Follow._SINGLEVALUEARG_in_singleFunctionArgCompiled2067);
++
++			Match(input, TokenConstants.DOWN, null);
++			PushFollow(Follow._exprCompiled_in_singleFunctionArgCompiled2069);
++			exprCompiled(gen);
++
++			state._fsp--;
++
++
++			Match(input, TokenConstants.UP, null);
++
++			}
++
++		}
++		catch ( RecognitionException re )
++		{
++			ReportError(re);
++			Recover(input,re);
++		}
++		finally
++		{
++		}
++		return ;
++	}
++	// $ANTLR end "singleFunctionArgCompiled"
++
++
++	// $ANTLR start "singleFunctionArgFunctional"
++	// Language\\ActionEvaluator.g3:891:0: singleFunctionArgFunctional returns [System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> func] : ^( SINGLEVALUEARG exprFunctional ) ;
++	private System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> singleFunctionArgFunctional(  )
++	{
++
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> func = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>);
++
++		System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> exprFunctional32 = default(System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>);
++
++		try
++		{
++			// Language\\ActionEvaluator.g3:892:4: ( ^( SINGLEVALUEARG exprFunctional ) )
++			// Language\\ActionEvaluator.g3:892:4: ^( SINGLEVALUEARG exprFunctional )
++			{
++			Match(input,SINGLEVALUEARG,Follow._SINGLEVALUEARG_in_singleFunctionArgFunctional2089);
++
++			Match(input, TokenConstants.DOWN, null);
++			PushFollow(Follow._exprFunctional_in_singleFunctionArgFunctional2091);
++			exprFunctional32=exprFunctional();
++
++			state._fsp--;
++
++			func = exprFunctional32;
++
++			Match(input, TokenConstants.UP, null);
++
++			}
++
++		}
++		catch ( RecognitionException re )
++		{
++			ReportError(re);
++			Recover(input,re);
++		}
++		finally
++		{
++		}
++		return func;
++	}
++	// $ANTLR end "singleFunctionArgFunctional"
++
++
++	// $ANTLR start "templateFunctional"
++	// Language\\ActionEvaluator.g3:895:0: templateFunctional[List<System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,StringTemplate>> templateApplicators] : ^( TEMPLATE ( ID args= . |anon= ANONYMOUS_TEMPLATE | ^( VALUE n= expr args2= . ) ) ) ;
++	private void templateFunctional( List<System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,StringTemplate>> templateApplicators )
++	{
++		StringTemplateAST anon=null;
++		StringTemplateAST ID33=null;
++		StringTemplateAST args=null;
++		StringTemplateAST args2=null;
++		object n = default(object);
++
++
++			Map argumentContext = null;
++
++		try
++		{
++			// Language\\ActionEvaluator.g3:900:4: ( ^( TEMPLATE ( ID args= . |anon= ANONYMOUS_TEMPLATE | ^( VALUE n= expr args2= . ) ) ) )
++			// Language\\ActionEvaluator.g3:900:4: ^( TEMPLATE ( ID args= . |anon= ANONYMOUS_TEMPLATE | ^( VALUE n= expr args2= . ) ) )
++			{
++			Match(input,TEMPLATE,Follow._TEMPLATE_in_templateFunctional2114);
++
++			Match(input, TokenConstants.DOWN, null);
++			// Language\\ActionEvaluator.g3:901:4: ( ID args= . |anon= ANONYMOUS_TEMPLATE | ^( VALUE n= expr args2= . ) )
++			int alt35=3;
++			switch ( input.LA(1) )
++			{
++			case ID:
++				{
++				alt35=1;
++				}
++				break;
++			case ANONYMOUS_TEMPLATE:
++				{
++				alt35=2;
++				}
++				break;
++			case VALUE:
++				{
++				alt35=3;
++				}
++				break;
++			default:
++				{
++					NoViableAltException nvae = new NoViableAltException("", 35, 0, input);
++
++					throw nvae;
++				}
++			}
++
++			switch ( alt35 )
++			{
++			case 1:
++				// Language\\ActionEvaluator.g3:901:6: ID args= .
++				{
++				ID33=(StringTemplateAST)Match(input,ID,Follow._ID_in_templateFunctional2121);
++				args=(StringTemplateAST)input.LT(1);
++				MatchAny(input);
++
++				#if COMPILE_EXPRESSIONS
++									System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,StringTemplate> func =
++										(chunk,self,writer) =>
++										{
++											string templateName = (ID33!=null?ID33.Text:null);
++											StringTemplateGroup group = self.Group;
++											StringTemplate embedded = group.GetEmbeddedInstanceOf(self, templateName);
++											if ( embedded!=null )
++											{
++												embedded.ArgumentsAST = args;
++											}
++											return embedded;
++										};
++									templateApplicators.Add( func );
++				#endif
++
++
++				}
++				break;
++			case 2:
++				// Language\\ActionEvaluator.g3:920:6: anon= ANONYMOUS_TEMPLATE
++				{
++				anon=(StringTemplateAST)Match(input,ANONYMOUS_TEMPLATE,Follow._ANONYMOUS_TEMPLATE_in_templateFunctional2142);
++
++				#if COMPILE_EXPRESSIONS
++									System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,StringTemplate> func =
++										(chunk,self,writer) =>
++										{
++											StringTemplate anonymous = anon.StringTemplate;
++											// to properly see overridden templates, always set
++											// anonymous' group to be self's group
++											anonymous.Group = self.Group;
++											return anonymous;
++										};
++									templateApplicators.Add( func );
++				#endif
++
++
++				}
++				break;
++			case 3:
++				// Language\\ActionEvaluator.g3:936:6: ^( VALUE n= expr args2= . )
++				{
++				Match(input,VALUE,Follow._VALUE_in_templateFunctional2158);
++
++				Match(input, TokenConstants.DOWN, null);
++				PushFollow(Follow._expr_in_templateFunctional2162);
++				n=expr();
++
++				state._fsp--;
++
++				args2=(StringTemplateAST)input.LT(1);
++				MatchAny(input);
++
++				#if COMPILE_EXPRESSIONS
++										System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,StringTemplate> func =
++											(chunk,self,writer) =>
++											{
++												StringTemplate embedded = null;
++												if ( n!=null )
++												{
++													string templateName = n.ToString();
++													StringTemplateGroup group = self.Group;
++													embedded = group.GetEmbeddedInstanceOf(self, templateName);
++													if ( embedded!=null )
++													{
++														embedded.ArgumentsAST = args2;
++													}
++												}
++												return embedded;
++											};
++										templateApplicators.Add( func );
++				#endif
++
++
++				Match(input, TokenConstants.UP, null);
++
++				}
++				break;
++
++			}
++
++
++			Match(input, TokenConstants.UP, null);
++
++			}
++
++		}
++		catch ( RecognitionException re )
++		{
++			ReportError(re);
++			Recover(input,re);
++		}
++		finally
++		{
++		}
++		return ;
++	}
++	// $ANTLR end "templateFunctional"
+#endregion
+
+// Delegated rules
+@@ -1714,6 +4192,117 @@ public partial class ActionEvaluator : TreeParser
+public static readonly BitSet _ID_in_argumentAssignment864 = new BitSet(new ulong[]{0x208228F0830UL});
+public static readonly BitSet _expr_in_argumentAssignment866 = new BitSet(new ulong[]{0x8UL});
+public static readonly BitSet _DOTDOTDOT_in_argumentAssignment877 = new BitSet(new ulong[]{0x2UL});
++		public static readonly BitSet _exprCompiled_in_actionCompiled893 = new BitSet(new ulong[]{0x2UL});
++		public static readonly BitSet _exprFunctional_in_actionFunctional915 = new BitSet(new ulong[]{0x2UL});
++		public static readonly BitSet _ifAtomCompiled_in_ifConditionCompiled933 = new BitSet(new ulong[]{0x2UL});
++		public static readonly BitSet _NOT_in_ifConditionCompiled940 = new BitSet(new ulong[]{0x4UL});
++		public static readonly BitSet _ifAtomCompiled_in_ifConditionCompiled942 = new BitSet(new ulong[]{0x8UL});
++		public static readonly BitSet _ifAtomFunctional_in_ifConditionFunctional965 = new BitSet(new ulong[]{0x2UL});
++		public static readonly BitSet _NOT_in_ifConditionFunctional975 = new BitSet(new ulong[]{0x4UL});
++		public static readonly BitSet _ifAtomFunctional_in_ifConditionFunctional977 = new BitSet(new ulong[]{0x8UL});
++		public static readonly BitSet _exprCompiled_in_ifAtomCompiled994 = new BitSet(new ulong[]{0x2UL});
++		public static readonly BitSet _exprFunctional_in_ifAtomFunctional1014 = new BitSet(new ulong[]{0x2UL});
++		public static readonly BitSet _PLUS_in_exprCompiled1031 = new BitSet(new ulong[]{0x4UL});
++		public static readonly BitSet _exprCompiled_in_exprCompiled1033 = new BitSet(new ulong[]{0x208228F0830UL});
++		public static readonly BitSet _exprCompiled_in_exprCompiled1036 = new BitSet(new ulong[]{0x8UL});
++		public static readonly BitSet _templateApplicationCompiled_in_exprCompiled1047 = new BitSet(new ulong[]{0x2UL});
++		public static readonly BitSet _attributeCompiled_in_exprCompiled1053 = new BitSet(new ulong[]{0x2UL});
++		public static readonly BitSet _templateIncludeCompiled_in_exprCompiled1059 = new BitSet(new ulong[]{0x2UL});
++		public static readonly BitSet _functionCompiled_in_exprCompiled1065 = new BitSet(new ulong[]{0x2UL});
++		public static readonly BitSet _listCompiled_in_exprCompiled1071 = new BitSet(new ulong[]{0x2UL});
++		public static readonly BitSet _VALUE_in_exprCompiled1078 = new BitSet(new ulong[]{0x4UL});
++		public static readonly BitSet _exprCompiled_in_exprCompiled1080 = new BitSet(new ulong[]{0x8UL});
++		public static readonly BitSet _PLUS_in_exprFunctional1102 = new BitSet(new ulong[]{0x4UL});
++		public static readonly BitSet _exprFunctional_in_exprFunctional1106 = new BitSet(new ulong[]{0x208228F0830UL});
++		public static readonly BitSet _exprFunctional_in_exprFunctional1110 = new BitSet(new ulong[]{0x8UL});
++		public static readonly BitSet _templateApplicationFunctional_in_exprFunctional1120 = new BitSet(new ulong[]{0x2UL});
++		public static readonly BitSet _attributeFunctional_in_exprFunctional1129 = new BitSet(new ulong[]{0x2UL});
++		public static readonly BitSet _templateIncludeFunctional_in_exprFunctional1138 = new BitSet(new ulong[]{0x2UL});
++		public static readonly BitSet _functionFunctional_in_exprFunctional1147 = new BitSet(new ulong[]{0x2UL});
++		public static readonly BitSet _listFunctional_in_exprFunctional1156 = new BitSet(new ulong[]{0x2UL});
++		public static readonly BitSet _VALUE_in_exprFunctional1166 = new BitSet(new ulong[]{0x4UL});
++		public static readonly BitSet _exprFunctional_in_exprFunctional1170 = new BitSet(new ulong[]{0x8UL});
++		public static readonly BitSet _APPLY_in_templateApplicationCompiled1194 = new BitSet(new ulong[]{0x4UL});
++		public static readonly BitSet _expr_in_templateApplicationCompiled1198 = new BitSet(new ulong[]{0x4000000000UL});
++		public static readonly BitSet _template_in_templateApplicationCompiled1204 = new BitSet(new ulong[]{0x4000000008UL});
++		public static readonly BitSet _MULTI_APPLY_in_templateApplicationCompiled1227 = new BitSet(new ulong[]{0x4UL});
++		public static readonly BitSet _exprCompiled_in_templateApplicationCompiled1230 = new BitSet(new ulong[]{0x208228F0930UL});
++		public static readonly BitSet _COLON_in_templateApplicationCompiled1235 = new BitSet(new ulong[]{0x10UL});
++		public static readonly BitSet _ANONYMOUS_TEMPLATE_in_templateApplicationCompiled1240 = new BitSet(new ulong[]{0x8UL});
++		public static readonly BitSet _APPLY_in_templateApplicationFunctional1299 = new BitSet(new ulong[]{0x4UL});
++		public static readonly BitSet _exprFunctional_in_templateApplicationFunctional1303 = new BitSet(new ulong[]{0x4000000000UL});
++		public static readonly BitSet _templateFunctional_in_templateApplicationFunctional1309 = new BitSet(new ulong[]{0x4000000008UL});
++		public static readonly BitSet _MULTI_APPLY_in_templateApplicationFunctional1328 = new BitSet(new ulong[]{0x4UL});
++		public static readonly BitSet _exprFunctional_in_templateApplicationFunctional1337 = new BitSet(new ulong[]{0x208228F0930UL});
++		public static readonly BitSet _COLON_in_templateApplicationFunctional1354 = new BitSet(new ulong[]{0x10UL});
++		public static readonly BitSet _ANONYMOUS_TEMPLATE_in_templateApplicationFunctional1356 = new BitSet(new ulong[]{0x8UL});
++		public static readonly BitSet _DOT_in_attributeCompiled1379 = new BitSet(new ulong[]{0x4UL});
++		public static readonly BitSet _exprCompiled_in_attributeCompiled1381 = new BitSet(new ulong[]{0x20000020000UL});
++		public static readonly BitSet _ID_in_attributeCompiled1391 = new BitSet(new ulong[]{0x8UL});
++		public static readonly BitSet _VALUE_in_attributeCompiled1405 = new BitSet(new ulong[]{0x4UL});
++		public static readonly BitSet _exprCompiled_in_attributeCompiled1407 = new BitSet(new ulong[]{0x8UL});
++		public static readonly BitSet _ID_in_attributeCompiled1431 = new BitSet(new ulong[]{0x2UL});
++		public static readonly BitSet _INT_in_attributeCompiled1441 = new BitSet(new ulong[]{0x2UL});
++		public static readonly BitSet _STRING_in_attributeCompiled1451 = new BitSet(new ulong[]{0x2UL});
++		public static readonly BitSet _ANONYMOUS_TEMPLATE_in_attributeCompiled1461 = new BitSet(new ulong[]{0x2UL});
++		public static readonly BitSet _DOT_in_attributeFunctional1482 = new BitSet(new ulong[]{0x4UL});
++		public static readonly BitSet _exprFunctional_in_attributeFunctional1486 = new BitSet(new ulong[]{0x20000020000UL});
++		public static readonly BitSet _ID_in_attributeFunctional1495 = new BitSet(new ulong[]{0x8UL});
++		public static readonly BitSet _VALUE_in_attributeFunctional1509 = new BitSet(new ulong[]{0x4UL});
++		public static readonly BitSet _exprFunctional_in_attributeFunctional1513 = new BitSet(new ulong[]{0x8UL});
++		public static readonly BitSet _ID_in_attributeFunctional1537 = new BitSet(new ulong[]{0x2UL});
++		public static readonly BitSet _INT_in_attributeFunctional1547 = new BitSet(new ulong[]{0x2UL});
++		public static readonly BitSet _STRING_in_attributeFunctional1557 = new BitSet(new ulong[]{0x2UL});
++		public static readonly BitSet _ANONYMOUS_TEMPLATE_in_attributeFunctional1567 = new BitSet(new ulong[]{0x2UL});
++		public static readonly BitSet _INCLUDE_in_templateIncludeCompiled1585 = new BitSet(new ulong[]{0x4UL});
++		public static readonly BitSet _ID_in_templateIncludeCompiled1592 = new BitSet(new ulong[]{0xFFFFFFFFFF0UL});
++		public static readonly BitSet _VALUE_in_templateIncludeCompiled1611 = new BitSet(new ulong[]{0x4UL});
++		public static readonly BitSet _exprCompiled_in_templateIncludeCompiled1613 = new BitSet(new ulong[]{0xFFFFFFFFFF0UL});
++		public static readonly BitSet _INCLUDE_in_templateIncludeFunctional1650 = new BitSet(new ulong[]{0x4UL});
++		public static readonly BitSet _ID_in_templateIncludeFunctional1657 = new BitSet(new ulong[]{0xFFFFFFFFFF0UL});
++		public static readonly BitSet _VALUE_in_templateIncludeFunctional1670 = new BitSet(new ulong[]{0x4UL});
++		public static readonly BitSet _exprFunctional_in_templateIncludeFunctional1672 = new BitSet(new ulong[]{0xFFFFFFFFFF0UL});
++		public static readonly BitSet _FUNCTION_in_functionCompiled1705 = new BitSet(new ulong[]{0x4UL});
++		public static readonly BitSet _FIRST_in_functionCompiled1712 = new BitSet(new ulong[]{0x400000000UL});
++		public static readonly BitSet _singleFunctionArgCompiled_in_functionCompiled1715 = new BitSet(new ulong[]{0x8UL});
++		public static readonly BitSet _REST_in_functionCompiled1729 = new BitSet(new ulong[]{0x400000000UL});
++		public static readonly BitSet _singleFunctionArgCompiled_in_functionCompiled1732 = new BitSet(new ulong[]{0x8UL});
++		public static readonly BitSet _LAST_in_functionCompiled1746 = new BitSet(new ulong[]{0x400000000UL});
++		public static readonly BitSet _singleFunctionArgCompiled_in_functionCompiled1749 = new BitSet(new ulong[]{0x8UL});
++		public static readonly BitSet _LENGTH_in_functionCompiled1763 = new BitSet(new ulong[]{0x400000000UL});
++		public static readonly BitSet _singleFunctionArgCompiled_in_functionCompiled1765 = new BitSet(new ulong[]{0x8UL});
++		public static readonly BitSet _STRIP_in_functionCompiled1779 = new BitSet(new ulong[]{0x400000000UL});
++		public static readonly BitSet _singleFunctionArgCompiled_in_functionCompiled1782 = new BitSet(new ulong[]{0x8UL});
++		public static readonly BitSet _TRUNC_in_functionCompiled1796 = new BitSet(new ulong[]{0x400000000UL});
++		public static readonly BitSet _singleFunctionArgCompiled_in_functionCompiled1799 = new BitSet(new ulong[]{0x8UL});
++		public static readonly BitSet _FUNCTION_in_functionFunctional1832 = new BitSet(new ulong[]{0x4UL});
++		public static readonly BitSet _FIRST_in_functionFunctional1839 = new BitSet(new ulong[]{0x400000000UL});
++		public static readonly BitSet _singleFunctionArgFunctional_in_functionFunctional1844 = new BitSet(new ulong[]{0x8UL});
++		public static readonly BitSet _REST_in_functionFunctional1857 = new BitSet(new ulong[]{0x400000000UL});
++		public static readonly BitSet _singleFunctionArgFunctional_in_functionFunctional1862 = new BitSet(new ulong[]{0x8UL});
++		public static readonly BitSet _LAST_in_functionFunctional1875 = new BitSet(new ulong[]{0x400000000UL});
++		public static readonly BitSet _singleFunctionArgFunctional_in_functionFunctional1880 = new BitSet(new ulong[]{0x8UL});
++		public static readonly BitSet _LENGTH_in_functionFunctional1893 = new BitSet(new ulong[]{0x400000000UL});
++		public static readonly BitSet _singleFunctionArgFunctional_in_functionFunctional1897 = new BitSet(new ulong[]{0x8UL});
++		public static readonly BitSet _STRIP_in_functionFunctional1910 = new BitSet(new ulong[]{0x400000000UL});
++		public static readonly BitSet _singleFunctionArgFunctional_in_functionFunctional1915 = new BitSet(new ulong[]{0x8UL});
++		public static readonly BitSet _TRUNC_in_functionFunctional1928 = new BitSet(new ulong[]{0x400000000UL});
++		public static readonly BitSet _singleFunctionArgFunctional_in_functionFunctional1933 = new BitSet(new ulong[]{0x8UL});
++		public static readonly BitSet _LIST_in_listCompiled1962 = new BitSet(new ulong[]{0x4UL});
++		public static readonly BitSet _exprCompiled_in_listCompiled1969 = new BitSet(new ulong[]{0x208328F0838UL});
++		public static readonly BitSet _NOTHING_in_listCompiled1977 = new BitSet(new ulong[]{0x208328F0838UL});
++		public static readonly BitSet _LIST_in_listFunctional2013 = new BitSet(new ulong[]{0x4UL});
++		public static readonly BitSet _exprFunctional_in_listFunctional2020 = new BitSet(new ulong[]{0x208328F0838UL});
++		public static readonly BitSet _NOTHING_in_listFunctional2033 = new BitSet(new ulong[]{0x208328F0838UL});
++		public static readonly BitSet _SINGLEVALUEARG_in_singleFunctionArgCompiled2067 = new BitSet(new ulong[]{0x4UL});
++		public static readonly BitSet _exprCompiled_in_singleFunctionArgCompiled2069 = new BitSet(new ulong[]{0x8UL});
++		public static readonly BitSet _SINGLEVALUEARG_in_singleFunctionArgFunctional2089 = new BitSet(new ulong[]{0x4UL});
++		public static readonly BitSet _exprFunctional_in_singleFunctionArgFunctional2091 = new BitSet(new ulong[]{0x8UL});
++		public static readonly BitSet _TEMPLATE_in_templateFunctional2114 = new BitSet(new ulong[]{0x4UL});
++		public static readonly BitSet _ID_in_templateFunctional2121 = new BitSet(new ulong[]{0xFFFFFFFFFF0UL});
++		public static readonly BitSet _ANONYMOUS_TEMPLATE_in_templateFunctional2142 = new BitSet(new ulong[]{0x8UL});
++		public static readonly BitSet _VALUE_in_templateFunctional2158 = new BitSet(new ulong[]{0x4UL});
++		public static readonly BitSet _expr_in_templateFunctional2162 = new BitSet(new ulong[]{0xFFFFFFFFFF0UL});
+
+}
+#endregion
+diff --git a/Antlr3.StringTemplate/Language/ActionEvaluator.g3 b/Antlr3.StringTemplate/Language/ActionEvaluator.g3
+index d6db683..c1e5c25 100644
+--- a/Antlr3.StringTemplate/Language/ActionEvaluator.g3
++++ b/Antlr3.StringTemplate/Language/ActionEvaluator.g3
+@@ -370,3 +370,592 @@ argumentAssignment[StringTemplate embedded, Map argumentContext]
+}
+|	DOTDOTDOT {$embedded.SetPassThroughAttributes(true);}
+;
++
++public
++actionCompiled[System.Reflection.Emit.ILGenerator gen]
++	:	exprCompiled[$gen]
++		{
++#if COMPILE_EXPRESSIONS
++			EmitWriteAttribute($gen);
++#endif
++		}
++	;
++
++public
++actionFunctional returns [System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,int> func]
++	:	exprFunctional
++		{
++#if COMPILE_EXPRESSIONS
++			$func = (chunk,self,writer) => chunk.WriteAttribute(self,$exprFunctional.func(chunk,self,writer),writer);
++#endif
++		}
++	;
++
++public
++ifConditionCompiled[System.Reflection.Emit.ILGenerator gen]
++	:	ifAtomCompiled[$gen]
++	|	^(NOT ifAtomCompiled[$gen])
++		{
++#if COMPILE_EXPRESSIONS
++			EmitNot($gen);
++#endif
++		}
++	;
++
++public
++ifConditionFunctional returns [System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,bool> func]
++	:	ifAtomFunctional
++		{
++#if COMPILE_EXPRESSIONS
++			$func = $ifAtomFunctional.func;
++#endif
++		}
++	|	^(NOT ifAtomFunctional)
++		{
++#if COMPILE_EXPRESSIONS
++			$func = (chunk,self,writer) => !($ifAtomFunctional.func(chunk,self,writer));
++#endif
++		}
++	;
++
++ifAtomCompiled[System.Reflection.Emit.ILGenerator gen]
++	:	exprCompiled[$gen]
++		{
++#if COMPILE_EXPRESSIONS
++			EmitTest($gen);
++#endif
++		}
++	;
++
++ifAtomFunctional returns [System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,bool> func]
++	:	exprFunctional
++		{
++#if COMPILE_EXPRESSIONS
++			$func = (chunk,self,writer) => chunk.TestAttributeTrue($exprFunctional.func(chunk,self,writer));
++#endif
++		}
++	;
++
++exprCompiled[System.Reflection.Emit.ILGenerator gen]
++	:	^(PLUS exprCompiled[$gen] exprCompiled[$gen])
++		{
++#if COMPILE_EXPRESSIONS
++			EmitAdd($gen);
++#endif
++		}
++	|	templateApplicationCompiled[$gen]
++	|	attributeCompiled[$gen]
++	|	templateIncludeCompiled[$gen]
++	|	functionCompiled[$gen]
++	|	listCompiled[$gen]
++	|	^(VALUE exprCompiled[$gen])
++		{
++#if COMPILE_EXPRESSIONS
++			EmitWriteToString($gen);
++#endif
++		}
++	;
++
++exprFunctional returns [System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> func]
++	:	^(PLUS a=exprFunctional b=exprFunctional)
++		{
++#if COMPILE_EXPRESSIONS
++			$func = (chunk,self,writer) => chunk.Add($a.func(chunk,self,writer),$b.func(chunk,self,writer));
++#endif
++		}
++	|	templateApplicationFunctional
++		{
++#if COMPILE_EXPRESSIONS
++			$func = $templateApplicationFunctional.func;
++#endif
++		}
++	|	attributeFunctional
++		{
++#if COMPILE_EXPRESSIONS
++			$func = $attributeFunctional.func;
++#endif
++		}
++	|	templateIncludeFunctional
++		{
++#if COMPILE_EXPRESSIONS
++			$func = $templateIncludeFunctional.func;
++#endif
++		}
++	|	functionFunctional
++		{
++#if COMPILE_EXPRESSIONS
++			$func = $functionFunctional.func;
++#endif
++		}
++	|	listFunctional
++		{
++#if COMPILE_EXPRESSIONS
++			$func = $listFunctional.func;
++#endif
++		}
++	|	^(VALUE a=exprFunctional)
++		{
++#if COMPILE_EXPRESSIONS
++			$func = (chunk,self,writer) =>
++				{
++					var value = $a.func(chunk,self,writer);
++					StringWriter buf = new StringWriter();
++					IStringTemplateWriter sw = self.Group.GetStringTemplateWriter( buf );
++					int n = chunk.WriteAttribute( self, value, sw );
++					if ( n > 0 )
++						return buf.ToString();
++					return value;
++				};
++#endif
++		}
++	;
++
++templateApplicationCompiled[System.Reflection.Emit.ILGenerator gen]
++@init
++{
++	var templatesToApply = new System.Collections.Generic.List<StringTemplate>();
++}
++	:	^(	APPLY a=expr
++			(template[templatesToApply])+
++			//{$value = chunk.ApplyListOfAlternatingTemplates(self,$a.value,templatesToApply);}
++			{
++#if COMPILE_EXPRESSIONS
++				throw new System.NotImplementedException();
++#endif
++			}
++		)
++	|	^(	MULTI_APPLY (exprCompiled[$gen])+ COLON
++			ANONYMOUS_TEMPLATE
++			{
++#if COMPILE_EXPRESSIONS
++				throw new System.NotImplementedException();
++#endif
++			}
++			//{
++			//	StringTemplate anonymous = $anon.StringTemplate;
++			//	templatesToApply.Add(anonymous);
++			//	$value = chunk.ApplyTemplateToListOfAttributes(self,
++			//												  attributes,
++			//												  $anon.StringTemplate);
++			//}
++		)
++	;
++
++templateApplicationFunctional returns [System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> func]
++@init
++{
++	var  templateApplicators = new List<System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,StringTemplate>>();
++#if COMPILE_EXPRESSIONS
++	List<System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>> attributes = new List<System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>>();
++#endif
++}
++	:	^(	APPLY a=exprFunctional
++			(templateFunctional[templateApplicators])+
++			{
++#if COMPILE_EXPRESSIONS
++				$func = (chunk,self,writer) =>
++					{
++						var templatesToApply =	( from applicator in templateApplicators
++												  let st = applicator(chunk,self,writer)
++												  where st != null
++												  select st )
++												.ToList();
++						return chunk.ApplyListOfAlternatingTemplates( self, $a.func(chunk,self,writer), templatesToApply );
++					};
++#endif
++			}
++		)
++	|	^(	MULTI_APPLY
++			(	a=exprFunctional
++				{
++#if COMPILE_EXPRESSIONS
++					attributes.Add($a.func);
++#endif
++				}
++			)+
++			COLON ANONYMOUS_TEMPLATE
++			{
++#if COMPILE_EXPRESSIONS
++				StringTemplate anonymous = $ANONYMOUS_TEMPLATE.StringTemplate;
++				$func = (chunk,self,writer) =>
++					{
++						var attr =	from f in attributes
++									select f(chunk,self,writer);
++						return chunk.ApplyTemplateToListOfAttributes( self, attr.ToList(), anonymous );
++					};
++#endif
++			}
++		)
++	;
++
++attributeCompiled[System.Reflection.Emit.ILGenerator gen]
++	:	^(	DOT exprCompiled[$gen]
++			(	id=ID
++				{
++#if COMPILE_EXPRESSIONS
++					EmitLoadString($gen,$id.text);
++#endif
++				}
++			|	^(VALUE exprCompiled[$gen])
++			)
++			{
++#if COMPILE_EXPRESSIONS
++				EmitObjectProperty($gen);
++#endif
++			}
++		)
++
++	|	id=ID
++		{
++#if COMPILE_EXPRESSIONS
++			EmitAttribute($gen,$id.text);
++#endif
++		}
++
++	|	INT
++		{
++#if COMPILE_EXPRESSIONS
++			EmitLoadIntAsObject($gen,int.Parse($INT.text));
++#endif
++		}
++
++	|	STRING
++		{
++#if COMPILE_EXPRESSIONS
++			EmitLoadString($gen,$STRING.text);
++#endif
++		}
++
++	|	ANONYMOUS_TEMPLATE
++		{
++#if COMPILE_EXPRESSIONS
++			EmitAnonymousTemplate($gen,$ANONYMOUS_TEMPLATE.text);
++#endif
++		}
++	;
++
++attributeFunctional returns [System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> func]
++	:	^(	DOT a=exprFunctional
++			(	id=ID
++				{
++#if COMPILE_EXPRESSIONS
++					string text = $id.text;
++					$func = (chunk,self,writer) => chunk.GetObjectProperty( self, $a.func(chunk,self,writer), text );
++#endif
++				}
++			|	^(VALUE b=exprFunctional)
++				{
++#if COMPILE_EXPRESSIONS
++					$func = (chunk,self,writer) => chunk.GetObjectProperty( self, $a.func(chunk,self,writer), $b.func(chunk,self,writer) );
++#endif
++				}
++			)
++		)
++
++	|	id=ID
++		{
++#if COMPILE_EXPRESSIONS
++			string text = $id.text;
++			$func = (chunk,self,writer) => self.GetAttribute( text );
++#endif
++		}
++
++	|	INT
++		{
++#if COMPILE_EXPRESSIONS
++			int i = int.Parse($INT.text);
++			$func = (chunk,self,writer) => i;
++#endif
++		}
++
++	|	STRING
++		{
++#if COMPILE_EXPRESSIONS
++			string text = $STRING.text;
++			$func = (chunk,self,writer) => text;
++#endif
++		}
++
++	|	ANONYMOUS_TEMPLATE
++		{
++#if COMPILE_EXPRESSIONS
++			string text = $ANONYMOUS_TEMPLATE.text;
++			if ( text != null )
++			{
++				$func = (chunk,self,writer) =>
++					new StringTemplate( self.Group, text )
++					{
++						EnclosingInstance = self,
++						Name = "<anonymous template argument>"
++					};
++			}
++			else
++			{
++				$func = (chunk,self,writer) => null;
++			}
++#endif
++		}
++	;
++
++templateIncludeCompiled[System.Reflection.Emit.ILGenerator gen]
++	:	^(	INCLUDE
++			(	ID args=.
++				{
++#if COMPILE_EXPRESSIONS
++					EmitLoadString( $gen, $ID.text );
++#endif
++				}
++			|	^( VALUE exprCompiled[$gen] args=. )
++			)
++		)
++		{
++#if COMPILE_EXPRESSIONS
++			EmitTemplateInclude( $gen, $args );
++#endif
++		}
++	;
++
++templateIncludeFunctional returns [System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> func]
++	:	^(	INCLUDE
++			(	ID args=.
++			|	^( VALUE exprFunctional args=. )
++			)
++		)
++		{
++#if COMPILE_EXPRESSIONS
++			if ( $ID != null )
++			{
++				string name = $ID.text;
++				if ( name != null )
++				{
++					$func = (chunk,self,writer) =>
++						{
++							return chunk.GetTemplateInclude( self, name, $args );
++						};
++				}
++				else
++				{
++					$func = (chunk,self,writer) => null;
++				}
++			}
++			else
++			{
++				$func = (chunk,self,writer) =>
++					{
++						var value = $exprFunctional.func(chunk,self,writer);
++						if ( value == null )
++							return null;
++
++						string name = value.ToString();
++						if ( name != null )
++						{
++							return chunk.GetTemplateInclude( self, name, $args );
++						}
++						return null;
++					};
++			}
++#endif
++		}
++	;
++
++functionCompiled[System.Reflection.Emit.ILGenerator gen]
++	:	^(	FUNCTION
++			(	'first'		singleFunctionArgCompiled[$gen]
++				{
++#if COMPILE_EXPRESSIONS
++					EmitFunctionFirst($gen);
++#endif
++				}
++			|	'rest'		singleFunctionArgCompiled[$gen]
++				{
++#if COMPILE_EXPRESSIONS
++					EmitFunctionRest($gen);
++#endif
++				}
++			|	'last'		singleFunctionArgCompiled[$gen]
++				{
++#if COMPILE_EXPRESSIONS
++					EmitFunctionLast($gen);
++#endif
++				}
++			|	'length'	singleFunctionArgCompiled[$gen]
++				{
++#if COMPILE_EXPRESSIONS
++					EmitFunctionLength($gen);
++#endif
++				}
++			|	'strip'		singleFunctionArgCompiled[$gen]
++				{
++#if COMPILE_EXPRESSIONS
++					EmitFunctionStrip($gen);
++#endif
++				}
++			|	'trunc'		singleFunctionArgCompiled[$gen]
++				{
++#if COMPILE_EXPRESSIONS
++					EmitFunctionTrunc($gen);
++#endif
++				}
++			)
++		)
++	;
++
++functionFunctional returns [System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> func]
++	:	^(	FUNCTION
++			(	'first'		a=singleFunctionArgFunctional
++				{
++#if COMPILE_EXPRESSIONS
++					$func = (chunk,self,writer) => chunk.First( $a.func(chunk,self,writer) );
++#endif
++				}
++			|	'rest'		a=singleFunctionArgFunctional
++				{
++#if COMPILE_EXPRESSIONS
++					$func = (chunk,self,writer) => chunk.Rest( $a.func(chunk,self,writer) );
++#endif
++				}
++			|	'last'		a=singleFunctionArgFunctional
++				{
++#if COMPILE_EXPRESSIONS
++					$func = (chunk,self,writer) => chunk.Last( $a.func(chunk,self,writer) );
++#endif
++				}
++			|	'length'	a=singleFunctionArgFunctional
++				{
++#if COMPILE_EXPRESSIONS
++					$func = (chunk,self,writer) => chunk.Length( $a.func(chunk,self,writer) );
++#endif
++				}
++			|	'strip'		a=singleFunctionArgFunctional
++				{
++#if COMPILE_EXPRESSIONS
++					$func = (chunk,self,writer) => chunk.Strip( $a.func(chunk,self,writer) );
++#endif
++				}
++			|	'trunc'		a=singleFunctionArgFunctional
++				{
++#if COMPILE_EXPRESSIONS
++					$func = (chunk,self,writer) => chunk.Trunc( $a.func(chunk,self,writer) );
++#endif
++				}
++			)
++		)
++	;
++
++listCompiled[System.Reflection.Emit.ILGenerator gen]
++	:	^(	LIST
++			(	exprCompiled[$gen]
++			|	NOTHING
++			)+
++		)
++		{throw new System.NotImplementedException();}
++	;
++
++listFunctional returns [System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> func]
++@init
++{
++	List<System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>> elements = new List<System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object>>();
++}
++	:	^(	LIST
++			(	exprFunctional
++				{
++#if COMPILE_EXPRESSIONS
++					if ( $exprFunctional.func != null )
++						elements.Add($exprFunctional.func);
++#endif
++				}
++			|	NOTHING
++				{
++#if COMPILE_EXPRESSIONS
++					elements.Add( (chunk,self,writer) => new ArrayList( new object[] { null } ).iterator() );
++#endif
++				}
++			)+
++		)
++		{
++#if COMPILE_EXPRESSIONS
++			$func = (chunk,self,writer) =>
++				new Cat(from f in elements
++						let value = f(chunk,self,writer)
++						where value != null
++						select value
++						);
++#endif
++		}
++	;
++
++singleFunctionArgCompiled[System.Reflection.Emit.ILGenerator gen]
++	:	^( SINGLEVALUEARG exprCompiled[$gen] )
++	;
++
++singleFunctionArgFunctional returns [System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,object> func]
++	:	^( SINGLEVALUEARG exprFunctional {$func = $exprFunctional.func;} )
++	;
++
++templateFunctional[List<System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,StringTemplate>> templateApplicators]
++@init
++{
++	Map argumentContext = null;
++}
++	:	^(	TEMPLATE
++			(	ID args=. // don't eval argList now; must re-eval each iteration
++				{
++#if COMPILE_EXPRESSIONS
++					System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,StringTemplate> func =
++						(chunk,self,writer) =>
++						{
++							string templateName = $ID.text;
++							StringTemplateGroup group = self.Group;
++							StringTemplate embedded = group.GetEmbeddedInstanceOf(self, templateName);
++							if ( embedded!=null )
++							{
++								embedded.ArgumentsAST = $args;
++							}
++							return embedded;
++						};
++					$templateApplicators.Add( func );
++#endif
++				}
++
++			|	anon=ANONYMOUS_TEMPLATE
++				{
++#if COMPILE_EXPRESSIONS
++					System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,StringTemplate> func =
++						(chunk,self,writer) =>
++						{
++							StringTemplate anonymous = $anon.StringTemplate;
++							// to properly see overridden templates, always set
++							// anonymous' group to be self's group
++							anonymous.Group = self.Group;
++							return anonymous;
++						};
++					$templateApplicators.Add( func );
++#endif
++				}
++
++			|	^(	VALUE n=expr args2=.
++					{
++#if COMPILE_EXPRESSIONS
++						System.Func<ASTExpr,StringTemplate,IStringTemplateWriter,StringTemplate> func =
++							(chunk,self,writer) =>
++							{
++								StringTemplate embedded = null;
++								if ( $n.value!=null )
++								{
++									string templateName = $n.value.ToString();
++									StringTemplateGroup group = self.Group;
++									embedded = group.GetEmbeddedInstanceOf(self, templateName);
++									if ( embedded!=null )
++									{
++										embedded.ArgumentsAST = $args2;
++									}
++								}
++								return embedded;
++							};
++						$templateApplicators.Add( func );
++#endif
++					}
++				)
++			)
++		)
++	;
+diff --git a/Antlr3.StringTemplate/Language/ActionEvaluatorHelper.cs b/Antlr3.StringTemplate/Language/ActionEvaluatorHelper.cs
+index 2d16055..abd6904 100644
+--- a/Antlr3.StringTemplate/Language/ActionEvaluatorHelper.cs
++++ b/Antlr3.StringTemplate/Language/ActionEvaluatorHelper.cs
+@@ -35,6 +35,13 @@ namespace Antlr3.ST.Language
+using Antlr.Runtime;
+using Antlr.Runtime.Tree;
+
++#if COMPILE_EXPRESSIONS
++    using ILGenerator = System.Reflection.Emit.ILGenerator;
++    using MethodInfo = System.Reflection.MethodInfo;
++    using OpCodes = System.Reflection.Emit.OpCodes;
++    using PropertyInfo = System.Reflection.PropertyInfo;
++    using StringWriter = System.IO.StringWriter;
++#endif
+
+partial class ActionEvaluator
+{
+@@ -60,6 +67,222 @@ namespace Antlr3.ST.Language
+{
+self.Error( "eval tree parse error", e );
+}
++
++#if COMPILE_EXPRESSIONS
++        static void EmitLoadChunk( ILGenerator gen )
++        {
++            gen.Emit( OpCodes.Ldarg_0 );
++        }
++        static void EmitLoadSelf( ILGenerator gen )
++        {
++            gen.Emit( OpCodes.Ldarg_1 );
++        }
++        static void EmitLoadWriter( ILGenerator gen )
++        {
++            gen.Emit( OpCodes.Ldarg_2 );
++        }
++
++        static void EmitNot( ILGenerator gen )
++        {
++            gen.Emit( OpCodes.Ldc_I4_0 );
++            gen.Emit( OpCodes.Ceq );
++        }
++        static void EmitTest( ILGenerator gen )
++        {
++            var local = gen.DeclareLocal( typeof( object ) );
++            gen.Emit( OpCodes.Stloc, local );
++            EmitLoadChunk( gen );
++            gen.Emit( OpCodes.Ldloc, local );
++            gen.Emit( OpCodes.Callvirt, typeof( ASTExpr ).GetMethod( "TestAttributeTrue", new System.Type[] { typeof( object ) } ) );
++        }
++        static void EmitAdd( ILGenerator gen )
++        {
++            //System.Func<object, object, object> add = ( a, b ) => chunk.Add( a, b );
++            var local1 = gen.DeclareLocal( typeof( object ) );
++            var local2 = gen.DeclareLocal( typeof( object ) );
++            gen.Emit( OpCodes.Stloc, local2 );
++            gen.Emit( OpCodes.Stloc, local1 );
++            EmitLoadChunk( gen );
++            gen.Emit( OpCodes.Call, typeof( ASTExpr ).GetMethod( "Add", new System.Type[] { typeof( object ), typeof( object ) } ) );
++        }
++        static void EmitWriteToString( ILGenerator gen )
++        {
++            //System.Func<object, StringTemplate, object> write = ( value, self ) =>
++            //{
++            //    StringWriter buf = new StringWriter();
++            //    IStringTemplateWriter sw = self.Group.GetStringTemplateWriter( buf );
++            //    int n = chunk.WriteAttribute( self, value, sw );
++            //    if ( n > 0 )
++            //        return buf.ToString();
++            //    return value;
++            //};
++
++            var value = gen.DeclareLocal( typeof( object ) );
++            var buf = gen.DeclareLocal( typeof( StringWriter ) );
++            var sw = gen.DeclareLocal( typeof( IStringTemplateWriter ) );
++
++            var preserveValue = gen.DefineLabel();
++            var endOfWrite = gen.DefineLabel();
++
++            gen.Emit( OpCodes.Stloc, value );
++
++            gen.Emit( OpCodes.Newobj, typeof( StringWriter ) );
++            gen.Emit( OpCodes.Stloc, buf );
++
++            EmitLoadSelf( gen );
++            gen.Emit( OpCodes.Callvirt, typeof( StringTemplate ).GetProperty( "Group" ).GetGetMethod() );
++            gen.Emit( OpCodes.Ldloc, buf );
++            gen.Emit( OpCodes.Callvirt, typeof( StringTemplateGroup ).GetMethod( "GetStringTemplateWriter", new System.Type[] { typeof( System.IO.TextWriter ) } ) );
++            gen.Emit( OpCodes.Stloc, sw );
++
++            EmitLoadChunk( gen );
++            EmitLoadSelf( gen );
++            gen.Emit( OpCodes.Ldloc, value );
++            gen.Emit( OpCodes.Ldloc, sw );
++            gen.Emit( OpCodes.Callvirt, typeof( ASTExpr ).GetMethod( "WriteAttribute", new System.Type[] { typeof( StringTemplate ), typeof( object ), typeof( IStringTemplateWriter ) } ) );
++            gen.Emit( OpCodes.Ldc_I4_0 );
++            gen.Emit( OpCodes.Ble, preserveValue );
++
++            gen.Emit( OpCodes.Ldloc, buf );
++            gen.Emit( OpCodes.Callvirt, typeof( StringWriter ).GetMethod( "ToString", new System.Type[0] ) );
++            gen.Emit( OpCodes.Br_S, endOfWrite );
++
++            gen.MarkLabel( preserveValue );
++            gen.Emit( OpCodes.Ldloc, value );
++
++            gen.MarkLabel( endOfWrite );
++        }
++        static void EmitObjectProperty( ILGenerator gen )
++        {
++            var local2 = gen.DeclareLocal( typeof( object ) );
++            gen.Emit( OpCodes.Stloc, local2 );
++            var local1 = gen.DeclareLocal( typeof( object ) );
++            gen.Emit( OpCodes.Stloc, local1 );
++
++            EmitLoadChunk( gen );
++            EmitLoadSelf( gen );
++            gen.Emit( OpCodes.Ldloc, local1 );
++            gen.Emit( OpCodes.Ldloc, local2 );
++            gen.Emit( OpCodes.Callvirt, typeof( ASTExpr ).GetMethod( "GetObjectProperty", new System.Type[] { typeof( StringTemplate ), typeof( object ), typeof( object ) } ) );
++        }
++        static void EmitAttribute( ILGenerator gen, string attribute )
++        {
++            //$value=self.GetAttribute($i3.text);
++            EmitLoadSelf( gen );
++            gen.Emit( OpCodes.Ldstr, attribute );
++            gen.Emit( OpCodes.Callvirt, typeof( StringTemplate ).GetMethod( "GetAttribute", new System.Type[] { typeof( string ) } ) );
++        }
++        static void EmitLoadIntAsObject( ILGenerator gen, int value )
++        {
++            gen.Emit( OpCodes.Ldc_I4, value );
++            gen.Emit( OpCodes.Box, typeof( int ) );
++        }
++        static void EmitLoadString( ILGenerator gen, string value )
++        {
++            gen.Emit( OpCodes.Ldstr, value );
++        }
++        static void EmitAnonymousTemplate( ILGenerator gen, string value )
++        {
++            //System.Func<StringTemplate, string, object> loadTemplate = ( self, text ) =>
++            //{
++            //    if ( text != null )
++            //    {
++            //        StringTemplate valueST = new StringTemplate( self.Group, text );
++            //        valueST.EnclosingInstance = self;
++            //        valueST.Name = "<anonymous template argument>";
++            //        return valueST;
++            //    }
++            //    return null;
++            //};
++
++            if ( value != null )
++            {
++                var valueST = gen.DeclareLocal( typeof( StringTemplate ) );
++
++                EmitLoadSelf( gen );
++                gen.Emit( OpCodes.Callvirt, typeof( StringTemplate ).GetProperty( "Group" ).GetGetMethod() );
++                gen.Emit( OpCodes.Ldstr, value );
++                gen.Emit( OpCodes.Newobj, typeof( StringTemplate ).GetConstructor( new System.Type[] { typeof( StringTemplateGroup ), typeof( string ) } ) );
++                // copies for store, set EnclosingInstance, set Name, and one left on the evaluation stack
++                gen.Emit( OpCodes.Dup );
++                gen.Emit( OpCodes.Dup );
++                gen.Emit( OpCodes.Dup );
++                gen.Emit( OpCodes.Stloc, valueST );
++                EmitLoadSelf( gen );
++                gen.Emit( OpCodes.Callvirt, typeof( StringTemplate ).GetProperty( "EnclosingInstance" ).GetSetMethod() );
++                gen.Emit( OpCodes.Ldstr, "<anonymous template argument>" );
++                gen.Emit( OpCodes.Callvirt, typeof( StringTemplate ).GetProperty( "Name" ).GetSetMethod() );
++            }
++            else
++            {
++                gen.Emit( OpCodes.Ldnull );
++            }
++        }
++        static void EmitTemplateInclude( ILGenerator gen, StringTemplateAST args )
++        {
++            var name = gen.DeclareLocal( typeof( string ) );
++
++            var ldnull = gen.DefineLabel();
++            var endinclude = gen.DefineLabel();
++
++            gen.Emit( OpCodes.Dup );
++            gen.Emit( OpCodes.Brfalse_S, endinclude ); // the dup of a null object already loaded null back on the stack
++            gen.Emit( OpCodes.Callvirt, typeof( object ).GetMethod( "ToString" ) );
++            // at this point, the name is the top item on the evaluation stack
++            gen.Emit( OpCodes.Dup );
++            gen.Emit( OpCodes.Brfalse_S, endinclude );
++            gen.Emit( OpCodes.Stloc, name );
++
++            // $value = chunk.GetTemplateInclude(self, name, args);
++            EmitLoadChunk( gen );
++            EmitLoadSelf( gen );
++            gen.Emit( OpCodes.Ldloc, name );
++
++            // TODO: handle args
++            throw new System.NotImplementedException();
++
++            gen.Emit( OpCodes.Callvirt, typeof( ASTExpr ).GetMethod( "GetTemplateInclude", new System.Type[] { typeof( StringTemplate ), typeof( string ), typeof( StringTemplateAST ) } ) );
++
++            gen.MarkLabel( endinclude );
++        }
++        static void EmitWriteAttribute( ILGenerator gen )
++        {
++            // $numCharsWritten = chunk.WriteAttribute(self,$expr.value,writer);
++
++            var value = gen.DeclareLocal( typeof( object ) );
++            gen.Emit( OpCodes.Stloc, value );
++
++            EmitLoadChunk( gen );
++            EmitLoadSelf( gen );
++            gen.Emit( OpCodes.Ldloc, value );
++            EmitLoadWriter( gen );
++            gen.Emit( OpCodes.Callvirt, typeof( ASTExpr ).GetMethod( "WriteAttribute", new System.Type[] { typeof( StringTemplate ), typeof( object ), typeof( IStringTemplateWriter ) } ) );
++        }
++        static void EmitFunctionFirst( ILGenerator gen )
++        {
++            throw new System.NotImplementedException();
++        }
++        static void EmitFunctionRest( ILGenerator gen )
++        {
++            throw new System.NotImplementedException();
++        }
++        static void EmitFunctionLast( ILGenerator gen )
++        {
++            throw new System.NotImplementedException();
++        }
++        static void EmitFunctionLength( ILGenerator gen )
++        {
++            throw new System.NotImplementedException();
++        }
++        static void EmitFunctionStrip( ILGenerator gen )
++        {
++            throw new System.NotImplementedException();
++        }
++        static void EmitFunctionTrunc( ILGenerator gen )
++        {
++            throw new System.NotImplementedException();
++        }
++#endif
+}
+
+}
+diff --git a/Antlr3.StringTemplate/Language/ConditionalExpr.cs b/Antlr3.StringTemplate/Language/ConditionalExpr.cs
+index 66ed75a..2e92f96 100644
+--- a/Antlr3.StringTemplate/Language/ConditionalExpr.cs
++++ b/Antlr3.StringTemplate/Language/ConditionalExpr.cs
+@@ -37,16 +37,28 @@ namespace Antlr3.ST.Language
+
+using ITree = Antlr.Runtime.Tree.ITree;
+using RecognitionException = Antlr.Runtime.RecognitionException;
++#if COMPILE_EXPRESSIONS
++    using DynamicMethod = System.Reflection.Emit.DynamicMethod;
++    using OpCodes = System.Reflection.Emit.OpCodes;
++    using ParameterAttributes = System.Reflection.ParameterAttributes;
++    using Type = System.Type;
++#endif
+
+/** <summary>A conditional reference to an embedded subtemplate.</summary> */
+public class ConditionalExpr : ASTExpr
+{
++#if COMPILE_EXPRESSIONS
++        System.Func<StringTemplate, IStringTemplateWriter, bool> EvaluateCondition;
++#endif
+StringTemplate _subtemplate;
+List<ElseIfClauseData> _elseIfSubtemplates;
+StringTemplate _elseSubtemplate;
+
+protected class ElseIfClauseData
+{
++#if COMPILE_EXPRESSIONS
++            public System.Func<StringTemplate, IStringTemplateWriter, bool> EvaluateCondition;
++#endif
+public ASTExpr expr;
+public StringTemplate st;
+}
+@@ -79,6 +91,79 @@ namespace Antlr3.ST.Language
+}
+}
+
++#if COMPILE_EXPRESSIONS
++        public class HoldsConditionFuncAndChunk
++        {
++            public System.Func<ASTExpr, StringTemplate, IStringTemplateWriter, bool> func;
++            public ASTExpr chunk;
++        }
++        public static bool CallFunctionalConditionEvaluator( HoldsConditionFuncAndChunk data, StringTemplate self, IStringTemplateWriter writer )
++        {
++            return data.func( data.chunk, self, writer );
++        }
++
++        static int _evaluatorNumber = 0;
++#if CACHE_FUNCTORS
++        static Dictionary<ITree, DynamicMethod> _methods = new Dictionary<ITree, DynamicMethod>();
++#endif
++        static System.Func<StringTemplate, IStringTemplateWriter, bool> GetEvaluator( ASTExpr chunk, ITree condition )
++        {
++            if ( EnableDynamicMethods )
++            {
++                try
++                {
++                    if ( UseFunctionalMethods )
++                    {
++                        ActionEvaluator evalFunctional = new ActionEvaluator( null, chunk, null, condition );
++                        var functionalEvaluator = evalFunctional.ifConditionFunctional();
++                        HoldsConditionFuncAndChunk holder = new HoldsConditionFuncAndChunk()
++                        {
++                            func = functionalEvaluator,
++                            chunk = chunk
++                        };
++                        return (System.Func<StringTemplate, IStringTemplateWriter, bool>)System.Delegate.CreateDelegate( typeof( System.Func<StringTemplate, IStringTemplateWriter, bool> ), holder, typeof( ConditionalExpr ).GetMethod( "CallFunctionalConditionEvaluator" ) );
++                    }
++                    else
++                    {
++                        DynamicMethod method = null;
++#if CACHE_FUNCTORS
++                        if ( !_methods.TryGetValue( condition, out method ) )
++#endif
++                        {
++                            Type[] parameterTypes = { typeof( ASTExpr ), typeof( StringTemplate ), typeof( IStringTemplateWriter ) };
++                            method = new DynamicMethod( "ConditionEvaluator" + _evaluatorNumber, typeof( bool ), parameterTypes, typeof( ConditionalExpr ), true );
++                            method.DefineParameter( 1, ParameterAttributes.None, "chunk" );
++                            method.DefineParameter( 2, ParameterAttributes.None, "self" );
++                            method.DefineParameter( 3, ParameterAttributes.None, "writer" );
++                            _evaluatorNumber++;
++
++                            var gen = method.GetILGenerator();
++                            ActionEvaluator evalCompiled = new ActionEvaluator( null, chunk, null, condition );
++                            evalCompiled.ifConditionCompiled( gen );
++                            gen.Emit( OpCodes.Ret );
++#if CACHE_FUNCTORS
++                            _methods[condition] = method;
++#endif
++                        }
++
++                        var dynamicEvaluator = (System.Func<StringTemplate, IStringTemplateWriter, bool>)method.CreateDelegate( typeof( System.Func<StringTemplate, IStringTemplateWriter, bool> ), chunk );
++                        return dynamicEvaluator;
++                    }
++                }
++                catch
++                {
++                    // fall back to interpreted version
++                }
++            }
++
++            return new System.Func<StringTemplate, IStringTemplateWriter, bool>( ( self, @out ) =>
++            {
++                ActionEvaluator eval = new ActionEvaluator( self, chunk, @out, condition );
++                return eval.ifCondition();
++            } );
++        }
++#endif
++
+public virtual void AddElseIfSubtemplate( ASTExpr conditionalTree,
+StringTemplate subtemplate )
+{
+@@ -106,17 +191,26 @@ namespace Antlr3.ST.Language
+{
+return 0;
+}
+-            // System.out.println("evaluating conditional tree: "+exprTree.toStringList());
++            //System.Console.Out.WriteLine( "evaluating conditional tree: " + AST.ToStringTree() );
++#if !COMPILE_EXPRESSIONS
+ActionEvaluator eval = null;
++#endif
+int n = 0;
+try
+{
+bool testedTrue = false;
+// get conditional from tree and compute result
++#if COMPILE_EXPRESSIONS
++                if ( EvaluateCondition == null )
++                    EvaluateCondition = GetEvaluator( this, AST.GetChild( 0 ) );
++                bool includeSubtemplate = EvaluateCondition( self, @out ); // eval and write out tree
++#else
+ITree cond = AST.GetChild( 0 );
+eval = new ActionEvaluator( self, this, @out, cond );
+-                bool includeSubtemplate = eval.ifCondition(); // eval and write out tree
+-                // System.out.println("subtemplate "+subtemplate);
++                // eval and write out trees
++                bool includeSubtemplate = eval.ifCondition();
++#endif
++                //System.Console.Out.WriteLine( "subtemplate " + _subtemplate );
+// IF
+if ( includeSubtemplate )
+{
+@@ -129,8 +223,14 @@ namespace Antlr3.ST.Language
+for ( int i = 0; i < _elseIfSubtemplates.Count; i++ )
+{
+ElseIfClauseData elseIfClause = _elseIfSubtemplates[i];
++#if COMPILE_EXPRESSIONS
++                        if ( elseIfClause.EvaluateCondition == null )
++                            elseIfClause.EvaluateCondition = GetEvaluator( this, elseIfClause.expr.AST );
++                        includeSubtemplate = elseIfClause.EvaluateCondition( self, @out );
++#else
+eval = new ActionEvaluator( self, this, @out, elseIfClause.expr.AST );
+includeSubtemplate = eval.ifCondition();
++#endif
+if ( includeSubtemplate )
+{
+WriteSubTemplate( self, @out, elseIfClause.st );
+diff --git a/Antlr3.StringTemplate/StringTemplate.cs b/Antlr3.StringTemplate/StringTemplate.cs
+index 8e301d2..77ff6c0 100644
+--- a/Antlr3.StringTemplate/StringTemplate.cs
++++ b/Antlr3.StringTemplate/StringTemplate.cs
+@@ -987,12 +987,13 @@ namespace Antlr3.ST
+int n = 0;
+SetPredefinedAttributes();
+SetDefaultArgumentValues();
+-            for ( int i = 0; _chunks != null && i < _chunks.Count; i++ )
++            int chunkCount = _chunks != null ? _chunks.Count : 0;
++            for ( int i = 0; _chunks != null && i < chunkCount; i++ )
+{
+-                Expr a = (Expr)_chunks[i];
++                Expr a = _chunks[i];
+int chunkN = a.Write( this, writer );
+// expr-on-first-line-with-no-output NEWLINE => NEWLINE
+-                if ( chunkN == 0 && i == 0 && ( i + 1 ) < _chunks.Count &&
++                if ( chunkN == 0 && i == 0 && ( i + 1 ) < chunkCount &&
+_chunks[i + 1] is NewlineRef )
+{
+//System.out.println("found pure first-line-blank \\n pattern");
+@@ -1004,7 +1005,7 @@ namespace Antlr3.ST
+// so the indent does not come out as a StringRef
+if ( chunkN == 0 &&
+( i - 1 ) >= 0 && _chunks[i - 1] is NewlineRef &&
+-                    ( i + 1 ) < _chunks.Count && _chunks[i + 1] is NewlineRef )
++                    ( i + 1 ) < chunkCount && _chunks[i + 1] is NewlineRef )
+{
+//System.out.println("found pure \\n blank \\n pattern");
+i++; // make it skip over the next chunk, the NEWLINE
+@@ -1015,7 +1016,7 @@ namespace Antlr3.ST
+{
+_group.EmitTemplateStopDebugString( this, writer );
+}
+-            if ( _lintMode )
++            if ( LintMode )
+{
+CheckForTrouble();
+}
+@@ -1061,7 +1062,7 @@ namespace Antlr3.ST
+return null;
+}
+
+-            if ( _lintMode )
++            if ( LintMode )
+{
+self.TrackAttributeReference( attribute );
+}
+@@ -1070,7 +1071,7 @@ namespace Antlr3.ST
+object o = null;
+if ( self.attributes != null )
+{
+-                o = self.attributes.get( attribute );
++                self.attributes.TryGetValue( attribute, out o );
+}
+
+// nope, check argument context in case embedded
+@@ -1079,7 +1080,7 @@ namespace Antlr3.ST
+IDictionary<string, object> argContext = self.ArgumentContext;
+if ( argContext != null )
+{
+-                    o = argContext.get( attribute );
++                    argContext.TryGetValue( attribute, out o );
+}
+}
+
+@@ -1097,10 +1098,7 @@ namespace Antlr3.ST
+// not locally defined, check enclosingInstance if embedded
+if ( o == null && self._enclosingInstance != null )
+{
+-                /*
+-                System.out.println("looking for "+getName()+"."+attribute+" in super="+
+-                        enclosingInstance.getName());
+-                */
++                //System.Console.Out.WriteLine( "looking for " + Name + "." + attribute + " in super=" + _enclosingInstance.Name );
+object valueFromEnclosing = Get( self._enclosingInstance, attribute );
+if ( valueFromEnclosing == null )
+{
+@@ -1227,7 +1225,7 @@ namespace Antlr3.ST
+}
+if ( _formalArguments != FormalArgument.UNKNOWN )
+{
+-                foreach ( FormalArgument arg in _formalArguments )
++                foreach ( var arg in _formalArguments )
+{
+string argName = arg.name;
+// use the default value then
+@@ -1264,7 +1262,13 @@ namespace Antlr3.ST
+
+public virtual FormalArgument GetFormalArgument( string name )
+{
+-            return _formalArguments.FirstOrDefault( fa => fa.name == name );
++            foreach ( var arg in FormalArguments )
++            {
++                if ( arg.name == name )
++                    return arg;
++            }
++
++            return null;
+}
+
+public virtual void DefineEmptyFormalArgumentList()
+

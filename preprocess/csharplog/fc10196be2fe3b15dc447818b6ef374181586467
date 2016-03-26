@@ -1,0 +1,11 @@
+commit fc10196be2fe3b15dc447818b6ef374181586467
+Merge: b308fd8 e4194f4
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Fri Aug 9 22:01:01 2013 -0700
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Fri Aug 9 22:01:01 2013 -0700
+
+Merge pull request #20 from sharwell/fix-13
+
+Fix support for static methods, properties, and fields (fixes #13)
+

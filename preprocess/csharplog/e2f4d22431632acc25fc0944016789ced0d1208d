@@ -1,0 +1,419 @@
+commit e2f4d22431632acc25fc0944016789ced0d1208d
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed May 4 06:07:47 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed May 4 06:07:47 2011 -0800
+
+(C# 3) Remove signing keys from a location visible to P4
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8388]
+
+diff --git a/Antlr3.StringTemplate/Antlr3.StringTemplate.csproj b/Antlr3.StringTemplate/Antlr3.StringTemplate.csproj
+index 9bfc162..b123bcb 100644
+--- a/Antlr3.StringTemplate/Antlr3.StringTemplate.csproj
++++ b/Antlr3.StringTemplate/Antlr3.StringTemplate.csproj
+@@ -20,7 +20,7 @@
+</SccAuxPath>
+<SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+-    <AssemblyOriginatorKeyFile>..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
++    <AssemblyOriginatorKeyFile>..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+@@ -135,7 +135,7 @@
+</ProjectReference>
+</ItemGroup>
+<ItemGroup>
+-    <None Include="..\Antlr3\Key.snk">
++    <None Include="..\..\..\..\keys\antlr\Key.snk">
+<Link>Key.snk</Link>
+</None>
+</ItemGroup>
+diff --git a/Antlr3.Targets/Antlr3.Targets.ActionScript/Antlr3.Targets.ActionScript.csproj b/Antlr3.Targets/Antlr3.Targets.ActionScript/Antlr3.Targets.ActionScript.csproj
+index 7e2cc84..bd3b87c 100644
+--- a/Antlr3.Targets/Antlr3.Targets.ActionScript/Antlr3.Targets.ActionScript.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.ActionScript/Antlr3.Targets.ActionScript.csproj
+@@ -18,7 +18,7 @@
+</SccAuxPath>
+<SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+-    <AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
++    <AssemblyOriginatorKeyFile>..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+@@ -56,7 +56,7 @@
+</ProjectReference>
+</ItemGroup>
+<ItemGroup>
+-    <None Include="..\..\Antlr3\Key.snk">
++    <None Include="..\..\..\..\..\keys\antlr\Key.snk">
+<Link>Key.snk</Link>
+</None>
+</ItemGroup>
+diff --git a/Antlr3.Targets/Antlr3.Targets.C/Antlr3.Targets.C.csproj b/Antlr3.Targets/Antlr3.Targets.C/Antlr3.Targets.C.csproj
+index d14fa53..4e25597 100644
+--- a/Antlr3.Targets/Antlr3.Targets.C/Antlr3.Targets.C.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.C/Antlr3.Targets.C.csproj
+@@ -18,7 +18,7 @@
+</SccAuxPath>
+<SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+-    <AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
++    <AssemblyOriginatorKeyFile>..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+@@ -61,7 +61,7 @@
+</ProjectReference>
+</ItemGroup>
+<ItemGroup>
+-    <None Include="..\..\Antlr3\Key.snk">
++    <None Include="..\..\..\..\..\keys\antlr\Key.snk">
+<Link>Key.snk</Link>
+</None>
+</ItemGroup>
+diff --git a/Antlr3.Targets/Antlr3.Targets.CSharp2/Antlr3.Targets.CSharp2.csproj b/Antlr3.Targets/Antlr3.Targets.CSharp2/Antlr3.Targets.CSharp2.csproj
+index 6bf9235..235edf5 100644
+--- a/Antlr3.Targets/Antlr3.Targets.CSharp2/Antlr3.Targets.CSharp2.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.CSharp2/Antlr3.Targets.CSharp2.csproj
+@@ -18,7 +18,7 @@
+</SccAuxPath>
+<SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+-    <AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
++    <AssemblyOriginatorKeyFile>..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+@@ -56,7 +56,7 @@
+</ProjectReference>
+</ItemGroup>
+<ItemGroup>
+-    <None Include="..\..\Antlr3\Key.snk">
++    <None Include="..\..\..\..\..\keys\antlr\Key.snk">
+<Link>Key.snk</Link>
+</None>
+</ItemGroup>
+diff --git a/Antlr3.Targets/Antlr3.Targets.CSharp3/Antlr3.Targets.CSharp3.csproj b/Antlr3.Targets/Antlr3.Targets.CSharp3/Antlr3.Targets.CSharp3.csproj
+index 4622a8b..fafad39 100644
+--- a/Antlr3.Targets/Antlr3.Targets.CSharp3/Antlr3.Targets.CSharp3.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.CSharp3/Antlr3.Targets.CSharp3.csproj
+@@ -19,7 +19,7 @@
+<SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+<DelaySign>false</DelaySign>
+-    <AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
++    <AssemblyOriginatorKeyFile>..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+@@ -62,7 +62,7 @@
+</ProjectReference>
+</ItemGroup>
+<ItemGroup>
+-    <None Include="..\..\Antlr3\Key.snk">
++    <None Include="..\..\..\..\..\keys\antlr\Key.snk">
+<Link>Key.snk</Link>
+</None>
+</ItemGroup>
+diff --git a/Antlr3.Targets/Antlr3.Targets.Cpp/Antlr3.Targets.Cpp.csproj b/Antlr3.Targets/Antlr3.Targets.Cpp/Antlr3.Targets.Cpp.csproj
+index 7f4c374..541ac5d 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Cpp/Antlr3.Targets.Cpp.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.Cpp/Antlr3.Targets.Cpp.csproj
+@@ -18,7 +18,7 @@
+</SccAuxPath>
+<SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+-    <AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
++    <AssemblyOriginatorKeyFile>..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+@@ -61,7 +61,7 @@
+</ProjectReference>
+</ItemGroup>
+<ItemGroup>
+-    <None Include="..\..\Antlr3\Key.snk">
++    <None Include="..\..\..\..\..\keys\antlr\Key.snk">
+<Link>Key.snk</Link>
+</None>
+</ItemGroup>
+diff --git a/Antlr3.Targets/Antlr3.Targets.Delphi/Antlr3.Targets.Delphi.csproj b/Antlr3.Targets/Antlr3.Targets.Delphi/Antlr3.Targets.Delphi.csproj
+index 6bdc5cb..184d023 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Delphi/Antlr3.Targets.Delphi.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.Delphi/Antlr3.Targets.Delphi.csproj
+@@ -18,7 +18,7 @@
+</SccAuxPath>
+<SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+-    <AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
++    <AssemblyOriginatorKeyFile>..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+@@ -56,7 +56,7 @@
+</ProjectReference>
+</ItemGroup>
+<ItemGroup>
+-    <None Include="..\..\Antlr3\Key.snk">
++    <None Include="..\..\..\..\..\keys\antlr\Key.snk">
+<Link>Key.snk</Link>
+</None>
+</ItemGroup>
+diff --git a/Antlr3.Targets/Antlr3.Targets.Java/Antlr3.Targets.Java.csproj b/Antlr3.Targets/Antlr3.Targets.Java/Antlr3.Targets.Java.csproj
+index abee8e5..f0cdcd7 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Java/Antlr3.Targets.Java.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.Java/Antlr3.Targets.Java.csproj
+@@ -18,7 +18,7 @@
+</SccAuxPath>
+<SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+-    <AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
++    <AssemblyOriginatorKeyFile>..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+@@ -56,7 +56,7 @@
+</ProjectReference>
+</ItemGroup>
+<ItemGroup>
+-    <None Include="..\..\Antlr3\Key.snk">
++    <None Include="..\..\..\..\..\keys\antlr\Key.snk">
+<Link>Key.snk</Link>
+</None>
+</ItemGroup>
+diff --git a/Antlr3.Targets/Antlr3.Targets.JavaScript/Antlr3.Targets.JavaScript.csproj b/Antlr3.Targets/Antlr3.Targets.JavaScript/Antlr3.Targets.JavaScript.csproj
+index 0688065..1ba2256 100644
+--- a/Antlr3.Targets/Antlr3.Targets.JavaScript/Antlr3.Targets.JavaScript.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.JavaScript/Antlr3.Targets.JavaScript.csproj
+@@ -18,7 +18,7 @@
+</SccAuxPath>
+<SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+-    <AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
++    <AssemblyOriginatorKeyFile>..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+@@ -56,7 +56,7 @@
+</ProjectReference>
+</ItemGroup>
+<ItemGroup>
+-    <None Include="..\..\Antlr3\Key.snk">
++    <None Include="..\..\..\..\..\keys\antlr\Key.snk">
+<Link>Key.snk</Link>
+</None>
+</ItemGroup>
+diff --git a/Antlr3.Targets/Antlr3.Targets.ObjC/Antlr3.Targets.ObjC.csproj b/Antlr3.Targets/Antlr3.Targets.ObjC/Antlr3.Targets.ObjC.csproj
+index 1db2b21..fdc52b6 100644
+--- a/Antlr3.Targets/Antlr3.Targets.ObjC/Antlr3.Targets.ObjC.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.ObjC/Antlr3.Targets.ObjC.csproj
+@@ -18,7 +18,7 @@
+</SccAuxPath>
+<SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+-    <AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
++    <AssemblyOriginatorKeyFile>..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+@@ -61,7 +61,7 @@
+</ProjectReference>
+</ItemGroup>
+<ItemGroup>
+-    <None Include="..\..\Antlr3\Key.snk">
++    <None Include="..\..\..\..\..\keys\antlr\Key.snk">
+<Link>Key.snk</Link>
+</None>
+</ItemGroup>
+diff --git a/Antlr3.Targets/Antlr3.Targets.Perl5/Antlr3.Targets.Perl5.csproj b/Antlr3.Targets/Antlr3.Targets.Perl5/Antlr3.Targets.Perl5.csproj
+index 089bd62..c9d5106 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Perl5/Antlr3.Targets.Perl5.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.Perl5/Antlr3.Targets.Perl5.csproj
+@@ -18,7 +18,7 @@
+</SccAuxPath>
+<SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+-    <AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
++    <AssemblyOriginatorKeyFile>..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+@@ -56,7 +56,7 @@
+</ProjectReference>
+</ItemGroup>
+<ItemGroup>
+-    <None Include="..\..\Antlr3\Key.snk">
++    <None Include="..\..\..\..\..\keys\antlr\Key.snk">
+<Link>Key.snk</Link>
+</None>
+</ItemGroup>
+diff --git a/Antlr3.Targets/Antlr3.Targets.Python/Antlr3.Targets.Python.csproj b/Antlr3.Targets/Antlr3.Targets.Python/Antlr3.Targets.Python.csproj
+index b652eba..f7bd4aa 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Python/Antlr3.Targets.Python.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.Python/Antlr3.Targets.Python.csproj
+@@ -18,7 +18,7 @@
+</SccAuxPath>
+<SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+-    <AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
++    <AssemblyOriginatorKeyFile>..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+@@ -49,11 +49,6 @@
+<Compile Include="PythonTarget.cs" />
+</ItemGroup>
+<ItemGroup>
+-    <None Include="..\..\Antlr3\Key.snk">
+-      <Link>Key.snk</Link>
+-    </None>
+-  </ItemGroup>
+-  <ItemGroup>
+<ProjectReference Include="..\..\..\..\antlr\antlr3-main\runtime\CSharp3\Sources\Antlr3.Runtime\Antlr3.Runtime.csproj">
+<Project>{8FDC0A87-9005-4D5A-AB75-E55CEB575559}</Project>
+<Name>Antlr3.Runtime</Name>
+@@ -65,6 +60,11 @@
+<Private>False</Private>
+</ProjectReference>
+</ItemGroup>
++  <ItemGroup>
++    <None Include="..\..\..\..\..\keys\antlr\Key.snk">
++      <Link>Key.snk</Link>
++    </None>
++  </ItemGroup>
+<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+<!-- To modify your build process, add your task inside one of the targets below and uncomment it.
+Other similar extension points exist, see Microsoft.Common.targets.
+diff --git a/Antlr3.Targets/Antlr3.Targets.Ruby/Antlr3.Targets.Ruby.csproj b/Antlr3.Targets/Antlr3.Targets.Ruby/Antlr3.Targets.Ruby.csproj
+index d55eff6..46fe20a 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Ruby/Antlr3.Targets.Ruby.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.Ruby/Antlr3.Targets.Ruby.csproj
+@@ -18,7 +18,7 @@
+</SccAuxPath>
+<SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+-    <AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
++    <AssemblyOriginatorKeyFile>..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+@@ -61,7 +61,7 @@
+</ProjectReference>
+</ItemGroup>
+<ItemGroup>
+-    <None Include="..\..\Antlr3\Key.snk">
++    <None Include="..\..\..\..\..\keys\antlr\Key.snk">
+<Link>Key.snk</Link>
+</None>
+</ItemGroup>
+diff --git a/Antlr3/Antlr3.csproj b/Antlr3/Antlr3.csproj
+index 04ceb85..b3cde5a 100644
+--- a/Antlr3/Antlr3.csproj
++++ b/Antlr3/Antlr3.csproj
+@@ -20,7 +20,7 @@
+<StartupObject>
+</StartupObject>
+<SignAssembly>true</SignAssembly>
+-    <AssemblyOriginatorKeyFile>Key.snk</AssemblyOriginatorKeyFile>
++    <AssemblyOriginatorKeyFile>..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+@@ -513,11 +513,13 @@
+<Link>Codegen\Templates\LeftRecursiveRules.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</EmbeddedResource>
++    <None Include="..\..\..\..\keys\antlr\Key.snk">
++      <Link>Key.snk</Link>
++    </None>
+<None Include="app.config" />
+<Antlr3 Include="Grammars\LeftRecursiveRuleWalker.g3">
+<Generator>MSBuild:Compile</Generator>
+</Antlr3>
+-    <None Include="Key.snk" />
+</ItemGroup>
+<ItemGroup>
+<ProjectReference Include="..\..\..\antlr\antlr3-main\runtime\CSharp3\Sources\Antlr3.Runtime.Debug\Antlr3.Runtime.Debug.csproj">
+diff --git a/Antlr3/Key.snk b/Antlr3/Key.snk
+deleted file mode 100644
+index e69de29..0000000
+diff --git a/Antlr4.StringTemplate.Visualizer/Antlr4.StringTemplate.Visualizer.csproj b/Antlr4.StringTemplate.Visualizer/Antlr4.StringTemplate.Visualizer.csproj
+index dc4dc40..4f5120b 100644
+--- a/Antlr4.StringTemplate.Visualizer/Antlr4.StringTemplate.Visualizer.csproj
++++ b/Antlr4.StringTemplate.Visualizer/Antlr4.StringTemplate.Visualizer.csproj
+@@ -41,7 +41,7 @@
+<SignAssembly>true</SignAssembly>
+</PropertyGroup>
+<PropertyGroup>
+-    <AssemblyOriginatorKeyFile>..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
++    <AssemblyOriginatorKeyFile>..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+</PropertyGroup>
+<ItemGroup>
+<Reference Include="System" />
+@@ -88,7 +88,7 @@
+<Generator>ResXFileCodeGenerator</Generator>
+<LastGenOutput>Resources.Designer.cs</LastGenOutput>
+</EmbeddedResource>
+-    <None Include="..\Antlr3\Key.snk">
++    <None Include="..\..\..\..\keys\antlr\Key.snk">
+<Link>Key.snk</Link>
+</None>
+<None Include="Properties\Settings.settings">
+diff --git a/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj b/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj
+index 8a2aab8..5388480 100644
+--- a/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj
++++ b/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj
+@@ -53,7 +53,7 @@
+<Compile Include="Misc\Aggregate.cs" />
+<Compile Include="Misc\AggregateModelAdaptor.cs" />
+<Compile Include="TemplateGroupString.cs" />
+-    <None Include="..\Antlr3\Key.snk">
++    <None Include="..\..\..\..\keys\antlr\Key.snk">
+<Link>Key.snk</Link>
+</None>
+<None Include="DateRenderer.cs" />
+@@ -143,7 +143,7 @@
+<SignAssembly>true</SignAssembly>
+</PropertyGroup>
+<PropertyGroup>
+-    <AssemblyOriginatorKeyFile>..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
++    <AssemblyOriginatorKeyFile>..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+</PropertyGroup>
+<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+<PropertyGroup>
+diff --git a/AntlrBuildTask/AntlrBuildTask.csproj b/AntlrBuildTask/AntlrBuildTask.csproj
+index 2507bec..ff3d960 100644
+--- a/AntlrBuildTask/AntlrBuildTask.csproj
++++ b/AntlrBuildTask/AntlrBuildTask.csproj
+@@ -13,7 +13,7 @@
+<TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+<FileAlignment>512</FileAlignment>
+<SignAssembly>true</SignAssembly>
+-    <AssemblyOriginatorKeyFile>..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
++    <AssemblyOriginatorKeyFile>..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<SccProjectName>Perforce Project</SccProjectName>
+<SccLocalPath>..\..\..</SccLocalPath>
+<SccAuxPath>
+@@ -55,13 +55,15 @@
+<Compile Include="Properties\AssemblyInfo.cs" />
+</ItemGroup>
+<ItemGroup>
+-    <None Include="..\Antlr3\Key.snk">
+-      <Link>Key.snk</Link>
+-    </None>
+<Content Include="Antlr3.targets">
+<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+</Content>
+</ItemGroup>
++  <ItemGroup>
++    <None Include="..\..\..\..\keys\antlr\Key.snk">
++      <Link>Key.snk</Link>
++    </None>
++  </ItemGroup>
+<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+<!-- To modify your build process, add your task inside one of the targets below and uncomment it.
+Other similar extension points exist, see Microsoft.Common.targets.
+

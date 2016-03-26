@@ -1,0 +1,160 @@
+commit 9fc705513585b42914aa9ae02792dcbe5e5b6202
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Fri Sep 27 18:38:02 2013 -0500
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Fri Sep 27 18:38:02 2013 -0500
+
+[maven-release-plugin] prepare release 3.5.1
+
+diff --git a/antlr-complete/pom.xml b/antlr-complete/pom.xml
+index f3531d5..f672de5 100644
+--- a/antlr-complete/pom.xml
++++ b/antlr-complete/pom.xml
+@@ -17,7 +17,7 @@
+<parent>
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+-        <version>3.5.1-SNAPSHOT</version>
++        <version>3.5.1</version>
+</parent>
+
+<url>http://antlr.org/</url>
+diff --git a/antlr3-maven-archetype/pom.xml b/antlr3-maven-archetype/pom.xml
+index a1b5e62..3f4aaed 100644
+--- a/antlr3-maven-archetype/pom.xml
++++ b/antlr3-maven-archetype/pom.xml
+@@ -1,6 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
++<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+
+<modelVersion>4.0.0</modelVersion>
+@@ -20,7 +19,7 @@
+<parent>
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+-        <version>3.5.1-SNAPSHOT</version>
++        <version>3.5.1</version>
+</parent>
+
+<build>
+diff --git a/antlr3-maven-plugin/pom.xml b/antlr3-maven-plugin/pom.xml
+index be31508..4f14953 100644
+--- a/antlr3-maven-plugin/pom.xml
++++ b/antlr3-maven-plugin/pom.xml
+@@ -33,8 +33,7 @@
+
+
+
+-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
++<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+<!-- Maven model we are inheriting from
+-->
+@@ -63,7 +62,7 @@
+<parent>
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+-        <version>3.5.1-SNAPSHOT</version>
++        <version>3.5.1</version>
+</parent>
+
+<name>ANTLR 3 Maven plugin</name>
+diff --git a/gunit-maven-plugin/pom.xml b/gunit-maven-plugin/pom.xml
+index 2e133a9..7c36b91 100644
+--- a/gunit-maven-plugin/pom.xml
++++ b/gunit-maven-plugin/pom.xml
+@@ -31,8 +31,7 @@
+
+-->
+
+-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
++<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+<modelVersion>4.0.0</modelVersion>
+
+@@ -57,7 +56,7 @@
+<parent>
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+-        <version>3.5.1-SNAPSHOT</version>
++        <version>3.5.1</version>
+</parent>
+
+<properties>
+diff --git a/gunit/pom.xml b/gunit/pom.xml
+index c893cbf..f000afd 100644
+--- a/gunit/pom.xml
++++ b/gunit/pom.xml
+@@ -17,7 +17,7 @@
+<parent>
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+-        <version>3.5.1-SNAPSHOT</version>
++        <version>3.5.1</version>
+</parent>
+
+<url>http://www.antlr.org/wiki/display/ANTLR3/gUnit+-+Grammar+Unit+Testing</url>
+@@ -65,7 +65,7 @@
+<groupId>org.antlr</groupId>
+<artifactId>antlr3-maven-plugin</artifactId>
+<version>${project.version}</version>
+-                <configuration></configuration>
++                <configuration />
+<executions>
+<execution>
+<goals>
+diff --git a/pom.xml b/pom.xml
+index b6bebfb..4707d71 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -11,7 +11,7 @@
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+<packaging>pom</packaging>
+-    <version>3.5.1-SNAPSHOT</version>
++    <version>3.5.1</version>
+<name>ANTLR 3 Master build control POM</name>
+<description>Master build POM for ANTLR 3</description>
+<url>http://antlr.org</url>
+@@ -84,7 +84,8 @@
+<url>https://github.com/antlr/antlr3/tree/master</url>
+<connection>scm:git:git://github.com/antlr/antlr3.git</connection>
+<developerConnection>scm:git:git@github.com:antlr/antlr3.git</developerConnection>
+-    </scm>
++      <tag>3.5.1</tag>
++  </scm>
+<!--
+
+Tell Maven which other artifacts we need in order to
+diff --git a/runtime/Java/pom.xml b/runtime/Java/pom.xml
+index 6296cb8..395dc53 100644
+--- a/runtime/Java/pom.xml
++++ b/runtime/Java/pom.xml
+@@ -15,7 +15,7 @@
+<parent>
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+-      <version>3.5.1-SNAPSHOT</version>
++      <version>3.5.1</version>
+<relativePath>../..</relativePath>
+</parent>
+
+diff --git a/tool/pom.xml b/tool/pom.xml
+index dd825e3..e140b1c 100644
+--- a/tool/pom.xml
++++ b/tool/pom.xml
+@@ -16,7 +16,7 @@
+<parent>
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+-        <version>3.5.1-SNAPSHOT</version>
++        <version>3.5.1</version>
+</parent>
+
+<dependencies>
+

@@ -1,0 +1,22 @@
+commit 466160a0705c8c7e717507a72e8fb55ed86b54c3
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Thu Dec 13 17:37:28 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Thu Dec 13 18:00:46 2012 -0600
+
+Fix warning about exposing a package-private type
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg b/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
+index 49b7982..1082079 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
+@@ -1078,7 +1078,7 @@ static {
+}
+}
+
+-class DFA<dfa.decisionNumber> extends DFA {
++protected class DFA<dfa.decisionNumber> extends DFA {
+
+public DFA<dfa.decisionNumber>(BaseRecognizer recognizer) {
+this.recognizer = recognizer;
+

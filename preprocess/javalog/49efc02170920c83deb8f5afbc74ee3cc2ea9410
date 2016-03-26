@@ -1,0 +1,182 @@
+commit 49efc02170920c83deb8f5afbc74ee3cc2ea9410
+Author:     Sanne Grinovero <sanne@hibernate.org>
+AuthorDate: Wed Jul 11 16:06:16 2012 +0100
+Commit:     Sanne Grinovero <sanne@hibernate.org>
+CommitDate: Wed Jul 11 16:13:20 2012 +0100
+
+Allow extensions to avoid System.exit in case of failures
+
+diff --git a/gunit/src/main/java/org/antlr/gunit/gUnitBaseTest.java b/gunit/src/main/java/org/antlr/gunit/gUnitBaseTest.java
+index 7656324..d2520b7 100644
+--- a/gunit/src/main/java/org/antlr/gunit/gUnitBaseTest.java
++++ b/gunit/src/main/java/org/antlr/gunit/gUnitBaseTest.java
+@@ -115,17 +115,17 @@ public abstract class gUnitBaseTest extends TestCase {
+return null;
+}
+} catch (ClassNotFoundException e) {
+-        	e.printStackTrace(); System.exit(1);
++        	handleUnexpectedException(e);
+} catch (SecurityException e) {
+-        	e.printStackTrace(); System.exit(1);
++        	handleUnexpectedException(e);
+} catch (NoSuchMethodException e) {
+-        	e.printStackTrace(); System.exit(1);
++        	handleUnexpectedException(e);
+} catch (IllegalArgumentException e) {
+-        	e.printStackTrace(); System.exit(1);
++        	handleUnexpectedException(e);
+} catch (InstantiationException e) {
+-        	e.printStackTrace(); System.exit(1);
++        	handleUnexpectedException(e);
+} catch (IllegalAccessException e) {
+-        	e.printStackTrace(); System.exit(1);
++        	handleUnexpectedException(e);
+} catch (InvocationTargetException e) {	// This exception could be caused from ANTLR Runtime Exception, e.g. MismatchedTokenException
+if ( e.getCause()!=null ) this.stderr = e.getCause().toString();
+else this.stderr = e.toString();
+@@ -260,16 +260,16 @@ public abstract class gUnitBaseTest extends TestCase {
+}
+}
+catch (ClassNotFoundException e) {
+-			e.printStackTrace(); System.exit(1);
++        	handleUnexpectedException(e);
+}
+catch (SecurityException e) {
+-			e.printStackTrace(); System.exit(1);
++        	handleUnexpectedException(e);
+}
+catch (NoSuchMethodException e) {
+-			e.printStackTrace(); System.exit(1);
++        	handleUnexpectedException(e);
+}
+catch (IllegalAccessException e) {
+-			e.printStackTrace(); System.exit(1);
++        	handleUnexpectedException(e);
+}
+catch (InvocationTargetException e) {
+this.stdout = out.toString();
+@@ -432,13 +432,13 @@ public abstract class gUnitBaseTest extends TestCase {
+return null;
+}
+} catch (ClassNotFoundException e) {
+-			e.printStackTrace(); System.exit(1);
++			handleUnexpectedException(e);
+} catch (SecurityException e) {
+-			e.printStackTrace(); System.exit(1);
++			handleUnexpectedException(e);
+} catch (NoSuchMethodException e) {
+-			e.printStackTrace(); System.exit(1);
++			handleUnexpectedException(e);
+} catch (IllegalAccessException e) {
+-			e.printStackTrace(); System.exit(1);
++			handleUnexpectedException(e);
+} catch (InvocationTargetException e) {
+if ( e.getCause()!=null ) this.stderr = e.getCause().toString();
+else this.stderr = e.toString();
+@@ -481,4 +481,9 @@ public abstract class gUnitBaseTest extends TestCase {
+}
+}
+
++	protected void handleUnexpectedException(Exception e) {
++		e.printStackTrace();
++		System.exit(1);
++	}
++
+}
+diff --git a/gunit/src/main/java/org/antlr/gunit/gUnitExecutor.java b/gunit/src/main/java/org/antlr/gunit/gUnitExecutor.java
+index 72d8ea4..1ac8319 100644
+--- a/gunit/src/main/java/org/antlr/gunit/gUnitExecutor.java
++++ b/gunit/src/main/java/org/antlr/gunit/gUnitExecutor.java
+@@ -147,8 +147,7 @@ public class gUnitExecutor implements ITestSuite {
+}
+}
+catch (Exception e) {
+-            e.printStackTrace();
+-            System.exit(1);
++			handleUnexpectedException(e);
+}
+return testResultST.toString();
+}
+@@ -277,17 +276,17 @@ public class gUnitExecutor implements ITestSuite {
+} catch (IOException e) {
+return getTestExceptionResult(e);
+} catch (ClassNotFoundException e) {
+-        	e.printStackTrace(); System.exit(1);
++        	handleUnexpectedException( e );
+} catch (SecurityException e) {
+-        	e.printStackTrace(); System.exit(1);
++        	handleUnexpectedException( e );
+} catch (NoSuchMethodException e) {
+-        	e.printStackTrace(); System.exit(1);
++        	handleUnexpectedException( e );
+} catch (IllegalArgumentException e) {
+-        	e.printStackTrace(); System.exit(1);
++        	handleUnexpectedException( e );
+} catch (InstantiationException e) {
+-        	e.printStackTrace(); System.exit(1);
++        	handleUnexpectedException( e );
+} catch (IllegalAccessException e) {
+-        	e.printStackTrace(); System.exit(1);
++        	handleUnexpectedException( e );
+} catch (InvocationTargetException e) {	// This exception could be caused from ANTLR Runtime Exception, e.g. MismatchedTokenException
+return getTestExceptionResult(e);
+} finally {
+@@ -409,17 +408,17 @@ public class gUnitExecutor implements ITestSuite {
+} catch (IOException e) {
+return getTestExceptionResult(e);
+} catch (ClassNotFoundException e) {
+-        	e.printStackTrace(); System.exit(1);
++			handleUnexpectedException( e );
+} catch (SecurityException e) {
+-        	e.printStackTrace(); System.exit(1);
++        	handleUnexpectedException( e );
+} catch (NoSuchMethodException e) {
+-        	e.printStackTrace(); System.exit(1);
++        	handleUnexpectedException( e );
+} catch (IllegalArgumentException e) {
+-        	e.printStackTrace(); System.exit(1);
++        	handleUnexpectedException( e );
+} catch (InstantiationException e) {
+-        	e.printStackTrace(); System.exit(1);
++        	handleUnexpectedException( e );
+} catch (IllegalAccessException e) {
+-        	e.printStackTrace(); System.exit(1);
++        	handleUnexpectedException( e );
+} catch (InvocationTargetException e) {	// This exception could be caused from ANTLR Runtime Exception, e.g. MismatchedTokenException
+return getTestExceptionResult(e);
+} finally {
+@@ -578,17 +577,17 @@ public class gUnitExecutor implements ITestSuite {
+} catch (IOException e) {
+return getTestExceptionResult(e);
+} catch (ClassNotFoundException e) {
+-        	e.printStackTrace(); System.exit(1);
++			handleUnexpectedException( e );
+} catch (SecurityException e) {
+-        	e.printStackTrace(); System.exit(1);
++        	handleUnexpectedException( e );
+} catch (NoSuchMethodException e) {
+-        	e.printStackTrace(); System.exit(1);
++        	handleUnexpectedException( e );
+} catch (IllegalArgumentException e) {
+-        	e.printStackTrace(); System.exit(1);
++        	handleUnexpectedException( e );
+} catch (InstantiationException e) {
+-        	e.printStackTrace(); System.exit(1);
++        	handleUnexpectedException( e );
+} catch (IllegalAccessException e) {
+-        	e.printStackTrace(); System.exit(1);
++        	handleUnexpectedException( e );
+} catch (InvocationTargetException e) {	// note: This exception could be caused from ANTLR Runtime Exception...
+return getTestExceptionResult(e);
+} finally {
+@@ -652,4 +651,9 @@ public class gUnitExecutor implements ITestSuite {
+
+}
+
++	protected void handleUnexpectedException(Exception e) {
++		e.printStackTrace();
++		System.exit(1);
++	}
++
+}
+

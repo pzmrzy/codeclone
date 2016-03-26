@@ -1,0 +1,62 @@
+commit c8f839c846089ec801b25d03968e66854f5d0879
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Fri Feb 25 19:28:11 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Fri Feb 25 19:28:11 2011 -0800
+
+(C# 3) Fix testSetElement for atoms with explicit terminal options
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7772]
+
+diff --git a/Antlr3/Grammars/TreeToNFAConverter.g3 b/Antlr3/Grammars/TreeToNFAConverter.g3
+index b5cdd41..53a63a4 100644
+--- a/Antlr3/Grammars/TreeToNFAConverter.g3
++++ b/Antlr3/Grammars/TreeToNFAConverter.g3
+@@ -698,8 +698,8 @@ finally { inTest--; }
+
+/** Match just an element; no ast suffix etc.. */
+testSetElement returns [int alts=1]
+-	:	c=CHAR_LITERAL
+-	|	t=TOKEN_REF
++	:	c=CHAR_LITERAL {!HasElementOptions($c)}?
++	|	t=TOKEN_REF {!HasElementOptions($t)}?
+{{
+if ( grammar.type==GrammarType.Lexer )
+{
+diff --git a/Antlr3/Grammars/TreeToNFAConverterHelper.cs b/Antlr3/Grammars/TreeToNFAConverterHelper.cs
+index 5bd968f..965e31f 100644
+--- a/Antlr3/Grammars/TreeToNFAConverterHelper.cs
++++ b/Antlr3/Grammars/TreeToNFAConverterHelper.cs
+@@ -32,16 +32,13 @@
+
+namespace Antlr3.Grammars
+{
+-    using System.Collections.Generic;
+using Antlr.Runtime;
+-    using Antlr.Runtime.JavaExtensions;
+using Antlr3.Analysis;
+using Antlr3.Tool;
+
+-    using ArrayList = System.Collections.Generic.List<object>;
++    using ArgumentNullException = System.ArgumentNullException;
+using CommonTreeNodeStream = Antlr.Runtime.Tree.CommonTreeNodeStream;
+using IIntSet = Antlr3.Misc.IIntSet;
+-    using IList = System.Collections.IList;
+using ITreeNodeStream = Antlr.Runtime.Tree.ITreeNodeStream;
+
+partial class TreeToNFAConverter
+@@ -171,5 +168,13 @@ namespace Antlr3.Grammars
+"buildnfa: " + ex.ToString(),
+ex );
+}
++
++        private bool HasElementOptions(GrammarAST node)
++        {
++            if (node == null)
++                throw new ArgumentNullException("node");
++
++            return node.terminalOptions != null && node.terminalOptions.Count > 0;
++        }
+}
+}
+

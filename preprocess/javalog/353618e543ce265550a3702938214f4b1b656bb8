@@ -1,0 +1,446 @@
+commit 353618e543ce265550a3702938214f4b1b656bb8
+Author:     acondit <acondit@parrt.spork>
+AuthorDate: Sat Jan 28 10:24:32 2012 -0800
+Commit:     acondit <acondit@parrt.spork>
+CommitDate: Sat Jan 28 10:24:32 2012 -0800
+
+Changes to match error fixes in java runtime
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 9922]
+
+diff --git a/runtime/ObjC/Framework/CommonToken.h b/runtime/ObjC/Framework/CommonToken.h
+index 187763e..8326c5b 100644
+--- a/runtime/ObjC/Framework/CommonToken.h
++++ b/runtime/ObjC/Framework/CommonToken.h
+@@ -83,6 +83,18 @@
+- (void) setText:(NSString *)aText;
+
+//----------------------------------------------------------
++//  charPositionInLine
++//----------------------------------------------------------
++- (NSUInteger) getCharPositionInLine;
++- (void) setCharPositionInLine:(NSUInteger)aCharPositionInLine;
++
++//----------------------------------------------------------
++//  line
++//----------------------------------------------------------
++- (NSUInteger) getLine;
++- (void) setLine:(NSUInteger)aLine;
++
++//----------------------------------------------------------
+//  type
+//----------------------------------------------------------
+- (NSInteger)type;
+diff --git a/runtime/ObjC/Framework/CommonToken.m b/runtime/ObjC/Framework/CommonToken.m
+index 5df9474..e2e72b8 100644
+--- a/runtime/ObjC/Framework/CommonToken.m
++++ b/runtime/ObjC/Framework/CommonToken.m
+@@ -144,10 +144,10 @@ static CommonToken *INVALID_TOKEN;
+
+// designated initializer
+- (id) initWithInput:(id<CharStream>)anInput
+-                           Type:(NSInteger)aTType
+-                             Channel:(NSInteger)aChannel
+-                               Start:(NSInteger)aStart
+-                                Stop:(NSInteger)aStop
++                Type:(NSInteger)aTType
++             Channel:(NSInteger)aChannel
++               Start:(NSInteger)aStart
++                Stop:(NSInteger)aStop
+{
+if ((self = [super init]) != nil) {
+input = anInput;
+@@ -236,7 +236,7 @@ static CommonToken *INVALID_TOKEN;
+//----------------------------------------------------------
+//  charPositionInLine
+//----------------------------------------------------------
+-- (NSUInteger) charPositionInLine
++- (NSUInteger) getCharPositionInLine
+{
+return charPositionInLine;
+}
+@@ -249,7 +249,7 @@ static CommonToken *INVALID_TOKEN;
+//----------------------------------------------------------
+//  line
+//----------------------------------------------------------
+-- (NSUInteger) line
++- (NSUInteger) getLine
+{
+return line;
+}
+@@ -270,7 +270,13 @@ static CommonToken *INVALID_TOKEN;
+if (input == nil) {
+return nil;
+}
+-    return [input substringWithRange:NSMakeRange(startIndex, (stopIndex-startIndex)+1)];
++    int n = [input count];
++    if ( startIndex < n && stopIndex < n) {
++        return [input substringWithRange:NSMakeRange(startIndex, (stopIndex-startIndex)+1)];
++    }
++    else {
++        return @"<EOF>";
++    }
+}
+
+- (void) setText:(NSString *)aText
+diff --git a/runtime/ObjC/Framework/CommonTokenStream.h b/runtime/ObjC/Framework/CommonTokenStream.h
+index e5de349..5179ca6 100644
+--- a/runtime/ObjC/Framework/CommonTokenStream.h
++++ b/runtime/ObjC/Framework/CommonTokenStream.h
+@@ -55,10 +55,11 @@
+- (id<Token>) LB:(NSInteger)k;
+- (id<Token>) LT:(NSInteger)k;
+
+-- (NSInteger) skipOffChannelTokens:(NSInteger) i;
+-- (NSInteger) skipOffChannelTokensReverse:(NSInteger) i;
++- (NSInteger) skipOffTokenChannels:(NSInteger) i;
++- (NSInteger) skipOffTokenChannelsReverse:(NSInteger) i;
+
+- (void)setup;
++- (void)reset;
+
+- (NSInteger) getNumberOfOnChannelTokens;
+
+diff --git a/runtime/ObjC/Framework/CommonTokenStream.m b/runtime/ObjC/Framework/CommonTokenStream.m
+index b14133b..711a87e 100644
+--- a/runtime/ObjC/Framework/CommonTokenStream.m
++++ b/runtime/ObjC/Framework/CommonTokenStream.m
+@@ -140,7 +140,7 @@
+
+#pragma mark Channels & Skipping
+
+-- (NSInteger) skipOffChannelTokens:(NSInteger) idx
++- (NSInteger) skipOffTokenChannels:(NSInteger) idx
+{
+[self sync:idx];
+while ( ((CommonToken *)[tokens objectAtIndex:idx]).channel != channel ) {
+@@ -150,7 +150,7 @@
+return idx;
+}
+
+-- (NSInteger) skipOffChannelTokensReverse:(NSInteger) i
++- (NSInteger) skipOffTokenChannelsReverse:(NSInteger) i
+{
+while ( i >= 0 && ((CommonToken *)[tokens objectAtIndex:i]).channel != channel ) {
+i--;
+@@ -158,6 +158,12 @@
+return i;
+}
+
++- (void) reset
++{
++    [super reset];
++    index = [self skipOffTokenChannels:0];
++}
++
+- (void) setup
+{
+index = 0;
+diff --git a/runtime/ObjC/Framework/Lexer.m b/runtime/ObjC/Framework/Lexer.m
+index 2ae9bd2..fbec67e 100644
+--- a/runtime/ObjC/Framework/Lexer.m
++++ b/runtime/ObjC/Framework/Lexer.m
+@@ -35,26 +35,26 @@
+
+- (id) initWithCharStream:(id<CharStream>)anInput
+{
+-	self = [super initWithState:[[RecognizerSharedState alloc] init]];
+-	if ( self != nil ) {
++    self = [super initWithState:[[RecognizerSharedState alloc] init]];
++    if ( self != nil ) {
+input = [anInput retain];
+if (state.token != nil)
+[((CommonToken *)state.token) setInput:anInput];
+-		ruleNestingLevel = 0;
+-	}
+-	return self;
++        ruleNestingLevel = 0;
++    }
++    return self;
+}
+
+- (id) initWithCharStream:(id<CharStream>)anInput State:(RecognizerSharedState *)aState
+{
+-	self = [super initWithState:aState];
+-	if ( self != nil ) {
++    self = [super initWithState:aState];
++    if ( self != nil ) {
+input = [anInput retain];
+if (state.token != nil)
+[((CommonToken *)state.token) setInput:anInput];
+-		ruleNestingLevel = 0;
+-	}
+-	return self;
++        ruleNestingLevel = 0;
++    }
++    return self;
+}
+
+- (void) dealloc
+@@ -66,7 +66,7 @@
+- (id) copyWithZone:(NSZone *)aZone
+{
+Lexer *copy;
+-
++
+copy = [[[self class] allocWithZone:aZone] init];
+//    copy = [super copyWithZone:aZone]; // allocation occurs here
+if ( input != nil )
+@@ -114,7 +114,7 @@
+// this method may be overridden in the generated lexer if we generate a filtering lexer.
+- (id<Token>) nextToken
+{
+-	while (YES) {
++    while (YES) {
+[self setToken:nil];
+state.channel = CommonToken.DEFAULT_CHANNEL;
+state.tokenStartCharIndex = input.index;
+@@ -123,7 +123,7 @@
+state.text = nil;
+
+// [self setText:[self text]];
+-		if ([input LA:1] == CharStreamEOF) {
++        if ([input LA:1] == CharStreamEOF) {
+CommonToken *eof = [CommonToken newToken:input
+Type:TokenTypeEOF
+Channel:CommonToken.DEFAULT_CHANNEL
+@@ -131,10 +131,10 @@
+Stop:input.index];
+[eof setLine:input.getLine];
+[eof setCharPositionInLine:input.getCharPositionInLine];
+-			return eof;
+-		}
+-		@try {
+-			[self mTokens];
++            return eof;
++        }
++        @try {
++            [self mTokens];
+// SEL aMethod = @selector(mTokens);
+// [[self class] instancesRespondToSelector:aMethod];
+if ( state.token == nil)
+@@ -142,16 +142,21 @@
+else if ( state.token == [CommonToken skipToken] ) {
+continue;
+}
+-			return state.token;
+-		}
+-		@catch (NoViableAltException *nva) {
+-			[self reportError:nva];
+-			[self recover:nva];
+-		}
+-		@catch (RecognitionException *e) {
+-			[self reportError:e];
+-		}
+-	}
++            return state.token;
++        }
++        @catch (MismatchedRangeException *re) {
++            [self reportError:re];
++            // [self recover:re];
++        }
++        @catch (MismatchedTokenException *re) {
++            [self reportError:re];
++            // [self recover:re];
++        }
++        @catch (RecognitionException *re) {
++            [self reportError:re];
++            [self recover:re];
++        }
++    }
+}
+
+- (void) mTokens
+@@ -187,7 +192,7 @@
+*/
+- (void) emit:(id<Token>)aToken
+{
+-	state.token = aToken;
++    state.token = aToken;
+}
+
+/** The standard method called to automatically emit a token at the
+@@ -201,17 +206,17 @@
+*/
+- (void) emit
+{
+-	id<Token> aToken = [CommonToken newToken:input
++    id<Token> aToken = [CommonToken newToken:input
+Type:state.type
+Channel:state.channel
+Start:state.tokenStartCharIndex
+Stop:input.index-1];
+-	[aToken setLine:state.tokenStartLine];
++    [aToken setLine:state.tokenStartLine];
+aToken.text = [self text];
+-	[aToken setCharPositionInLine:state.tokenStartCharPositionInLine];
++    [aToken setCharPositionInLine:state.tokenStartCharPositionInLine];
+[aToken retain];
+-	[self emit:aToken];
+-	// [aToken release];
++    [self emit:aToken];
++    // [aToken release];
+}
+
+// matching
+@@ -219,81 +224,81 @@
+- (void) matchString:(NSString *)aString
+{
+unichar c;
+-	unsigned int i = 0;
+-	unsigned int stringLength = [aString length];
+-	while ( i < stringLength ) {
+-		c = [input LA:1];
++    unsigned int i = 0;
++    unsigned int stringLength = [aString length];
++    while ( i < stringLength ) {
++        c = [input LA:1];
+if ( c != [aString characterAtIndex:i] ) {
+-			if ([state getBacktracking] > 0) {
+-				state.failed = YES;
+-				return;
+-			}
+-			MismatchedTokenException *mte = [MismatchedTokenException newExceptionChar:[aString characterAtIndex:i] Stream:input];
++            if ([state getBacktracking] > 0) {
++                state.failed = YES;
++                return;
++            }
++            MismatchedTokenException *mte = [MismatchedTokenException newExceptionChar:[aString characterAtIndex:i] Stream:input];
+mte.c = c;
+-			[self recover:mte];
+-			@throw mte;
+-		}
+-		i++;
+-		[input consume];
+-		state.failed = NO;
+-	}
++            [self recover:mte];
++            @throw mte;
++        }
++        i++;
++        [input consume];
++        state.failed = NO;
++    }
+}
+
+- (void) matchAny
+{
+-	[input consume];
++    [input consume];
+}
+
+- (void) matchChar:(unichar) aChar
+{
+-	// TODO: -LA: is returning an int because it sometimes is used in the generated parser to compare lookahead with a tokentype.
+-	//		 try to change all those occurrences to -LT: if possible (i.e. if ANTLR can be made to generate LA only for lexer code)
++    // TODO: -LA: is returning an int because it sometimes is used in the generated parser to compare lookahead with a tokentype.
++    //       try to change all those occurrences to -LT: if possible (i.e. if ANTLR can be made to generate LA only for lexer code)
+unichar charLA;
+-	charLA = [input LA:1];
+-	if ( charLA != aChar) {
+-		if ([state getBacktracking] > 0) {
+-			state.failed = YES;
+-			return;
+-		}
+-		MismatchedTokenException  *mte = [MismatchedTokenException newExceptionChar:aChar Stream:input];
++    charLA = [input LA:1];
++    if ( charLA != aChar) {
++        if ([state getBacktracking] > 0) {
++            state.failed = YES;
++            return;
++        }
++        MismatchedTokenException  *mte = [MismatchedTokenException newExceptionChar:aChar Stream:input];
+mte.c = charLA;
+-		[self recover:mte];
+-		@throw mte;
+-	}
+-	[input consume];
+-	state.failed = NO;
++        [self recover:mte];
++        @throw mte;
++    }
++    [input consume];
++    state.failed = NO;
+}
+
+- (void) matchRangeFromChar:(unichar)fromChar to:(unichar)toChar
+{
+-	unichar charLA = (unichar)[input LA:1];
+-	if ( charLA < fromChar || charLA > toChar ) {
+-		if ([state getBacktracking] > 0) {
+-			state.failed = YES;
+-			return;
+-		}
+-		MismatchedRangeException  *mre = [MismatchedRangeException
+-					newException:NSMakeRange((NSUInteger)fromChar,(NSUInteger)toChar)
+-							   stream:input];
++    unichar charLA = (unichar)[input LA:1];
++    if ( charLA < fromChar || charLA > toChar ) {
++        if ([state getBacktracking] > 0) {
++            state.failed = YES;
++            return;
++        }
++        MismatchedRangeException  *mre = [MismatchedRangeException
++                    newException:NSMakeRange((NSUInteger)fromChar,(NSUInteger)toChar)
++                               stream:input];
+mre.c = charLA;
+-		[self recover:mre];
+-		@throw mre;
+-	}
+-	[input consume];
+-	state.failed = NO;
++        [self recover:mre];
++        @throw mre;
++    }
++    [input consume];
++    state.failed = NO;
+}
+
+-	// info
++    // info
+#pragma mark Informational
+
+- (NSUInteger) line
+{
+-	return input.getLine;
++    return input.getLine;
+}
+
+- (NSUInteger) charPositionInLine
+{
+-	return input.getCharPositionInLine;
++    return input.getCharPositionInLine;
+}
+
+- (NSInteger) index
+@@ -306,7 +311,7 @@
+if (state.text != nil) {
+return state.text;
+}
+-	return [input substringWithRange:NSMakeRange(state.tokenStartCharIndex, input.index-state.tokenStartCharIndex)];
++    return [input substringWithRange:NSMakeRange(state.tokenStartCharIndex, input.index-state.tokenStartCharIndex)];
+}
+
+- (void) setText:(NSString *) theText
+@@ -314,7 +319,7 @@
+state.text = theText;
+}
+
+-	// error handling
++    // error handling
+- (void) reportError:(RecognitionException *)e
+{
+/** TODO: not thought about recovery in lexer yet.
+diff --git a/runtime/ObjC/Framework/Parser.m b/runtime/ObjC/Framework/Parser.m
+index abfe964..4d14eb4 100644
+--- a/runtime/ObjC/Framework/Parser.m
++++ b/runtime/ObjC/Framework/Parser.m
+@@ -113,6 +113,7 @@
+t.line = current.line;
+t.charPositionInLine = current.charPositionInLine;
+t.channel = TokenChannelDefault;
++    t.input = current.input;
+return t;
+}
+
+

@@ -1,0 +1,32 @@
+commit d5f0cd689c13bbb5aec3deea5531f0d15af990a4
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Jan 31 14:01:27 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Jan 31 14:01:27 2011 -0800
+
+Merge CL7533, 7534
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7582]
+
+diff --git a/Antlr4.StringTemplate/Interpreter.cs b/Antlr4.StringTemplate/Interpreter.cs
+index 08519ce..a585bde 100644
+--- a/Antlr4.StringTemplate/Interpreter.cs
++++ b/Antlr4.StringTemplate/Interpreter.cs
+@@ -1288,13 +1288,14 @@ namespace Antlr4.StringTemplate
+defaultArgST.enclosingInstance = invokedST.enclosingInstance;
+defaultArgST.groupThatCreatedThisInstance = group;
+defaultArgST.impl = arg.CompiledDefaultValue;
+-                    Console.WriteLine("setting def arg " + arg.Name + " to " + defaultArgST);
++                    //Console.WriteLine("setting def arg " + arg.Name + " to " + defaultArgST);
+// If default arg is template with single expression
+// wrapped in parens, x={<(...)>}, then eval to string
+// rather than setting x to the template for later
+// eval.
+string defArgTemplate = arg.DefaultValueToken.Text;
+-                    if (defArgTemplate.StartsWith("{<(") && defArgTemplate.EndsWith(")>}"))
++                    if (defArgTemplate.StartsWith("{" + group.delimiterStartChar + "(")
++                        && defArgTemplate.EndsWith(")" + group.delimiterStopChar + "}"))
+{
+invokedST.RawSetAttribute(arg.Name, ToString(invokedST, defaultArgST));
+}
+

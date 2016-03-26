@@ -1,0 +1,11 @@
+commit d5baadf783f0cfc884f4c0c041f941cc7aef8bda
+Merge: fc10196 2c444ce
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Fri Aug 9 22:01:08 2013 -0700
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Fri Aug 9 22:01:08 2013 -0700
+
+Merge pull request #21 from sharwell/fix-17
+
+Remove the -XdbgST feature from the Release build configuration (fixes #17)
+

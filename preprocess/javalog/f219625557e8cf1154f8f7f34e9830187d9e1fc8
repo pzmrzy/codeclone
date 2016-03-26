@@ -1,0 +1,61 @@
+commit f219625557e8cf1154f8f7f34e9830187d9e1fc8
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Sun Jan 6 16:22:23 2013 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Sun Jan 6 16:22:23 2013 -0600
+
+Revert "Add the -ro option (force relative output directory) and -in option (explicit relative input directory)"
+
+This reverts commit bb36c440e8e42a24b21b91950a1c2d9f90063ee3.
+
+diff --git a/tool/src/main/java/org/antlr/Tool.java b/tool/src/main/java/org/antlr/Tool.java
+index a1d0796..818f412 100644
+--- a/tool/src/main/java/org/antlr/Tool.java
++++ b/tool/src/main/java/org/antlr/Tool.java
+@@ -154,17 +154,14 @@ public class Tool {
+return;
+}
+for (int i = 0; i < args.length; i++) {
+-            if (args[i].equals("-o") || args[i].equals("-fo") || args[i].equals("-ro")) {
++            if (args[i].equals("-o") || args[i].equals("-fo")) {
+if (i + 1 >= args.length) {
+-                    System.err.println("missing output directory with " + args[i] + " option; ignoring");
++                    System.err.println("missing output directory with -fo/-o option; ignoring");
+}
+else {
+if (args[i].equals("-fo")) { // force output into dir
+setForceAllFilesToOutputDir(true);
+}
+-					else if (args[i].equals("-ro")) {
+-						setForceRelativeOutput(true);
+-					}
+i++;
+outputDirectory = args[i];
+if (outputDirectory.endsWith("/") ||
+@@ -180,25 +177,6 @@ public class Tool {
+}
+}
+}
+-			else if (args[i].equals("-in")) {
+-				if (i + 1 >= args.length) {
+-					System.err.println("missing input directory with -in option; ignoring");
+-				}
+-				else {
+-					i++;
+-					String directory = args[i];
+-					if (directory.endsWith("/") || directory.endsWith("\\")) {
+-						directory = directory.substring(0, directory.length() - 1);
+-					}
+-
+-					if (!new File(directory).isDirectory()) {
+-						System.err.println("the specified input directory does not exist");
+-						continue;
+-					}
+-
+-					setInputDirectory(args[i]);
+-				}
+-			}
+else if (args[i].equals("-lib")) {
+if (i + 1 >= args.length) {
+System.err.println("missing library directory with -lib option; ignoring");
+

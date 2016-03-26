@@ -1,0 +1,11 @@
+commit ff2cc62dc6e82e31470cac89947bb4125baa1ec1
+Merge: c9c1fdf b2abe9c
+Author:     Terence Parr <parrt@cs.usfca.edu>
+AuthorDate: Sat Feb 11 10:16:47 2012 -0800
+Commit:     Terence Parr <parrt@cs.usfca.edu>
+CommitDate: Sat Feb 11 10:16:47 2012 -0800
+
+Merge pull request #4 from sharwell/b2abe9c9a68b9dc3c7b44b3dbe872f2e19ad7044
+
+Added .gitignore
+

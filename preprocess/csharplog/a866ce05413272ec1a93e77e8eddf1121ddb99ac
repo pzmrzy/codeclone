@@ -1,0 +1,69 @@
+commit a866ce05413272ec1a93e77e8eddf1121ddb99ac
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Wed Jan 30 14:59:52 2013 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Wed Jan 30 14:59:52 2013 -0600
+
+C# target: Updated assembly copyright and versioning note
+
+diff --git a/Antlr3.Runtime.Debug/Properties/AssemblyInfo.cs b/Antlr3.Runtime.Debug/Properties/AssemblyInfo.cs
+index dd6db55..5473727 100644
+--- a/Antlr3.Runtime.Debug/Properties/AssemblyInfo.cs
++++ b/Antlr3.Runtime.Debug/Properties/AssemblyInfo.cs
+@@ -42,7 +42,7 @@ using System.Runtime.InteropServices;
+[assembly: AssemblyConfiguration( "" )]
+[assembly: AssemblyCompany( "Tunnel Vision Laboratories, LLC" )]
+[assembly: AssemblyProduct( "Antlr3.Runtime.Debug" )]
+-[assembly: AssemblyCopyright( "Copyright © Sam Harwell 2011" )]
++[assembly: AssemblyCopyright( "Copyright © Sam Harwell 2013" )]
+[assembly: AssemblyTrademark( "" )]
+[assembly: AssemblyCulture( "" )]
+[assembly: CLSCompliant( true )]
+diff --git a/Antlr3.Runtime.JavaExtensions/Properties/AssemblyInfo.cs b/Antlr3.Runtime.JavaExtensions/Properties/AssemblyInfo.cs
+index 596e4af..0908b03 100644
+--- a/Antlr3.Runtime.JavaExtensions/Properties/AssemblyInfo.cs
++++ b/Antlr3.Runtime.JavaExtensions/Properties/AssemblyInfo.cs
+@@ -42,7 +42,7 @@ using System.Runtime.InteropServices;
+[assembly: AssemblyConfiguration( "" )]
+[assembly: AssemblyCompany( "Tunnel Vision Laboratories, LLC" )]
+[assembly: AssemblyProduct( "Antlr3.Runtime.JavaExtensions" )]
+-[assembly: AssemblyCopyright( "Copyright © Sam Harwell 2011" )]
++[assembly: AssemblyCopyright( "Copyright © Sam Harwell 2013" )]
+[assembly: AssemblyTrademark( "" )]
+[assembly: AssemblyCulture( "" )]
+[assembly: CLSCompliant( true )]
+@@ -64,7 +64,6 @@ using System.Runtime.InteropServices;
+*   2. Build is incremented each time the C# port is packaged for release (regardless
+*      of whether it's an incremental or nightly). The value resets to zero whenever
+*      the Major or Minor version is incremented.
+- *   3. Revision is the Perforce changelist number associated with the release.
+*/
+[assembly: AssemblyVersion("3.5.0.0")]
+[assembly: AssemblyFileVersion("3.5.0.0")]
+diff --git a/Antlr3.Runtime.Test/Properties/AssemblyInfo.cs b/Antlr3.Runtime.Test/Properties/AssemblyInfo.cs
+index d4f63a4..df467a2 100644
+--- a/Antlr3.Runtime.Test/Properties/AssemblyInfo.cs
++++ b/Antlr3.Runtime.Test/Properties/AssemblyInfo.cs
+@@ -42,7 +42,7 @@ using System.Runtime.InteropServices;
+[assembly: AssemblyConfiguration( "" )]
+[assembly: AssemblyCompany( "Pixel Mine, Inc." )]
+[assembly: AssemblyProduct( "Antlr3.Runtime.Test" )]
+-[assembly: AssemblyCopyright("Copyright © Sam Harwell 2011")]
++[assembly: AssemblyCopyright("Copyright © Sam Harwell 2013")]
+[assembly: AssemblyTrademark( "" )]
+[assembly: AssemblyCulture( "" )]
+[assembly: CLSCompliant( true )]
+diff --git a/Antlr3.Runtime/Properties/AssemblyInfo.cs b/Antlr3.Runtime/Properties/AssemblyInfo.cs
+index 24f7daf..5172174 100644
+--- a/Antlr3.Runtime/Properties/AssemblyInfo.cs
++++ b/Antlr3.Runtime/Properties/AssemblyInfo.cs
+@@ -43,7 +43,7 @@ using System.Security;
+[assembly: AssemblyConfiguration( "" )]
+[assembly: AssemblyCompany( "Tunnel Vision Laboratories, LLC" )]
+[assembly: AssemblyProduct( "Antlr3.Runtime" )]
+-[assembly: AssemblyCopyright("Copyright © Sam Harwell 2011")]
++[assembly: AssemblyCopyright("Copyright © Sam Harwell 2013")]
+[assembly: AssemblyTrademark( "" )]
+[assembly: AssemblyCulture( "" )]
+[assembly: CLSCompliant( true )]
+

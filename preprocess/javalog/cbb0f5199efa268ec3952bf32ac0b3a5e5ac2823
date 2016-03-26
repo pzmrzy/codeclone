@@ -1,0 +1,456 @@
+commit cbb0f5199efa268ec3952bf32ac0b3a5e5ac2823
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Apr 13 18:27:50 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Apr 13 18:27:50 2011 -0800
+
+(C# 3) Fix a number of bugs introduced by CL8195 (consolidating rule return scopes)
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8212]
+
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/Composition/Program.cs b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/Composition/Program.cs
+index ce89dc2..c2aaf02 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/Composition/Program.cs
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/Composition/Program.cs
+@@ -37,7 +37,7 @@
+var lex = new VecMathLexer(input);
+var tokens = new CommonTokenStream(lex);
+var g = new VecMathParser(tokens);
+-            VecMath_VecMath_Parser.prog_return r = g.prog();
++            IAstRuleReturnScope<CommonTree> r = g.prog();
+CommonTree t = r.Tree;
+Console.WriteLine("Original tree:   " + t.ToStringTree());
+
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime/Antlr3.Runtime.csproj b/runtime/CSharp3/Sources/Antlr3.Runtime/Antlr3.Runtime.csproj
+index 74a3b3b..d885625 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime/Antlr3.Runtime.csproj
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime/Antlr3.Runtime.csproj
+@@ -66,6 +66,8 @@
+<Compile Include="ICharStream.cs" />
+<Compile Include="IIntStream.cs" />
+<Compile Include="IRuleReturnScope.cs" />
++    <Compile Include="ITemplateRuleReturnScope.cs" />
++    <Compile Include="ITemplateRuleReturnScope`1.cs" />
+<Compile Include="IToken.cs" />
+<Compile Include="ITokenSource.cs" />
+<Compile Include="ITokenStream.cs" />
+@@ -87,6 +89,7 @@
+<Compile Include="RecognitionException.cs" />
+<Compile Include="RecognizerSharedState.cs" />
+<Compile Include="RuleReturnScope.cs" />
++    <Compile Include="TemplateParserRuleReturnScope`2.cs" />
+<Compile Include="TokenConstants.cs" />
+<Compile Include="TokenRewriteStream.cs" />
+<Compile Include="Tree\AstTreeRuleReturnScope`1.cs" />
+@@ -112,6 +115,7 @@
+<Compile Include="Tree\RewriteRuleNodeStream.cs" />
+<Compile Include="Tree\RewriteRuleSubtreeStream.cs" />
+<Compile Include="Tree\RewriteRuleTokenStream.cs" />
++    <Compile Include="Tree\TemplateTreeRuleReturnScope`2.cs" />
+<Compile Include="Tree\TreeConstants.cs" />
+<Compile Include="Tree\TreeFilter.cs" />
+<Compile Include="Tree\TreeIterator.cs" />
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime/ITemplateRuleReturnScope.cs b/runtime/CSharp3/Sources/Antlr3.Runtime/ITemplateRuleReturnScope.cs
+new file mode 100644
+index 0000000..8a3de74
+--- /dev/null
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime/ITemplateRuleReturnScope.cs
+@@ -0,0 +1,42 @@
++﻿/*
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2011 Sam Harwell, Pixel Mine, Inc.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace Antlr.Runtime
++{
++    public interface ITemplateRuleReturnScope
++    {
++        object Template
++        {
++            get;
++        }
++    }
++}
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime/ITemplateRuleReturnScope`1.cs b/runtime/CSharp3/Sources/Antlr3.Runtime/ITemplateRuleReturnScope`1.cs
+new file mode 100644
+index 0000000..5c1e81e
+--- /dev/null
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime/ITemplateRuleReturnScope`1.cs
+@@ -0,0 +1,42 @@
++﻿/*
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2011 Sam Harwell, Pixel Mine, Inc.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace Antlr.Runtime
++{
++    public interface ITemplateRuleReturnScope<TTemplate> : ITemplateRuleReturnScope
++    {
++        new TTemplate Template
++        {
++            get;
++        }
++    }
++}
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime/TemplateParserRuleReturnScope`2.cs b/runtime/CSharp3/Sources/Antlr3.Runtime/TemplateParserRuleReturnScope`2.cs
+new file mode 100644
+index 0000000..1e3c185
+--- /dev/null
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime/TemplateParserRuleReturnScope`2.cs
+@@ -0,0 +1,60 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2011 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2011 Sam Harwell, Pixel Mine, Inc.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace Antlr.Runtime
++{
++    public class TemplateParserRuleReturnScope<TTemplate, TToken> : ParserRuleReturnScope<TToken>, ITemplateRuleReturnScope<TTemplate>, ITemplateRuleReturnScope
++    {
++        private TTemplate _template;
++
++        public TTemplate Template
++        {
++            get
++            {
++                return _template;
++            }
++
++            set
++            {
++                _template = value;
++            }
++        }
++
++        object ITemplateRuleReturnScope.Template
++        {
++            get
++            {
++                return Template;
++            }
++        }
++    }
++}
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime/Tree/AstParserRuleReturnScope`1.cs b/runtime/CSharp3/Sources/Antlr3.Runtime/Tree/AstParserRuleReturnScope`1.cs
+index b6598ce..c2664ab 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime/Tree/AstParserRuleReturnScope`1.cs
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime/Tree/AstParserRuleReturnScope`1.cs
+@@ -32,7 +32,7 @@
+
+namespace Antlr.Runtime.Tree
+{
+-    public class AstParserRuleReturnScope<TTree> : ParserRuleReturnScope<TTree>, IAstRuleReturnScope<TTree>, IAstRuleReturnScope
++    public class AstParserRuleReturnScope<TTree, TToken> : ParserRuleReturnScope<TToken>, IAstRuleReturnScope<TTree>, IAstRuleReturnScope
+{
+private TTree _tree;
+
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime/Tree/AstTreeRuleReturnScope`1.cs b/runtime/CSharp3/Sources/Antlr3.Runtime/Tree/AstTreeRuleReturnScope`1.cs
+index b31ca9c..6a0ea8e 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime/Tree/AstTreeRuleReturnScope`1.cs
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime/Tree/AstTreeRuleReturnScope`1.cs
+@@ -32,11 +32,11 @@
+
+namespace Antlr.Runtime.Tree
+{
+-    public class AstTreeRuleReturnScope<TTree> : TreeRuleReturnScope<TTree>, IAstRuleReturnScope<TTree>, IAstRuleReturnScope
++    public class AstTreeRuleReturnScope<TOutputTree, TInputTree> : TreeRuleReturnScope<TInputTree>, IAstRuleReturnScope<TOutputTree>, IAstRuleReturnScope
+{
+-        private TTree _tree;
++        private TOutputTree _tree;
+
+-        public TTree Tree
++        public TOutputTree Tree
+{
+get
+{
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime/Tree/TemplateTreeRuleReturnScope`2.cs b/runtime/CSharp3/Sources/Antlr3.Runtime/Tree/TemplateTreeRuleReturnScope`2.cs
+new file mode 100644
+index 0000000..96ac54f
+--- /dev/null
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime/Tree/TemplateTreeRuleReturnScope`2.cs
+@@ -0,0 +1,60 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2011 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2011 Sam Harwell, Pixel Mine, Inc.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace Antlr.Runtime.Tree
++{
++    public class TemplateTreeRuleReturnScope<TTemplate, TTree> : TreeRuleReturnScope<TTree>, ITemplateRuleReturnScope<TTemplate>, ITemplateRuleReturnScope
++    {
++        private TTemplate _template;
++
++        public TTemplate Template
++        {
++            get
++            {
++                return _template;
++            }
++
++            set
++            {
++                _template = value;
++            }
++        }
++
++        object ITemplateRuleReturnScope.Template
++        {
++            get
++            {
++                return Template;
++            }
++        }
++    }
++}
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/AST.stg b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/AST.stg
+index 89fa83d..705215d 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/AST.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/AST.stg
+@@ -78,7 +78,9 @@ treeAdaptorType() ::= <<
+<actions.(actionScope).treeAdaptorType; null="ITreeAdaptor">
+>>
+
+-@ruleReturnBaseType.prefix() ::= "Ast"
++ruleReturnBaseType() ::= <%
++Ast<if(TREE_PARSER)>Tree<else>Parser<endif>RuleReturnScope\<<ASTLabelType>, <labelType>>
++%>
+
+/** Add a variable to track rule's return AST */
+ruleDeclarations() ::= <<
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg
+index 074bc2c..a5da1f7 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg
+@@ -308,7 +308,7 @@ genericParser(grammar, name, scopes, tokens, tokenNames, rules, numRules,
+appear to be defined in this recognizer. !>
+#region Delegated rules
+<grammar.delegatedRules:{ruleDescriptor|
+-	<ruleModifier(grammar=grammar,ruleDescriptor=ruleDescriptor)> <returnType()> <ruleDescriptor.name; format="id">(<ruleDescriptor.parameterScope:parameterScope()>) <!throws RecognitionException !>{ <if(ruleDescriptor.hasReturnValue)>return <endif><ruleDescriptor.grammar:delegateName()>.<ruleDescriptor.name; format="id">(<ruleDescriptor.parameterScope.attributes:{a|<a.name; format="id">}; separator=", ">); \}}; separator="\n">
++	<ruleModifier(grammar=grammar,ruleDescriptor=ruleDescriptor)> <returnType(ruleDescriptor)> <ruleDescriptor.name; format="id">(<ruleDescriptor.parameterScope:parameterScope()>) <!throws RecognitionException !>{ <if(ruleDescriptor.hasReturnValue)>return <endif><ruleDescriptor.grammar:delegateName()>.<ruleDescriptor.name; format="id">(<ruleDescriptor.parameterScope.attributes:{a|<a.name; format="id">}; separator=", ">); \}}; separator="\n">
+#endregion Delegated rules
+<endif>
+
+@@ -483,14 +483,14 @@ ruleBacktrackFailure() ::= <<
+*/
+rule(ruleName,ruleDescriptor,block,emptyRule,description,exceptions,finally,memoize) ::= <<
+<ruleAttributeScope(scope=ruleDescriptor.ruleScope)>
+-<returnScope(scope=ruleDescriptor.returnScope)>
++<returnScope(ruleDescriptor.returnScope)>
+partial void EnterRule_<ruleName>();
+partial void LeaveRule_<ruleName>();
+
+// $ANTLR start "<ruleName>"
+// <fileName>:<description>
+[GrammarRule("<ruleName>")]
+-<ruleModifier(grammar=grammar,ruleDescriptor=ruleDescriptor)> <returnType()> <ruleName; format="id">(<ruleDescriptor.parameterScope:parameterScope()>)
++<ruleModifier(grammar=grammar,ruleDescriptor=ruleDescriptor)> <returnType(ruleDescriptor)> <ruleName; format="id">(<ruleDescriptor.parameterScope:parameterScope()>)
+{
+EnterRule_<ruleName>();
+EnterRule("<ruleName>", <ruleDescriptor.index>);
+@@ -560,10 +560,8 @@ catch (<e.decl>)
+>>
+
+ruleDeclarations() ::= <<
+-<if(ruleDescriptor.returnScope.attributes)>
+-<returnType()> retval = new <returnType()>(this);
+-<elseif(ruleDescriptor.hasMultipleReturnValues)>
+-<returnType()> retval = new <returnType()>();
++<if(ruleDescriptor.hasMultipleReturnValues)>
++<returnType(ruleDescriptor)> retval = new <returnType(ruleDescriptor)>(<if(ruleDescriptor.returnScope.attributes)>this<endif>);
+retval.Start = (<labelType>)input.LT(1);
+<else>
+<ruleDescriptor.returnScope.attributes:{ a |
+@@ -1446,8 +1444,8 @@ ruleAttributeScope(scope) ::= <<
+
+returnStructName(it) ::= "<it.name>_return"
+
+-returnType() ::= <%
+-<if(ruleDescriptor.returnScope.attributes)>
++returnType(ruleDescriptor) ::= <%
++<if(ruleDescriptor.returnScope.attributes && ruleDescriptor.hasMultipleReturnValues)>
+<ruleDescriptor.grammar.recognizerName>.<ruleDescriptor:returnStructName()>
+<elseif(ruleDescriptor.hasMultipleReturnValues)>
+<ruleReturnBaseType()>
+@@ -1462,14 +1460,14 @@ returnType() ::= <%
+*  values.
+*/
+ruleLabelType(referencedRule) ::= <%
+-<if(referencedRule.hasMultipleReturnValues)>
+-<referencedRule.grammar.recognizerName>.<referencedRule.name>_return
+-<else>
+-<if(referencedRule.hasSingleReturnValue)>
+-<referencedRule.singleValueReturnType>
++<if(referencedRule.returnScope.attributes&&referencedRule.hasMultipleReturnValues)>
++	<referencedRule.grammar.recognizerName>.<referencedRule:returnStructName()>
++<elseif(referencedRule.hasMultipleReturnValues)>
++	<ruleReturnBaseType()>
++<elseif(referencedRule.hasSingleReturnValue)>
++	<referencedRule.singleValueReturnType>
+<else>
+-void
+-<endif>
++	void
+<endif>
+%>
+
+@@ -1494,7 +1492,7 @@ ruleLabelDef(label) ::= <%
+*  subgroups to stick in members.
+*/
+returnScope(scope) ::= <<
+-<if(scope.attributes)>
++<if(scope.attributes && ruleDescriptor.hasMultipleReturnValues)>
+<returnScopeModifier(grammar=grammar,ruleDescriptor=ruleDescriptor)> sealed partial class <ruleDescriptor:returnStructName()> : <ruleReturnBaseType()><@ruleReturnInterfaces()>
+{
+<scope.attributes:{it|public <it.decl>;}; separator="\n">
+@@ -1504,11 +1502,9 @@ returnScope(scope) ::= <<
+>>
+
+ruleReturnBaseType() ::= <%
+-<@prefix()><if(TREE_PARSER)>Tree<else>Parser<endif>RuleReturnScope\<<labelType>>
++<if(TREE_PARSER)>Tree<else>Parser<endif>RuleReturnScope\<<labelType>>
+%>
+
+-@ruleReturnBaseType.prefix() ::= ""
+-
+@returnScope.ruleReturnMembers() ::= <<
+public <ruleDescriptor:returnStructName()>(<grammar.recognizerName> grammar) {OnCreated(grammar);}
+partial void OnCreated(<grammar.recognizerName> grammar);
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/ST.stg b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/ST.stg
+index 0873b55..fd1322f 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/ST.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/ST.stg
+@@ -39,14 +39,6 @@ using Antlr3.ST;
+using Antlr3.ST.Language;
+>>
+
+-/** Add this to each rule's return value struct */
+-@returnScope.ruleReturnMembers() ::= <<
+-private StringTemplate _st;
+-public StringTemplate Template { get { return _st; } set { _st = value; } }
+-public override string ToString() { return (Template==null) ? string.Empty : Template.ToString(); }
+-<@super.ruleReturnMembers()>
+->>
+-
+@genericParser.members() ::= <<
+<@super.members()>
+private StringTemplateGroup _templateGroup = new StringTemplateGroup("<name>Templates", typeof(AngleBracketTemplateLexer) );
+@@ -58,6 +50,10 @@ public StringTemplateGroup TemplateGroup
+}
+>>
+
++ruleReturnBaseType() ::= <%
++Template<if(TREE_PARSER)>Tree<else>Parser<endif>RuleReturnScope\<StringTemplate, <labelType>>
++%>
++
+/** x+=rule when output=template */
+ruleRefAndListLabel(rule,label,elementIndex,args,scope) ::= <<
+<ruleRef(...)>
+

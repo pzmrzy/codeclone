@@ -1,0 +1,11 @@
+commit 0654f9e63e8b30dab177e8d837e4f3ef315570e2
+Merge: c2538f9 1b8855e
+Author:     Terence Parr <parrt@cs.usfca.edu>
+AuthorDate: Thu Feb 16 16:15:53 2012 -0800
+Commit:     Terence Parr <parrt@cs.usfca.edu>
+CommitDate: Thu Feb 16 16:15:53 2012 -0800
+
+Merge pull request #6 from muggins/dev
+
+Dev
+

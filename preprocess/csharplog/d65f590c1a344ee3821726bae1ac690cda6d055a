@@ -1,0 +1,181 @@
+commit d65f590c1a344ee3821726bae1ac690cda6d055a
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Apr 5 18:26:28 2010 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Apr 5 18:26:28 2010 -0800
+
+C# Port:
+* Updated bootstrap binaries
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6806]
+
+diff --git a/bin/Bootstrap/Antlr3.Runtime.Debug.dll b/bin/Bootstrap/Antlr3.Runtime.Debug.dll
+index a3650c2..0af7cd1 100644
+Binary files a/bin/Bootstrap/Antlr3.Runtime.Debug.dll and b/bin/Bootstrap/Antlr3.Runtime.Debug.dll differ
+diff --git a/bin/Bootstrap/Antlr3.Runtime.Debug.pdb b/bin/Bootstrap/Antlr3.Runtime.Debug.pdb
+index 48f721c..6295181 100644
+Binary files a/bin/Bootstrap/Antlr3.Runtime.Debug.pdb and b/bin/Bootstrap/Antlr3.Runtime.Debug.pdb differ
+diff --git a/bin/Bootstrap/Antlr3.Runtime.dll b/bin/Bootstrap/Antlr3.Runtime.dll
+index 3bc843f..4ff354c 100644
+Binary files a/bin/Bootstrap/Antlr3.Runtime.dll and b/bin/Bootstrap/Antlr3.Runtime.dll differ
+diff --git a/bin/Bootstrap/Antlr3.Runtime.pdb b/bin/Bootstrap/Antlr3.Runtime.pdb
+index 138680b..5a4a118 100644
+Binary files a/bin/Bootstrap/Antlr3.Runtime.pdb and b/bin/Bootstrap/Antlr3.Runtime.pdb differ
+diff --git a/bin/Bootstrap/Antlr3.StringTemplate.dll b/bin/Bootstrap/Antlr3.StringTemplate.dll
+index 6263ccc..976be61 100644
+Binary files a/bin/Bootstrap/Antlr3.StringTemplate.dll and b/bin/Bootstrap/Antlr3.StringTemplate.dll differ
+diff --git a/bin/Bootstrap/Antlr3.StringTemplate.pdb b/bin/Bootstrap/Antlr3.StringTemplate.pdb
+index 639ff9d..8b4a69c 100644
+Binary files a/bin/Bootstrap/Antlr3.StringTemplate.pdb and b/bin/Bootstrap/Antlr3.StringTemplate.pdb differ
+diff --git a/bin/Bootstrap/Antlr3.exe b/bin/Bootstrap/Antlr3.exe
+index fc7937e..472148f 100755
+Binary files a/bin/Bootstrap/Antlr3.exe and b/bin/Bootstrap/Antlr3.exe differ
+diff --git a/bin/Bootstrap/Antlr3.exe.config b/bin/Bootstrap/Antlr3.exe.config
+new file mode 100644
+index 0000000..a8afe94
+--- /dev/null
++++ b/bin/Bootstrap/Antlr3.exe.config
+@@ -0,0 +1,3 @@
++﻿<?xml version="1.0"?>
++<configuration>
++<startup><supportedRuntime version="v2.0.50727" sku="Client"/></startup></configuration>
+diff --git a/bin/Bootstrap/Antlr3.pdb b/bin/Bootstrap/Antlr3.pdb
+index 532667d..22c9859 100644
+Binary files a/bin/Bootstrap/Antlr3.pdb and b/bin/Bootstrap/Antlr3.pdb differ
+diff --git a/bin/Bootstrap/AntlrBuildTask.dll b/bin/Bootstrap/AntlrBuildTask.dll
+index 611bc27..eba5cae 100644
+Binary files a/bin/Bootstrap/AntlrBuildTask.dll and b/bin/Bootstrap/AntlrBuildTask.dll differ
+diff --git a/bin/Bootstrap/AntlrBuildTask.pdb b/bin/Bootstrap/AntlrBuildTask.pdb
+index 6a256a6..28c70bc 100644
+Binary files a/bin/Bootstrap/AntlrBuildTask.pdb and b/bin/Bootstrap/AntlrBuildTask.pdb differ
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg
+index 35e50d7..b6ecd4e 100644
+--- a/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg
+@@ -90,7 +90,7 @@ namespace <actions.(actionScope).namespace>
+>>
+
+lexer(grammar, name, tokens, scopes, rules, numRules, labelType="CommonToken",
+-      filterMode, superClass="Lexer") ::= <<
++      filterMode, superClass={<if(actions.(actionScope).superClass)><actions.(actionScope).superClass><else>Antlr.Runtime.Lexer<endif>}) ::= <<
+[System.CodeDom.Compiler.GeneratedCode("ANTLR", "<ANTLRVersion>")]
+[System.CLSCompliant(false)]
+public partial class <grammar.recognizerName> : <@superClassName><superClass><@end>
+@@ -121,13 +121,32 @@ public partial class <grammar.recognizerName> : <@superClassName><superClass><@e
+<endif>
+<endif>
+<grammar.directDelegates:
+-		 {g|<g:delegateName()> = new <g.recognizerName>(input, state<trunc(g.delegators):{p|, <p:delegateName()>}>, this);}; separator="\n">
++		 {g|<g:delegateName()> = new <g.recognizerName>(input, this.state<trunc(g.delegators):{p|, <p:delegateName()>}>, this);}; separator="\n">
+<grammar.delegators:
+{g|this.<g:delegateName()> = <g:delegateName()>;}; separator="\n">
+<last(grammar.delegators):{g|gParent = <g:delegateName()>;}>
+}
+public override string GrammarFileName { get { return "<fileName>"; } }
+
++<if(grammar.hasDelegates)>
++	public override ICharStream CharStream
++	{
++		get
++		{
++			return base.CharStream;
++		}
++		set
++		{
++			base.CharStream = value;
++			<grammar.directDelegates:
++			 {g|<g:delegateName()> = new <g.recognizerName>(input, state<trunc(g.delegators):{p|, <p:delegateName()>}>, this);}; separator="\n">
++			<grammar.delegators:
++			 {g|this.<g:delegateName()> = <g:delegateName()>;}; separator="\n">
++			<last(grammar.delegators):{g|gParent = <g:delegateName()>;}>
++		}
++	}
++
++<endif>
+<if(filterMode)>
+<filteringNextToken()>
+<endif>
+@@ -163,7 +182,10 @@ public override IToken NextToken()
+{
+if (input.LA(1) == CharStreamConstants.EndOfFile)
+{
+-			return Tokens.EndOfFile;
++			IToken eof = new CommonToken((ICharStream)input, CharStreamConstants.EndOfFile, TokenChannels.Default, input.Index, input.Index);
++			eof.Line = Line;
++			eof.CharPositionInLine = CharPositionInLine;
++			return eof;
+}
+state.token = null;
+state.channel = TokenChannels.Default;
+@@ -318,7 +340,7 @@ this.state.ruleMemo = new System.Collections.Generic.Dictionary\<int, int>[<leng
+>>
+
+parser(grammar, name, scopes, tokens, tokenNames, rules, numRules, bitsets,
+-       ASTLabelType="object", superClass="Parser", labelType="IToken",
++       ASTLabelType="object", superClass={<if(actions.(actionScope).superClass)><actions.(actionScope).superClass><else>Antlr.Runtime.Parser<endif>}, labelType="IToken",
+members={<actions.parser.members>}) ::= <<
+<genericParser(inputStreamType="ITokenStream", rewriteElementType="IToken", ...)>
+>>
+@@ -328,7 +350,7 @@ parser(grammar, name, scopes, tokens, tokenNames, rules, numRules, bitsets,
+*/
+treeParser(grammar, name, scopes, tokens, tokenNames, globalAction, rules,
+numRules, bitsets, labelType={<ASTLabelType>}, ASTLabelType="object",
+-           superClass={<if(filterMode)><if(buildAST)>TreeRewriter<else>TreeFilter<endif><else>TreeParser<endif>},
++           superClass={<if(actions.(actionScope).superClass)><actions.(actionScope).superClass><else>Antlr.Runtime.Tree.<if(filterMode)><if(buildAST)>TreeRewriter<else>TreeFilter<endif><else>TreeParser<endif><endif>},
+members={<actions.treeparser.members>},
+filterMode) ::= <<
+<genericParser(inputStreamType="ITreeNodeStream", rewriteElementType="Node", ...)>
+@@ -846,7 +868,11 @@ lexerStringRef(string,label) ::= <<
+<if(label)>
+int <label>Start = CharIndex;
+Match(<string>); <checkRuleBacktrackFailure()>
++int <label>StartLine<elementIndex> = Line;
++int <label>StartCharPos<elementIndex> = CharPositionInLine;
+<label> = new <labelType>(input, TokenTypes.Invalid, TokenChannels.Default, <label>Start, CharIndex-1);
++<label>.Line = <label>StartLine<elementIndex>;
++<label>.CharPositionInLine = <label>StartCharPos<elementIndex>;
+<else>
+Match(<string>); <checkRuleBacktrackFailure()><\n>
+<endif>
+@@ -905,8 +931,12 @@ ruleRefAndListLabel(rule,label,elementIndex,args,scope) ::= <<
+lexerRuleRef(rule,label,args,elementIndex,scope) ::= <<
+<if(label)>
+int <label>Start<elementIndex> = CharIndex;
++int <label>StartLine<elementIndex> = Line;
++int <label>StartCharPos<elementIndex> = CharPositionInLine;
+<if(scope)><scope:delegateName()>.<endif>m<rule.name>(<args; separator=", ">); <checkRuleBacktrackFailure()>
+<label> = new <labelType>(input, TokenTypes.Invalid, TokenChannels.Default, <label>Start<elementIndex>, CharIndex-1);
++<label>.Line = <label>StartLine<elementIndex>;
++<label>.CharPositionInLine = <label>StartCharPos<elementIndex>;
+<else>
+<if(scope)><scope:delegateName()>.<endif>m<rule.name>(<args; separator=", ">); <checkRuleBacktrackFailure()>
+<endif>
+@@ -922,8 +952,12 @@ lexerRuleRefAndListLabel(rule,label,args,elementIndex,scope) ::= <<
+lexerMatchEOF(label,elementIndex) ::= <<
+<if(label)>
+int <label>Start<elementIndex> = CharIndex;
++int <label>StartLine<elementIndex> = Line;
++int <label>StartCharPos<elementIndex> = CharPositionInLine;
+Match(EOF); <checkRuleBacktrackFailure()>
+<labelType> <label> = new <labelType>(input, EOF, TokenChannels.Default, <label>Start<elementIndex>, CharIndex-1);
++<label>.Line = <label>StartLine<elementIndex>;
++<label>.CharPositionInLine = <label>StartCharPos<elementIndex>;
+<else>
+Match(EOF); <checkRuleBacktrackFailure()>
+<endif>
+diff --git a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll
+index a4ffc98..af4cdd4 100644
+Binary files a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll and b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll differ
+diff --git a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll.config b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll.config
+deleted file mode 100644
+index df20690..0000000
+--- a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll.config
++++ /dev/null
+@@ -1,3 +0,0 @@
+-﻿<?xml version="1.0"?>
+-<configuration>
+-<startup><supportedRuntime version="v2.0.50727"/></startup></configuration>
+diff --git a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.pdb b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.pdb
+index ce60556..652d0ed 100644
+Binary files a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.pdb and b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.pdb differ
+

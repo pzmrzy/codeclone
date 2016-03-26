@@ -1,0 +1,9 @@
+commit 56eed34cf571f0080fcb4fc992387fbb5a4229f1
+Merge: c76d160 1b8855e
+Author:     Alan Condit <acondit@ipns.com>
+AuthorDate: Thu Feb 16 19:07:22 2012 -0800
+Commit:     Alan Condit <acondit@ipns.com>
+CommitDate: Thu Feb 16 19:07:22 2012 -0800
+
+Merge branch 'dev' of github.com:muggins/antlr3 into dev
+

@@ -1,0 +1,23 @@
+commit 5c7ec0d3ad1b4605a954988aa8dfa82e107a69eb
+Author:     parrt <parrt@antlr.org>
+AuthorDate: Wed Apr 13 15:29:12 2011 -0800
+Commit:     parrt <parrt@antlr.org>
+CommitDate: Wed Apr 13 15:29:12 2011 -0800
+
+comment
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8206]
+
+diff --git a/tool/CHANGES.txt b/tool/CHANGES.txt
+index 940bf5b..28da92c 100644
+--- a/tool/CHANGES.txt
++++ b/tool/CHANGES.txt
+@@ -10,6 +10,7 @@ CHANGES
+April 13, 2011
+
+* Unmangled region names in STViz hiearchy tree display.
++* Removed conversion timeout thing again
+
+April 11, 2011
+
+

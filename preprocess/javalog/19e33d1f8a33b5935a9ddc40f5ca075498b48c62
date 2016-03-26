@@ -1,0 +1,80 @@
+commit 19e33d1f8a33b5935a9ddc40f5ca075498b48c62
+Author:     Alan Condit <acondit@ipns.com>
+AuthorDate: Thu Mar 8 16:17:39 2012 -0800
+Commit:     Alan Condit <acondit@ipns.com>
+CommitDate: Thu Mar 8 16:17:39 2012 -0800
+
+Some minor changes made while working on ST4 runtime.
+
+diff --git a/runtime/ObjC/Framework/AMutableArray.m b/runtime/ObjC/Framework/AMutableArray.m
+index e6d1eb8..640ed37 100644
+--- a/runtime/ObjC/Framework/AMutableArray.m
++++ b/runtime/ObjC/Framework/AMutableArray.m
+@@ -91,10 +91,12 @@
+- (void) addObjectsFromArray:(NSArray *)otherArray
+{
+NSInteger cnt, i;
++    id tmp;
+cnt = [otherArray count];
+[self ensureCapacity:count+cnt];
+for( i = 0; i < cnt; i++) {
+-        [self addObject:[otherArray objectAtIndex:i]];
++        tmp = [otherArray objectAtIndex:i];
++        [self addObject:tmp];
+}
+return;
+}
+@@ -264,11 +266,13 @@
+{
+NSMutableString *str;
+NSInteger idx, cnt;
++    id tmp;
+cnt = [self count];
+str = [NSMutableString stringWithCapacity:30];
+[str appendString:@"["];
+for (idx = 0; idx < cnt; idx++ ) {
+-        [str appendString:[[self objectAtIndex:idx] toString]];
++        tmp = [self objectAtIndex:idx];
++        [str appendString:((tmp == nil) ? @"nil" : [tmp description])];
+}
+[str appendString:@"]"];
+return str;
+diff --git a/runtime/ObjC/Framework/BaseRecognizer.m b/runtime/ObjC/Framework/BaseRecognizer.m
+index 62a4ed5..6e7b738 100644
+--- a/runtime/ObjC/Framework/BaseRecognizer.m
++++ b/runtime/ObjC/Framework/BaseRecognizer.m
+@@ -34,6 +34,7 @@
+#import "RuleMemo.h"
+#import "CommonToken.h"
+#import "Map.h"
++#import "NoViableAltException.h"
+
+extern NSInteger debug;
+
+@@ -400,7 +401,8 @@ static NSString *NEXT_TOKEN_RULE_NAME;
+// for development, can add "decision=<<"+nvae.grammarDecisionDescription+">>"
+// and "(decision="+nvae.decisionNumber+") and
+// "state "+nvae.stateNumber
+-        msg = [NSString stringWithFormat:@"no viable alternative at input %@", [self getTokenErrorDisplay:e.token]];
++        //        msg = [NSString stringWithFormat:@"no viable alternative at input %@", [self getTokenErrorDisplay:e.token]];
++        msg = [NSString stringWithFormat:@"no viable alternative decision:%d state:%d at input %@", ((NoViableAltException *)e).stateNumber, ((NoViableAltException *)e).decisionNumber, [self getTokenErrorDisplay:e.token]];
+}
+else if ( [e isKindOfClass:[EarlyExitException class]] ) {
+//EarlyExitException *eee = (EarlyExitException *)e;
+diff --git a/runtime/ObjC/README b/runtime/ObjC/README
+index 1244bc3..22ad627 100644
+--- a/runtime/ObjC/README
++++ b/runtime/ObjC/README
+@@ -25,5 +25,7 @@ antlr-3.2/tool/src/main/java/org/antlr/codegen/ObjCTarget/Java>.
+If you are using Antlr3.3 the code from here is included with the Antlr tarball. You just need
+to copy the ANTLR.framework to /Library/Frameworks.
+
+-Feb. 16, 2012 -- I just uploaded (to dev) a new binary(zipped) copy of the ANTLR.framework that has all of the
+-renaming changes that I did to match the Java source names and fixes to the DFA transitions. This is antlr-3.4.1.
+\ No newline at end of file
++antlr3.4.1
++Feb. 22, 2012 -- I just uploaded a new binary(zipped) copy of the ANTLR.framework and antlr3.4.jar
++that has all of the renaming changes that I did to match the Java source names and
++fixes to the DFA transitions. This is antlr-3.4.1.jar.
+\ No newline at end of file
+

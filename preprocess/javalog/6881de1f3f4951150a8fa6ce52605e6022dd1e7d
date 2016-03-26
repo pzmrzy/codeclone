@@ -1,0 +1,90 @@
+commit 6881de1f3f4951150a8fa6ce52605e6022dd1e7d
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Fri Sep 27 17:38:01 2013 -0500
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Fri Sep 27 18:35:43 2013 -0500
+
+Updated Maven configuration for release
+
+diff --git a/antlr-complete/pom.xml b/antlr-complete/pom.xml
+index b4044d1..f3531d5 100644
+--- a/antlr-complete/pom.xml
++++ b/antlr-complete/pom.xml
+@@ -61,20 +61,6 @@
+<plugins>
+
+<plugin>
+-                <groupId>org.antlr</groupId>
+-                <artifactId>antlr3-maven-plugin</artifactId>
+-                <version>${project.version}</version>
+-                <configuration></configuration>
+-                <executions>
+-                    <execution>
+-                        <goals>
+-                            <goal>antlr</goal>
+-                        </goals>
+-                    </execution>
+-                </executions>
+-            </plugin>
+-
+-            <plugin>
+<groupId>org.apache.maven.plugins</groupId>
+<artifactId>maven-shade-plugin</artifactId>
+<version>2.0</version>
+@@ -137,6 +123,13 @@
+</executions>
+</plugin>
+
++            <plugin>
++                <groupId>org.apache.maven.plugins</groupId>
++                <artifactId>maven-javadoc-plugin</artifactId>
++                <configuration>
++                    <includeDependencySources>true</includeDependencySources>
++                </configuration>
++            </plugin>
+</plugins>
+
+</build>
+diff --git a/pom.xml b/pom.xml
+index c988f40..b6bebfb 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -43,6 +43,7 @@
+<module>gunit</module>
+<module>gunit-maven-plugin</module>
+<module>antlr3-maven-archetype</module>
++        <module>antlr-complete</module>
+</modules>
+
+<!--
+@@ -249,17 +250,28 @@
+
+<plugin>
+<groupId>org.apache.maven.plugins</groupId>
++                <artifactId>maven-release-plugin</artifactId>
++                <!-- override the version inherited from the parent -->
++                <version>2.4.1</version>
++                <configuration>
++                    <arguments>-Psonatype-oss-release ${release.arguments}</arguments>
++                </configuration>
++            </plugin>
++
++            <plugin>
++                <groupId>org.apache.maven.plugins</groupId>
+<artifactId>maven-surefire-plugin</artifactId>
++                <!-- override the version inherited from the parent -->
+<version>2.16</version>
+</plugin>
+
+<plugin>
+<groupId>org.codehaus.mojo</groupId>
+<artifactId>findbugs-maven-plugin</artifactId>
++                <!-- override the version inherited from the parent -->
+<version>2.5.2</version>
+<configuration>
+<findbugsXmlOutput>true</findbugsXmlOutput>
+-                    <findbugsXmlWithMessages>true</findbugsXmlWithMessages>
+<xmlOutput>true</xmlOutput>
+</configuration>
+</plugin>
+

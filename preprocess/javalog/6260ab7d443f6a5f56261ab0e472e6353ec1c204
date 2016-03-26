@@ -1,0 +1,24 @@
+commit 6260ab7d443f6a5f56261ab0e472e6353ec1c204
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Tue Dec 4 15:34:48 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Tue Dec 4 15:34:48 2012 -0600
+
+Fix the bootclasspath property for Windows and Linux
+
+diff --git a/pom.xml b/pom.xml
+index 2592e08..dac5e10 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -49,8 +49,8 @@
+<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+<java5.home>${env.JAVA5_HOME}</java5.home>
+<java6.home>${env.JAVA6_HOME}</java6.home>
+-        <bootclasspath.compile>${java5.home}/jre/lib/rt.jar</bootclasspath.compile>
+-        <bootclasspath.testCompile>${java6.home}/jre/lib/rt.jar</bootclasspath.testCompile>
++        <bootclasspath.compile>${java5.home}/lib/rt.jar</bootclasspath.compile>
++        <bootclasspath.testCompile>${java6.home}/lib/rt.jar</bootclasspath.testCompile>
+</properties>
+
+<licenses>
+

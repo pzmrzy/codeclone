@@ -1,0 +1,28 @@
+commit 8371b2cb359bebd04b7180242a999568f567c7c0
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sun Aug 7 14:29:18 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sun Aug 7 14:29:18 2011 -0800
+
+(C# 2, 3) Reference properties instead of fields
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 9021]
+
+diff --git a/Antlr3.Runtime/ANTLRStringStream.cs b/Antlr3.Runtime/ANTLRStringStream.cs
+index 9904680..b3f11b4 100644
+--- a/Antlr3.Runtime/ANTLRStringStream.cs
++++ b/Antlr3.Runtime/ANTLRStringStream.cs
+@@ -241,9 +241,9 @@ namespace Antlr.Runtime
+{
+state = markers[markDepth];
+}
+-            state.p = p;
+-            state.line = line;
+-            state.charPositionInLine = charPositionInLine;
++            state.p = Index;
++            state.line = Line;
++            state.charPositionInLine = CharPositionInLine;
+lastMarker = markDepth;
+return markDepth;
+}
+

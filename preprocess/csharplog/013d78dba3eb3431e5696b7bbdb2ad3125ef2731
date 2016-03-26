@@ -1,0 +1,4180 @@
+commit 013d78dba3eb3431e5696b7bbdb2ad3125ef2731
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Apr 11 12:48:50 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Apr 11 12:48:50 2011 -0800
+
+(C# 3) Merge CL8141: ST4 integration
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8172]
+
+diff --git a/Antlr3.Targets/Antlr3.Targets.ActionScript/Antlr3.Targets.ActionScript.csproj b/Antlr3.Targets/Antlr3.Targets.ActionScript/Antlr3.Targets.ActionScript.csproj
+index 7e2cc84..c8de0c2 100644
+--- a/Antlr3.Targets/Antlr3.Targets.ActionScript/Antlr3.Targets.ActionScript.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.ActionScript/Antlr3.Targets.ActionScript.csproj
+@@ -19,7 +19,8 @@
+<SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+<AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
+-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
++    <TargetFrameworkProfile>
++    </TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+diff --git a/Antlr3.Targets/Antlr3.Targets.C/Antlr3.Targets.C.csproj b/Antlr3.Targets/Antlr3.Targets.C/Antlr3.Targets.C.csproj
+index a5bfa56..1f3679c 100644
+--- a/Antlr3.Targets/Antlr3.Targets.C/Antlr3.Targets.C.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.C/Antlr3.Targets.C.csproj
+@@ -19,7 +19,8 @@
+<SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+<AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
+-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
++    <TargetFrameworkProfile>
++    </TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+@@ -49,16 +50,16 @@
+<Compile Include="Properties\AssemblyInfo.cs" />
+</ItemGroup>
+<ItemGroup>
+-    <ProjectReference Include="..\..\Antlr3.StringTemplate\Antlr3.StringTemplate.csproj">
+-      <Project>{B5910BE2-DE21-4AA9-95C1-486F42B9E794}</Project>
+-      <Name>Antlr3.StringTemplate</Name>
+-      <Private>False</Private>
+-    </ProjectReference>
+<ProjectReference Include="..\..\Antlr3\Antlr3.csproj">
+<Project>{2AB8CAED-C046-4F05-8B18-6948100D2FE7}</Project>
+<Name>Antlr3</Name>
+<Private>False</Private>
+</ProjectReference>
++    <ProjectReference Include="..\..\Antlr4.StringTemplate\Antlr4.StringTemplate.csproj">
++      <Project>{DE9B7DA2-35DD-46CC-B768-DAEE3C298660}</Project>
++      <Name>Antlr4.StringTemplate</Name>
++      <Private>False</Private>
++    </ProjectReference>
+</ItemGroup>
+<ItemGroup>
+<None Include="..\..\Antlr3\Key.snk">
+diff --git a/Antlr3.Targets/Antlr3.Targets.C/CTarget.cs b/Antlr3.Targets/Antlr3.Targets.C/CTarget.cs
+index 0b33c35..74ef2d3 100644
+--- a/Antlr3.Targets/Antlr3.Targets.C/CTarget.cs
++++ b/Antlr3.Targets/Antlr3.Targets.C/CTarget.cs
+@@ -33,12 +33,13 @@
+namespace Antlr3.Targets
+{
+using System.Collections.Generic;
++    using Antlr3.Extensions;
+
+using CodeGenerator = Antlr3.Codegen.CodeGenerator;
+using Grammar = Antlr3.Tool.Grammar;
+using GrammarType = Antlr3.Tool.GrammarType;
+using StringBuilder = System.Text.StringBuilder;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
++    using StringTemplate = Antlr4.StringTemplate.Template;
+using Target = Antlr3.Codegen.Target;
+
+public class CTarget : Target
+diff --git a/Antlr3.Targets/Antlr3.Targets.CSharp2/Antlr3.Targets.CSharp2.csproj b/Antlr3.Targets/Antlr3.Targets.CSharp2/Antlr3.Targets.CSharp2.csproj
+index 6bf9235..019a497 100644
+--- a/Antlr3.Targets/Antlr3.Targets.CSharp2/Antlr3.Targets.CSharp2.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.CSharp2/Antlr3.Targets.CSharp2.csproj
+@@ -19,7 +19,8 @@
+<SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+<AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
+-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
++    <TargetFrameworkProfile>
++    </TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+diff --git a/Antlr3.Targets/Antlr3.Targets.CSharp3/Antlr3.Targets.CSharp3.csproj b/Antlr3.Targets/Antlr3.Targets.CSharp3/Antlr3.Targets.CSharp3.csproj
+index e3e86bb..8175fce 100644
+--- a/Antlr3.Targets/Antlr3.Targets.CSharp3/Antlr3.Targets.CSharp3.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.CSharp3/Antlr3.Targets.CSharp3.csproj
+@@ -20,7 +20,8 @@
+<SignAssembly>true</SignAssembly>
+<DelaySign>false</DelaySign>
+<AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
+-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
++    <TargetFrameworkProfile>
++    </TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+@@ -50,16 +51,16 @@
+<Compile Include="Properties\AssemblyInfo.cs" />
+</ItemGroup>
+<ItemGroup>
+-    <ProjectReference Include="..\..\Antlr3.StringTemplate\Antlr3.StringTemplate.csproj">
+-      <Project>{B5910BE2-DE21-4AA9-95C1-486F42B9E794}</Project>
+-      <Name>Antlr3.StringTemplate</Name>
+-      <Private>False</Private>
+-    </ProjectReference>
+<ProjectReference Include="..\..\Antlr3\Antlr3.csproj">
+<Project>{2AB8CAED-C046-4F05-8B18-6948100D2FE7}</Project>
+<Name>Antlr3</Name>
+<Private>False</Private>
+</ProjectReference>
++    <ProjectReference Include="..\..\Antlr4.StringTemplate\Antlr4.StringTemplate.csproj">
++      <Project>{DE9B7DA2-35DD-46CC-B768-DAEE3C298660}</Project>
++      <Name>Antlr4.StringTemplate</Name>
++      <Private>False</Private>
++    </ProjectReference>
+</ItemGroup>
+<ItemGroup>
+<None Include="..\..\Antlr3\Key.snk">
+diff --git a/Antlr3.Targets/Antlr3.Targets.CSharp3/CSharp3Target.cs b/Antlr3.Targets/Antlr3.Targets.CSharp3/CSharp3Target.cs
+index 7a664ef..e7c158b 100644
+--- a/Antlr3.Targets/Antlr3.Targets.CSharp3/CSharp3Target.cs
++++ b/Antlr3.Targets/Antlr3.Targets.CSharp3/CSharp3Target.cs
+@@ -34,13 +34,12 @@ namespace Antlr3.Targets
+using System.Collections.Generic;
+
+using ArgumentException = System.ArgumentException;
+-    using ArgumentNullException = System.ArgumentNullException;
+using CLSCompliantAttribute = System.CLSCompliantAttribute;
+using CodeGenerator = Antlr3.Codegen.CodeGenerator;
+using CultureInfo = System.Globalization.CultureInfo;
+using Grammar = Antlr3.Tool.Grammar;
+-    using IAttributeRenderer = Antlr3.ST.IAttributeRenderer;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
++    using IAttributeRenderer = Antlr4.StringTemplate.IAttributeRenderer;
++    using Template = Antlr4.StringTemplate.Template;
+using Target = Antlr3.Codegen.Target;
+
+public class CSharp3Target : Target
+@@ -80,7 +79,7 @@ namespace Antlr3.Targets
+return "0x" + word.ToString( "X" );
+}
+
+-        protected override void GenRecognizerFile(AntlrTool tool, CodeGenerator generator, Grammar grammar, StringTemplate outputFileST)
++        protected override void GenRecognizerFile(AntlrTool tool, CodeGenerator generator, Grammar grammar, Template outputFileST)
+{
+if (!grammar.IsRoot)
+{
+@@ -115,14 +114,9 @@ namespace Antlr3.Targets
+_target = target;
+}
+
+-            public string ToString(string value)
++            public string ToString(string value, string formatName, CultureInfo culture)
+{
+-                return value;
+-            }
+-
+-            public string ToString(string value, string formatName)
+-            {
+-                if (string.IsNullOrEmpty(value))
++                if (string.IsNullOrEmpty(value) || string.IsNullOrEmpty(formatName))
+return value;
+
+switch (formatName)
+@@ -144,17 +138,9 @@ namespace Antlr3.Targets
+}
+}
+
+-            string IAttributeRenderer.ToString(object o)
++            string IAttributeRenderer.ToString(object o, string formatName, CultureInfo culture)
+{
+-                return (string)o;
+-            }
+-
+-            string IAttributeRenderer.ToString(object o, string formatName)
+-            {
+-                if (formatName == null)
+-                    throw new ArgumentNullException("formatName");
+-
+-                return ToString((string)o, formatName);
++                return ToString((string)o, formatName, culture);
+}
+}
+}
+diff --git a/Antlr3.Targets/Antlr3.Targets.Cpp/Antlr3.Targets.Cpp.csproj b/Antlr3.Targets/Antlr3.Targets.Cpp/Antlr3.Targets.Cpp.csproj
+index 8fad7cd..6b7dae7 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Cpp/Antlr3.Targets.Cpp.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.Cpp/Antlr3.Targets.Cpp.csproj
+@@ -19,7 +19,8 @@
+<SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+<AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
+-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
++    <TargetFrameworkProfile>
++    </TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+@@ -49,16 +50,16 @@
+<Compile Include="Properties\AssemblyInfo.cs" />
+</ItemGroup>
+<ItemGroup>
+-    <ProjectReference Include="..\..\Antlr3.StringTemplate\Antlr3.StringTemplate.csproj">
+-      <Project>{B5910BE2-DE21-4AA9-95C1-486F42B9E794}</Project>
+-      <Name>Antlr3.StringTemplate</Name>
+-      <Private>False</Private>
+-    </ProjectReference>
+<ProjectReference Include="..\..\Antlr3\Antlr3.csproj">
+<Project>{2AB8CAED-C046-4F05-8B18-6948100D2FE7}</Project>
+<Name>Antlr3</Name>
+<Private>False</Private>
+</ProjectReference>
++    <ProjectReference Include="..\..\Antlr4.StringTemplate\Antlr4.StringTemplate.csproj">
++      <Project>{DE9B7DA2-35DD-46CC-B768-DAEE3C298660}</Project>
++      <Name>Antlr4.StringTemplate</Name>
++      <Private>False</Private>
++    </ProjectReference>
+</ItemGroup>
+<ItemGroup>
+<None Include="..\..\Antlr3\Key.snk">
+diff --git a/Antlr3.Targets/Antlr3.Targets.Cpp/CPPTarget.cs b/Antlr3.Targets/Antlr3.Targets.Cpp/CPPTarget.cs
+index 7e99676..8f5fb72 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Cpp/CPPTarget.cs
++++ b/Antlr3.Targets/Antlr3.Targets.Cpp/CPPTarget.cs
+@@ -34,8 +34,8 @@ namespace Antlr3.Targets
+using CodeGenerator = Antlr3.Codegen.CodeGenerator;
+using Grammar = Antlr3.Tool.Grammar;
+using StringBuilder = System.Text.StringBuilder;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
+-    using StringTemplateGroup = Antlr3.ST.StringTemplateGroup;
++    using StringTemplate = Antlr4.StringTemplate.Template;
++    using StringTemplateGroup = Antlr4.StringTemplate.TemplateGroup;
+using Target = Antlr3.Codegen.Target;
+
+public class CPPTarget : Target
+@@ -104,7 +104,6 @@ namespace Antlr3.Targets
+StringTemplate headerFileST,
+string extName )
+{
+-            StringTemplateGroup templates = generator.Templates;
+generator.Write( headerFileST, grammar.name + extName );
+}
+
+diff --git a/Antlr3.Targets/Antlr3.Targets.Delphi/Antlr3.Targets.Delphi.csproj b/Antlr3.Targets/Antlr3.Targets.Delphi/Antlr3.Targets.Delphi.csproj
+index 6bdc5cb..b2fdd93 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Delphi/Antlr3.Targets.Delphi.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.Delphi/Antlr3.Targets.Delphi.csproj
+@@ -19,7 +19,8 @@
+<SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+<AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
+-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
++    <TargetFrameworkProfile>
++    </TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+diff --git a/Antlr3.Targets/Antlr3.Targets.Java/Antlr3.Targets.Java.csproj b/Antlr3.Targets/Antlr3.Targets.Java/Antlr3.Targets.Java.csproj
+index abee8e5..5e42515 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Java/Antlr3.Targets.Java.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.Java/Antlr3.Targets.Java.csproj
+@@ -19,7 +19,8 @@
+<SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+<AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
+-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
++    <TargetFrameworkProfile>
++    </TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+diff --git a/Antlr3.Targets/Antlr3.Targets.JavaScript/Antlr3.Targets.JavaScript.csproj b/Antlr3.Targets/Antlr3.Targets.JavaScript/Antlr3.Targets.JavaScript.csproj
+index 0688065..4519c4b 100644
+--- a/Antlr3.Targets/Antlr3.Targets.JavaScript/Antlr3.Targets.JavaScript.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.JavaScript/Antlr3.Targets.JavaScript.csproj
+@@ -19,7 +19,8 @@
+<SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+<AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
+-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
++    <TargetFrameworkProfile>
++    </TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+diff --git a/Antlr3.Targets/Antlr3.Targets.ObjC/Antlr3.Targets.ObjC.csproj b/Antlr3.Targets/Antlr3.Targets.ObjC/Antlr3.Targets.ObjC.csproj
+index 02f84d0..868ed85 100644
+--- a/Antlr3.Targets/Antlr3.Targets.ObjC/Antlr3.Targets.ObjC.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.ObjC/Antlr3.Targets.ObjC.csproj
+@@ -19,7 +19,8 @@
+<SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+<AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
+-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
++    <TargetFrameworkProfile>
++    </TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+@@ -49,16 +50,16 @@
+<Compile Include="Properties\AssemblyInfo.cs" />
+</ItemGroup>
+<ItemGroup>
+-    <ProjectReference Include="..\..\Antlr3.StringTemplate\Antlr3.StringTemplate.csproj">
+-      <Project>{B5910BE2-DE21-4AA9-95C1-486F42B9E794}</Project>
+-      <Name>Antlr3.StringTemplate</Name>
+-      <Private>False</Private>
+-    </ProjectReference>
+<ProjectReference Include="..\..\Antlr3\Antlr3.csproj">
+<Project>{2AB8CAED-C046-4F05-8B18-6948100D2FE7}</Project>
+<Name>Antlr3</Name>
+<Private>False</Private>
+</ProjectReference>
++    <ProjectReference Include="..\..\Antlr4.StringTemplate\Antlr4.StringTemplate.csproj">
++      <Project>{DE9B7DA2-35DD-46CC-B768-DAEE3C298660}</Project>
++      <Name>Antlr4.StringTemplate</Name>
++      <Private>False</Private>
++    </ProjectReference>
+</ItemGroup>
+<ItemGroup>
+<None Include="..\..\Antlr3\Key.snk">
+diff --git a/Antlr3.Targets/Antlr3.Targets.ObjC/ObjCTarget.cs b/Antlr3.Targets/Antlr3.Targets.ObjC/ObjCTarget.cs
+index 0edad81..f3d422f 100644
+--- a/Antlr3.Targets/Antlr3.Targets.ObjC/ObjCTarget.cs
++++ b/Antlr3.Targets/Antlr3.Targets.ObjC/ObjCTarget.cs
+@@ -36,7 +36,7 @@ namespace Antlr3.Targets
+using CodeGenerator = Antlr3.Codegen.CodeGenerator;
+using Grammar = Antlr3.Tool.Grammar;
+using StringBuilder = System.Text.StringBuilder;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
++    using StringTemplate = Antlr4.StringTemplate.Template;
+using Target = Antlr3.Codegen.Target;
+
+public class ObjCTarget : Target
+diff --git a/Antlr3.Targets/Antlr3.Targets.Perl5/Antlr3.Targets.Perl5.csproj b/Antlr3.Targets/Antlr3.Targets.Perl5/Antlr3.Targets.Perl5.csproj
+index 089bd62..2de800e 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Perl5/Antlr3.Targets.Perl5.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.Perl5/Antlr3.Targets.Perl5.csproj
+@@ -19,7 +19,8 @@
+<SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+<AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
+-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
++    <TargetFrameworkProfile>
++    </TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+diff --git a/Antlr3.Targets/Antlr3.Targets.Python/Antlr3.Targets.Python.csproj b/Antlr3.Targets/Antlr3.Targets.Python/Antlr3.Targets.Python.csproj
+index b652eba..9beeae6 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Python/Antlr3.Targets.Python.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.Python/Antlr3.Targets.Python.csproj
+@@ -19,7 +19,8 @@
+<SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+<AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
+-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
++    <TargetFrameworkProfile>
++    </TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+diff --git a/Antlr3.Targets/Antlr3.Targets.Ruby/Antlr3.Targets.Ruby.csproj b/Antlr3.Targets/Antlr3.Targets.Ruby/Antlr3.Targets.Ruby.csproj
+index 77b39bf..2307e9b 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Ruby/Antlr3.Targets.Ruby.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.Ruby/Antlr3.Targets.Ruby.csproj
+@@ -19,7 +19,8 @@
+<SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+<AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
+-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
++    <TargetFrameworkProfile>
++    </TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+@@ -49,16 +50,16 @@
+<Compile Include="RubyTarget.cs" />
+</ItemGroup>
+<ItemGroup>
+-    <ProjectReference Include="..\..\Antlr3.StringTemplate\Antlr3.StringTemplate.csproj">
+-      <Project>{B5910BE2-DE21-4AA9-95C1-486F42B9E794}</Project>
+-      <Name>Antlr3.StringTemplate</Name>
+-      <Private>False</Private>
+-    </ProjectReference>
+<ProjectReference Include="..\..\Antlr3\Antlr3.csproj">
+<Project>{2AB8CAED-C046-4F05-8B18-6948100D2FE7}</Project>
+<Name>Antlr3</Name>
+<Private>False</Private>
+</ProjectReference>
++    <ProjectReference Include="..\..\Antlr4.StringTemplate\Antlr4.StringTemplate.csproj">
++      <Project>{DE9B7DA2-35DD-46CC-B768-DAEE3C298660}</Project>
++      <Name>Antlr4.StringTemplate</Name>
++      <Private>False</Private>
++    </ProjectReference>
+</ItemGroup>
+<ItemGroup>
+<None Include="..\..\Antlr3\Key.snk">
+diff --git a/Antlr3.Targets/Antlr3.Targets.Ruby/RubyTarget.cs b/Antlr3.Targets/Antlr3.Targets.Ruby/RubyTarget.cs
+index f466866..3fdedd3 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Ruby/RubyTarget.cs
++++ b/Antlr3.Targets/Antlr3.Targets.Ruby/RubyTarget.cs
+@@ -40,14 +40,15 @@ namespace Antlr3.Targets
+using Console = System.Console;
+using Grammar = Antlr3.Tool.Grammar;
+using GrammarType = Antlr3.Tool.GrammarType;
+-    using IAttributeRenderer = Antlr3.ST.IAttributeRenderer;
++    using IAttributeRenderer = Antlr4.StringTemplate.IAttributeRenderer;
+using Regex = System.Text.RegularExpressions.Regex;
+using StringBuilder = System.Text.StringBuilder;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
+-    using StringTemplateGroup = Antlr3.ST.StringTemplateGroup;
++    using StringTemplate = Antlr4.StringTemplate.Template;
++    using StringTemplateGroup = Antlr4.StringTemplate.TemplateGroup;
+using Target = Antlr3.Codegen.Target;
+using TypeLoadException = System.TypeLoadException;
+using NumberStyles = System.Globalization.NumberStyles;
++    using CultureInfo = System.Globalization.CultureInfo;
+
+public class RubyTarget : Target
+{
+@@ -98,18 +99,10 @@ namespace Antlr3.Targets
+rubyCharValueEscape['"'] = "\\\"";
+}
+
+-            public string ToString(object o)
++            public string ToString(object o, string formatName, CultureInfo culture)
+{
+-                return o.ToString();
+-            }
+-
+-            public string ToString(object o, string formatName)
+-            {
+-                if (formatName == null)
+-                    throw new ArgumentNullException("formatName");
+-
+string idString = o.ToString();
+-                if (string.IsNullOrEmpty(idString))
++                if (string.IsNullOrEmpty(idString) || string.IsNullOrEmpty(formatName))
+return idString;
+
+switch (formatName)
+diff --git a/Antlr3.Test/Antlr3.Test.csproj b/Antlr3.Test/Antlr3.Test.csproj
+index ddd3843..dbab499 100644
+--- a/Antlr3.Test/Antlr3.Test.csproj
++++ b/Antlr3.Test/Antlr3.Test.csproj
+@@ -123,6 +123,10 @@
+<Name>Antlr3</Name>
+<Private>True</Private>
+</ProjectReference>
++    <ProjectReference Include="..\Antlr4.StringTemplate\Antlr4.StringTemplate.csproj">
++      <Project>{DE9B7DA2-35DD-46CC-B768-DAEE3C298660}</Project>
++      <Name>Antlr4.StringTemplate</Name>
++    </ProjectReference>
+</ItemGroup>
+<Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+<!-- To modify your build process, add your task inside one of the targets below and uncomment it.
+diff --git a/Antlr3.Test/BaseTest.cs b/Antlr3.Test/BaseTest.cs
+index e612ea1..5d56cdd 100644
+--- a/Antlr3.Test/BaseTest.cs
++++ b/Antlr3.Test/BaseTest.cs
+@@ -38,6 +38,7 @@ namespace AntlrUnitTests
+using Antlr.Runtime;
+using Antlr.Runtime.JavaExtensions;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
++    using Antlr3.Extensions;
+
+using AntlrTool = Antlr3.AntlrTool;
+using BindingFlags = System.Reflection.BindingFlags;
+@@ -56,8 +57,8 @@ namespace AntlrUnitTests
+using RegistryKey = Microsoft.Win32.RegistryKey;
+using RegistryValueOptions = Microsoft.Win32.RegistryValueOptions;
+using StringBuilder = System.Text.StringBuilder;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
+-    using StringTemplateGroup = Antlr3.ST.StringTemplateGroup;
++    using StringTemplate = Antlr4.StringTemplate.Template;
++    using StringTemplateGroup = Antlr4.StringTemplate.TemplateGroup;
+
+[TestClass]
+public abstract class BaseTest
+@@ -111,12 +112,7 @@ namespace AntlrUnitTests
+tmpdir = Path.GetFullPath( Path.Combine( Path.GetTempPath(), "antlr-" + currentTimeMillis() ) );
+
+ErrorManager.ResetErrorState();
+-
+-            // force reset of static caches
+-            StringTemplateGroup.ResetNameMaps();
+-
+-            StringTemplate.ResetTemplateCounter();
+-            StringTemplate.defaultGroup = new StringTemplateGroup( "defaultGroup", "." );
++            StringTemplateGroup.defaultGroup = new StringTemplateGroup();
+
+// verify token constants in StringTemplate
+VerifyImportedTokens( typeof( Antlr3.ST.Language.ActionParser ), typeof( Antlr3.ST.Language.ActionLexer ) );
+@@ -840,29 +836,29 @@ namespace AntlrUnitTests
+"public class Test {\n" +
+"    public static void main(String[] args) throws Exception {\n" +
+"        CharStream input = new ANTLRFileStream(args[0]);\n" +
+-                "        $lexerName$ lex = new $lexerName$(input);\n" +
++                "        <lexerName> lex = new <lexerName>(input);\n" +
+"        CommonTokenStream tokens = new CommonTokenStream(lex);\n" +
+-                "        $createParser$\n" +
+-                "        parser.$parserStartRuleName$();\n" +
++                "        <createParser>\n" +
++                "        parser.<parserStartRuleName>();\n" +
+"    }\n" +
+"}"
+);
+StringTemplate createParserST =
+new StringTemplate(
+"        Profiler2 profiler = new Profiler2();\n" +
+-                "        $parserName$ parser = new $parserName$(tokens,profiler);\n" +
++                "        <parserName> parser = new <parserName>(tokens,profiler);\n" +
+"        profiler.setParser(parser);\n" );
+if ( !debug )
+{
+createParserST =
+new StringTemplate(
+-                    "        $parserName$ parser = new $parserName$(tokens);\n" );
++                    "        <parserName> parser = new <parserName>(tokens);\n" );
+}
+outputFileST.SetAttribute( "createParser", createParserST );
+outputFileST.SetAttribute( "parserName", parserName );
+outputFileST.SetAttribute( "lexerName", lexerName );
+outputFileST.SetAttribute( "parserStartRuleName", parserStartRuleName );
+-            writeFile( tmpdir, "Test.java", outputFileST.ToString() );
++            writeFile( tmpdir, "Test.java", outputFileST.Render() );
+}
+
+protected void writeLexerTestFile( string lexerName, bool debug )
+@@ -878,14 +874,14 @@ namespace AntlrUnitTests
+"public class Test {\n" +
+"    public static void main(String[] args) throws Exception {\n" +
+"        CharStream input = new ANTLRFileStream(args[0]);\n" +
+-                "        $lexerName$ lex = new $lexerName$(input);\n" +
++                "        <lexerName> lex = new <lexerName>(input);\n" +
+"        CommonTokenStream tokens = new CommonTokenStream(lex);\n" +
+"        System.out.println(tokens);\n" +
+"    }\n" +
+"}"
+);
+outputFileST.SetAttribute( "lexerName", lexerName );
+-            writeFile( tmpdir, "Test.java", outputFileST.ToString() );
++            writeFile( tmpdir, "Test.java", outputFileST.Render() );
+}
+
+protected void writeTreeTestFile( string parserName,
+@@ -906,28 +902,28 @@ namespace AntlrUnitTests
+"public class Test {\n" +
+"    public static void main(String[] args) throws Exception {\n" +
+"        CharStream input = new ANTLRFileStream(args[0]);\n" +
+-                "        $lexerName$ lex = new $lexerName$(input);\n" +
++                "        <lexerName> lex = new <lexerName>(input);\n" +
+"        TokenRewriteStream tokens = new TokenRewriteStream(lex);\n" +
+-                "        $createParser$\n" +
+-                "        $parserName$.$parserStartRuleName$_return r = parser.$parserStartRuleName$();\n" +
+-                "        $if(!treeParserStartRuleName)$\n" +
++                "        <createParser>\n" +
++                "        <parserName>.<parserStartRuleName>_return r = parser.<parserStartRuleName>();\n" +
++                "        <if(!treeParserStartRuleName)>\n" +
+"        if ( r.tree!=null ) {\n" +
+"            System.out.println(((Tree)r.tree).toStringTree());\n" +
+"            ((CommonTree)r.tree).sanityCheckParentAndChildIndexes();\n" +
+"		 }\n" +
+-                "        $else$\n" +
++                "        <else>\n" +
+"        CommonTreeNodeStream nodes = new CommonTreeNodeStream((Tree)r.tree);\n" +
+"        nodes.setTokenStream(tokens);\n" +
+-                "        $treeParserName$ walker = new $treeParserName$(nodes);\n" +
+-                "        walker.$treeParserStartRuleName$();\n" +
+-                "        $endif$\n" +
++                "        <treeParserName> walker = new <treeParserName>(nodes);\n" +
++                "        walker.<treeParserStartRuleName>();\n" +
++                "        <endif>\n" +
+"    }\n" +
+"}"
+);
+StringTemplate createParserST =
+new StringTemplate(
+"        Profiler2 profiler = new Profiler2();\n" +
+-                "        $parserName$ parser = new $parserName$(tokens,profiler);\n" +
++                "        <parserName> parser = new <parserName>(tokens,profiler);\n" +
+"        profiler.setParser(parser);\n" );
+if ( !debug )
+{
+@@ -941,7 +937,7 @@ namespace AntlrUnitTests
+outputFileST.SetAttribute( "lexerName", lexerName );
+outputFileST.SetAttribute( "parserStartRuleName", parserStartRuleName );
+outputFileST.SetAttribute( "treeParserStartRuleName", treeParserStartRuleName );
+-            writeFile( tmpdir, "Test.java", outputFileST.ToString() );
++            writeFile( tmpdir, "Test.java", outputFileST.Render() );
+}
+
+/** Parser creates trees and so does the tree parser */
+@@ -963,15 +959,15 @@ namespace AntlrUnitTests
+"public class Test {\n" +
+"    public static void main(String[] args) throws Exception {\n" +
+"        CharStream input = new ANTLRFileStream(args[0]);\n" +
+-                "        $lexerName$ lex = new $lexerName$(input);\n" +
++                "        <lexerName> lex = new <lexerName>(input);\n" +
+"        TokenRewriteStream tokens = new TokenRewriteStream(lex);\n" +
+-                "        $createParser$\n" +
+-                "        $parserName$.$parserStartRuleName$_return r = parser.$parserStartRuleName$();\n" +
++                "        <createParser>\n" +
++                "        <parserName>.<parserStartRuleName>_return r = parser.<parserStartRuleName>();\n" +
+"        ((CommonTree)r.tree).sanityCheckParentAndChildIndexes();\n" +
+"        CommonTreeNodeStream nodes = new CommonTreeNodeStream((Tree)r.tree);\n" +
+"        nodes.setTokenStream(tokens);\n" +
+-                "        $treeParserName$ walker = new $treeParserName$(nodes);\n" +
+-                "        $treeParserName$.$treeParserStartRuleName$_return r2 = walker.$treeParserStartRuleName$();\n" +
++                "        <treeParserName> walker = new <treeParserName>(nodes);\n" +
++                "        <treeParserName>.<treeParserStartRuleName>_return r2 = walker.<treeParserStartRuleName>();\n" +
+"		 CommonTree rt = ((CommonTree)r2.tree);\n" +
+"		 if ( rt!=null ) System.out.println(((CommonTree)r2.tree).toStringTree());\n" +
+"    }\n" +
+@@ -980,13 +976,13 @@ namespace AntlrUnitTests
+StringTemplate createParserST =
+new StringTemplate(
+"        Profiler2 profiler = new Profiler2();\n" +
+-                "        $parserName$ parser = new $parserName$(tokens,profiler);\n" +
++                "        <parserName> parser = new <parserName>(tokens,profiler);\n" +
+"        profiler.setParser(parser);\n" );
+if ( !debug )
+{
+createParserST =
+new StringTemplate(
+-                    "        $parserName$ parser = new $parserName$(tokens);\n" );
++                    "        <parserName> parser = new <parserName>(tokens);\n" );
+}
+outputFileST.SetAttribute( "createParser", createParserST );
+outputFileST.SetAttribute( "parserName", parserName );
+@@ -994,7 +990,7 @@ namespace AntlrUnitTests
+outputFileST.SetAttribute( "lexerName", lexerName );
+outputFileST.SetAttribute( "parserStartRuleName", parserStartRuleName );
+outputFileST.SetAttribute( "treeParserStartRuleName", treeParserStartRuleName );
+-            writeFile( tmpdir, "Test.java", outputFileST.ToString() );
++            writeFile( tmpdir, "Test.java", outputFileST.Render() );
+}
+
+protected void writeTemplateTestFile( string parserName,
+@@ -1021,11 +1017,11 @@ namespace AntlrUnitTests
+"					AngleBracketTemplateLexer.class);" +
+"    public static void main(String[] args) throws Exception {\n" +
+"        CharStream input = new ANTLRFileStream(args[0]);\n" +
+-                "        $lexerName$ lex = new $lexerName$(input);\n" +
++                "        <lexerName> lex = new <lexerName>(input);\n" +
+"        CommonTokenStream tokens = new CommonTokenStream(lex);\n" +
+-                "        $createParser$\n" +
++                "        <createParser>\n" +
+"		 parser.setTemplateLib(group);\n" +
+-                "        $parserName$.$parserStartRuleName$_return r = parser.$parserStartRuleName$();\n" +
++                "        <parserName>.<parserStartRuleName>_return r = parser.<parserStartRuleName>();\n" +
+"        if ( r.st!=null )\n" +
+"            System.out.print(r.st.toString());\n" +
+"	 	 else\n" +
+@@ -1036,19 +1032,19 @@ namespace AntlrUnitTests
+StringTemplate createParserST =
+new StringTemplate(
+"        Profiler2 profiler = new Profiler2();\n" +
+-                "        $parserName$ parser = new $parserName$(tokens,profiler);\n" +
++                "        <parserName> parser = new <parserName>(tokens,profiler);\n" +
+"        profiler.setParser(parser);\n" );
+if ( !debug )
+{
+createParserST =
+new StringTemplate(
+-                    "        $parserName$ parser = new $parserName$(tokens);\n" );
++                    "        <parserName> parser = new <parserName>(tokens);\n" );
+}
+outputFileST.SetAttribute( "createParser", createParserST );
+outputFileST.SetAttribute( "parserName", parserName );
+outputFileST.SetAttribute( "lexerName", lexerName );
+outputFileST.SetAttribute( "parserStartRuleName", parserStartRuleName );
+-            writeFile( tmpdir, "Test.java", outputFileST.ToString() );
++            writeFile( tmpdir, "Test.java", outputFileST.Render() );
+}
+
+protected void eraseFiles( string filesEndingWith )
+diff --git a/Antlr3.Test/TestAttributes.cs b/Antlr3.Test/TestAttributes.cs
+index dfbe8bd..a609373 100644
+--- a/Antlr3.Test/TestAttributes.cs
++++ b/Antlr3.Test/TestAttributes.cs
+@@ -38,16 +38,16 @@ namespace AntlrUnitTests
+using Antlr.Runtime.JavaExtensions;
+using Antlr3.Grammars;
+using Antlr3.Tool;
++    using Antlr3.Extensions;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using ActionTranslator = Antlr3.Grammars.ActionTranslator;
+-    using AngleBracketTemplateLexer = Antlr3.ST.Language.AngleBracketTemplateLexer;
+using AntlrTool = Antlr3.AntlrTool;
+using CodeGenerator = Antlr3.Codegen.CodeGenerator;
+using CommonToken = Antlr.Runtime.CommonToken;
+using StringReader = System.IO.StringReader;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
+-    using StringTemplateGroup = Antlr3.ST.StringTemplateGroup;
++    using StringTemplate = Antlr4.StringTemplate.Template;
++    using StringTemplateGroup = Antlr4.StringTemplate.TemplateGroup;
+
+/** Check the $x, $x.y attributes.  For checking the actual
+*  translation, assume the Java target.  This is still a great test
+@@ -56,7 +56,6 @@ namespace AntlrUnitTests
+[TestClass]
+public class TestAttributes : BaseTest
+{
+-
+/** Public default constructor used by TestRig */
+public TestAttributes()
+{
+@@ -74,10 +73,10 @@ namespace AntlrUnitTests
+string rawTranslation =
+translator.Translate();
+StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
++                new StringTemplateGroup();
+StringTemplate actionST = new StringTemplate( templates, "<action>" );
+actionST.SetAttribute( "action", rawTranslation );
+-            string found = actionST.ToString();
++            string found = actionST.Render();
+Assert.AreEqual( expecting, found );
+}
+
+@@ -99,12 +98,7 @@ namespace AntlrUnitTests
+new ActionTranslator( generator,
+"a",
+new CommonToken( ANTLRParser.ACTION, action ), 0 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
++            string found = translator.Translate();
+Assert.AreEqual( expecting, found );
+}
+
+@@ -126,13 +120,8 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+ActionTranslator translator = new ActionTranslator( generator, "a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -319,13 +308,8 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+ActionTranslator translator = new ActionTranslator( generator, "a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -364,13 +348,8 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+ActionTranslator translator = new ActionTranslator( generator, "a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -413,13 +392,8 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+ActionTranslator translator = new ActionTranslator( generator, "a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -447,13 +421,8 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+ActionTranslator translator = new ActionTranslator( generator, "a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -478,23 +447,9 @@ namespace AntlrUnitTests
+g.CodeGenerator = generator;
+generator.GenRecognizer(); // forces load of templates
+StringTemplate codeST = generator.RecognizerST;
+-            string code = codeST.ToString();
++            string code = codeST.Render();
+string found = code.Substring(code.IndexOf("###") + 3, code.IndexOf("!!!") - code.IndexOf("###") - 3);
+Assert.AreEqual(expecting, found);
+-
+-#if false
+-            ActionTranslator translator = new ActionTranslator( generator, "a",
+-                                                                         new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string code = actionST.ToString();
+-            string found = code.Substring(code.IndexOf("###") + 3, code.IndexOf("!!!") - code.IndexOf("###") - 2);
+-            Assert.AreEqual( expecting, found );
+-#endif
+-
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+
+@@ -515,13 +470,8 @@ namespace AntlrUnitTests
+ActionTranslator translator = new ActionTranslator( generator,
+"a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+int expectedMsgID = ErrorManager.MSG_UNKNOWN_SIMPLE_ATTRIBUTE;
+object expectedArg = "x";
+@@ -551,13 +501,8 @@ namespace AntlrUnitTests
+new ActionTranslator( generator,
+"b",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -583,13 +528,8 @@ namespace AntlrUnitTests
+new ActionTranslator( generator,
+"b",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -612,13 +552,8 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+ActionTranslator translator = new ActionTranslator( generator, "a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -656,13 +591,8 @@ namespace AntlrUnitTests
+{
+ActionTranslator translator = new ActionTranslator( generator, "rule1",
+new CommonToken( ANTLRParser.ACTION, action ), i + 1 );
+-                string rawTranslation =
+-                        translator.Translate();
+-                StringTemplateGroup templates =
+-                        new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-                StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-                string found = actionST.ToString();
+-                Assert.AreEqual( expecting, found );
++                string found = translator.Translate();
++                Assert.AreEqual(expecting, found);
+action = action2;
+expecting = expecting2;
+} while ( i++ < 1 );
+@@ -685,13 +615,8 @@ namespace AntlrUnitTests
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+ActionTranslator translator = new ActionTranslator( generator, "a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+int expectedMsgID = ErrorManager.MSG_UNKNOWN_SIMPLE_ATTRIBUTE;
+object expectedArg = "x";
+@@ -719,13 +644,8 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+ActionTranslator translator = new ActionTranslator( generator, "a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -752,7 +672,7 @@ namespace AntlrUnitTests
+g.CodeGenerator = generator;
+generator.GenRecognizer(); // codegen phase sets some vars we need
+StringTemplate codeST = generator.RecognizerST;
+-            string code = codeST.ToString();
++            string code = codeST.Render();
+int startIndex = code.IndexOf("###") + 3;
+int endIndex = code.IndexOf("!!!");
+string found = code.Substring( startIndex, endIndex - startIndex );
+@@ -800,7 +720,7 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // codegen phase sets some vars we need
+
+StringTemplate codeST = generator.RecognizerST;
+-            string code = codeST.ToString();
++            string code = codeST.Render();
+int startIndex = code.IndexOf("###") + 3;
+int endIndex = code.IndexOf("!!!");
+string found = code.Substring( startIndex, endIndex - startIndex );
+@@ -829,7 +749,7 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // codegen phase sets some vars we need
+
+StringTemplate codeST = generator.RecognizerST;
+-            string code = codeST.ToString();
++            string code = codeST.Render();
+int startIndex = code.IndexOf("###") + 3;
+int endIndex = code.IndexOf("!!!");
+string found = code.Substring(startIndex, endIndex - startIndex);
+@@ -856,13 +776,8 @@ namespace AntlrUnitTests
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+ActionTranslator translator = new ActionTranslator( generator, "b",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+int expectedMsgID = ErrorManager.MSG_INVALID_RULE_PARAMETER_REF;
+object expectedArg = "a";
+@@ -891,13 +806,8 @@ namespace AntlrUnitTests
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+ActionTranslator translator = new ActionTranslator( generator, "b",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+int expectedMsgID = ErrorManager.MSG_INVALID_RULE_SCOPE_ATTRIBUTE_REF;
+object expectedArg = "a";
+@@ -925,13 +835,8 @@ namespace AntlrUnitTests
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+ActionTranslator translator = new ActionTranslator( generator, "b",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+int expectedMsgID = ErrorManager.MSG_UNKNOWN_RULE_ATTRIBUTE;
+object expectedArg = "a";
+@@ -1013,13 +918,8 @@ namespace AntlrUnitTests
+ActionTranslator translator = new ActionTranslator( generator,
+null,
+new CommonToken( ANTLRParser.ACTION, action ), 0 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+int expectedMsgID = ErrorManager.MSG_ATTRIBUTE_REF_NOT_IN_RULE;
+object expectedArg = "x";
+@@ -1044,13 +944,8 @@ namespace AntlrUnitTests
+ActionTranslator translator = new ActionTranslator( generator,
+null,
+new CommonToken( ANTLRParser.ACTION, action ), 0 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+int expectedMsgID = ErrorManager.MSG_ATTRIBUTE_REF_NOT_IN_RULE;
+object expectedArg = "x";
+@@ -1084,13 +979,8 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+ActionTranslator translator = new ActionTranslator( generator, "a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -1145,13 +1035,8 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+ActionTranslator translator = new ActionTranslator( generator, "a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -1179,11 +1064,8 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+ActionTranslator translator = new ActionTranslator( generator, "a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            Assert.AreEqual( expecting, rawTranslation );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -1211,11 +1093,8 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+ActionTranslator translator = new ActionTranslator( generator, "a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            Assert.AreEqual( expecting, rawTranslation );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -1241,13 +1120,7 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+ActionTranslator translator = new ActionTranslator( generator, "a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-
++            string found = translator.Translate();
+Assert.AreEqual( expecting, found );
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+@@ -1278,13 +1151,8 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+ActionTranslator translator = new ActionTranslator( generator, "a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -1311,13 +1179,8 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+ActionTranslator translator = new ActionTranslator( generator, "a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -1343,13 +1206,8 @@ namespace AntlrUnitTests
+ActionTranslator translator = new ActionTranslator( generator,
+null,
+new CommonToken( ANTLRParser.ACTION, action ), 0 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -1374,13 +1232,8 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+ActionTranslator translator = new ActionTranslator( generator, "a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -1434,13 +1287,8 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+ActionTranslator translator = new ActionTranslator( generator, "b",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -1466,13 +1314,8 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+ActionTranslator translator = new ActionTranslator( generator, "b",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -1502,13 +1345,8 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+ActionTranslator translator = new ActionTranslator( generator, "a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -1535,13 +1373,8 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+ActionTranslator translator = new ActionTranslator( generator, "b",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -1563,13 +1396,8 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+ActionTranslator translator = new ActionTranslator( generator, "a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -1591,13 +1419,8 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+ActionTranslator translator = new ActionTranslator( generator, "a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -1619,13 +1442,8 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+ActionTranslator translator = new ActionTranslator( generator, "a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -1755,13 +1573,8 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+ActionTranslator translator = new ActionTranslator( generator, "a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -1787,7 +1600,7 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+
+StringTemplate codeST = generator.RecognizerST;
+-            string code = codeST.ToString();
++            string code = codeST.Render();
+int startIndex = code.IndexOf("###") + 3;
+int endIndex = code.IndexOf("!!!");
+string found = code.Substring(startIndex, endIndex - startIndex);
+@@ -1817,13 +1630,8 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+ActionTranslator translator = new ActionTranslator( generator, "b",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -1846,13 +1654,8 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+ActionTranslator translator = new ActionTranslator( generator, "a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -1874,7 +1677,7 @@ namespace AntlrUnitTests
+g.CodeGenerator = generator;
+generator.GenRecognizer(); // forces load of templates
+StringTemplate codeST = generator.RecognizerST;
+-            string code = codeST.ToString();
++            string code = codeST.Render();
+string found = code.Substring(code.IndexOf("###") + 3, code.IndexOf("!!!") - code.IndexOf("###") - 3);
+Assert.AreEqual(expecting, found);
+
+@@ -1899,7 +1702,7 @@ namespace AntlrUnitTests
+ActionTranslator translator = new ActionTranslator( generator, "a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+StringTemplate codeST = generator.RecognizerST;
+-            string code = codeST.ToString();
++            string code = codeST.Render();
+int startIndex = code.IndexOf("###") + 3;
+int endIndex = code.IndexOf("!!!");
+string found = code.Substring(startIndex, endIndex - startIndex);
+@@ -1930,25 +1733,14 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+ActionTranslator translator = new ActionTranslator( generator, "a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+translator = new ActionTranslator( generator,
+"a",
+new CommonToken( ANTLRParser.ACTION, action2 ), 2 );
+-            rawTranslation =
+-                translator.Translate();
+-            templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            actionST = new StringTemplate( templates, rawTranslation );
+-            found = actionST.ToString();
+-
++            found = translator.Translate();
+Assert.AreEqual( expecting2, found );
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+@@ -1975,7 +1767,7 @@ namespace AntlrUnitTests
+g.CodeGenerator = generator;
+generator.GenRecognizer(); // forces load of templates
+StringTemplate codeST = generator.RecognizerST;
+-            string code = codeST.ToString();
++            string code = codeST.Render();
+string found = code.Substring(code.IndexOf("###") + 3, code.IndexOf("!!!") - code.IndexOf("###") - 3);
+Assert.AreEqual(expecting, found);
+found = code.Substring(code.IndexOf("^^^") + 3, code.IndexOf("&&&") - code.IndexOf("^^^") - 3);
+@@ -2006,13 +1798,8 @@ namespace AntlrUnitTests
+new ActionTranslator( generator,
+"a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+int expectedMsgID = ErrorManager.MSG_UNKNOWN_DYNAMIC_SCOPE_ATTRIBUTE;
+object expectedArg = "a";
+@@ -2044,13 +1831,8 @@ namespace AntlrUnitTests
+new ActionTranslator( generator,
+"a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+int expectedMsgID = ErrorManager.MSG_UNKNOWN_DYNAMIC_SCOPE_ATTRIBUTE;
+object expectedArg = "Symbols";
+@@ -2082,13 +1864,8 @@ namespace AntlrUnitTests
+new ActionTranslator( generator,
+"b",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+int expectedMsgID = ErrorManager.MSG_UNKNOWN_SIMPLE_ATTRIBUTE;
+object expectedArg = "n";
+@@ -2186,13 +1963,8 @@ namespace AntlrUnitTests
+new ActionTranslator( generator,
+"a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -2216,13 +1988,8 @@ namespace AntlrUnitTests
+new ActionTranslator( generator,
+"a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -2246,13 +2013,8 @@ namespace AntlrUnitTests
+new ActionTranslator( generator,
+"a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -2276,13 +2038,8 @@ namespace AntlrUnitTests
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+g.CodeGenerator = generator;
+generator.GenRecognizer(); // forces load of templates
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -2308,13 +2065,8 @@ namespace AntlrUnitTests
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+g.CodeGenerator = generator;
+generator.GenRecognizer(); // forces load of templates
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -2337,7 +2089,7 @@ namespace AntlrUnitTests
+generator.GenRecognizer();
+
+StringTemplate codeST = generator.RecognizerST;
+-            string code = codeST.ToString();
++            string code = codeST.Render();
+int startIndex = code.IndexOf("###") + 3;
+int endIndex = code.IndexOf("!!!");
+string found = code.Substring(startIndex, endIndex - startIndex);
+@@ -2364,7 +2116,7 @@ namespace AntlrUnitTests
+generator.GenRecognizer();
+
+StringTemplate codeST = generator.RecognizerST;
+-            string code = codeST.ToString();
++            string code = codeST.Render();
+int startIndex = code.IndexOf("###") + 3;
+int endIndex = code.IndexOf("!!!");
+string found = code.Substring(startIndex, endIndex - startIndex);
+@@ -2392,7 +2144,7 @@ namespace AntlrUnitTests
+generator.GenRecognizer();
+
+StringTemplate codeST = generator.RecognizerST;
+-            string code = codeST.ToString();
++            string code = codeST.Render();
+int startIndex = code.IndexOf("###") + 3;
+int endIndex = code.IndexOf("!!!");
+string found = code.Substring(startIndex, endIndex - startIndex);
+@@ -2420,13 +2172,8 @@ namespace AntlrUnitTests
+
+ActionTranslator translator = new ActionTranslator( generator, "a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -2450,13 +2197,8 @@ namespace AntlrUnitTests
+
+ActionTranslator translator = new ActionTranslator( generator, "a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -2705,14 +2447,8 @@ namespace AntlrUnitTests
+new ActionTranslator( generator,
+"R",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -2735,14 +2471,8 @@ namespace AntlrUnitTests
+new ActionTranslator( generator,
+"R",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -2765,14 +2495,8 @@ namespace AntlrUnitTests
+new ActionTranslator( generator,
+"R",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -2878,14 +2602,8 @@ namespace AntlrUnitTests
+new ActionTranslator( generator,
+"R",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -2908,14 +2626,8 @@ namespace AntlrUnitTests
+new ActionTranslator( generator,
+"R",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -2937,14 +2649,8 @@ namespace AntlrUnitTests
+new ActionTranslator( generator,
+"R",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -3040,13 +2746,8 @@ namespace AntlrUnitTests
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+g.CodeGenerator = generator;
+generator.GenRecognizer(); // forces load of templates
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -3070,13 +2771,8 @@ namespace AntlrUnitTests
+
+ActionTranslator translator = new ActionTranslator( generator, "a",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+}
+
+[TestMethod]
+@@ -3147,13 +2843,8 @@ namespace AntlrUnitTests
+ActionTranslator translator = new ActionTranslator( generator,
+"field",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -3176,13 +2867,8 @@ namespace AntlrUnitTests
+ActionTranslator translator = new ActionTranslator( generator,
+"rule",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -3205,13 +2891,8 @@ namespace AntlrUnitTests
+ActionTranslator translator = new ActionTranslator( generator,
+"rule",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+@@ -3279,9 +2960,9 @@ namespace AntlrUnitTests
+checkErrors( equeue, expectedErrors );
+
+StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
++                new StringTemplateGroup();
+StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
++            string found = actionST.Render();
+Assert.AreEqual( expecting, found );
+}
+
+@@ -3369,7 +3050,7 @@ namespace AntlrUnitTests
+g.CodeGenerator = generator;
+generator.GenRecognizer(); // forces load of templates
+StringTemplate codeST = generator.RecognizerST;
+-            string code = codeST.ToString();
++            string code = codeST.Render();
+string found = code.Substring(code.IndexOf("###") + 3, code.IndexOf("!!!") - code.IndexOf("###") - 3);
+Assert.AreEqual(expecting, found);
+}
+@@ -3394,12 +3075,7 @@ namespace AntlrUnitTests
+ActionTranslator translator = new ActionTranslator( generator,
+"RULE",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
++            string found = translator.Translate();
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+Assert.AreEqual( expecting, found );
+}
+@@ -3447,9 +3123,9 @@ namespace AntlrUnitTests
+}
+Assert.IsFalse(foundScopeSetAttributeRef, "action translator used scopeSetAttributeRef template in comparison!");
+StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
++                new StringTemplateGroup();
+StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
++            string found = actionST.Render();
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+Assert.AreEqual( expecting, found );
+}
+@@ -3475,7 +3151,7 @@ namespace AntlrUnitTests
+g.CodeGenerator = generator;
+generator.GenRecognizer(); // codegen phase sets some vars we need
+StringTemplate codeST = generator.RecognizerST;
+-            string code = codeST.ToString();
++            string code = codeST.Render();
+int startIndex = code.IndexOf("###") + 3;
+int endIndex = code.IndexOf("!!!");
+string found = code.Substring(startIndex, endIndex - startIndex);
+@@ -3493,9 +3169,9 @@ namespace AntlrUnitTests
+[TestMethod]
+public void TestRefToTextAttributeForCurrentTreeRule() /*throws Exception*/ {
+string action = "$text";
+-            string expecting = "input.getTokenStream().toString(" + NewLine +
+-                               "              input.getTreeAdaptor().getTokenStartIndex(retval.start)," + NewLine +
+-                               "              input.getTreeAdaptor().getTokenStopIndex(retval.start))";
++            string expecting = "input.getTokenStream().toString(" +
++                               "input.getTreeAdaptor().getTokenStartIndex(retval.start)," +
++                               "input.getTreeAdaptor().getTokenStopIndex(retval.start))";
+
+ErrorQueue equeue = new ErrorQueue();
+ErrorManager.SetErrorListener( equeue );
+@@ -3511,7 +3187,7 @@ namespace AntlrUnitTests
+g.CodeGenerator = generator;
+generator.GenRecognizer(); // codegen phase sets some vars we need
+StringTemplate codeST = generator.RecognizerST;
+-            string code = codeST.ToString();
++            string code = codeST.Render();
+int startIndex = code.IndexOf("###") + 3;
+int endIndex = code.IndexOf("!!!");
+string found = code.Substring(startIndex, endIndex - startIndex);
+@@ -3541,13 +3217,8 @@ namespace AntlrUnitTests
+generator.GenRecognizer(); // forces load of templates
+ActionTranslator translator = new ActionTranslator( generator, "b",
+new CommonToken( ANTLRParser.ACTION, action ), 1 );
+-            string rawTranslation =
+-                translator.Translate();
+-            StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
+-            StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
+-            Assert.AreEqual( expecting, found );
++            string found = translator.Translate();
++            Assert.AreEqual(expecting, found);
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+}
+diff --git a/Antlr3.Test/TestLexer.cs b/Antlr3.Test/TestLexer.cs
+index d85387c..6536cfc 100644
+--- a/Antlr3.Test/TestLexer.cs
++++ b/Antlr3.Test/TestLexer.cs
+@@ -38,7 +38,7 @@ namespace AntlrUnitTests
+using AntlrTool = Antlr3.AntlrTool;
+using CodeGenerator = Antlr3.Codegen.CodeGenerator;
+using Grammar = Antlr3.Tool.Grammar;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
++    using StringTemplate = Antlr4.StringTemplate.Template;
+
+[TestClass]
+public class TestLexer : BaseTest
+@@ -277,7 +277,7 @@ namespace AntlrUnitTests
+g.CodeGenerator = generator;
+generator.GenRecognizer(); // codegen phase sets some vars we need
+StringTemplate codeST = generator.RecognizerST;
+-            string code = codeST.ToString();
++            string code = codeST.Render();
+int m = code.IndexOf( "match(\"" );
+string found = code.Substring( m, expecting.Length );
+
+diff --git a/Antlr3.Test/TestNFAConstruction.cs b/Antlr3.Test/TestNFAConstruction.cs
+index 82ad087..3119a7a 100644
+--- a/Antlr3.Test/TestNFAConstruction.cs
++++ b/Antlr3.Test/TestNFAConstruction.cs
+@@ -827,7 +827,6 @@ namespace AntlrUnitTests
+string result = g.GetLexerGrammar();
+string expecting =
+"lexer grammar t;" + NewLine +
+-                "" + NewLine +
+"// $ANTLR src \"<string>\" 2" + NewLine +
+"A : '{' ~('}')* '}';";
+Assert.AreEqual( expecting, result );
+diff --git a/Antlr3.Test/TestSymbolDefinitions.cs b/Antlr3.Test/TestSymbolDefinitions.cs
+index 93e33e4..61ed66e 100644
+--- a/Antlr3.Test/TestSymbolDefinitions.cs
++++ b/Antlr3.Test/TestSymbolDefinitions.cs
+@@ -42,7 +42,7 @@ namespace AntlrUnitTests
+using AntlrTool = Antlr3.AntlrTool;
+using CodeGenerator = Antlr3.Codegen.CodeGenerator;
+using Label = Antlr3.Analysis.Label;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
++    using StringTemplate = Antlr4.StringTemplate.Template;
+using StringTokenizer = Antlr.Runtime.JavaExtensions.StringTokenizer;
+
+[TestClass]
+@@ -139,7 +139,6 @@ namespace AntlrUnitTests
+
+string implicitLexer =
+"lexer grammar t;" + NewLine +
+-                "" + NewLine +
+"T__5 : 'x' ;" + NewLine +
+"" + NewLine +
+"// $ANTLR src \"<string>\" 3" + NewLine +
+@@ -256,7 +255,7 @@ namespace AntlrUnitTests
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.CodeGenerator = generator;
+StringTemplate recogST = generator.GenRecognizer();
+-            string code = recogST.ToString();
++            string code = recogST.Render();
+Assert.IsTrue(code.IndexOf("x=b();") < 0, "not expecting label");
+
+Assert.AreEqual(0, equeue.errors.Count, "unexpected errors: " + equeue);
+diff --git a/Antlr3.Test/TestTemplates.cs b/Antlr3.Test/TestTemplates.cs
+index c43ec13..21767fc 100644
+--- a/Antlr3.Test/TestTemplates.cs
++++ b/Antlr3.Test/TestTemplates.cs
+@@ -41,8 +41,8 @@ namespace AntlrUnitTests
+using AntlrTool = Antlr3.AntlrTool;
+using CodeGenerator = Antlr3.Codegen.CodeGenerator;
+using CommonToken = Antlr.Runtime.CommonToken;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
+-    using StringTemplateGroup = Antlr3.ST.StringTemplateGroup;
++    using StringTemplate = Antlr4.StringTemplate.Template;
++    using StringTemplateGroup = Antlr4.StringTemplate.TemplateGroup;
+
+/** Test templates in actions; %... shorthands */
+[TestClass]
+@@ -54,7 +54,7 @@ namespace AntlrUnitTests
+public void TestTemplateConstructor() /*throws Exception*/ {
+string action = "x = %foo(name={$ID.text});";
+string expecting = "x = templateLib.getInstanceOf(\"foo\"," +
+-                LINE_SEP + "  new STAttrMap().put(\"name\", (ID1!=null?ID1.getText():null)));";
++                "  new STAttrMap().put(\"name\", (ID1!=null?ID1.getText():null)));";
+
+ErrorQueue equeue = new ErrorQueue();
+ErrorManager.SetErrorListener( equeue );
+@@ -79,9 +79,9 @@ namespace AntlrUnitTests
+string rawTranslation =
+translator.Translate();
+StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
++                new StringTemplateGroup();
+StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
++            string found = actionST.Render();
+
+assertNoErrors( equeue );
+
+@@ -116,9 +116,9 @@ namespace AntlrUnitTests
+string rawTranslation =
+translator.Translate();
+StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
++                new StringTemplateGroup();
+StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
++            string found = actionST.Render();
+
+assertNoErrors( equeue );
+
+@@ -129,7 +129,7 @@ namespace AntlrUnitTests
+public void TestIndirectTemplateConstructor() /*throws Exception*/ {
+string action = "x = %({\"foo\"})(name={$ID.text});";
+string expecting = "x = templateLib.getInstanceOf(\"foo\"," +
+-                LINE_SEP + "  new STAttrMap().put(\"name\", (ID1!=null?ID1.getText():null)));";
++                "  new STAttrMap().put(\"name\", (ID1!=null?ID1.getText():null)));";
+
+ErrorQueue equeue = new ErrorQueue();
+ErrorManager.SetErrorListener( equeue );
+@@ -154,9 +154,9 @@ namespace AntlrUnitTests
+string rawTranslation =
+translator.Translate();
+StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
++                new StringTemplateGroup();
+StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
++            string found = actionST.Render();
+
+assertNoErrors( equeue );
+
+@@ -190,9 +190,9 @@ namespace AntlrUnitTests
+string rawTranslation =
+translator.Translate();
+StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
++                new StringTemplateGroup();
+StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
++            string found = actionST.Render();
+
+assertNoErrors( equeue );
+
+@@ -227,9 +227,9 @@ namespace AntlrUnitTests
+string rawTranslation =
+translator.Translate();
+StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
++                new StringTemplateGroup();
+StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
++            string found = actionST.Render();
+
+assertNoErrors( equeue );
+
+@@ -263,9 +263,9 @@ namespace AntlrUnitTests
+string rawTranslation =
+translator.Translate();
+StringTemplateGroup templates =
+-                new StringTemplateGroup( ".", typeof( AngleBracketTemplateLexer ) );
++                new StringTemplateGroup();
+StringTemplate actionST = new StringTemplate( templates, rawTranslation );
+-            string found = actionST.ToString();
++            string found = actionST.Render();
+
+assertNoErrors( equeue );
+
+diff --git a/Antlr3/Analysis/DFA.cs b/Antlr3/Analysis/DFA.cs
+index 6075103..02d8103 100644
+--- a/Antlr3/Analysis/DFA.cs
++++ b/Antlr3/Analysis/DFA.cs
+@@ -43,7 +43,7 @@ namespace Antlr3.Analysis
+using IIntStream = Antlr.Runtime.IIntStream;
+using IntervalSet = Antlr3.Misc.IntervalSet;
+using StringBuilder = System.Text.StringBuilder;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
++    using StringTemplate = Antlr4.StringTemplate.Template;
+
+/** A DFA (converted from a grammar's NFA).
+*  DFAs are used as prediction machine for alternative blocks in all kinds
+diff --git a/Antlr3/Analysis/SemanticContext.cs b/Antlr3/Analysis/SemanticContext.cs
+index 56475f6..ff19a03 100644
+--- a/Antlr3/Analysis/SemanticContext.cs
++++ b/Antlr3/Analysis/SemanticContext.cs
+@@ -34,6 +34,7 @@ namespace Antlr3.Analysis
+{
+using System.Collections.Generic;
+using System.Linq;
++    using Antlr3.Extensions;
+
+using ANTLRParser = Antlr3.Grammars.ANTLRParser;
+using ArgumentNullException = System.ArgumentNullException;
+@@ -42,8 +43,8 @@ namespace Antlr3.Analysis
+using Grammar = Antlr3.Tool.Grammar;
+using GrammarAST = Antlr3.Tool.GrammarAST;
+using StringComparer = System.StringComparer;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
+-    using StringTemplateGroup = Antlr3.ST.StringTemplateGroup;
++    using StringTemplate = Antlr4.StringTemplate.Template;
++    using TemplateGroup = Antlr4.StringTemplate.TemplateGroup;
+
+/** A binary tree structure used to record the semantic context in which
+*  an NFA configuration is valid.  It's either a single predicate or
+@@ -115,7 +116,7 @@ namespace Antlr3.Analysis
+/** Generate an expression that will evaluate the semantic context,
+*  given a set of output templates.
+*/
+-        public abstract StringTemplate GenExpr(CodeGenerator generator, StringTemplateGroup templates, DFA dfa);
++        public abstract StringTemplate GenExpr(CodeGenerator generator, TemplateGroup templates, DFA dfa);
+
+public class Predicate : SemanticContext
+{
+@@ -241,7 +242,7 @@ namespace Antlr3.Analysis
+return StringComparer.Ordinal.GetHashCode(_predicateAST.Text);
+}
+
+-            public override StringTemplate GenExpr(CodeGenerator generator, StringTemplateGroup templates, DFA dfa)
++            public override StringTemplate GenExpr(CodeGenerator generator, TemplateGroup templates, DFA dfa)
+{
+StringTemplate eST = null;
+if (templates != null)
+@@ -272,7 +273,7 @@ namespace Antlr3.Analysis
+}
+else
+{
+-                    eST = new StringTemplate("$pred$");
++                    eST = new StringTemplate("<pred>");
+eST.SetAttribute("pred", this.ToString());
+return eST;
+}
+@@ -318,10 +319,10 @@ namespace Antlr3.Analysis
+}
+}
+
+-            public override StringTemplate GenExpr(CodeGenerator generator, StringTemplateGroup templates, DFA dfa)
++            public override StringTemplate GenExpr(CodeGenerator generator, TemplateGroup templates, DFA dfa)
+{
+if (templates != null)
+-                    return templates.GetInstanceOf("true");
++                    return templates.GetInstanceOf("true_value");
+
+return new StringTemplate("true");
+}
+@@ -349,10 +350,10 @@ namespace Antlr3.Analysis
+}
+}
+
+-            public override StringTemplate GenExpr(CodeGenerator generator, StringTemplateGroup templates, DFA dfa)
++            public override StringTemplate GenExpr(CodeGenerator generator, TemplateGroup templates, DFA dfa)
+{
+if (templates != null)
+-                    return templates.GetInstanceOf("false");
++                    return templates.GetInstanceOf("false_value");
+
+return new StringTemplate("false");
+}
+@@ -516,7 +517,7 @@ namespace Antlr3.Analysis
+}
+}
+
+-            public override StringTemplate GenExpr(CodeGenerator generator, StringTemplateGroup templates, DFA dfa)
++            public override StringTemplate GenExpr(CodeGenerator generator, TemplateGroup templates, DFA dfa)
+{
+StringTemplate result =
+Operands.Aggregate(default(StringTemplate),
+@@ -529,7 +530,7 @@ namespace Antlr3.Analysis
+if (templates != null)
+eST = templates.GetInstanceOf("andPredicates");
+else
+-                                eST = new StringTemplate("($left$&&$right$)");
++                                eST = new StringTemplate("(<left>&&<right>)");
+
+eST.SetAttribute("left", template);
+eST.SetAttribute("right", operand.GenExpr(generator, templates, dfa));
+@@ -570,13 +571,13 @@ namespace Antlr3.Analysis
+}
+}
+
+-            public override StringTemplate GenExpr(CodeGenerator generator, StringTemplateGroup templates, DFA dfa)
++            public override StringTemplate GenExpr(CodeGenerator generator, TemplateGroup templates, DFA dfa)
+{
+StringTemplate eST = null;
+if (templates != null)
+eST = templates.GetInstanceOf("orPredicates");
+else
+-                    eST = new StringTemplate("($first(operands)$$rest(operands):{o | ||$o$}$)");
++                    eST = new StringTemplate("(<first(operands)><rest(operands):{o | ||<o>}>)");
+
+foreach (SemanticContext semctx in Operands)
+{
+@@ -634,13 +635,13 @@ namespace Antlr3.Analysis
+}
+}
+
+-            public override StringTemplate GenExpr(CodeGenerator generator, StringTemplateGroup templates, DFA dfa)
++            public override StringTemplate GenExpr(CodeGenerator generator, TemplateGroup templates, DFA dfa)
+{
+StringTemplate eST = null;
+if (templates != null)
+eST = templates.GetInstanceOf("notPredicate");
+else
+-                    eST = new StringTemplate("?!($pred$)");
++                    eST = new StringTemplate("!(<pred>)");
+
+eST.SetAttribute("pred", ctx.GenExpr(generator, templates, dfa));
+return eST;
+diff --git a/Antlr3/Antlr3.csproj b/Antlr3/Antlr3.csproj
+index 2727ba6..187d085 100644
+--- a/Antlr3/Antlr3.csproj
++++ b/Antlr3/Antlr3.csproj
+@@ -21,7 +21,8 @@
+</StartupObject>
+<SignAssembly>true</SignAssembly>
+<AssemblyOriginatorKeyFile>Key.snk</AssemblyOriginatorKeyFile>
+-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
++    <TargetFrameworkProfile>
++    </TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+@@ -77,6 +78,7 @@
+<Compile Include="Analysis\Transition.cs" />
+<Compile Include="Codegen\CodeGenerator.cs" />
+<Compile Include="Codegen\Target.cs" />
++    <Compile Include="Extensions\TemplateExtensions.cs" />
+<Compile Include="Grammars\LeftRecursiveRuleWalker.g3.cs">
+<DependentUpon>LeftRecursiveRuleWalker.g3</DependentUpon>
+</Compile>
+@@ -525,9 +527,13 @@
+<Project>{8FDC0A87-9005-4D5A-AB75-E55CEB575559}</Project>
+<Name>Antlr3.Runtime</Name>
+</ProjectReference>
+-    <ProjectReference Include="..\Antlr3.StringTemplate\Antlr3.StringTemplate.csproj">
+-      <Project>{B5910BE2-DE21-4AA9-95C1-486F42B9E794}</Project>
+-      <Name>Antlr3.StringTemplate</Name>
++    <ProjectReference Include="..\Antlr4.StringTemplate.Visualizer\Antlr4.StringTemplate.Visualizer.csproj">
++      <Project>{DC0A9616-0B69-4A3B-ADC7-62FCA9207B98}</Project>
++      <Name>Antlr4.StringTemplate.Visualizer</Name>
++    </ProjectReference>
++    <ProjectReference Include="..\Antlr4.StringTemplate\Antlr4.StringTemplate.csproj">
++      <Project>{DE9B7DA2-35DD-46CC-B768-DAEE3C298660}</Project>
++      <Name>Antlr4.StringTemplate</Name>
+</ProjectReference>
+</ItemGroup>
+<PropertyGroup>
+diff --git a/Antlr3/AntlrTool.cs b/Antlr3/AntlrTool.cs
+index 54a377f..8602f42 100644
+--- a/Antlr3/AntlrTool.cs
++++ b/Antlr3/AntlrTool.cs
+@@ -95,6 +95,7 @@ namespace Antlr3
+".g3"
+};
+
++        [STAThread]
+public static void Main( string[] args )
+{
+AntlrTool antlr = new AntlrTool( args );
+@@ -102,7 +103,7 @@ namespace Antlr3
+{
+//System.Diagnostics.Stopwatch timer = System.Diagnostics.Stopwatch.StartNew();
+antlr.Process();
+-                //Console.WriteLine("Total parse time: {0}", timer.ElapsedMilliseconds);
++                //Console.WriteLine("Total parse time: {0}ms", timer.ElapsedMilliseconds);
+Environment.ExitCode = ( ErrorManager.GetNumErrors() > 0 ) ? 1 : 0;
+}
+}
+@@ -124,6 +125,7 @@ namespace Antlr3
+
+TargetsDirectory = Path.Combine(ToolPathRoot, @"Targets");
+TemplatesDirectory = Path.Combine(Path.Combine(ToolPathRoot, @"Codegen"), "Templates");
++            ErrorManager.Initialize();
+}
+
+public AntlrTool( string[] args )
+@@ -342,7 +344,7 @@ namespace Antlr3
+}
+else if ( args[i] == "-XdbgST" )
+{
+-                    CodeGenerator.EmitTemplateDelimiters = true;
++                    CodeGenerator.LaunchTemplateInspector = true;
+}
+else if ( args[i] == "-Xmaxinlinedfastates" )
+{
+diff --git a/Antlr3/Codegen/ACyclicDFACodeGenerator.cs b/Antlr3/Codegen/ACyclicDFACodeGenerator.cs
+index 5f58d73..5d1c2a9 100644
+--- a/Antlr3/Codegen/ACyclicDFACodeGenerator.cs
++++ b/Antlr3/Codegen/ACyclicDFACodeGenerator.cs
+@@ -35,9 +35,10 @@ namespace Antlr3.Codegen
+using System.Collections.Generic;
+using System.Linq;
+using Antlr3.Analysis;
++    using Antlr3.Extensions;
+
+-    using StringTemplate = Antlr3.ST.StringTemplate;
+-    using StringTemplateGroup = Antlr3.ST.StringTemplateGroup;
++    using StringTemplate = Antlr4.StringTemplate.Template;
++    using TemplateGroup = Antlr4.StringTemplate.TemplateGroup;
+
+public class ACyclicDFACodeGenerator
+{
+@@ -48,14 +49,14 @@ namespace Antlr3.Codegen
+this.parentGenerator = parent;
+}
+
+-        public virtual StringTemplate GenFixedLookaheadDecision( StringTemplateGroup templates,
++        public virtual StringTemplate GenFixedLookaheadDecision( TemplateGroup templates,
+DFA dfa )
+{
+return WalkFixedDFAGeneratingStateMachine( templates, dfa, dfa.startState, 1 );
+}
+
+protected virtual StringTemplate WalkFixedDFAGeneratingStateMachine(
+-                StringTemplateGroup templates,
++                TemplateGroup templates,
+DFA dfa,
+DFAState s,
+int k )
+@@ -126,7 +127,7 @@ namespace Antlr3.Codegen
+}
+StringTemplate edgeST = templates.GetInstanceOf( dfaEdgeName );
+// If the template wants all the label values delineated, do that
+-                if ( edgeST.GetFormalArgument( "labels" ) != null )
++                if ( edgeST.impl.TryGetFormalArgument( "labels" ) != null )
+{
+List<string> labels = edge.Label.Set.Select( value => parentGenerator.GetTokenTypeAsTargetLabel( value ) ).ToList();
+edgeST.SetAttribute( "labels", labels );
+diff --git a/Antlr3/Codegen/CodeGenerator.cs b/Antlr3/Codegen/CodeGenerator.cs
+index 16eaf84..abf064a 100644
+--- a/Antlr3/Codegen/CodeGenerator.cs
++++ b/Antlr3/Codegen/CodeGenerator.cs
+@@ -37,9 +37,11 @@ namespace Antlr3.Codegen
+using Antlr.Runtime.JavaExtensions;
+using Antlr3.Analysis;
+using Antlr3.Grammars;
++    using Antlr3.Extensions;
++    using Antlr4.StringTemplate.Visualizer.Extensions;
+
++    using File = System.IO.File;
+using Activator = System.Activator;
+-    using AngleBracketTemplateLexer = Antlr3.ST.Language.AngleBracketTemplateLexer;
+using ANTLRLexer = Antlr3.Grammars.ANTLRLexer;
+using ANTLRParser = Antlr3.Grammars.ANTLRParser;
+using AntlrTool = Antlr3.AntlrTool;
+@@ -49,7 +51,6 @@ namespace Antlr3.Codegen
+using AttributeScope = Antlr3.Tool.AttributeScope;
+using BitSet = Antlr3.Misc.BitSet;
+using CLSCompliant = System.CLSCompliantAttribute;
+-    using CommonGroupLoader = Antlr3.ST.CommonGroupLoader;
+using CommonToken = Antlr.Runtime.CommonToken;
+using DFA = Antlr3.Analysis.DFA;
+using DFAOptimizer = Antlr3.Analysis.DFAOptimizer;
+@@ -63,8 +64,7 @@ namespace Antlr3.Codegen
+using Interval = Antlr3.Misc.Interval;
+using IntervalSet = Antlr3.Misc.IntervalSet;
+using IOException = System.IO.IOException;
+-    using IStringTemplateGroupLoader = Antlr3.ST.IStringTemplateGroupLoader;
+-    using IStringTemplateWriter = Antlr3.ST.IStringTemplateWriter;
++    using ITemplateWriter = Antlr4.StringTemplate.ITemplateWriter;
+using IToken = Antlr.Runtime.IToken;
+using Label = Antlr3.Analysis.Label;
+using LookaheadSet = Antlr3.Analysis.LookaheadSet;
+@@ -74,15 +74,17 @@ namespace Antlr3.Codegen
+using Rule = Antlr3.Tool.Rule;
+using RuntimeHelpers = System.Runtime.CompilerServices.RuntimeHelpers;
+using Stopwatch = System.Diagnostics.Stopwatch;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
+-    using StringTemplateGroup = Antlr3.ST.StringTemplateGroup;
++    using StringTemplate = Antlr4.StringTemplate.Template;
++    using TemplateGroup = Antlr4.StringTemplate.TemplateGroup;
+using TextWriter = System.IO.TextWriter;
+using TimeSpan = System.TimeSpan;
++    using TemplateGroupFile = Antlr4.StringTemplate.TemplateGroupFile;
++    using FileNotFoundException = System.IO.FileNotFoundException;
+
+/** ANTLR's code generator.
+*
+*  Generate recognizers derived from grammars.  Language independence
+-     *  achieved through the use of StringTemplateGroup objects.  All output
++     *  achieved through the use of TemplateGroup objects.  All output
+*  strings are completely encapsulated in the group files such as Java.stg.
+*  Some computations are done that are unused by a particular language.
+*  This generator just computes and sets the values into the templates;
+@@ -118,7 +120,7 @@ namespace Antlr3.Codegen
+public static int MaxSwitchCaseLabels = DefaultMaxSwitchCaseLabels;
+public static int MinSwitchAlts = DefaultMinSwitchAlts;
+public static int MaxAcyclicDfaStatesInline = DefaultMaxAcyclicDfaStatesInline;
+-        public static bool EmitTemplateDelimiters = false;
++        public static bool LaunchTemplateInspector = false;
+
+public bool GenerateSwitchesWhenPossible = true;
+
+@@ -137,13 +139,13 @@ namespace Antlr3.Codegen
+static readonly Dictionary<string, Target> _targets = new Dictionary<string, Target>();
+
+/** Where are the templates this generator should use to generate code? */
+-        protected StringTemplateGroup templates;
++        protected TemplateGroup templates;
+
+/** The basic output templates without AST or templates stuff; this will be
+*  the templates loaded for the language such as Java.stg *and* the Dbg
+*  stuff if turned on.  This is used for generating syntactic predicates.
+*/
+-        protected StringTemplateGroup baseTemplates;
++        protected TemplateGroup baseTemplates;
+
+protected StringTemplate recognizerST;
+protected StringTemplate outputFileST;
+@@ -182,8 +184,8 @@ namespace Antlr3.Codegen
+public static readonly string VocabFileExtension = ".tokens";
+
+protected const string vocabFilePattern =
+-            "<tokens:{<attr.name>=<attr.type>\n}>" +
+-            "<literals:{<attr.name>=<attr.type>\n}>";
++            "<tokens:{it|<it.name>=<it.type>\n}>" +
++            "<literals:{it|<it.name>=<it.type>\n}>";
+
+public CodeGenerator( AntlrTool tool, Grammar grammar, string language )
+{
+@@ -202,7 +204,7 @@ namespace Antlr3.Codegen
+#region Properties
+
+[CLSCompliant(false)]
+-        public StringTemplateGroup BaseTemplates
++        public TemplateGroup BaseTemplates
+{
+get
+{
+@@ -220,7 +222,7 @@ namespace Antlr3.Codegen
+}
+
+[CLSCompliant(false)]
+-        public StringTemplateGroup Templates
++        public TemplateGroup Templates
+{
+get
+{
+@@ -340,9 +342,8 @@ namespace Antlr3.Codegen
+LoadTemplates(tool, language, grammar.type, outputOption, debug, out baseTemplates, out templates);
+}
+
+-        private static readonly Dictionary<string, IStringTemplateGroupLoader> _templateLoaders = new Dictionary<string, IStringTemplateGroupLoader>();
+-        private static readonly Dictionary<string, StringTemplateGroup> _coreTemplates = new Dictionary<string, StringTemplateGroup>();
+-        private static readonly Dictionary<StringTemplateGroup, Dictionary<string, StringTemplateGroup>> _languageTemplates = new Dictionary<StringTemplateGroup, Dictionary<string, StringTemplateGroup>>(ObjectReferenceEqualityComparer<StringTemplateGroup>.Default);
++        private static readonly Dictionary<string, TemplateGroup> _coreTemplates = new Dictionary<string, TemplateGroup>();
++        private static readonly Dictionary<TemplateGroup, Dictionary<string, TemplateGroup>> _languageTemplates = new Dictionary<TemplateGroup, Dictionary<string, TemplateGroup>>(ObjectReferenceEqualityComparer<TemplateGroup>.Default);
+
+private sealed class ObjectReferenceEqualityComparer<T> : EqualityComparer<T>
+where T : class
+@@ -372,10 +373,10 @@ namespace Antlr3.Codegen
+}
+}
+
+-        private static void LoadTemplates(AntlrTool tool, string language, GrammarType grammarType, string outputOption, bool debug, out StringTemplateGroup baseTemplates, out StringTemplateGroup templates)
++        private static void LoadTemplates(AntlrTool tool, string language, GrammarType grammarType, string outputOption, bool debug, out TemplateGroup baseTemplates, out TemplateGroup templates)
+{
+// first load main language template
+-            StringTemplateGroup coreTemplates = GetOrCacheTemplateGroup(tool, language, null, null);
++            TemplateGroup coreTemplates = GetOrCacheTemplateGroup(tool, language, null, null);
+baseTemplates = coreTemplates;
+if (coreTemplates == null)
+{
+@@ -392,10 +393,10 @@ namespace Antlr3.Codegen
+{
+if (debug && grammarType != GrammarType.Lexer)
+{
+-                    StringTemplateGroup dbgTemplates = GetOrCacheTemplateGroup(tool, language, "Dbg", coreTemplates);
++                    TemplateGroup dbgTemplates = GetOrCacheTemplateGroup(tool, language, "Dbg", coreTemplates);
+baseTemplates = dbgTemplates;
+-                    StringTemplateGroup astTemplates = GetOrCacheTemplateGroup(tool, language, "AST", dbgTemplates);
+-                    StringTemplateGroup astParserTemplates = astTemplates;
++                    TemplateGroup astTemplates = GetOrCacheTemplateGroup(tool, language, "AST", dbgTemplates);
++                    TemplateGroup astParserTemplates = astTemplates;
+if (grammarType == GrammarType.TreeParser)
+{
+astParserTemplates = GetOrCacheTemplateGroup(tool, language, "ASTTreeParser", astTemplates);
+@@ -405,13 +406,13 @@ namespace Antlr3.Codegen
+astParserTemplates = GetOrCacheTemplateGroup(tool, language, "ASTParser", astTemplates);
+}
+
+-                    StringTemplateGroup astDbgTemplates = GetOrCacheTemplateGroup(tool, language, "ASTDbg", astParserTemplates);
++                    TemplateGroup astDbgTemplates = GetOrCacheTemplateGroup(tool, language, "ASTDbg", astParserTemplates);
+templates = astDbgTemplates;
+}
+else
+{
+-                    StringTemplateGroup astTemplates = GetOrCacheTemplateGroup(tool, language, "AST", coreTemplates);
+-                    StringTemplateGroup astParserTemplates = astTemplates;
++                    TemplateGroup astTemplates = GetOrCacheTemplateGroup(tool, language, "AST", coreTemplates);
++                    TemplateGroup astParserTemplates = astTemplates;
+if (grammarType == GrammarType.TreeParser)
+{
+astParserTemplates = GetOrCacheTemplateGroup(tool, language, "ASTTreeParser", astTemplates);
+@@ -428,9 +429,9 @@ namespace Antlr3.Codegen
+{
+if (debug && grammarType != GrammarType.Lexer)
+{
+-                    StringTemplateGroup dbgTemplates = GetOrCacheTemplateGroup(tool, language, "Dbg", coreTemplates);
++                    TemplateGroup dbgTemplates = GetOrCacheTemplateGroup(tool, language, "Dbg", coreTemplates);
+baseTemplates = dbgTemplates;
+-                    StringTemplateGroup stTemplates = GetOrCacheTemplateGroup(tool, language, "ST", dbgTemplates);
++                    TemplateGroup stTemplates = GetOrCacheTemplateGroup(tool, language, "ST", dbgTemplates);
+templates = stTemplates;
+}
+else
+@@ -447,85 +448,61 @@ namespace Antlr3.Codegen
+{
+templates = coreTemplates;
+}
+-
+-            if (CodeGenerator.EmitTemplateDelimiters)
+-            {
+-                templates.EmitDebugStartStopStrings(true);
+-                templates.DoNotEmitDebugStringsForTemplate("codeFileExtension");
+-                templates.DoNotEmitDebugStringsForTemplate("headerFileExtension");
+-            }
+-        }
+-
+-        private static StringTemplateGroup GetOrCacheTemplateGroup(AntlrTool tool, string language, string name, StringTemplateGroup superGroup)
+-        {
+-#if true // <-- Caching
+-            return GetOrCacheTemplateGroup(tool, null, language, name, superGroup);
+-#else
+-            // get or create the template loader
+-            IStringTemplateGroupLoader loader;
+-            if (!_templateLoaders.TryGetValue(language, out loader))
+-            {
+-                string templateDirs =
+-                    tool.TemplatesDirectory + ":" +
+-                    Path.Combine(tool.TemplatesDirectory, language);
+-                loader = new CommonGroupLoader(templateDirs, ErrorManager.GetStringTemplateErrorListener());
+-                _templateLoaders[language] = loader;
+-            }
+-
+-            return CacheTemplateGroup(loader, language, name, superGroup);
+-#endif
+}
+
+-        private static StringTemplateGroup GetOrCacheTemplateGroup(AntlrTool tool, IStringTemplateGroupLoader loader, string language, string name, StringTemplateGroup superGroup)
++        private static TemplateGroup GetOrCacheTemplateGroup(AntlrTool tool, string language, string name, TemplateGroup superGroup)
+{
+if (string.IsNullOrEmpty(name) && superGroup == null)
+{
+-                StringTemplateGroup group;
++                TemplateGroup group;
+if (_coreTemplates.TryGetValue(language, out group))
+return group;
+}
+else
+{
+-                Dictionary<string, StringTemplateGroup> languageTemplates;
++                Dictionary<string, TemplateGroup> languageTemplates;
+if (_languageTemplates.TryGetValue(superGroup, out languageTemplates))
+{
+-                    StringTemplateGroup group;
++                    TemplateGroup group;
+if (languageTemplates.TryGetValue(name, out group))
+return group;
+}
+}
+
+-            // get or create the template loader
+-            if (loader == null && !_templateLoaders.TryGetValue(language, out loader))
+-            {
+-                string templateDirs =
+-                    tool.TemplatesDirectory + ":" +
+-                    Path.Combine(tool.TemplatesDirectory, language);
+-                loader = new CommonGroupLoader(templateDirs, ErrorManager.GetStringTemplateErrorListener());
+-                _templateLoaders[language] = loader;
+-            }
++            string[] templateDirectories =
++                {
++                    tool.TemplatesDirectory,
++                    Path.Combine(tool.TemplatesDirectory, language)
++                };
+
+-            return CacheTemplateGroup(loader, language, name, superGroup);
++            return CacheTemplateGroup(templateDirectories, language, name, superGroup);
+}
+
+-        private static StringTemplateGroup CacheTemplateGroup(IStringTemplateGroupLoader loader, string language, string name, StringTemplateGroup superGroup)
++        private static TemplateGroup CacheTemplateGroup(string[] templateDirectories, string language, string name, TemplateGroup superGroup)
+{
+-            StringTemplateGroup.RegisterGroupLoader(loader, true, true);
+-            StringTemplateGroup.RegisterDefaultLexer(typeof(AngleBracketTemplateLexer));
++            string groupFileName;
++            if (string.IsNullOrEmpty(name))
++                groupFileName = FindTemplateFile(templateDirectories, string.Format("{0}.stg", language));
++            else
++                groupFileName = FindTemplateFile(templateDirectories, string.Format("{0}.stg", name));
+
+if (string.IsNullOrEmpty(name) && superGroup == null)
+{
+-                StringTemplateGroup group = StringTemplateGroup.LoadGroup(language);
++                TemplateGroup group = new TemplateGroupFile(groupFileName);
++                group.IterateAcrossValues = true;
+_coreTemplates[language] = group;
+return group;
+}
+else
+{
+-                StringTemplateGroup group = StringTemplateGroup.LoadGroup(name, superGroup);
+-                Dictionary<string, StringTemplateGroup> groups;
++                TemplateGroup group = new TemplateGroupFile(groupFileName);
++                group.IterateAcrossValues = true;
++                group.ImportTemplates(superGroup);
++
++                Dictionary<string, TemplateGroup> groups;
+if (!_languageTemplates.TryGetValue(superGroup, out groups))
+{
+-                    groups = new Dictionary<string, StringTemplateGroup>();
++                    groups = new Dictionary<string, TemplateGroup>();
+_languageTemplates[superGroup] = groups;
+}
+
+@@ -534,6 +511,18 @@ namespace Antlr3.Codegen
+}
+}
+
++        internal static string FindTemplateFile(string[] templateDirectories, string fileName)
++        {
++            foreach (var directory in templateDirectories)
++            {
++                string templateFileName = Path.Combine(directory, fileName);
++                if (File.Exists(templateFileName))
++                    return templateFileName;
++            }
++
++            throw new FileNotFoundException();
++        }
++
+/** Given the grammar to which we are attached, walk the AST associated
+*  with that grammar to create NFAs.  Then create the DFAs for all
+*  decision points in the grammar by converting the NFAs to DFAs.
+@@ -585,8 +574,10 @@ namespace Antlr3.Codegen
+else
+{
+// create a dummy to avoid null-checks all over code generator
+-                headerFileST = new StringTemplate( templates, "" );
+-                headerFileST.Name = "dummy-header-file";
++                headerFileST = new StringTemplate( templates, string.Empty );
++                // it normally sees this from outputFile
++                headerFileST.Add("cyclicDFAs", null);
++                headerFileST.impl.name = "dummy-header-file";
+}
+
+bool filterMode = grammar.GetOption( "filter" ) != null &&
+@@ -729,6 +720,13 @@ namespace Antlr3.Codegen
+// all recognizers can see Grammar object
+recognizerST.SetAttribute( "grammar", grammar );
+
++            if (CodeGenerator.LaunchTemplateInspector)
++            {
++                outputFileST.Visualize();
++                if (templates.IsDefined("headerFile"))
++                    headerFileST.Visualize();
++            }
++
+// WRITE FILES
+try
+{
+@@ -736,7 +734,7 @@ namespace Antlr3.Codegen
+if ( templates.IsDefined( "headerFile" ) )
+{
+StringTemplate extST = templates.GetInstanceOf( "headerFileExtension" );
+-                    target.GenRecognizerHeaderFile( tool, this, grammar, headerFileST, extST.ToString() );
++                    target.GenRecognizerHeaderFile( tool, this, grammar, headerFileST, extST.Render() );
+}
+// write out the vocab interchange file; used by antlr,
+// does not change per target
+@@ -1003,7 +1001,7 @@ namespace Antlr3.Codegen
+StringTemplate predST = preds.GenExpr( this,
+Templates,
+t.dfa );
+-                        edgeST.SetAttribute( "predicates", predST.ToString() );
++                        edgeST.SetAttribute( "predicates", predST.Render() );
+}
+}
+if ( edge.Label.Atom != Label.EOT )
+@@ -1025,7 +1023,7 @@ namespace Antlr3.Codegen
+}
+
+/** Generate an expression for traversing an edge. */
+-        protected internal virtual StringTemplate GenLabelExpr( StringTemplateGroup templates,
++        protected internal virtual StringTemplate GenLabelExpr( TemplateGroup templates,
+Transition edge,
+int k )
+{
+@@ -1046,7 +1044,7 @@ namespace Antlr3.Codegen
+return eST;
+}
+
+-        protected internal virtual StringTemplate GenSemanticPredicateExpr( StringTemplateGroup templates,
++        protected internal virtual StringTemplate GenSemanticPredicateExpr( TemplateGroup templates,
+Transition edge )
+{
+DFA dfa = ( (DFAState)edge.Target ).dfa; // which DFA are we in
+@@ -1058,7 +1056,7 @@ namespace Antlr3.Codegen
+/** For intervals such as [3..3, 30..35], generate an expression that
+*  tests the lookahead similar to LA(1)==3 || (LA(1)>=30&&LA(1)<=35)
+*/
+-        public virtual StringTemplate GenSetExpr( StringTemplateGroup templates,
++        public virtual StringTemplate GenSetExpr( TemplateGroup templates,
+IIntSet set,
+int k,
+bool partOfDFA )
+@@ -1071,7 +1069,7 @@ namespace Antlr3.Codegen
+if ( iset.Intervals == null || iset.Intervals.Count == 0 )
+{
+StringTemplate emptyST = new StringTemplate( templates, "" );
+-                emptyST.Name = "empty-set-expr";
++                emptyST.impl.name = "empty-set-expr";
+return emptyST;
+}
+string testSTName = "lookaheadTest";
+@@ -1172,10 +1170,11 @@ namespace Antlr3.Codegen
+*/
+protected virtual StringTemplate GenTokenVocabOutput()
+{
+-            StringTemplate vocabFileST =
+-                new StringTemplate( vocabFilePattern,
+-                                   typeof( AngleBracketTemplateLexer ) );
+-            vocabFileST.Name = "vocab-file";
++            StringTemplate vocabFileST = new StringTemplate( vocabFilePattern );
++            // "define" literals arg
++            vocabFileST.Add("literals", null);
++            vocabFileST.Add("tokens", null);
++            vocabFileST.impl.name = "vocab-file";
+// make constants for the token names
+foreach ( string tokenID in grammar.TokenIDs )
+{
+@@ -1237,7 +1236,6 @@ namespace Antlr3.Codegen
+chunks = target.PostProcessAction( chunks, actionToken );
+StringTemplate catST = new StringTemplate( templates, "<chunks>" );
+catST.SetAttribute( "chunks", chunks );
+-                    templates.CreateStringTemplate();
+translatedArgs.Add( catST );
+}
+}
+@@ -1566,7 +1564,7 @@ namespace Antlr3.Codegen
+{
+StringTemplate extST = templates.GetInstanceOf( "codeFileExtension" );
+string recognizerName = grammar.GetRecognizerName();
+-            return recognizerName + extST.ToString();
++            return recognizerName + extST.Render();
+/*
+String suffix = "";
+if ( type==GrammarType.Combined ||
+@@ -1595,8 +1593,8 @@ namespace Antlr3.Codegen
+Stopwatch watch = Stopwatch.StartNew();
+TextWriter w = tool.GetOutputFile( grammar, fileName );
+// Write the output to a StringWriter
+-            IStringTemplateWriter wr = templates.GetStringTemplateWriter( w );
+-            wr.SetLineWidth( lineWidth );
++            ITemplateWriter wr = templates.GetStringTemplateWriter( w );
++            wr.LineWidth = lineWidth;
+code.Write( wr );
+w.Close();
+TimeSpan duration = watch.Elapsed;
+diff --git a/Antlr3/Codegen/Target.cs b/Antlr3/Codegen/Target.cs
+index 6d3d41f..2a1361b 100644
+--- a/Antlr3/Codegen/Target.cs
++++ b/Antlr3/Codegen/Target.cs
+@@ -42,7 +42,7 @@ namespace Antlr3.Codegen
+using IToken = Antlr.Runtime.IToken;
+using Label = Antlr3.Analysis.Label;
+using StringBuilder = System.Text.StringBuilder;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
++    using StringTemplate = Antlr4.StringTemplate.Template;
+
+/** The code generator for ANTLR can usually be retargeted just by providing
+*  a new X.stg file for language X, however, sometimes the files that must
+diff --git a/Antlr3/Extensions/TemplateExtensions.cs b/Antlr3/Extensions/TemplateExtensions.cs
+new file mode 100644
+index 0000000..3e97c84
+--- /dev/null
++++ b/Antlr3/Extensions/TemplateExtensions.cs
+@@ -0,0 +1,59 @@
++﻿namespace Antlr3.Extensions
++{
++    using System;
++    using System.Collections.Generic;
++    using System.Linq;
++    using System.Text;
++    using Antlr4.StringTemplate;
++    using TextWriter = System.IO.TextWriter;
++
++    public static class TemplateExtensions
++    {
++        public static Template SetAttribute(this Template template, string name, params object[] value)
++        {
++            if (template == null)
++                throw new ArgumentNullException("template");
++            if (name == null)
++                throw new ArgumentNullException("name");
++            if (name.Length == 0)
++                throw new ArgumentException("Invalid attribute name", "name");
++
++            if (name[name.Length - 1] == '}')
++                return template.AddMany(name, value);
++            else if (value.Length == 1)
++                return template.Add(name, value[0]);
++            else
++                return template.Add(name, value);
++        }
++
++        public static void RemoveAttribute(this Template template, string name)
++        {
++            if (template == null)
++                throw new ArgumentNullException("template");
++            if (name == null)
++                throw new ArgumentNullException("name");
++            if (name.Length == 0)
++                throw new ArgumentException("Invalid attribute name", "name");
++
++            template.Remove(name);
++        }
++
++        public static Template GetInstanceOf(this Template template)
++        {
++            if (template == null)
++                throw new ArgumentNullException("template");
++
++            return new Template(template);
++        }
++
++        public static ITemplateWriter GetStringTemplateWriter(this TemplateGroup group, TextWriter writer)
++        {
++            if (group == null)
++                throw new ArgumentNullException("group");
++            if (writer == null)
++                throw new ArgumentNullException("writer");
++
++            return new AutoIndentWriter(writer);
++        }
++    }
++}
+diff --git a/Antlr3/Grammars/ActionTranslatorHelper.cs b/Antlr3/Grammars/ActionTranslatorHelper.cs
+index ff5fdc8..d5b42f8 100644
+--- a/Antlr3/Grammars/ActionTranslatorHelper.cs
++++ b/Antlr3/Grammars/ActionTranslatorHelper.cs
+@@ -34,6 +34,7 @@ namespace Antlr3.Grammars
+{
+using System.Collections.Generic;
+using Antlr3.Codegen;
++    using Antlr3.Extensions;
+
+using ANTLRStringStream = Antlr.Runtime.ANTLRStringStream;
+using Attribute = Antlr3.Tool.Attribute;
+@@ -46,7 +47,7 @@ namespace Antlr3.Grammars
+using Rule = Antlr3.Tool.Rule;
+using StringBuilder = System.Text.StringBuilder;
+using StringComparison = System.StringComparison;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
++    using StringTemplate = Antlr4.StringTemplate.Template;
+using TokenTypes = Antlr.Runtime.TokenTypes;
+
+partial class ActionTranslator
+@@ -105,7 +106,11 @@ namespace Antlr3.Grammars
+for (int i = 0; i < theChunks.Count; i++)
+{
+object o = (object)theChunks[i];
+-                buf.Append(o);
++                StringTemplate template = o as StringTemplate;
++                if (template != null)
++                    buf.Append(template.Render());
++                else
++                    buf.Append(o);
+}
+//JSystem.@out.println("translated: "+buf.toString());
+return buf.ToString();
+diff --git a/Antlr3/Grammars/CodeGenTreeWalker.g3 b/Antlr3/Grammars/CodeGenTreeWalker.g3
+index 07e51ec..7f9c3ae 100644
+--- a/Antlr3/Grammars/CodeGenTreeWalker.g3
++++ b/Antlr3/Grammars/CodeGenTreeWalker.g3
+@@ -51,11 +51,12 @@ options
+using Antlr3.Analysis;
+using Antlr3.Misc;
+using Antlr3.Tool;
++using Antlr3.Extensions;
+
+using BitSet = Antlr.Runtime.BitSet;
+using DFA = Antlr.Runtime.DFA;
+-using StringTemplate = Antlr3.ST.StringTemplate;
+-using StringTemplateGroup = Antlr3.ST.StringTemplateGroup;
++using StringTemplate = Antlr4.StringTemplate.Template;
++using TemplateGroup = Antlr4.StringTemplate.TemplateGroup;
+using TokenWithIndex = Antlr.Runtime.CommonToken;
+}
+
+@@ -76,19 +77,28 @@ grammar_[Grammar g,
+this.headerFileST = headerFileST;
+string superClass = (string)g.GetOption("superClass");
+outputOption = (string)g.GetOption("output");
+-		recognizerST.SetAttribute("superClass", superClass);
++		if (superClass != null)
++			recognizerST.SetAttribute("superClass", superClass);
++
+if ( g.type!=GrammarType.Lexer ) {
+-			recognizerST.SetAttribute("ASTLabelType", g.GetOption("ASTLabelType"));
++			object labelType = g.GetOption("ASTLabelType");
++			if (labelType != null)
++				recognizerST.SetAttribute("ASTLabelType", labelType);
+}
++
+if ( g.type==GrammarType.TreeParser && g.GetOption("ASTLabelType")==null ) {
+ErrorManager.GrammarWarning(ErrorManager.MSG_MISSING_AST_TYPE_IN_TREE_GRAMMAR,
+g,
+null,
+g.name);
+}
++
+if ( g.type!=GrammarType.TreeParser ) {
+-			recognizerST.SetAttribute("labelType", g.GetOption("TokenLabelType"));
++			object labelType = g.GetOption("TokenLabelType");
++			if (labelType != null)
++				recognizerST.SetAttribute("labelType", labelType);
+}
++
+$recognizerST.SetAttribute("numRules", grammar.Rules.Count);
+$outputFileST.SetAttribute("numRules", grammar.Rules.Count);
+$headerFileST.SetAttribute("numRules", grammar.Rules.Count);
+@@ -174,7 +184,7 @@ rule returns [StringTemplate code=null]
+
+// For syn preds, we don't want any AST code etc... in there.
+// Save old templates ptr and restore later.  Base templates include Dbg.
+-	StringTemplateGroup saveGroup = templates;
++	TemplateGroup saveGroup = templates;
+if ( ruleDescr.IsSynPred )
+{
+templates = generator.BaseTemplates;
+@@ -982,7 +992,7 @@ rewrite returns [StringTemplate code=null]
+// just in case they ref $r for "previous value", make a stream
+// from retval.tree
+StringTemplate retvalST = templates.GetInstanceOf("prevRuleRootRef");
+-				ruleLabels.Add(retvalST.ToString());
++				ruleLabels.Add(retvalST.Render());
+$code.SetAttribute("referencedTokenLabels", tokenLabels);
+$code.SetAttribute("referencedTokenListLabels", tokenListLabels);
+$code.SetAttribute("referencedRuleLabels", ruleLabels);
+@@ -1177,7 +1187,7 @@ rewrite_atom[bool isRoot] returns [StringTemplate code=null]
+grammar,
+((GrammarAST)($r)).Token,
+ruleRefName);
+-				$code = new StringTemplate(); // blank; no code gen
++				$code = new StringTemplate(string.Empty); // blank; no code gen
+}
+else if ( grammar.GetRule(currentRuleName)
+.GetRuleRefsInAlt(ruleRefName,outerAltNum)==null )
+diff --git a/Antlr3/Grammars/CodeGenTreeWalkerHelper.cs b/Antlr3/Grammars/CodeGenTreeWalkerHelper.cs
+index 039eb36..f4dbf58 100644
+--- a/Antlr3/Grammars/CodeGenTreeWalkerHelper.cs
++++ b/Antlr3/Grammars/CodeGenTreeWalkerHelper.cs
+@@ -34,6 +34,7 @@ namespace Antlr3.Grammars
+{
+using System.Collections.Generic;
+using Antlr3.Codegen;
++    using Antlr3.Extensions;
+
+using CommonToken = Antlr.Runtime.CommonToken;
+using Console = System.Console;
+@@ -48,8 +49,8 @@ namespace Antlr3.Grammars
+using RecognitionException = Antlr.Runtime.RecognitionException;
+using Rule = Antlr3.Tool.Rule;
+using RuleType = Antlr3.Tool.RuleType;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
+-    using StringTemplateGroup = Antlr3.ST.StringTemplateGroup;
++    using StringTemplate = Antlr4.StringTemplate.Template;
++    using TemplateGroup = Antlr4.StringTemplate.TemplateGroup;
+
+partial class CodeGenTreeWalker
+{
+@@ -91,7 +92,7 @@ namespace Antlr3.Grammars
+
+protected CodeGenerator generator;
+protected Grammar grammar;
+-        protected StringTemplateGroup templates;
++        protected TemplateGroup templates;
+
+/** The overall lexer/parser template; simulate dynamically scoped
+*  attributes by making this an instance var of the walker.
+diff --git a/Antlr3/Tool/BuildDependencyGenerator.cs b/Antlr3/Tool/BuildDependencyGenerator.cs
+index fcac1ea..85eae6b 100644
+--- a/Antlr3/Tool/BuildDependencyGenerator.cs
++++ b/Antlr3/Tool/BuildDependencyGenerator.cs
+@@ -35,12 +35,13 @@ namespace Antlr3.Tool
+using System;
+using System.Collections.Generic;
+using System.Linq;
++    using Antlr3.Extensions;
+
+using CodeGenerator = Antlr3.Codegen.CodeGenerator;
+using FileInfo = System.IO.FileInfo;
+using Path = System.IO.Path;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
+-    using StringTemplateGroup = Antlr3.ST.StringTemplateGroup;
++    using StringTemplate = Antlr4.StringTemplate.Template;
++    using TemplateGroup = Antlr4.StringTemplate.TemplateGroup;
+using Tool = Antlr3.AntlrTool;
+
+/** Given a grammar file, show the dependencies on .tokens etc...
+@@ -86,7 +87,7 @@ namespace Antlr3.Tool
+protected Tool tool;
+protected Grammar grammar;
+protected CodeGenerator generator;
+-        protected StringTemplateGroup templates;
++        protected TemplateGroup templates;
+
+public BuildDependencyGenerator( Tool tool, string grammarFileName )
+{
+@@ -149,7 +150,7 @@ namespace Antlr3.Tool
+{
+headerExtST = generator.Templates.GetInstanceOf( "headerFileExtension" );
+string suffix = Grammar.grammarTypeToFileNameSuffix[(int)grammar.type];
+-                string fileName = grammar.name + suffix + headerExtST.ToString();
++                string fileName = grammar.name + suffix + headerExtST.Render();
+files.Add( new FileInfo( System.IO.Path.Combine( outputDir.FullName, fileName ) ) );
+}
+if ( grammar.type == GrammarType.Combined )
+@@ -157,13 +158,13 @@ namespace Antlr3.Tool
+// add autogenerated lexer; e.g., TLexer.java TLexer.h TLexer.tokens
+// don't add T__.g (just a temp file)
+string suffix = Grammar.grammarTypeToFileNameSuffix[(int)GrammarType.Lexer];
+-                string lexer = grammar.name + suffix + extST.ToString();
++                string lexer = grammar.name + suffix + extST.Render();
+files.Add( new FileInfo( System.IO.Path.Combine( outputDir.FullName, lexer ) ) );
+
+// TLexer.h
+if ( headerExtST != null )
+{
+-                    string header = grammar.name + suffix + headerExtST.ToString();
++                    string header = grammar.name + suffix + headerExtST.Render();
+files.Add( new FileInfo( System.IO.Path.Combine( outputDir.FullName, header ) ) );
+}
+// for combined, don't generate TLexer.tokens
+@@ -175,7 +176,7 @@ namespace Antlr3.Tool
+foreach ( Grammar g in imports )
+{
+outputDir = tool.GetOutputDirectory( g.FileName );
+-                string fname = GroomQualifiedFileName( outputDir.ToString(), g.GetRecognizerName() + extST.ToString() );
++                string fname = GroomQualifiedFileName( outputDir.ToString(), g.GetRecognizerName() + extST.Render() );
+files.Add( new FileInfo( fname ) );
+}
+
+diff --git a/Antlr3/Tool/DOTGenerator.cs b/Antlr3/Tool/DOTGenerator.cs
+index e8a103c..c826b87 100644
+--- a/Antlr3/Tool/DOTGenerator.cs
++++ b/Antlr3/Tool/DOTGenerator.cs
+@@ -36,13 +36,14 @@ namespace Antlr3.Tool
+using System.Collections.Generic;
+using System.Linq;
+using Antlr3.Analysis;
++    using Antlr3.Extensions;
+
+-    using AngleBracketTemplateLexer = Antlr3.ST.Language.AngleBracketTemplateLexer;
+using ANTLRParser = Antlr3.Grammars.ANTLRParser;
+using Path = System.IO.Path;
+using StringBuffer = System.Text.StringBuilder;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
+-    using StringTemplateGroup = Antlr3.ST.StringTemplateGroup;
++    using StringTemplate = Antlr4.StringTemplate.Template;
++    using TemplateGroupDirectory = Antlr4.StringTemplate.TemplateGroupDirectory;
++    using TemplateGroup = Antlr4.StringTemplate.TemplateGroup;
+
+/** The DOT (part of graphviz) generation aspect. */
+public class DOTGenerator : IGraphGenerator
+@@ -53,8 +54,7 @@ namespace Antlr3.Tool
+protected string rankdir = "LR";
+
+/** <summary>Library of output templates; use &lt;attrname&gt; format</summary> */
+-        public static StringTemplateGroup stlib =
+-                new StringTemplateGroup( "toollib", typeof( AngleBracketTemplateLexer ) );
++        private static TemplateGroup _stlib;
+
+public string dfaTemplateDirectoryName;
+
+@@ -112,6 +112,16 @@ namespace Antlr3.Tool
+
+#endregion
+
++        public static TemplateGroup GetTemplates()
++        {
++            if (_stlib == null)
++            {
++                _stlib = new TemplateGroupDirectory(Path.Combine(Path.Combine(Path.Combine(AntlrTool.ToolPathRoot, "Tool"), "Templates"), "dot"));
++            }
++
++            return _stlib;
++        }
++
+/** Return a String containing a DOT description that, when displayed,
+*  will show the incoming state machine visually.  All nodes reachable
+*  from startState will be included.
+@@ -127,7 +137,7 @@ namespace Antlr3.Tool
+markedStates = new HashSet<int>();
+if ( startState is DFAState )
+{
+-                dot = stlib.GetInstanceOf( Path.Combine( dfaTemplateDirectoryName, "dfa" ) );
++                dot = GetTemplates().GetInstanceOf( "dfa" );
+dot.SetAttribute( "startState",
+startState.StateNumber );
+dot.SetAttribute( "useBox",
+@@ -136,7 +146,7 @@ namespace Antlr3.Tool
+}
+else
+{
+-                dot = stlib.GetInstanceOf( Path.Combine( dfaTemplateDirectoryName, "nfa" ) );
++                dot = GetTemplates().GetInstanceOf( "nfa" );
+dot.SetAttribute( "startState",
+startState.StateNumber );
+WalkRuleNFACreatingDOT( dot, startState );
+@@ -153,7 +163,7 @@ namespace Antlr3.Tool
+public string GetRuleNFADOT( State startState )
+{
+// The output DOT graph for visualization
+-            StringTemplate dot = stlib.GetInstanceOf( Path.Combine( dfaTemplateDirectoryName, "nfa" ) );
++            StringTemplate dot = GetTemplates().GetInstanceOf( "nfa" );
+
+markedStates = new HashSet<object>();
+dot.SetAttribute( "startState", startState.stateNumber );
+@@ -180,11 +190,11 @@ namespace Antlr3.Tool
+StringTemplate st;
+if ( s.IsAcceptState )
+{
+-                st = stlib.GetInstanceOf( Path.Combine( dfaTemplateDirectoryName, "stopstate" ) );
++                st = GetTemplates().GetInstanceOf( "stopstate" );
+}
+else
+{
+-                st = stlib.GetInstanceOf( Path.Combine( dfaTemplateDirectoryName, "state" ) );
++                st = GetTemplates().GetInstanceOf( "state" );
+}
+st.SetAttribute( "name", GetStateLabel( s ) );
+dot.SetAttribute( "states", st );
+@@ -203,7 +213,7 @@ namespace Antlr3.Tool
+continue; // don't generate nodes for terminal states
+}
+}
+-                st = stlib.GetInstanceOf( Path.Combine( dfaTemplateDirectoryName, "edge" ) );
++                st = GetTemplates().GetInstanceOf( "edge" );
+st.SetAttribute( "label", GetEdgeLabel( edge ) );
+st.SetAttribute( "src", GetStateLabel( s ) );
+st.SetAttribute( "target", GetStateLabel( edge.Target ) );
+@@ -233,11 +243,11 @@ namespace Antlr3.Tool
+StringTemplate stateST;
+if ( s.IsAcceptState )
+{
+-                stateST = stlib.GetInstanceOf( Path.Combine( dfaTemplateDirectoryName, "stopstate" ) );
++                stateST = GetTemplates().GetInstanceOf( "stopstate" );
+}
+else
+{
+-                stateST = stlib.GetInstanceOf( Path.Combine( dfaTemplateDirectoryName, "state" ) );
++                stateST = GetTemplates().GetInstanceOf( "state" );
+}
+stateST.SetAttribute( "name", GetStateLabel( s ) );
+dot.SetAttribute( "states", stateST );
+@@ -254,7 +264,7 @@ namespace Antlr3.Tool
+GrammarAST n = ( (NFAState)s ).associatedASTNode;
+if ( n != null && n.Type != ANTLRParser.EOB )
+{
+-                    StringTemplate rankST = stlib.GetInstanceOf( Path.Combine( dfaTemplateDirectoryName, "decision-rank" ) );
++                    StringTemplate rankST = GetTemplates().GetInstanceOf( "decision-rank" );
+NFAState alt = (NFAState)s;
+while ( alt != null )
+{
+@@ -281,7 +291,7 @@ namespace Antlr3.Tool
+{
+RuleClosureTransition rr = ( (RuleClosureTransition)edge );
+// don't jump to other rules, but display edge to follow node
+-                    edgeST = stlib.GetInstanceOf( Path.Combine( dfaTemplateDirectoryName, "edge" ) );
++                    edgeST = GetTemplates().GetInstanceOf( "edge" );
+if ( rr.rule.Grammar != grammar )
+{
+edgeST.SetAttribute( "label", "<" + rr.rule.Grammar.name + "." + rr.rule.Name + ">" );
+@@ -299,15 +309,15 @@ namespace Antlr3.Tool
+}
+if ( edge.IsAction )
+{
+-                    edgeST = stlib.GetInstanceOf( Path.Combine( dfaTemplateDirectoryName, "action-edge" ) );
++                    edgeST = GetTemplates().GetInstanceOf( "action-edge" );
+}
+else if ( edge.IsEpsilon )
+{
+-                    edgeST = stlib.GetInstanceOf( Path.Combine( dfaTemplateDirectoryName, "epsilon-edge" ) );
++                    edgeST = GetTemplates().GetInstanceOf( "epsilon-edge" );
+}
+else
+{
+-                    edgeST = stlib.GetInstanceOf( Path.Combine( dfaTemplateDirectoryName, "edge" ) );
++                    edgeST = GetTemplates().GetInstanceOf( "edge" );
+}
+edgeST.SetAttribute( "label", GetEdgeLabel( edge ) );
+edgeST.SetAttribute( "src", GetStateLabel( s ) );
+diff --git a/Antlr3/Tool/ErrorManager.cs b/Antlr3/Tool/ErrorManager.cs
+index 127a08f..c39c5bc 100644
+--- a/Antlr3/Tool/ErrorManager.cs
++++ b/Antlr3/Tool/ErrorManager.cs
+@@ -37,7 +37,6 @@ namespace Antlr3.Tool
+using Antlr.Runtime.JavaExtensions;
+using Antlr3.Misc;
+
+-    using AngleBracketTemplateLexer = Antlr3.ST.Language.AngleBracketTemplateLexer;
+using BitSet = Antlr3.Misc.BitSet;
+using CultureInfo = System.Globalization.CultureInfo;
+using DecisionProbe = Antlr3.Analysis.DecisionProbe;
+@@ -46,19 +45,22 @@ namespace Antlr3.Tool
+using FieldInfo = System.Reflection.FieldInfo;
+using ICollection = System.Collections.ICollection;
+using IOException = System.IO.IOException;
+-    using IStringTemplateErrorListener = Antlr3.ST.IStringTemplateErrorListener;
+using IToken = Antlr.Runtime.IToken;
+using NFAState = Antlr3.Analysis.NFAState;
+using Path = System.IO.Path;
+using RecognitionException = Antlr.Runtime.RecognitionException;
+using StackFrame = System.Diagnostics.StackFrame;
+using StreamReader = System.IO.StreamReader;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
+-    using StringTemplateGroup = Antlr3.ST.StringTemplateGroup;
++    using StringTemplate = Antlr4.StringTemplate.Template;
++    using TemplateGroup = Antlr4.StringTemplate.TemplateGroup;
+using TargetInvocationException = System.Reflection.TargetInvocationException;
+using Thread = System.Threading.Thread;
+using Tool = Antlr3.AntlrTool;
+using TraceListener = System.Diagnostics.TraceListener;
++    using ITemplateErrorListener = Antlr4.StringTemplate.ITemplateErrorListener;
++    using TemplateErrorManager = Antlr4.StringTemplate.Misc.ErrorManager;
++    using TemplateGroupFile = Antlr4.StringTemplate.TemplateGroupFile;
++    using TemplateMessage = Antlr4.StringTemplate.Misc.TemplateMessage;
+
+public static class ErrorManager
+{
+@@ -244,9 +246,9 @@ namespace Antlr3.Tool
+private static IDictionary<Thread, Tool> threadToToolMap = new Dictionary<Thread, Tool>();
+
+/** The group of templates that represent all possible ANTLR errors. */
+-        private static StringTemplateGroup messages;
++        private static TemplateGroup messages;
+/** The group of templates that represent the current message format. */
+-        private static StringTemplateGroup format;
++        private static TemplateGroup format;
+
+/** From a msgID how can I get the name of the template that describes
+*  the error or warning?
+@@ -313,43 +315,51 @@ namespace Antlr3.Tool
+}
+}
+
+-        static IANTLRErrorListener theDefaultErrorListener = new DefaultErrorListener();
++        private static IANTLRErrorListener theDefaultErrorListener = new DefaultErrorListener();
+
+-        class InitSTListener : IStringTemplateErrorListener
++        private class InitSTListener : ITemplateErrorListener
+{
+-            public virtual void Error( String s, Exception e )
++            public void CompiletimeError(TemplateMessage msg)
+{
+-                Console.Error.WriteLine( "ErrorManager init error: " + s );
+-                if ( e != null )
+-                {
+-                    Console.Error.WriteLine( "exception: " + e );
+-                }
+-                /*
+-                if ( e!=null ) {
+-                    e.printStackTrace(System.err);
+-                }
+-                */
++                Console.Error.WriteLine("ErrorManager init error: " + msg);
++            }
++
++            public void RuntimeError(TemplateMessage msg)
++            {
++                Console.Error.WriteLine("ErrorManager init error: " + msg);
+}
+-            public virtual void Warning( String s )
++
++            public void IOError(TemplateMessage msg)
+{
+-                Console.Error.WriteLine( "ErrorManager init warning: " + s );
++                Console.Error.WriteLine("ErrorManager init error: " + msg);
+}
+-            public virtual void Debug( String s )
++
++            public void InternalError(TemplateMessage msg)
+{
++                Console.Error.WriteLine("ErrorManager init error: " + msg);
+}
+}
+
+/** Handle all ST error listeners here (code gen, Grammar, and this class
+*  use templates.
+*/
+-        static IStringTemplateErrorListener initSTListener = new InitSTListener();
++        private static ITemplateErrorListener initSTListener = new InitSTListener();
+
+-        class BlankSTListener : IStringTemplateErrorListener
++        private sealed class BlankSTListener : ITemplateErrorListener
+{
+-            public virtual void Error( string msg, Exception e )
++            public void CompiletimeError(TemplateMessage msg)
++            {
++            }
++
++            public void RuntimeError(TemplateMessage msg)
++            {
++            }
++
++            public void IOError(TemplateMessage msg)
+{
+}
+-            public virtual void Warning( string msg )
++
++            public void InternalError(TemplateMessage msg)
+{
+}
+}
+@@ -358,46 +368,52 @@ namespace Antlr3.Tool
+*  I'll handle them here.  This is used only after file has loaded ok
+*  and only for the messages STG.
+*/
+-        static IStringTemplateErrorListener blankSTListener = new BlankSTListener();
++        private static ITemplateErrorListener blankSTListener = new BlankSTListener();
+
+-        class DefaultSTListener : IStringTemplateErrorListener
++        private class DefaultSTListener : ITemplateErrorListener
+{
+-            public virtual void Error( String s, Exception e )
++            public void CompiletimeError(TemplateMessage msg)
+{
+-                if ( e is TargetInvocationException )
+-                {
+-                    e = e.InnerException ?? e;
+-                }
+-                ErrorManager.Error( ErrorManager.MSG_INTERNAL_ERROR, s, e );
++                ErrorManager.Error(ErrorManager.MSG_INTERNAL_ERROR, msg.ToString(), msg.Cause);
++            }
++
++            public void RuntimeError(TemplateMessage msg)
++            {
++                ErrorManager.Error(ErrorManager.MSG_INTERNAL_ERROR, msg.ToString(), msg.Cause);
+}
+-            public virtual void Warning( String s )
++
++            public void IOError(TemplateMessage msg)
+{
+-                ErrorManager.Warning( ErrorManager.MSG_INTERNAL_WARNING, s );
++                ErrorManager.Error(ErrorManager.MSG_INTERNAL_ERROR, msg.ToString(), msg.Cause);
+}
+-            public virtual void Debug( String s )
++
++            public void InternalError(TemplateMessage msg)
+{
++                ErrorManager.Error(ErrorManager.MSG_INTERNAL_ERROR, msg.ToString(), msg.Cause);
+}
+}
+
+/** Errors during initialization related to ST must all go to System.err.
+*/
+-        static IStringTemplateErrorListener theDefaultSTListener = new DefaultSTListener();
++        private static ITemplateErrorListener theDefaultSTListener = new DefaultSTListener();
+
+-        static ErrorManager()
++        internal static void Initialize()
+{
+InitIdToMessageNameMapping();
++
+// it is inefficient to set the default locale here if another
+// piece of code is going to set the locale, but that would
+// require that a user call an init() function or something.  I prefer
+// that this class be ready to go when loaded as I'm absentminded ;)
+SetLocale( CultureInfo.CurrentCulture );
++
+// try to load the message format group
+// the user might have specified one on the command line
+// if not, or if the user has given an illegal value, we will fall back to "antlr"
+SetFormat( "antlr" );
+}
+
+-        public static IStringTemplateErrorListener GetStringTemplateErrorListener()
++        public static ITemplateErrorListener GetStringTemplateErrorListener()
+{
+return theDefaultSTListener;
+}
+@@ -410,54 +426,26 @@ namespace Antlr3.Tool
+public static void SetLocale( CultureInfo locale )
+{
+ErrorManager.locale = locale;
+-            String language = locale.TwoLetterISOLanguageName;
+-            //String fileName = "org/antlr/tool/templates/messages/languages/"+language+".stg";
+-            string fileName = Path.Combine(Path.Combine(Path.Combine(Path.Combine("Tool", "Templates"), "messages"), "languages"), language + ".stg");
+-            string streamName = "Antlr3." + fileName.Replace(Path.DirectorySeparatorChar, '.').Replace(Path.AltDirectorySeparatorChar, '.');
+-            fileName = System.IO.Path.Combine(AntlrTool.ToolPathRoot, fileName);
+-            //ClassLoader cl = Thread.currentThread().getContextClassLoader();
+-            //InputStream @is = cl.getResourceAsStream(fileName);
+-            System.IO.Stream @is;
+-            if ( System.IO.File.Exists( fileName ) )
+-                @is = new System.IO.MemoryStream( System.IO.File.ReadAllBytes( fileName ) );
+-            else
+-                @is = typeof( ErrorManager ).Assembly.GetManifestResourceStream( streamName );
+-            //if ( @is==null ) {
+-            //    cl = typeof(ErrorManager).getClassLoader();
+-            //    @is = cl.getResourceAsStream(fileName);
+-            //}
+-            if ( @is==null && language.Equals(CultureInfo.GetCultureInfo("en-us").TwoLetterISOLanguageName) ) {
+-                RawError("ANTLR installation corrupted; cannot find English messages file "+fileName);
+-                Panic();
+-            }
+-            else if ( @is==null ) {
+-                //rawError("no such locale file "+fileName+" retrying with English locale");
+-                SetLocale(CultureInfo.GetCultureInfo("en-us")); // recurse on this rule, trying the US locale
+-                return;
+-            }
+-            StreamReader br = null;
+-            try {
+-                br = new StreamReader(new System.IO.BufferedStream( @is ) );
+-                messages = new StringTemplateGroup(br,
+-                                                   typeof(AngleBracketTemplateLexer),
+-                                                   initSTListener);
+-                br.Close();
+-            }
+-            catch (IOException ioe) {
+-                RawError("error reading message file "+fileName, ioe);
+-            }
+-            finally {
+-                if ( br!=null ) {
+-                    try {
+-                        br.Close();
+-                    }
+-                    catch (IOException ioe) {
+-                        RawError("cannot close message file "+fileName, ioe);
+-                    }
++            string language = locale.TwoLetterISOLanguageName;
++            string fileName = Path.Combine(Path.Combine(Path.Combine(Path.Combine(Path.Combine(AntlrTool.ToolPathRoot, "Tool"), "Templates"), "messages"), "languages"), language + ".stg");
++            messages = new TemplateGroupFile(fileName);
++            messages.Listener = initSTListener;
++            if (!messages.IsDefined("INTERNAL_ERROR"))
++            {
++                // pick random msg to load
++                if (language.Equals(CultureInfo.GetCultureInfo("en-us").TwoLetterISOLanguageName))
++                {
++                    RawError("ANTLR installation corrupted; cannot find English messages file " + fileName);
++                    Panic();
++                }
++                else
++                {
++                    // recurse on this rule, trying the US locale
++                    SetLocale(CultureInfo.GetCultureInfo("en-us"));
+}
+}
+
+-            messages.ErrorListener = blankSTListener;
++            messages.Listener = blankSTListener;
+bool messagesOK = VerifyMessages();
+if ( !messagesOK && language.Equals(CultureInfo.GetCultureInfo("en-us").TwoLetterISOLanguageName) ) {
+RawError("ANTLR installation corrupted; English messages file "+language+".stg incomplete");
+@@ -474,56 +462,27 @@ namespace Antlr3.Tool
+public static void SetFormat( String formatName )
+{
+ErrorManager.formatName = formatName;
+-            //String fileName = "org/antlr/tool/templates/messages/formats/"+formatName+".stg";
+-            string fileName = Path.Combine(Path.Combine(Path.Combine(Path.Combine("Tool", "Templates"), "messages"), "formats"), formatName + ".stg");
+-            string streamName = "Antlr3." + fileName.Replace(Path.DirectorySeparatorChar, '.').Replace(Path.AltDirectorySeparatorChar, '.');
+-            fileName = System.IO.Path.Combine(AntlrTool.ToolPathRoot, fileName);
+-            //ClassLoader cl = Thread.currentThread().getContextClassLoader();
+-            //InputStream is = cl.getResourceAsStream(fileName);
+-            System.IO.Stream @is;
+-            if ( System.IO.File.Exists( fileName ) )
+-                @is = new System.IO.MemoryStream( System.IO.File.ReadAllBytes( fileName ) );
+-            else
+-                @is = typeof( ErrorManager ).Assembly.GetManifestResourceStream( streamName );
+-            //if ( is==null ) {
+-            //    cl = ErrorManager.class.getClassLoader();
+-            //    is = cl.getResourceAsStream(fileName);
+-            //}
+-            if ( @is == null && formatName.Equals( "antlr" ) )
++            string fileName = Path.Combine(Path.Combine(Path.Combine(Path.Combine(Path.Combine(AntlrTool.ToolPathRoot, "Tool"), "Templates"), "messages"), "formats"), formatName + ".stg");
++            format = new TemplateGroupFile(fileName);
++            format.Listener = initSTListener;
++            if (!format.IsDefined("message"))
+{
+-                RawError( "ANTLR installation corrupted; cannot find ANTLR messages format file " + fileName );
+-                Panic();
+-            }
+-            else if ( @is == null )
+-            {
+-                RawError( "no such message format file " + fileName + " retrying with default ANTLR format" );
+-                SetFormat( "antlr" ); // recurse on this rule, trying the default message format
+-                return;
+-            }
+-            StreamReader br = null;
+-            try
+-            {
+-                br = new StreamReader( new System.IO.BufferedStream( @is ) );
+-                format = new StringTemplateGroup( br,
+-                                                   typeof( AngleBracketTemplateLexer ),
+-                                                   initSTListener );
+-            }
+-            finally
+-            {
+-                try
++                // pick random msg to load
++                if (formatName.Equals("antlr"))
+{
+-                    if ( br != null )
+-                    {
+-                        br.Close();
+-                    }
++                    RawError("no such message format file " + fileName + " retrying with default ANTLR format");
++                    // recurse on this rule, trying the default message format
++                    SetFormat("antlr");
++                    return;
+}
+-                catch ( IOException ioe )
++                else
+{
+-                    RawError( "cannot close message format file " + fileName, ioe );
++                    // recurse on this rule, trying the default message format
++                    SetFormat("antlr");
+}
+}
+
+-            format.ErrorListener = blankSTListener;
++            format.Listener = blankSTListener;
+bool formatOK = VerifyFormat();
+if ( !formatOK && formatName.Equals( "antlr" ) )
+{
+@@ -603,11 +562,11 @@ namespace Antlr3.Tool
+{
+if ( GetErrorState().warningMsgIDs.Contains( msgID ) )
+{
+-                return messages.GetInstanceOf( "warning" ).ToString();
++                return messages.GetInstanceOf( "warning" ).Render();
+}
+else if ( GetErrorState().errorMsgIDs.Contains( msgID ) )
+{
+-                return messages.GetInstanceOf( "error" ).ToString();
++                return messages.GetInstanceOf( "error" ).Render();
+}
+AssertTrue( false, "Assertion failed! Message ID " + msgID + " created but is not present in errorMsgIDs or warningMsgIDs." );
+return "";
+@@ -630,7 +589,7 @@ namespace Antlr3.Tool
+}
+public static bool FormatWantsSingleLineMessage()
+{
+-            return format.GetInstanceOf( "wantsSingleLineMessage" ).ToString().Equals( "true" );
++            return format.GetInstanceOf( "wantsSingleLineMessage" ).Render().Equals( "true" );
+}
+
+public static IANTLRErrorListener GetErrorListener()
+diff --git a/Antlr3/Tool/FASerializer.cs b/Antlr3/Tool/FASerializer.cs
+index e1c2911..4d25114 100644
+--- a/Antlr3/Tool/FASerializer.cs
++++ b/Antlr3/Tool/FASerializer.cs
+@@ -199,7 +199,7 @@ namespace Antlr3.Tool
+{
+predsStr = "&&{" +
+preds.GenExpr( grammar.generator,
+-                                              grammar.generator.Templates, null ).ToString()
++                                              grammar.generator.Templates, null ).Render()
++ "}?";
+}
+}
+diff --git a/Antlr3/Tool/Grammar.cs b/Antlr3/Tool/Grammar.cs
+index 394eba0..245fdb1 100644
+--- a/Antlr3/Tool/Grammar.cs
++++ b/Antlr3/Tool/Grammar.cs
+@@ -39,8 +39,8 @@ namespace Antlr3.Tool
+using Antlr3.Analysis;
+using Antlr3.Grammars;
+using Antlr3.Misc;
++    using Antlr3.Extensions;
+
+-    using AngleBracketTemplateLexer = Antlr3.ST.Language.AngleBracketTemplateLexer;
+using CLSCompliant = System.CLSCompliantAttribute;
+using CodeGenerator = Antlr3.Codegen.CodeGenerator;
+using CommonToken = Antlr.Runtime.CommonToken;
+@@ -60,12 +60,14 @@ namespace Antlr3.Tool
+using StringComparer = System.StringComparer;
+using StringComparison = System.StringComparison;
+using StringReader = System.IO.StringReader;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
++    using StringTemplate = Antlr4.StringTemplate.Template;
+using Target = Antlr3.Codegen.Target;
+using TextReader = System.IO.TextReader;
+using TextWriter = System.IO.TextWriter;
+using TimeSpan = System.TimeSpan;
++    using TemplateGroupString = Antlr4.StringTemplate.TemplateGroupString;
+using Tool = Antlr3.AntlrTool;
++    using TemplateGroup = Antlr4.StringTemplate.TemplateGroup;
+
+/** Represents a grammar in memory. */
+public class Grammar
+@@ -479,29 +481,27 @@ namespace Antlr3.Tool
+*  as it's a lexer grammar.  A bit odd, but autogenerated.  Can tweak
+*  later if we want.
+*/
+-        StringTemplate lexerGrammarST;
+-        protected StringTemplate LexerGrammarST
++        private StringTemplate _lexerGrammarTemplate;
++
++        private readonly string lexerGrammarTemplateText =
++                "grammar(name, options, imports, actionNames, actions, literals, rules) ::= <<\n" +
++                "lexer grammar <name>;\n" +
++                "<if(options)>" +
++                "options {\n" +
++                "  <options:{it | <it.name>=<it.value>;<\\n>}>\n" +
++                "}<\\n>\n" +
++                "<endif>\n" +
++                "<if(imports)>import <imports; separator=\", \">;<endif>\n" +
++                "<actionNames,actions:{n,a|@<n> {<a>\\}\n}>\n" +
++                "<literals:{it | <it.ruleName> : <it.literal> ;\n}>\n" +
++                "<rules>\n" +
++                ">>\n";
++
++        private StringTemplate LexerGrammarTemplate
+{
+get
+{
+-                if ( lexerGrammarST == null )
+-                {
+-                    lexerGrammarST = new StringTemplate(
+-                        "lexer grammar <name>;\n" +
+-                        "<if(options)>" +
+-                        "options {\n" +
+-                        "  <options:{<it.name>=<it.value>;<\\n>}>\n" +
+-                        "}<\\n>\n" +
+-                        "<endif>\n" +
+-                        "<if(imports)>import <imports; separator=\", \">;<endif>\n" +
+-                        "<actionNames,actions:{n,a|@<n> {<a>}\n}>\n" +
+-                        "<literals:{<it.ruleName> : <it.literal> ;\n}>\n" +
+-                        "<rules>",
+-                        typeof( AngleBracketTemplateLexer )
+-                        );
+-                }
+-
+-                return lexerGrammarST;
++                return _lexerGrammarTemplate;
+}
+}
+
+@@ -581,6 +581,9 @@ namespace Antlr3.Tool
+{
+defaultRuleModifier = composite.delegateGrammarTreeRoot.grammar.DefaultRuleModifier;
+}
++
++            TemplateGroup lexerGrammarTemplateGroup = new TemplateGroupString(lexerGrammarTemplateText);
++            _lexerGrammarTemplate = lexerGrammarTemplateGroup.GetInstanceOf("grammar");
+target = CodeGenerator.LoadLanguageTarget((string)GetOption("language"), tool.TargetsDirectory);
+}
+
+@@ -601,6 +604,9 @@ namespace Antlr3.Tool
+builtFromString = true;
+composite = new CompositeGrammar( this );
+Tool = tool;
++
++            TemplateGroup lexerGrammarTemplateGroup = new TemplateGroupString(lexerGrammarTemplateText);
++            _lexerGrammarTemplate = lexerGrammarTemplateGroup.GetInstanceOf("grammar");
+string targetsDirectory = Path.Combine(AntlrTool.ToolPathRoot, "Targets");
+target = CodeGenerator.LoadLanguageTarget((string)GetOption("language"), targetsDirectory);
+}
+@@ -1232,19 +1238,19 @@ namespace Antlr3.Tool
+*/
+public virtual string GetLexerGrammar()
+{
+-            if ( LexerGrammarST.GetAttribute( "literals" ) == null &&
+-                 LexerGrammarST.GetAttribute( "rules" ) == null )
++            if ( LexerGrammarTemplate.GetAttribute( "literals" ) == null &&
++                 LexerGrammarTemplate.GetAttribute( "rules" ) == null )
+{
+// if no rules, return nothing
+return null;
+}
+-            LexerGrammarST.SetAttribute( "name", name );
++            LexerGrammarTemplate.SetAttribute( "name", name );
+// if there are any actions set for lexer, pass them in
+if ( actions.get( "lexer" ) != null )
+{
+-                LexerGrammarST.SetAttribute( "actionNames",
++                LexerGrammarTemplate.SetAttribute( "actionNames",
+( actions.get( "lexer" ) ).Keys );
+-                LexerGrammarST.SetAttribute( "actions",
++                LexerGrammarTemplate.SetAttribute( "actions",
+( actions.get( "lexer" ) ).Values );
+}
+// make sure generated grammar has the same options
+@@ -1256,11 +1262,11 @@ namespace Antlr3.Tool
+if ( !doNotCopyOptionsToLexer.Contains( optionName ) )
+{
+object value = option.Value;
+-                        LexerGrammarST.SetAttribute( "options.{name,value}", optionName, value );
++                        LexerGrammarTemplate.SetAttribute( "options.{name,value}", optionName, value );
+}
+}
+}
+-            return LexerGrammarST.ToString();
++            return LexerGrammarTemplate.Render();
+}
+
+/** Get the name of the generated recognizer; may or may not be same
+@@ -1318,14 +1324,12 @@ namespace Antlr3.Tool
+{
+matchTokenRuleST = new StringTemplate(
+ArtificialTokensRuleName +
+-                        " options {k=1; backtrack=true;} : <rules; separator=\"|\">;",
+-                        typeof( AngleBracketTemplateLexer ) );
++                        " options {k=1; backtrack=true;} : <rules; separator=\"|\">;");
+}
+else
+{
+matchTokenRuleST = new StringTemplate(
+-                        ArtificialTokensRuleName + " : <rules; separator=\"|\">;",
+-                        typeof( AngleBracketTemplateLexer ) );
++                        ArtificialTokensRuleName + " : <rules; separator=\"|\">;");
+}
+
+// Now add token rule references
+@@ -1339,47 +1343,8 @@ namespace Antlr3.Tool
+string dname = (string)delegateNames[i];
+matchTokenRuleST.SetAttribute( "rules", dname + ".Tokens" );
+}
+-            //JSystem.@out.println("tokens rule: "+matchTokenRuleST.toString());
+-
+-            ////ANTLRLexer lexer = new ANTLRLexer( new StringReader( matchTokenRuleST.toString() ) );
+-            ////lexer.setTokenObjectClass( "antlr.TokenWithIndex" );
+-            ////TokenStreamRewriteEngine tokbuf =
+-            ////    new TokenStreamRewriteEngine( lexer );
+-            ////tokbuf.discard( ANTLRParser.WS );
+-            ////tokbuf.discard( ANTLRParser.ML_COMMENT );
+-            ////tokbuf.discard( ANTLRParser.COMMENT );
+-            ////tokbuf.discard( ANTLRParser.SL_COMMENT );
+-            ////ANTLRParser parser = new ANTLRParser( tokbuf );
+-            //ANTLRLexer lexer = new ANTLRLexer( new Antlr.Runtime.ANTLRStringStream( matchTokenRuleST.ToString() ) );
+-            //TokenStreamRewriteEngine tokbuf = new TokenStreamRewriteEngine( lexer );
+-            //tokbuf.Discard( ANTLRParser.WS, ANTLRParser.ML_COMMENT, ANTLRParser.COMMENT, ANTLRParser.SL_COMMENT );
+-            //ANTLRParser parser = new ANTLRParser( new Antlr.Runtime.CommonTokenStream( tokbuf ) );
+-
+-            //parser.Grammar = this;
+-            //parser.GrammarType = GrammarType.Lexer;
+-            //ANTLRParser.rule_return result = null;
+-            //try
+-            //{
+-            //    result = parser.rule();
+-            //    if ( Tool.internalOption_PrintGrammarTree )
+-            //    {
+-            //        Console.Out.WriteLine( "Tokens rule: " + ( (ITree)result.Tree ).ToStringTree() );
+-            //    }
+-            //    GrammarAST p = grammarAST;
+-            //    while ( p.Type != ANTLRParser.LEXER_GRAMMAR )
+-            //    {
+-            //        p = (GrammarAST)p.getNextSibling();
+-            //    }
+-            //    p.AddChild( (Antlr.Runtime.Tree.ITree)result.Tree );
+-            //}
+-            //catch ( Exception e )
+-            //{
+-            //    ErrorManager.Error( ErrorManager.MSG_ERROR_CREATING_ARTIFICIAL_RULE,
+-            //                       e );
+-            //}
+-            //return (GrammarAST)result.Tree;
+
+-            GrammarAST r = ParseArtificialRule(matchTokenRuleST.ToString());
++            GrammarAST r = ParseArtificialRule(matchTokenRuleST.Render());
+AddRule(grammarAST, r);
+//addRule((GrammarAST)parser.getAST());
+//return (GrammarAST)parser.getAST();
+@@ -2210,7 +2175,7 @@ namespace Antlr3.Tool
+// now put the rule into the lexer grammar template
+if ( IsRoot )
+{ // don't build lexers for delegates
+-                LexerGrammarST.SetAttribute( "rules", ruleText );
++                LexerGrammarTemplate.SetAttribute( "rules", ruleText );
+}
+// track this lexer rule's name
+composite.lexerRules.Add( ruleToken.Text );
+@@ -2226,7 +2191,7 @@ namespace Antlr3.Tool
+if ( IsRoot )
+{ // don't build lexers for delegates
+//JSystem.@out.println("defineLexerRuleForAliasedStringLiteral: "+literal+" "+tokenType);
+-                LexerGrammarST.SetAttribute( "literals.{ruleName,type,literal}",
++                LexerGrammarTemplate.SetAttribute( "literals.{ruleName,type,literal}",
+tokenID,
+tokenType,
+literal );
+@@ -2244,7 +2209,7 @@ namespace Antlr3.Tool
+// tell implicit lexer to define a rule to match the literal
+if ( IsRoot )
+{ // don't build lexers for delegates
+-                LexerGrammarST.SetAttribute( "literals.{ruleName,type,literal}",
++                LexerGrammarTemplate.SetAttribute( "literals.{ruleName,type,literal}",
+tokenID,
+tokenType,
+literal );
+@@ -2947,7 +2912,7 @@ namespace Antlr3.Tool
+{
+// ooops, we wasted some effort; tell lexer to read it in
+// later
+-                        LexerGrammarST.SetAttribute( "imports", grammarName );
++                        LexerGrammarTemplate.SetAttribute( "imports", grammarName );
+// but, this parser grammar will need the vocab
+// so add to composite anyway so we suck in the tokens later
+}
+diff --git a/Antlr3/Tool/GrammarAST.cs b/Antlr3/Tool/GrammarAST.cs
+index a73b9a8..cee2469 100644
+--- a/Antlr3/Tool/GrammarAST.cs
++++ b/Antlr3/Tool/GrammarAST.cs
+@@ -47,7 +47,7 @@ namespace Antlr3.Tool
+using ITree = Antlr.Runtime.Tree.ITree;
+using Math = System.Math;
+using NFAState = Antlr3.Analysis.NFAState;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
++    using StringTemplate = Antlr4.StringTemplate.Template;
+
+/** Grammars are first converted to ASTs using this class and then are
+*  converted to NFAs via a tree walker.
+diff --git a/Antlr3/Tool/GrammarAnalysisAbortedMessage.cs b/Antlr3/Tool/GrammarAnalysisAbortedMessage.cs
+index 7434074..f3b493b 100644
+--- a/Antlr3/Tool/GrammarAnalysisAbortedMessage.cs
++++ b/Antlr3/Tool/GrammarAnalysisAbortedMessage.cs
+@@ -32,8 +32,9 @@
+
+namespace Antlr3.Tool
+{
++    using Antlr3.Extensions;
+using DecisionProbe = Antlr3.Analysis.DecisionProbe;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
++    using StringTemplate = Antlr4.StringTemplate.Template;
+
+/** Reports the condition that ANTLR's LL(*) analysis engine terminated
+*  early.
+diff --git a/Antlr3/Tool/GrammarDanglingStateMessage.cs b/Antlr3/Tool/GrammarDanglingStateMessage.cs
+index 7f1cef8..a960492 100644
+--- a/Antlr3/Tool/GrammarDanglingStateMessage.cs
++++ b/Antlr3/Tool/GrammarDanglingStateMessage.cs
+@@ -34,10 +34,11 @@ namespace Antlr3.Tool
+{
+using System.Collections.Generic;
+using Antlr.Runtime.JavaExtensions;
++    using Antlr3.Extensions;
+
+using DecisionProbe = Antlr3.Analysis.DecisionProbe;
+using DFAState = Antlr3.Analysis.DFAState;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
++    using StringTemplate = Antlr4.StringTemplate.Template;
+
+/** Reports a potential parsing issue with a decision; the decision is
+*  nondeterministic in some way.
+diff --git a/Antlr3/Tool/GrammarInsufficientPredicatesMessage.cs b/Antlr3/Tool/GrammarInsufficientPredicatesMessage.cs
+index 882dc62..94ae346 100644
+--- a/Antlr3/Tool/GrammarInsufficientPredicatesMessage.cs
++++ b/Antlr3/Tool/GrammarInsufficientPredicatesMessage.cs
+@@ -35,10 +35,11 @@ namespace Antlr3.Tool
+using System.Collections.Generic;
+using Antlr.Runtime.JavaExtensions;
+using Antlr3.Analysis;
++    using Antlr3.Extensions;
+
+using IToken = Antlr.Runtime.IToken;
+using StringComparer = System.StringComparer;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
++    using StringTemplate = Antlr4.StringTemplate.Template;
+
+public class GrammarInsufficientPredicatesMessage : Message
+{
+diff --git a/Antlr3/Tool/GrammarNonDeterminismMessage.cs b/Antlr3/Tool/GrammarNonDeterminismMessage.cs
+index d8c1ef4..56a788c 100644
+--- a/Antlr3/Tool/GrammarNonDeterminismMessage.cs
++++ b/Antlr3/Tool/GrammarNonDeterminismMessage.cs
+@@ -33,11 +33,12 @@
+namespace Antlr3.Tool
+{
+using System.Collections.Generic;
++    using Antlr3.Extensions;
+
+using DecisionProbe = Antlr3.Analysis.DecisionProbe;
+using DFAState = Antlr3.Analysis.DFAState;
+using NFAState = Antlr3.Analysis.NFAState;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
++    using StringTemplate = Antlr4.StringTemplate.Template;
+
+/** Reports a potential parsing issue with a decision; the decision is
+*  nondeterministic in some way.
+diff --git a/Antlr3/Tool/GrammarSemanticsMessage.cs b/Antlr3/Tool/GrammarSemanticsMessage.cs
+index 7edbbd6..bfb75fb 100644
+--- a/Antlr3/Tool/GrammarSemanticsMessage.cs
++++ b/Antlr3/Tool/GrammarSemanticsMessage.cs
+@@ -32,8 +32,10 @@
+
+namespace Antlr3.Tool
+{
++    using Antlr3.Extensions;
++
+using IToken = Antlr.Runtime.IToken;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
++    using StringTemplate = Antlr4.StringTemplate.Template;
+
+/** A problem with the symbols and/or meaning of a grammar such as rule
+*  redefinition.
+diff --git a/Antlr3/Tool/GrammarSyntaxMessage.cs b/Antlr3/Tool/GrammarSyntaxMessage.cs
+index 3e5f43a..0d1bbb2 100644
+--- a/Antlr3/Tool/GrammarSyntaxMessage.cs
++++ b/Antlr3/Tool/GrammarSyntaxMessage.cs
+@@ -33,10 +33,11 @@
+namespace Antlr3.Tool
+{
+using System;
++    using Antlr3.Extensions;
+
+using IToken = Antlr.Runtime.IToken;
+using RecognitionException = Antlr.Runtime.RecognitionException;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
++    using StringTemplate = Antlr4.StringTemplate.Template;
+
+/** A problem with the syntax of your antlr grammar such as
+*  "The '{' came as a complete surprise to me at this point in your program"
+diff --git a/Antlr3/Tool/GrammarUnreachableAltsMessage.cs b/Antlr3/Tool/GrammarUnreachableAltsMessage.cs
+index 4b5aff2..2f629df 100644
+--- a/Antlr3/Tool/GrammarUnreachableAltsMessage.cs
++++ b/Antlr3/Tool/GrammarUnreachableAltsMessage.cs
+@@ -35,10 +35,11 @@ namespace Antlr3.Tool
+using System;
+using System.Collections.Generic;
+using System.Linq;
++    using Antlr3.Extensions;
+
+using DecisionProbe = Antlr3.Analysis.DecisionProbe;
+using NFAState = Antlr3.Analysis.NFAState;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
++    using StringTemplate = Antlr4.StringTemplate.Template;
+
+/** Reports a potential parsing issue with a decision; the decision is
+*  nondeterministic in some way.
+diff --git a/Antlr3/Tool/LeftRecursionCyclesMessage.cs b/Antlr3/Tool/LeftRecursionCyclesMessage.cs
+index 92c6d1f..7655bc9 100644
+--- a/Antlr3/Tool/LeftRecursionCyclesMessage.cs
++++ b/Antlr3/Tool/LeftRecursionCyclesMessage.cs
+@@ -34,9 +34,10 @@ namespace Antlr3.Tool
+{
+using System;
+using Antlr3.Analysis;
++    using Antlr3.Extensions;
+
+using ICollection = System.Collections.ICollection;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
++    using StringTemplate = Antlr4.StringTemplate.Template;
+
+/** Similar to LeftRecursionMessage except this is used for announcing
+*  cycles found by walking rules without decisions; the other msg is
+diff --git a/Antlr3/Tool/LeftRecursiveRuleAnalyzer.cs b/Antlr3/Tool/LeftRecursiveRuleAnalyzer.cs
+index a189cae..61f8b57 100644
+--- a/Antlr3/Tool/LeftRecursiveRuleAnalyzer.cs
++++ b/Antlr3/Tool/LeftRecursiveRuleAnalyzer.cs
+@@ -38,13 +38,12 @@ namespace Antlr3.Tool
+using Antlr3.Codegen;
+using Antlr3.Extensions;
+using Antlr3.Grammars;
+-    using Antlr3.ST;
+-    using AngleBracketTemplateLexer = Antlr3.ST.Language.AngleBracketTemplateLexer;
+using Console = System.Console;
+using Exception = System.Exception;
+-    using IStringTemplateGroupLoader = Antlr3.ST.IStringTemplateGroupLoader;
++    using StringTemplate = Antlr4.StringTemplate.Template;
+using StringBuilder = System.Text.StringBuilder;
+-    using StringTemplateGroup = Antlr3.ST.StringTemplateGroup;
++    using TemplateGroup = Antlr4.StringTemplate.TemplateGroup;
++    using TemplateGroupFile = Antlr4.StringTemplate.TemplateGroupFile;
+
+[System.CLSCompliant(false)]
+public class LeftRecursiveRuleAnalyzer : LeftRecursiveRuleWalker
+@@ -65,11 +64,11 @@ namespace Antlr3.Tool
+public List<string> prefixAlts = new List<string>();
+public List<string> otherAlts = new List<string>();
+
+-        private static readonly SortedList<string, StringTemplateGroup> recRuleTemplatesCache =
+-            new SortedList<string, StringTemplateGroup>();
++        private static readonly SortedList<string, TemplateGroup> recRuleTemplatesCache =
++            new SortedList<string, TemplateGroup>();
+
+public string language;
+-        private StringTemplateGroup recRuleTemplates;
++        private TemplateGroup recRuleTemplates;
+
+public IDictionary<int, ASSOC> altAssociativity = new Dictionary<int, ASSOC>();
+
+@@ -84,19 +83,15 @@ namespace Antlr3.Tool
+recRuleTemplates = LoadPrecRuleTemplates(g.Tool);
+}
+
+-        private static StringTemplateGroup LoadPrecRuleTemplates(AntlrTool tool)
++        private static TemplateGroup LoadPrecRuleTemplates(AntlrTool tool)
+{
+string templateDirs = tool.TemplatesDirectory;
+-            StringTemplateGroup group;
++            TemplateGroup group;
+if (!recRuleTemplatesCache.TryGetValue(templateDirs, out group))
+{
+-                //+":" + Path.Combine(g.Tool.TemplatesDirectory);
+-                IStringTemplateGroupLoader loader = new CommonGroupLoader(templateDirs, ErrorManager.GetStringTemplateErrorListener());
+-                StringTemplateGroup.RegisterGroupLoader(loader);
+-                StringTemplateGroup.RegisterDefaultLexer(typeof(AngleBracketTemplateLexer));
+-
+-                group = StringTemplateGroup.LoadGroup("LeftRecursiveRules");
+-                if (group != null)
++                string fileName = CodeGenerator.FindTemplateFile(templateDirs.Split(':'), "LeftRecursiveRules.stg");
++                group = new TemplateGroupFile(fileName);
++                if (!group.IsDefined("recRuleName"))
+{
+recRuleTemplatesCache[templateDirs] = group;
+}
+@@ -160,14 +155,14 @@ namespace Antlr3.Tool
+StringTemplate refST = recRuleTemplates.GetInstanceOf("recRuleRef");
+refST.SetAttribute("ruleName", ruleName);
+refST.SetAttribute("arg", nextPrec);
+-            altTree = ReplaceRuleRefs(altTree, refST.ToString());
++            altTree = ReplaceRuleRefs(altTree, refST.Render());
+
+string altText = Text(altTree);
+altText = altText.Trim();
+altText += "{}"; // add empty alt to prevent pred hoisting
+StringTemplate nameST = recRuleTemplates.GetInstanceOf("recRuleName");
+nameST.SetAttribute("ruleName", ruleName);
+-            rewriteTree = ReplaceRuleRefs(rewriteTree, "$" + nameST.ToString());
++            rewriteTree = ReplaceRuleRefs(rewriteTree, "$" + nameST.Render());
+string rewriteText = Text(rewriteTree);
+binaryAlts.Add(alt, altText + (rewriteText != null ? " " + rewriteText : ""));
+//System.out.println("binaryAlt " + alt + ": " + altText + ", rewrite=" + rewriteText);
+@@ -186,14 +181,14 @@ namespace Antlr3.Tool
+StringTemplate refST = recRuleTemplates.GetInstanceOf("recRuleRef");
+refST.SetAttribute("ruleName", ruleName);
+refST.SetAttribute("arg", nextPrec);
+-            altTree = ReplaceLastRuleRef(altTree, refST.ToString());
++            altTree = ReplaceLastRuleRef(altTree, refST.Render());
+
+string altText = Text(altTree);
+altText = altText.Trim();
+altText += "{}"; // add empty alt to prevent pred hoisting
+StringTemplate nameST = recRuleTemplates.GetInstanceOf("recRuleName");
+nameST.SetAttribute("ruleName", ruleName);
+-            rewriteTree = ReplaceRuleRefs(rewriteTree, "$" + nameST.ToString());
++            rewriteTree = ReplaceRuleRefs(rewriteTree, "$" + nameST.Render());
+string rewriteText = Text(rewriteTree);
+ternaryAlts.Add(alt, altText + (rewriteText != null ? " " + rewriteText : ""));
+//System.out.println("ternaryAlt " + alt + ": " + altText + ", rewrite=" + rewriteText);
+@@ -211,14 +206,14 @@ namespace Antlr3.Tool
+StringTemplate refST = recRuleTemplates.GetInstanceOf("recRuleRef");
+refST.SetAttribute("ruleName", ruleName);
+refST.SetAttribute("arg", nextPrec);
+-            altTree = ReplaceRuleRefs(altTree, refST.ToString());
++            altTree = ReplaceRuleRefs(altTree, refST.Render());
+string altText = Text(altTree);
+altText = altText.Trim();
+altText += "{}"; // add empty alt to prevent pred hoisting
+
+StringTemplate nameST = recRuleTemplates.GetInstanceOf("recRuleName");
+nameST.SetAttribute("ruleName", ruleName);
+-            rewriteTree = ReplaceRuleRefs(rewriteTree, nameST.ToString());
++            rewriteTree = ReplaceRuleRefs(rewriteTree, nameST.Render());
+string rewriteText = Text(rewriteTree);
+
+prefixAlts.Add(altText + (rewriteText != null ? " " + rewriteText : ""));
+@@ -233,7 +228,7 @@ namespace Antlr3.Tool
+StripLeftRecursion(altTree);
+StringTemplate nameST = recRuleTemplates.GetInstanceOf("recRuleName");
+nameST.SetAttribute("ruleName", ruleName);
+-            rewriteTree = ReplaceRuleRefs(rewriteTree, "$" + nameST.ToString());
++            rewriteTree = ReplaceRuleRefs(rewriteTree, "$" + nameST.Render());
+string rewriteText = Text(rewriteTree);
+string altText = Text(altTree);
+altText = altText.Trim();
+@@ -288,7 +283,7 @@ namespace Antlr3.Tool
+
+//Console.WriteLine(ruleST);
+
+-            return ruleST.ToString();
++            return ruleST.Render();
+}
+
+public string GetArtificialPrimaryRule()
+@@ -298,7 +293,7 @@ namespace Antlr3.Tool
+ruleST.SetAttribute("alts", prefixAlts);
+ruleST.SetAttribute("alts", otherAlts);
+//Console.WriteLine(ruleST);
+-            return ruleST.ToString();
++            return ruleST.Render();
+}
+
+public string GetArtificialPrecStartRule()
+@@ -308,7 +303,7 @@ namespace Antlr3.Tool
+ruleST.SetAttribute("maxPrec", 0);
+
+//Console.WriteLine("start: " + ruleST);
+-            return ruleST.ToString();
++            return ruleST.Render();
+}
+
+public GrammarAST ReplaceRuleRefs(GrammarAST t, string name)
+diff --git a/Antlr3/Tool/Message.cs b/Antlr3/Tool/Message.cs
+index c94ace4..f9629a1 100644
+--- a/Antlr3/Tool/Message.cs
++++ b/Antlr3/Tool/Message.cs
+@@ -32,8 +32,10 @@
+
+namespace Antlr3.Tool
+{
++    using Antlr3.Extensions;
++
+using CLSCompliant = System.CLSCompliantAttribute;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
++    using StringTemplate = Antlr4.StringTemplate.Template;
+using Exception = System.Exception;
+
+/** The ANTLR code calls methods on ErrorManager to report errors etc...
+@@ -164,7 +166,7 @@ namespace Antlr3.Tool
+reportST.SetAttribute( "message", messageFormatST );
+reportST.SetAttribute( "type", ErrorManager.GetMessageType( msgID ) );
+
+-            return reportST.ToString();
++            return reportST.Render();
+}
+}
+}
+diff --git a/Antlr3/Tool/NonRegularDecisionMessage.cs b/Antlr3/Tool/NonRegularDecisionMessage.cs
+index c0003bf..c81bc08 100644
+--- a/Antlr3/Tool/NonRegularDecisionMessage.cs
++++ b/Antlr3/Tool/NonRegularDecisionMessage.cs
+@@ -34,9 +34,10 @@ namespace Antlr3.Tool
+{
+using System.Collections.Generic;
+using Antlr.Runtime.JavaExtensions;
++    using Antlr3.Extensions;
+
+using DecisionProbe = Antlr3.Analysis.DecisionProbe;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
++    using StringTemplate = Antlr4.StringTemplate.Template;
+
+/** More a single alternative recurses so this decision is not regular. */
+public class NonRegularDecisionMessage : Message
+diff --git a/Antlr3/Tool/RecursionOverflowMessage.cs b/Antlr3/Tool/RecursionOverflowMessage.cs
+index 98ad303..f84e4e0 100644
+--- a/Antlr3/Tool/RecursionOverflowMessage.cs
++++ b/Antlr3/Tool/RecursionOverflowMessage.cs
+@@ -35,8 +35,9 @@ namespace Antlr3.Tool
+using System;
+using System.Collections.Generic;
+using Antlr3.Analysis;
++    using Antlr3.Extensions;
+
+-    using StringTemplate = Antlr3.ST.StringTemplate;
++    using StringTemplate = Antlr4.StringTemplate.Template;
+
+/** Indicates recursion overflow.  A DFA state tried add an NFA configuration
+*  with NFA state p that was mentioned in its stack context too many times.
+diff --git a/Antlr3/Tool/Rule.cs b/Antlr3/Tool/Rule.cs
+index d033a99..14b5472 100644
+--- a/Antlr3/Tool/Rule.cs
++++ b/Antlr3/Tool/Rule.cs
+@@ -35,6 +35,7 @@ namespace Antlr3.Tool
+using System.Collections.Generic;
+using System.Linq;
+using Antlr.Runtime.JavaExtensions;
++    using Antlr3.Extensions;
+
+using ANTLRParser = Antlr3.Grammars.ANTLRParser;
+using ArgumentException = System.ArgumentException;
+diff --git a/Antlr3/Tool/ToolMessage.cs b/Antlr3/Tool/ToolMessage.cs
+index 8540617..04ef98c 100644
+--- a/Antlr3/Tool/ToolMessage.cs
++++ b/Antlr3/Tool/ToolMessage.cs
+@@ -33,9 +33,10 @@
+namespace Antlr3.Tool
+{
+using Antlr.Runtime.JavaExtensions;
++    using Antlr3.Extensions;
+
+using Exception = System.Exception;
+-    using StringTemplate = Antlr3.ST.StringTemplate;
++    using StringTemplate = Antlr4.StringTemplate.Template;
+
+/** A generic message from the tool such as "file not found" type errors; there
+*  is no reason to create a special object for each error unlike the grammar
+

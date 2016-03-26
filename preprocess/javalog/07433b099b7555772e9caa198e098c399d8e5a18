@@ -1,0 +1,59 @@
+commit 07433b099b7555772e9caa198e098c399d8e5a18
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Thu Dec 13 14:10:10 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Thu Dec 13 18:00:29 2012 -0600
+
+Use a TestWatcher to only remove tmpdir upon success
+
+diff --git a/tool/src/test/java/org/antlr/test/BaseTest.java b/tool/src/test/java/org/antlr/test/BaseTest.java
+index a5c3aec..9ea2b11 100644
+--- a/tool/src/test/java/org/antlr/test/BaseTest.java
++++ b/tool/src/test/java/org/antlr/test/BaseTest.java
+@@ -39,9 +39,12 @@ import org.antlr.tool.ANTLRErrorListener;
+import org.antlr.tool.ErrorManager;
+import org.antlr.tool.GrammarSemanticsMessage;
+import org.antlr.tool.Message;
+-import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
++import org.junit.Rule;
++import org.junit.rules.TestRule;
++import org.junit.rules.TestWatcher;
++import org.junit.runner.Description;
+
+import javax.tools.*;
+import java.io.*;
+@@ -76,6 +79,17 @@ public abstract class BaseTest {
+*/
+protected String stderrDuringParse;
+
++	@Rule
++	public final TestRule testWatcher = new TestWatcher() {
++
++		@Override
++		protected void succeeded(Description description) {
++			// remove tmpdir if no error.
++			eraseTempDir();
++		}
++
++	};
++
+@Before
+public void setUp() throws Exception {
+lastTestFailed = false; // hope for the best, but set to true in asserts that fail
+@@ -87,13 +101,6 @@ public abstract class BaseTest {
+STGroup.defaultGroup = new STGroup();
+}
+
+-    @After
+-    public void tearDown() throws Exception {
+-        // remove tmpdir if no error.
+-        if ( !lastTestFailed ) eraseTempDir();
+-
+-    }
+-
+protected Tool newTool(String[] args) {
+Tool tool = new Tool(args);
+tool.setOutputDirectory(tmpdir);
+

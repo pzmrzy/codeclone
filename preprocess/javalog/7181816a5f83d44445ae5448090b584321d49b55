@@ -1,0 +1,41 @@
+commit 7181816a5f83d44445ae5448090b584321d49b55
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Thu Dec 13 17:50:01 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Thu Dec 13 18:00:53 2012 -0600
+
+Remove dead code when last edge is "true"
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg b/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
+index 856baed..71b7d30 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
+@@ -901,6 +901,7 @@ if ( !(<evalPredicate(pred,description)>) ) {
+dfaState(k,edges,eotPredictsAlt,description,stateNumber,semPredState) ::= <<
+int LA<decisionNumber>_<stateNumber> = input.LA(<k>);
+<edges; separator="\nelse ">
++<if((!isTrue.(last(edges).labelExpr)) && (!last(edges).predicates))>
+else {
+<if(eotPredictsAlt)>
+alt<decisionNumber>=<eotPredictsAlt>;
+@@ -912,6 +913,7 @@ else {
+throw nvae;})>
+<endif>
+}
++<endif>
+>>
+
+nvaExceptionWrapperMap ::= [
+@@ -1450,6 +1452,11 @@ isEmptyString ::= [
+default : false
+]
+
++isTrue ::= [
++	"true" : true,
++	default : false
++]
++
+isDefaultLabelType ::= [
+"Token" : true,
+default : false
+

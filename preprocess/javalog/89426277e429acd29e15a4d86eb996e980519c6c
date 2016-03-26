@@ -1,0 +1,37 @@
+commit 89426277e429acd29e15a4d86eb996e980519c6c
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sat Jul 30 11:31:37 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sat Jul 30 11:31:37 2011 -0800
+
+(C# 2, 3) Fix dictionary in template
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8958]
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/CSharp2.stg b/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/CSharp2.stg
+index d238caf..2e82edd 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/CSharp2.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/CSharp2.stg
+@@ -504,7 +504,7 @@ ruleBacktrackFailure() ::= <<
+ruleWrapperMap ::= [
+"bottomup":{<ruleWrapperBottomup()>},
+"topdown":{<ruleWrapperTopdown()>},
+-	default:null
++	default:""
+]
+
+ruleWrapperBottomup() ::= <<
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg
+index 888c4ef..63f5e22 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg
+@@ -485,7 +485,7 @@ ruleBacktrackFailure() ::= <<
+ruleWrapperMap ::= [
+"bottomup":{<ruleWrapperBottomup()>},
+"topdown":{<ruleWrapperTopdown()>},
+-	default:null
++	default:""
+]
+
+ruleWrapperBottomup() ::= <<
+

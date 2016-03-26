@@ -1,0 +1,21 @@
+commit e11d084a7ffe63c7778069fed02a6878d58ad3ab
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Thu Nov 22 13:55:18 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Thu Nov 22 13:55:37 2012 -0600
+
+Update contributors.txt
+
+diff --git a/contributors.txt b/contributors.txt
+index 7aed1b1..85cf5cd 100644
+--- a/contributors.txt
++++ b/contributors.txt
+@@ -52,4 +52,5 @@ YYYY/MM/DD, github id, Full name, email
+2012/08/08, Zannick, Benjamin S Wolf, jokeserver@gmail.com
+2012/09/15, martint, Martin Traverso, mtraverso@gmail.com
+2012/09/16, qmx, Douglas Campos, qmx@qmx.me
+-2012/09/17, ksgokul, Gokulakannan Somasundaram, gokul007@gmail.com
+\ No newline at end of file
++2012/09/17, ksgokul, Gokulakannan Somasundaram, gokul007@gmail.com
++2012/11/22, sharwell, Sam Harwell, sam@tunnelvisionlabs.com
+

@@ -1,0 +1,32 @@
+commit b0d6ba2758ef442a05f9a8ed283d9228137bbae5
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Fri Jul 29 17:35:56 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Fri Jul 29 17:35:56 2011 -0800
+
+(C# 3) Merge CL8836/8884
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8938]
+
+diff --git a/Antlr3/Grammars/CodeGenTreeWalkerHelper.cs b/Antlr3/Grammars/CodeGenTreeWalkerHelper.cs
+index c078209..8463334 100644
+--- a/Antlr3/Grammars/CodeGenTreeWalkerHelper.cs
++++ b/Antlr3/Grammars/CodeGenTreeWalkerHelper.cs
+@@ -123,11 +123,13 @@ namespace Antlr3.Grammars
+GrammarAST ast_suffix,
+string label )
+{
+-            string suffix = GetSTSuffix( elementAST, ast_suffix, label );
+-            name += suffix;
++            Rule r = grammar.GetRule(currentRuleName);
++            string suffix = GetSTSuffix(elementAST, ast_suffix, label);
++            if (!r.IsSynPred)
++                name += suffix;
++
+// if we're building trees and there is no label, gen a label
+// unless we're in a synpred rule.
+-            Rule r = grammar.GetRule( currentRuleName );
+if ( ( grammar.BuildAST || suffix.Length > 0 ) && label == null &&
+( r == null || !r.IsSynPred ) )
+{
+

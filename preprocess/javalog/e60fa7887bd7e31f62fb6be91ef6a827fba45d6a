@@ -1,0 +1,252 @@
+commit e60fa7887bd7e31f62fb6be91ef6a827fba45d6a
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Apr 27 06:10:30 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Apr 27 06:10:30 2011 -0800
+
+(C# 3) Remove unused code
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8323]
+
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/SlimParsing/SlimLexer.cs b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/SlimParsing/SlimLexer.cs
+index f4a9975..3b2ec7f 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/SlimParsing/SlimLexer.cs
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/SlimParsing/SlimLexer.cs
+@@ -1,10 +1,10 @@
+﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+* Conversion to C#:
+- * Copyright (c) 2008-2009 Sam Harwell, Pixel Mine, Inc.
++ * Copyright (c) 2011 Sam Harwell, Pixel Mine, Inc.
+* All rights reserved.
+*
+* Redistribution and use in source and binary forms, with or without
+@@ -143,7 +143,7 @@ namespace Antlr.Runtime
+state.text = null;
+if ( input.LA( 1 ) == CharStreamConstants.EndOfFile )
+{
+-                    return Tokens<SlimToken>.EndOfFile;
++                    return new SlimToken(TokenTypes.EndOfFile);
+}
+try
+{
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/SlimParsing/SlimToken.cs b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/SlimParsing/SlimToken.cs
+index 6d6fae8..d850958 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/SlimParsing/SlimToken.cs
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/SlimParsing/SlimToken.cs
+@@ -1,10 +1,10 @@
+﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+* Conversion to C#:
+- * Copyright (c) 2008-2009 Sam Harwell, Pixel Mine, Inc.
++ * Copyright (c) 2011 Sam Harwell, Pixel Mine, Inc.
+* All rights reserved.
+*
+* Redistribution and use in source and binary forms, with or without
+@@ -39,10 +39,16 @@ namespace Antlr.Runtime
+public struct SlimToken
+: IToken
+{
+-        short _type;
+-        short _channel;
+-        short _startIndex;
+-        short _stopIndex;
++        private short _type;
++        private short _channel;
++        private short _startIndex;
++        private short _stopIndex;
++
++        public SlimToken(int type)
++            : this()
++        {
++            _type = (short)type;
++        }
+
+#region IToken Members
+
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/SlimParsing/SlimTokenStream.cs b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/SlimParsing/SlimTokenStream.cs
+index ba9e8b7..50da1ed 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/SlimParsing/SlimTokenStream.cs
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/SlimParsing/SlimTokenStream.cs
+@@ -1,10 +1,10 @@
+﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+* Conversion to C#:
+- * Copyright (c) 2008-2009 Sam Harwell, Pixel Mine, Inc.
++ * Copyright (c) 2011 Sam Harwell, Pixel Mine, Inc.
+* All rights reserved.
+*
+* Redistribution and use in source and binary forms, with or without
+@@ -258,7 +258,7 @@ namespace Antlr.Runtime
+//System.out.print("LT(p="+p+","+k+")=");
+if ( ( p + k - 1 ) >= tokens.Count )
+{
+-                return Tokens<SlimToken>.EndOfFile;
++                return new SlimToken(TokenTypes.EndOfFile);
+}
+//System.out.println(tokens.get(p+k-1));
+int i = p;
+@@ -272,7 +272,7 @@ namespace Antlr.Runtime
+}
+if ( i >= tokens.Count )
+{
+-                return Tokens<SlimToken>.EndOfFile;
++                return new SlimToken(TokenTypes.EndOfFile);
+}
+return tokens[i];
+}
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime/Antlr3.Runtime.csproj b/runtime/CSharp3/Sources/Antlr3.Runtime/Antlr3.Runtime.csproj
+index 31f254e..3b493ac 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime/Antlr3.Runtime.csproj
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime/Antlr3.Runtime.csproj
+@@ -94,7 +94,6 @@
+<Compile Include="TokenChannels.cs" />
+<Compile Include="TokenRewriteStream.cs" />
+<Compile Include="Tokens.cs" />
+-    <Compile Include="Tokens`1.cs" />
+<Compile Include="TokenTypes.cs" />
+<Compile Include="Tree\AstTreeRuleReturnScope`2.cs" />
+<Compile Include="Tree\BaseTree.cs" />
+@@ -119,7 +118,6 @@
+<Compile Include="Tree\RewriteRuleSubtreeStream.cs" />
+<Compile Include="Tree\RewriteRuleTokenStream.cs" />
+<Compile Include="Tree\TemplateTreeRuleReturnScope`2.cs" />
+-    <Compile Include="Tree\TreeConstants.cs" />
+<Compile Include="Tree\TreeFilter.cs" />
+<Compile Include="Tree\TreeIterator.cs" />
+<Compile Include="Tree\TreeParser.cs" />
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime/Tokens.cs b/runtime/CSharp3/Sources/Antlr3.Runtime/Tokens.cs
+index 1a8df14..a736f2f 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime/Tokens.cs
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime/Tokens.cs
+@@ -34,10 +34,6 @@ namespace Antlr.Runtime
+{
+public static class Tokens
+{
+-        public static readonly IToken EndOfFile = Tokens<CommonToken>.EndOfFile;
+-
+-        public static readonly IToken Invalid = new CommonToken( TokenTypes.Invalid );
+-
+/** <summary>
+*  In an action, a lexer rule can set token to this SKIP_TOKEN and ANTLR
+*  will avoid creating a token for this symbol and try to fetch another.
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime/Tokens`1.cs b/runtime/CSharp3/Sources/Antlr3.Runtime/Tokens`1.cs
+deleted file mode 100644
+index 702e450..0000000
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime/Tokens`1.cs
++++ /dev/null
+@@ -1,53 +0,0 @@
+-﻿/*
+- * [The "BSD license"]
+- * Copyright (c) 2011 Terence Parr
+- * All rights reserved.
+- *
+- * Conversion to C#:
+- * Copyright (c) 2011 Sam Harwell, Pixel Mine, Inc.
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. Redistributions in binary form must reproduce the above copyright
+- *    notice, this list of conditions and the following disclaimer in the
+- *    documentation and/or other materials provided with the distribution.
+- * 3. The name of the author may not be used to endorse or promote products
+- *    derived from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- */
+-
+-namespace Antlr.Runtime
+-{
+-    public static class Tokens<T>
+-        where T : IToken, new()
+-    {
+-        public static readonly T EndOfFile = new T()
+-        {
+-            Type = TokenTypes.EndOfFile
+-        };
+-
+-        public static readonly T Invalid = new T()
+-        {
+-            Type = TokenTypes.Invalid
+-        };
+-
+-        public static readonly T Skip = new T()
+-        {
+-            Type = TokenTypes.Invalid
+-        };
+-    }
+-}
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime/Tree/TreeConstants.cs b/runtime/CSharp3/Sources/Antlr3.Runtime/Tree/TreeConstants.cs
+deleted file mode 100644
+index 9cd316c..0000000
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime/Tree/TreeConstants.cs
++++ /dev/null
+@@ -1,39 +0,0 @@
+-﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
+- * All rights reserved.
+- *
+- * Conversion to C#:
+- * Copyright (c) 2008-2009 Sam Harwell, Pixel Mine, Inc.
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. Redistributions in binary form must reproduce the above copyright
+- *    notice, this list of conditions and the following disclaimer in the
+- *    documentation and/or other materials provided with the distribution.
+- * 3. The name of the author may not be used to endorse or promote products
+- *    derived from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- */
+-
+-namespace Antlr.Runtime.Tree
+-{
+-    public static class TreeConstants
+-    {
+-        public static readonly ITree INVALID_NODE = new CommonTree( Tokens.Invalid );
+-    }
+-}
+

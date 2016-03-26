@@ -1,0 +1,385 @@
+commit ed0d5511cd18a524987b9a9fa3629eac6c6c4f1b
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Thu Dec 10 14:17:11 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Thu Dec 10 14:17:11 2009 -0800
+
+C# Port:
+* Merge CL6341
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6471]
+
+diff --git a/Antlr3.Test/ST4/TestGroups.cs b/Antlr3.Test/ST4/TestGroups.cs
+index b042697..0c8df95 100644
+--- a/Antlr3.Test/ST4/TestGroups.cs
++++ b/Antlr3.Test/ST4/TestGroups.cs
+@@ -304,5 +304,26 @@ namespace AntlrUnitTests.ST4
+string result = st.Render();
+Assert.AreEqual(expected, result);
+}
++
++        [TestMethod]
++        public void TestImportTemplate()
++        {
++            string dir1 = GetRandomDir();
++            string a = "a() ::= <<dir1 a>>\n";
++            string b = "b() ::= <<dir1 b>>\n";
++            WriteFile(dir1, "a.st", a);
++            WriteFile(dir1, "b.st", b);
++            string dir2 = GetRandomDir();
++            a = "a() ::= <<dir2 a>>\n";
++            WriteFile(dir2, "a.st", a);
++
++            TemplateGroup group1 = new TemplateGroupDirectory(dir1);
++            TemplateGroup group2 = new TemplateGroupDirectory(dir2);
++            group2.ImportTemplates(group1);
++            Template st = group2.GetInstanceOf("b");
++            string expected = "dir1 b";
++            string result = st.Render();
++            Assert.AreEqual(expected, result);
++        }
+}
+}
+diff --git a/StringTemplate4/TemplateGroup.cs b/StringTemplate4/TemplateGroup.cs
+index 8dc1330..052c35a 100644
+--- a/StringTemplate4/TemplateGroup.cs
++++ b/StringTemplate4/TemplateGroup.cs
+@@ -81,7 +81,7 @@ namespace StringTemplate
+public Encoding encoding;
+
+// only in root
+-        public IList<TemplateGroup> imports; // OR, supergroups;???
++        protected IList<TemplateGroup> imports; // OR, supergroups;???
+
+public List<string> interfaces;
+
+@@ -114,7 +114,7 @@ namespace StringTemplate
+{
+}
+
+-        public string AbsoluteTemplatePath
++        public virtual string AbsoluteTemplatePath
+{
+get
+{
+@@ -123,7 +123,7 @@ namespace StringTemplate
+TemplateGroup p = this;
+while (p != root)
+{
+-                    elems.Insert(0, p.GetName());
++                    elems.Insert(0, p.Name);
+p = p.parent;
+}
+
+@@ -133,6 +133,14 @@ namespace StringTemplate
+}
+}
+
++        public virtual string Name
++        {
++            get
++            {
++                return "<no name>;";
++            }
++        }
++
+// TODO: for dirs, should this load everything in dir and below?
+public virtual void Load()
+{
+@@ -258,6 +266,17 @@ namespace StringTemplate
+dictionaries[name] = mapping;
+}
+
++        public void ImportTemplates(TemplateGroup g)
++        {
++            if (parent != null || g.parent != null)
++                throw new ArgumentException("can only import tempaltes into/from root groups");
++
++            if (imports == null)
++                imports = new List<TemplateGroup>();
++
++            imports.Add(g);
++        }
++
+/** StringTemplate object factory; each group can have its own. */
+public virtual Template CreateStringTemplate()
+{
+@@ -265,19 +284,14 @@ namespace StringTemplate
+return st;
+}
+
+-        public virtual string GetName()
+-        {
+-            return "<no name>;";
+-        }
+-
+-        public string GetPathFromRoot()
+-        {
+-            return root.fullyQualifiedRootDirName + AbsoluteTemplatePath;
+-        }
++        //public string GetPathFromRoot()
++        //{
++        //    return root.fullyQualifiedRootDirName + AbsoluteTemplatePath;
++        //}
+
+public override string ToString()
+{
+-            return GetName();
++            return Name;
+}
+
+public virtual string Show()
+diff --git a/StringTemplate4/TemplateGroupDirectory.cs b/StringTemplate4/TemplateGroupDirectory.cs
+index f957d33..1d27bb7 100644
+--- a/StringTemplate4/TemplateGroupDirectory.cs
++++ b/StringTemplate4/TemplateGroupDirectory.cs
+@@ -42,34 +42,39 @@ namespace StringTemplate
+using Exception = System.Exception;
+using File = System.IO.File;
+using Path = System.IO.Path;
++    using System.Collections.Generic;
+
+public class TemplateGroupDirectory : TemplateGroup
+{
+public string dirName;
++        public IList<TemplateGroup> children;
+
+public TemplateGroupDirectory(string fullyQualifiedRootDirName)
+{
+this.parent = null;
+this.root = this;
+this.fullyQualifiedRootDirName = fullyQualifiedRootDirName;
++            this.dirName = "/"; // it's the root
+if (!Directory.Exists(fullyQualifiedRootDirName))
+{
+throw new ArgumentException("No such directory: " + fullyQualifiedRootDirName);
+}
+}
+
+-        public TemplateGroupDirectory(TemplateGroupDirectory parent, string dirName)
++        public TemplateGroupDirectory(TemplateGroupDirectory parent, string relativeDirName)
+{
+if (parent == null)
+-                throw new ArgumentNullException("parent", "Relative dir " + dirName + " can't have a null parent.");
++                throw new ArgumentNullException("parent", "Relative dir " + relativeDirName + " can't have a null parent.");
+
++            // doubly-link this node; we point at the parent and it has us as child
+this.parent = parent;
++            parent.AddChild(this);
+this.root = parent.root;
+-            this.dirName = dirName;
+-            string dir = GetPathFromRoot();
+-            if (!Directory.Exists(dir))
++            this.dirName = relativeDirName;
++            string absoluteDirName = Path.Combine(root.fullyQualifiedRootDirName, AbsoluteTemplatePath.Substring(1));
++            if (!Directory.Exists(absoluteDirName))
+{
+-                throw new ArgumentException("No such directory: " + dir);
++                throw new ArgumentException("No such directory: " + absoluteDirName);
+}
+}
+
+@@ -79,6 +84,17 @@ namespace StringTemplate
+this.encoding = encoding;
+}
+
++        public override string Name
++        {
++            get
++            {
++                if (parent == null)
++                    return "/";
++
++                return dirName;
++            }
++        }
++
+public override CompiledTemplate LookupTemplate(string name)
+{
+if (name.Length > 0 && (name[0] == Path.DirectorySeparatorChar || name[0] == Path.AltDirectorySeparatorChar))
+@@ -98,32 +114,51 @@ namespace StringTemplate
+if (templates.TryGetValue(name, out code))
+return code;
+
+-            return LookupTemplateFile(name); // try to load then
++            code = LookupTemplateFile(name); // try to load then
++            if (code == null)
++            {
++                Console.WriteLine("look for " + name + " in " + imports);
++                foreach (TemplateGroup g in imports)
++                {
++                    code = g.LookupTemplate(Path.Combine(AbsoluteTemplatePath, name));
++                }
++
++                if (code == null)
++                {
++                    throw new ArgumentException("no such template: " + Path.Combine(AbsoluteTemplatePath, name));
++                }
++            }
++
++            return code;
+}
+
+/** Look up template name with '/' anywhere but first char */
+protected virtual CompiledTemplate LookupQualifiedTemplate(string name)
+{
+// TODO: slow to load a template!
+-            string d = GetPathFromRoot();
++            string absoluteDirName = Path.Combine(root.fullyQualifiedRootDirName, AbsoluteTemplatePath.Substring(1));
+string[] names = name.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+-            string templateFile = Path.Combine(d, names[0] + ".st");
++            string templateFile = Path.Combine(absoluteDirName, names[0] + ".st");
+if (templates.ContainsKey(names[0]) || File.Exists(templateFile))
+{
+throw new ArgumentException(names[0] + " is a template not a dir or group file");
+}
+// look for a directory or group file called names[0]
+TemplateGroup sub = null;
+-            string group = Path.Combine(d, names[0]);
++            string group = Path.Combine(absoluteDirName, names[0]);
+if (Directory.Exists(group))
+{
+sub = new TemplateGroupDirectory(this, names[0]);
+}
+-            else if (File.Exists(Path.Combine(d, names[0] + ".stg")))
++            else if (File.Exists(Path.Combine(absoluteDirName, names[0] + ".stg")))
+{
+try
+{
+sub = new TemplateGroupFile(this, names[0] + ".stg");
++                    if (children == null)
++                        children = new List<TemplateGroup>();
++
++                    children.Add(sub);
+}
+catch (Exception e)
+{
+@@ -147,12 +182,12 @@ namespace StringTemplate
+// load from disk
+public virtual CompiledTemplate LookupTemplateFile(string name)
+{
+-            string d = GetPathFromRoot();
+-            string f = Path.Combine(d, name + ".st");
++            string absoluteDirName = Path.Combine(root.fullyQualifiedRootDirName, AbsoluteTemplatePath.Substring(1));
++            string f = Path.Combine(absoluteDirName, name + ".st");
+if (!File.Exists(f))
+{
+// TODO: add tolerance check here
+-                throw new ArgumentException("no such template: /" + AbsoluteTemplatePath + "/" + name);
++                return null;
+}
+try
+{
+@@ -171,13 +206,12 @@ namespace StringTemplate
+return null;
+}
+
+-        public override string GetName()
++        public void AddChild(TemplateGroup g)
+{
+-            if (parent == null)
+-                return "/";
++            if (children == null)
++                children = new List<TemplateGroup>();
+
+-            return dirName;
++            children.Add(g);
+}
+-
+}
+}
+diff --git a/StringTemplate4/TemplateGroupFile.cs b/StringTemplate4/TemplateGroupFile.cs
+index 1150a31..bb254f4 100644
+--- a/StringTemplate4/TemplateGroupFile.cs
++++ b/StringTemplate4/TemplateGroupFile.cs
+@@ -50,10 +50,10 @@ namespace StringTemplate
+throw new ArgumentException("Group file names must end in .stg: " + fullyQualifiedFileName);
+}
+
++            this.fullyQualifiedRootDirName = Path.GetFullPath(Path.GetDirectoryName(fullyQualifiedRootDirName));
+this.fileName = Path.GetFileName(fullyQualifiedFileName);
+this.parent = null;
+this.root = this;
+-            this.fullyQualifiedRootDirName = Path.GetFullPath(Path.GetDirectoryName(fullyQualifiedRootDirName));
+}
+
+public TemplateGroupFile(TemplateGroupDirectory parent, string fileName)
+@@ -64,7 +64,9 @@ namespace StringTemplate
+}
+
+this.fileName = fileName;
++            // doubly-link this node; we point at parent and it has us as child
+this.parent = parent;
++            parent.AddChild(this);
+this.root = parent.root;
+}
+
+@@ -74,9 +76,24 @@ namespace StringTemplate
+this.encoding = encoding;
+}
+
+-        public override string GetName()
++        // /group if this is root, else /dir1/dir2/group if in subdir of TemplateGroupDirectory
++        public override string AbsoluteTemplatePath
++        {
++            get
++            {
++                if (this == root)
++                    return "/" + Name;
++
++                return base.AbsoluteTemplatePath;
++            }
++        }
++
++        public override string Name
+{
+-            return Path.GetFileNameWithoutExtension(fileName);
++            get
++            {
++                return Path.GetFileNameWithoutExtension(fileName);
++            }
+}
+
+public override CompiledTemplate LookupTemplate(string name)
+@@ -87,12 +104,13 @@ namespace StringTemplate
+return root.LookupTemplate(name);
+// if no root, name must be "/groupfile/templatename"
+string[] names = name.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+-                string fname = Path.GetFileName(fileName);
+-                string @base = fname.Substring(0, fname.LastIndexOf('.'));
+-                if (names.Length > 2 || !names[0].Equals(@base))
++                //string fname = Path.GetFileName(fileName);
++                //string @base = fname.Substring(0, fname.LastIndexOf('.'));
++                if (names.Length > 2 || !names[0].Equals(Name))
+{
+-                    throw new ArgumentException("name must be of form /" + @base + "/templatename: " + name);
++                    throw new ArgumentException("name must be of form /" + Name + "/templatename: " + name);
+}
++                name = names[1]; // toss out group part; just get template name
+}
+if (name.IndexOfAny(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }) >= 0)
+{
+@@ -115,11 +133,11 @@ namespace StringTemplate
+if (alreadyLoaded)
+return;
+
+-            string fullFileName = GetPathFromRoot() + ".stg";
++            string absoluteFileName = Path.Combine(root.fullyQualifiedRootDirName, AbsoluteTemplatePath.Substring(1) + ".stg");
+
+try
+{
+-                ANTLRFileStream fs = new ANTLRFileStream(fullFileName, encoding);
++                ANTLRFileStream fs = new ANTLRFileStream(absoluteFileName, encoding);
+GroupLexer lexer = new GroupLexer(fs);
+UnbufferedTokenStream tokens = new UnbufferedTokenStream(lexer);
+GroupParser parser = new GroupParser(tokens);
+@@ -128,7 +146,7 @@ namespace StringTemplate
+}
+catch (Exception e)
+{
+-                listener.Error("can't load group file: " + fullFileName, e);
++                listener.Error("can't load group file: " + absoluteFileName, e);
+}
+}
+
+

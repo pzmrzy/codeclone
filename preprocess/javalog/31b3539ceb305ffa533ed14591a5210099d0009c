@@ -1,0 +1,50 @@
+commit 31b3539ceb305ffa533ed14591a5210099d0009c
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Aug 10 11:08:48 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Aug 10 11:08:48 2011 -0800
+
+Fix stack overflow in semantic context analysis
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 9031]
+
+diff --git a/tool/CHANGES.txt b/tool/CHANGES.txt
+index ac09ef0..011b26b 100644
+--- a/tool/CHANGES.txt
++++ b/tool/CHANGES.txt
+@@ -7,6 +7,10 @@ University of San Francisco
+
+CHANGES
+
++August 10, 2011
++
++* (Sam) fix stack overflow in semantic context analysis
++
+July 30, 2011
+
+* added range check to BaseTree.insertChild()
+diff --git a/tool/src/main/java/org/antlr/analysis/SemanticContext.java b/tool/src/main/java/org/antlr/analysis/SemanticContext.java
+index 682de32..bcb8873 100644
+--- a/tool/src/main/java/org/antlr/analysis/SemanticContext.java
++++ b/tool/src/main/java/org/antlr/analysis/SemanticContext.java
+@@ -606,6 +606,9 @@ public abstract class SemanticContext {
+
+public static SemanticContext and(SemanticContext a, SemanticContext b) {
+//System.out.println("AND: "+a+"&&"+b);
++		if (a instanceof FalsePredicate || b instanceof FalsePredicate)
++			return new FalsePredicate();
++
+SemanticContext[] terms = factorOr(a, b);
+SemanticContext commonTerms = terms[0];
+a = terms[1];
+@@ -643,6 +646,9 @@ public abstract class SemanticContext {
+
+public static SemanticContext or(SemanticContext a, SemanticContext b) {
+//System.out.println("OR: "+a+"||"+b);
++		if (a instanceof TruePredicate || b instanceof TruePredicate)
++			return new TruePredicate();
++
+SemanticContext[] terms = factorAnd(a, b);
+SemanticContext commonTerms = terms[0];
+a = terms[1];
+

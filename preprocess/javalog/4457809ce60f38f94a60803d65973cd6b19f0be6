@@ -1,0 +1,26 @@
+commit 4457809ce60f38f94a60803d65973cd6b19f0be6
+Author:     parrt <parrt@antlr.org>
+AuthorDate: Wed Apr 13 11:43:26 2011 -0800
+Commit:     parrt <parrt@antlr.org>
+CommitDate: Wed Apr 13 11:43:26 2011 -0800
+
+* Unmangled region names in STViz hiearchy tree display.
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8189]
+
+diff --git a/tool/CHANGES.txt b/tool/CHANGES.txt
+index 31b7cd0..940bf5b 100644
+--- a/tool/CHANGES.txt
++++ b/tool/CHANGES.txt
+@@ -7,6 +7,10 @@ University of San Francisco
+
+CHANGES
+
++April 13, 2011
++
++* Unmangled region names in STViz hiearchy tree display.
++
+April 11, 2011
+
+* Added option -Xconversiontimeout back in.  Turns out we hit NFA conversion
+

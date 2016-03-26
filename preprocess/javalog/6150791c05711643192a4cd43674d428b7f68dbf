@@ -1,0 +1,2228 @@
+commit 6150791c05711643192a4cd43674d428b7f68dbf
+Author:     Zannick <jokeserver@gmail.com>
+AuthorDate: Sun Jun 17 22:31:28 2012 -0700
+Commit:     Zannick <jokeserver@gmail.com>
+CommitDate: Mon Jun 25 00:59:08 2012 -0700
+
+Convert unittests to Python 3.
+
+- (2to3) Unicode strings don't need u prefixes.
+- (2to3) StringIO module is now io.
+- String formatting with .format instead of %.
+- Move to use unittest assertion methods instead of bare asserts
+deprecated aliases, or fail() inside a try block.
+- Use implied string concatenation.
+- Remove unnecessary encoding information.
+- Don't use exceptions for control flow.
+- Remove unused argument 'x' from testtree.
+- Use 'not in set' conditionals instead of 'foo == A or foo == B' etc.
+- Use 'foo or bar' or the ternary operator instead of looking up into a
+list by using True or False (1 and 0 respectively) as indices.
+- Remove unnecessary semicolons.
+
+diff --git a/runtime/Python3/unittests/testbase.py b/runtime/Python3/unittests/testbase.py
+index 5c92887..c39243e 100644
+--- a/runtime/Python3/unittests/testbase.py
++++ b/runtime/Python3/unittests/testbase.py
+@@ -3,8 +3,8 @@ import unittest
+class BrokenTest(unittest.TestCase.failureException):
+def __repr__(self):
+name, reason = self.args
+-        return '%s: %s: %s works now' % (
+-            (self.__class__.__name__, name, reason))
++        return '{}: {}: {} works now'.format(
++            self.__class__.__name__, name, reason)
+
+
+def broken(reason, *exceptions):
+diff --git a/runtime/Python3/unittests/testdfa.py b/runtime/Python3/unittests/testdfa.py
+index 7df3fb8..7ae362d 100644
+--- a/runtime/Python3/unittests/testdfa.py
++++ b/runtime/Python3/unittests/testdfa.py
+@@ -42,10 +42,10 @@ class TestDFA(unittest.TestCase):
+def testUnpack(self):
+"""DFA.unpack()"""
+
+-        self.failUnlessEqual(
++        self.assertEqual(
+antlr3.DFA.unpack(
+-            u"\1\3\1\4\2\uffff\1\5\22\uffff\1\2\31\uffff\1\6\6\uffff"
+-            u"\32\6\4\uffff\1\6\1\uffff\32\6"
++            "\1\3\1\4\2\uffff\1\5\22\uffff\1\2\31\uffff\1\6\6\uffff"
++            "\32\6\4\uffff\1\6\1\uffff\32\6"
+),
+[ 3, 4, -1, -1, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+-1, -1, -1, -1, -1, -1, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+diff --git a/runtime/Python3/unittests/testrecognizers.py b/runtime/Python3/unittests/testrecognizers.py
+index 1fd8791..c30c06c 100644
+--- a/runtime/Python3/unittests/testrecognizers.py
++++ b/runtime/Python3/unittests/testrecognizers.py
+@@ -11,7 +11,7 @@ class TestBaseRecognizer(unittest.TestCase):
+"""BaseRecognizer._getRuleInvocationStack()"""
+
+rules = antlr3.BaseRecognizer._getRuleInvocationStack(__name__)
+-        self.failUnlessEqual(
++        self.assertEqual(
+rules,
+['testGetRuleInvocationStack']
+)
+@@ -47,7 +47,7 @@ class TestTokenSource(unittest.TestCase):
+for token in src:
+tokens.append(token.type)
+
+-        self.failUnlessEqual(tokens, [1, 2, 3, 4])
++        self.assertEqual(tokens, [1, 2, 3, 4])
+
+
+
+diff --git a/runtime/Python3/unittests/teststreams.py b/runtime/Python3/unittests/teststreams.py
+index f8430ba..957fffa 100644
+--- a/runtime/Python3/unittests/teststreams.py
++++ b/runtime/Python3/unittests/teststreams.py
+@@ -1,8 +1,7 @@
+-# -*- coding: utf-8 -*-
+
++from io import StringIO
+import os
+import unittest
+-from StringIO import StringIO
+import antlr3
+
+
+@@ -14,7 +13,7 @@ class TestStringStream(unittest.TestCase):
+
+stream = antlr3.StringStream('foo')
+
+-        self.failUnlessEqual(stream.size(), 3)
++        self.assertEqual(stream.size(), 3)
+
+
+def testIndex(self):
+@@ -22,7 +21,7 @@ class TestStringStream(unittest.TestCase):
+
+stream = antlr3.StringStream('foo')
+
+-        self.failUnlessEqual(stream.index(), 0)
++        self.assertEqual(stream.index(), 0)
+
+
+def testConsume(self):
+@@ -31,49 +30,49 @@ class TestStringStream(unittest.TestCase):
+stream = antlr3.StringStream('foo\nbar')
+
+stream.consume() # f
+-        self.failUnlessEqual(stream.index(), 1)
+-        self.failUnlessEqual(stream.charPositionInLine, 1)
+-        self.failUnlessEqual(stream.line, 1)
++        self.assertEqual(stream.index(), 1)
++        self.assertEqual(stream.charPositionInLine, 1)
++        self.assertEqual(stream.line, 1)
+
+stream.consume() # o
+-        self.failUnlessEqual(stream.index(), 2)
+-        self.failUnlessEqual(stream.charPositionInLine, 2)
+-        self.failUnlessEqual(stream.line, 1)
++        self.assertEqual(stream.index(), 2)
++        self.assertEqual(stream.charPositionInLine, 2)
++        self.assertEqual(stream.line, 1)
+
+stream.consume() # o
+-        self.failUnlessEqual(stream.index(), 3)
+-        self.failUnlessEqual(stream.charPositionInLine, 3)
+-        self.failUnlessEqual(stream.line, 1)
++        self.assertEqual(stream.index(), 3)
++        self.assertEqual(stream.charPositionInLine, 3)
++        self.assertEqual(stream.line, 1)
+
+stream.consume() # \n
+-        self.failUnlessEqual(stream.index(), 4)
+-        self.failUnlessEqual(stream.charPositionInLine, 0)
+-        self.failUnlessEqual(stream.line, 2)
++        self.assertEqual(stream.index(), 4)
++        self.assertEqual(stream.charPositionInLine, 0)
++        self.assertEqual(stream.line, 2)
+
+stream.consume() # b
+-        self.failUnlessEqual(stream.index(), 5)
+-        self.failUnlessEqual(stream.charPositionInLine, 1)
+-        self.failUnlessEqual(stream.line, 2)
++        self.assertEqual(stream.index(), 5)
++        self.assertEqual(stream.charPositionInLine, 1)
++        self.assertEqual(stream.line, 2)
+
+stream.consume() # a
+-        self.failUnlessEqual(stream.index(), 6)
+-        self.failUnlessEqual(stream.charPositionInLine, 2)
+-        self.failUnlessEqual(stream.line, 2)
++        self.assertEqual(stream.index(), 6)
++        self.assertEqual(stream.charPositionInLine, 2)
++        self.assertEqual(stream.line, 2)
+
+stream.consume() # r
+-        self.failUnlessEqual(stream.index(), 7)
+-        self.failUnlessEqual(stream.charPositionInLine, 3)
+-        self.failUnlessEqual(stream.line, 2)
++        self.assertEqual(stream.index(), 7)
++        self.assertEqual(stream.charPositionInLine, 3)
++        self.assertEqual(stream.line, 2)
+
+stream.consume() # EOF
+-        self.failUnlessEqual(stream.index(), 7)
+-        self.failUnlessEqual(stream.charPositionInLine, 3)
+-        self.failUnlessEqual(stream.line, 2)
++        self.assertEqual(stream.index(), 7)
++        self.assertEqual(stream.charPositionInLine, 3)
++        self.assertEqual(stream.line, 2)
+
+stream.consume() # EOF
+-        self.failUnlessEqual(stream.index(), 7)
+-        self.failUnlessEqual(stream.charPositionInLine, 3)
+-        self.failUnlessEqual(stream.line, 2)
++        self.assertEqual(stream.index(), 7)
++        self.assertEqual(stream.charPositionInLine, 3)
++        self.assertEqual(stream.line, 2)
+
+
+def testReset(self):
+@@ -85,10 +84,10 @@ class TestStringStream(unittest.TestCase):
+stream.consume()
+
+stream.reset()
+-        self.failUnlessEqual(stream.index(), 0)
+-        self.failUnlessEqual(stream.line, 1)
+-        self.failUnlessEqual(stream.charPositionInLine, 0)
+-        self.failUnlessEqual(stream.LT(1), 'f')
++        self.assertEqual(stream.index(), 0)
++        self.assertEqual(stream.line, 1)
++        self.assertEqual(stream.charPositionInLine, 0)
++        self.assertEqual(stream.LT(1), 'f')
+
+
+def testLA(self):
+@@ -96,16 +95,16 @@ class TestStringStream(unittest.TestCase):
+
+stream = antlr3.StringStream('foo')
+
+-        self.failUnlessEqual(stream.LT(1), 'f')
+-        self.failUnlessEqual(stream.LT(2), 'o')
+-        self.failUnlessEqual(stream.LT(3), 'o')
++        self.assertEqual(stream.LT(1), 'f')
++        self.assertEqual(stream.LT(2), 'o')
++        self.assertEqual(stream.LT(3), 'o')
+
+stream.consume()
+stream.consume()
+
+-        self.failUnlessEqual(stream.LT(1), 'o')
+-        self.failUnlessEqual(stream.LT(2), antlr3.EOF)
+-        self.failUnlessEqual(stream.LT(3), antlr3.EOF)
++        self.assertEqual(stream.LT(1), 'o')
++        self.assertEqual(stream.LT(2), antlr3.EOF)
++        self.assertEqual(stream.LT(3), antlr3.EOF)
+
+
+def testSubstring(self):
+@@ -113,10 +112,10 @@ class TestStringStream(unittest.TestCase):
+
+stream = antlr3.StringStream('foobar')
+
+-        self.failUnlessEqual(stream.substring(0, 0), 'f')
+-        self.failUnlessEqual(stream.substring(0, 1), 'fo')
+-        self.failUnlessEqual(stream.substring(0, 5), 'foobar')
+-        self.failUnlessEqual(stream.substring(3, 5), 'bar')
++        self.assertEqual(stream.substring(0, 0), 'f')
++        self.assertEqual(stream.substring(0, 1), 'fo')
++        self.assertEqual(stream.substring(0, 5), 'foobar')
++        self.assertEqual(stream.substring(3, 5), 'bar')
+
+
+def testSeekForward(self):
+@@ -126,10 +125,10 @@ class TestStringStream(unittest.TestCase):
+
+stream.seek(4)
+
+-        self.failUnlessEqual(stream.index(), 4)
+-        self.failUnlessEqual(stream.line, 2)
+-        self.failUnlessEqual(stream.charPositionInLine, 0)
+-        self.failUnlessEqual(stream.LT(1), 'b')
++        self.assertEqual(stream.index(), 4)
++        self.assertEqual(stream.line, 2)
++        self.assertEqual(stream.charPositionInLine, 0)
++        self.assertEqual(stream.LT(1), 'b')
+
+
+##     # not yet implemented
+@@ -141,10 +140,10 @@ class TestStringStream(unittest.TestCase):
+##         stream.seek(4)
+##         stream.seek(1)
+
+-##         self.failUnlessEqual(stream.index(), 1)
+-##         self.failUnlessEqual(stream.line, 1)
+-##         self.failUnlessEqual(stream.charPositionInLine, 1)
+-##         self.failUnlessEqual(stream.LA(1), 'o')
++##         self.assertEqual(stream.index(), 1)
++##         self.assertEqual(stream.line, 1)
++##         self.assertEqual(stream.charPositionInLine, 1)
++##         self.assertEqual(stream.LA(1), 'o')
+
+
+def testMark(self):
+@@ -155,13 +154,13 @@ class TestStringStream(unittest.TestCase):
+stream.seek(4)
+
+marker = stream.mark()
+-        self.failUnlessEqual(marker, 1)
+-        self.failUnlessEqual(stream.markDepth, 1)
++        self.assertEqual(marker, 1)
++        self.assertEqual(stream.markDepth, 1)
+
+stream.consume()
+marker = stream.mark()
+-        self.failUnlessEqual(marker, 2)
+-        self.failUnlessEqual(stream.markDepth, 2)
++        self.assertEqual(marker, 2)
++        self.assertEqual(stream.markDepth, 2)
+
+
+def testReleaseLast(self):
+@@ -176,11 +175,11 @@ class TestStringStream(unittest.TestCase):
+marker2 = stream.mark()
+
+stream.release()
+-        self.failUnlessEqual(stream.markDepth, 1)
++        self.assertEqual(stream.markDepth, 1)
+
+# release same marker again, nothing has changed
+stream.release()
+-        self.failUnlessEqual(stream.markDepth, 1)
++        self.assertEqual(stream.markDepth, 1)
+
+
+def testReleaseNested(self):
+@@ -198,7 +197,7 @@ class TestStringStream(unittest.TestCase):
+marker3 = stream.mark()
+
+stream.release(marker2)
+-        self.failUnlessEqual(stream.markDepth, 1)
++        self.assertEqual(stream.markDepth, 1)
+
+
+def testRewindLast(self):
+@@ -213,11 +212,11 @@ class TestStringStream(unittest.TestCase):
+stream.consume()
+
+stream.rewind()
+-        self.failUnlessEqual(stream.markDepth, 0)
+-        self.failUnlessEqual(stream.index(), 4)
+-        self.failUnlessEqual(stream.line, 2)
+-        self.failUnlessEqual(stream.charPositionInLine, 0)
+-        self.failUnlessEqual(stream.LT(1), 'b')
++        self.assertEqual(stream.markDepth, 0)
++        self.assertEqual(stream.index(), 4)
++        self.assertEqual(stream.line, 2)
++        self.assertEqual(stream.charPositionInLine, 0)
++        self.assertEqual(stream.LT(1), 'b')
+
+
+def testRewindNested(self):
+@@ -235,11 +234,11 @@ class TestStringStream(unittest.TestCase):
+marker3 = stream.mark()
+
+stream.rewind(marker2)
+-        self.failUnlessEqual(stream.markDepth, 1)
+-        self.failUnlessEqual(stream.index(), 5)
+-        self.failUnlessEqual(stream.line, 2)
+-        self.failUnlessEqual(stream.charPositionInLine, 1)
+-        self.failUnlessEqual(stream.LT(1), 'a')
++        self.assertEqual(stream.markDepth, 1)
++        self.assertEqual(stream.index(), 5)
++        self.assertEqual(stream.line, 2)
++        self.assertEqual(stream.charPositionInLine, 1)
++        self.assertEqual(stream.LT(1), 'a')
+
+
+class TestFileStream(unittest.TestCase):
+@@ -261,18 +260,18 @@ class TestFileStream(unittest.TestCase):
+marker3 = stream.mark()
+
+stream.rewind(marker2)
+-        self.failUnlessEqual(stream.markDepth, 1)
+-        self.failUnlessEqual(stream.index(), 5)
+-        self.failUnlessEqual(stream.line, 2)
+-        self.failUnlessEqual(stream.charPositionInLine, 1)
+-        self.failUnlessEqual(stream.LT(1), 'a')
+-        self.failUnlessEqual(stream.LA(1), ord('a'))
++        self.assertEqual(stream.markDepth, 1)
++        self.assertEqual(stream.index(), 5)
++        self.assertEqual(stream.line, 2)
++        self.assertEqual(stream.charPositionInLine, 1)
++        self.assertEqual(stream.LT(1), 'a')
++        self.assertEqual(stream.LA(1), ord('a'))
+
+
+def testEncoded(self):
+path = os.path.join(os.path.dirname(__file__), 'teststreams.input2')
+
+-        stream = antlr3.FileStream(path, 'utf-8')
++        stream = antlr3.FileStream(path)
+
+stream.seek(4)
+marker1 = stream.mark()
+@@ -284,12 +283,12 @@ class TestFileStream(unittest.TestCase):
+marker3 = stream.mark()
+
+stream.rewind(marker2)
+-        self.failUnlessEqual(stream.markDepth, 1)
+-        self.failUnlessEqual(stream.index(), 5)
+-        self.failUnlessEqual(stream.line, 2)
+-        self.failUnlessEqual(stream.charPositionInLine, 1)
+-        self.failUnlessEqual(stream.LT(1), u'ä')
+-        self.failUnlessEqual(stream.LA(1), ord(u'ä'))
++        self.assertEqual(stream.markDepth, 1)
++        self.assertEqual(stream.index(), 5)
++        self.assertEqual(stream.line, 2)
++        self.assertEqual(stream.charPositionInLine, 1)
++        self.assertEqual(stream.LT(1), 'ä')
++        self.assertEqual(stream.LA(1), ord('ä'))
+
+
+
+@@ -311,18 +310,18 @@ class TestInputStream(unittest.TestCase):
+marker3 = stream.mark()
+
+stream.rewind(marker2)
+-        self.failUnlessEqual(stream.markDepth, 1)
+-        self.failUnlessEqual(stream.index(), 5)
+-        self.failUnlessEqual(stream.line, 2)
+-        self.failUnlessEqual(stream.charPositionInLine, 1)
+-        self.failUnlessEqual(stream.LT(1), 'a')
+-        self.failUnlessEqual(stream.LA(1), ord('a'))
++        self.assertEqual(stream.markDepth, 1)
++        self.assertEqual(stream.index(), 5)
++        self.assertEqual(stream.line, 2)
++        self.assertEqual(stream.charPositionInLine, 1)
++        self.assertEqual(stream.LT(1), 'a')
++        self.assertEqual(stream.LA(1), ord('a'))
+
+
+def testEncoded(self):
+-        file = StringIO(u'foo\nbär'.encode('utf-8'))
++        file = StringIO('foo\nbär')
+
+-        stream = antlr3.InputStream(file, 'utf-8')
++        stream = antlr3.InputStream(file)
+
+stream.seek(4)
+marker1 = stream.mark()
+@@ -334,12 +333,12 @@ class TestInputStream(unittest.TestCase):
+marker3 = stream.mark()
+
+stream.rewind(marker2)
+-        self.failUnlessEqual(stream.markDepth, 1)
+-        self.failUnlessEqual(stream.index(), 5)
+-        self.failUnlessEqual(stream.line, 2)
+-        self.failUnlessEqual(stream.charPositionInLine, 1)
+-        self.failUnlessEqual(stream.LT(1), u'ä')
+-        self.failUnlessEqual(stream.LA(1), ord(u'ä'))
++        self.assertEqual(stream.markDepth, 1)
++        self.assertEqual(stream.index(), 5)
++        self.assertEqual(stream.line, 2)
++        self.assertEqual(stream.charPositionInLine, 1)
++        self.assertEqual(stream.LT(1), 'ä')
++        self.assertEqual(stream.LA(1), ord('ä'))
+
+
+class TestCommonTokenStream(unittest.TestCase):
+@@ -361,10 +360,9 @@ class TestCommonTokenStream(unittest.TestCase):
+return antlr3.CommonToken(type=antlr3.EOF)
+
+def nextToken(self):
+-                try:
++                if self.tokens:
+return self.tokens.pop(0)
+-                except IndexError:
+-                    return None
++                return None
+
+self.source = MockSource()
+
+@@ -373,7 +371,7 @@ class TestCommonTokenStream(unittest.TestCase):
+"""CommonTokenStream.__init__()"""
+
+stream = antlr3.CommonTokenStream(self.source)
+-        self.failUnlessEqual(stream.index(), -1)
++        self.assertEqual(stream.index(), -1)
+
+
+def testSetTokenSource(self):
+@@ -381,8 +379,8 @@ class TestCommonTokenStream(unittest.TestCase):
+
+stream = antlr3.CommonTokenStream(None)
+stream.setTokenSource(self.source)
+-        self.failUnlessEqual(stream.index(), -1)
+-        self.failUnlessEqual(stream.channel, antlr3.DEFAULT_CHANNEL)
++        self.assertEqual(stream.index(), -1)
++        self.assertEqual(stream.channel, antlr3.DEFAULT_CHANNEL)
+
+
+def testLTEmptySource(self):
+@@ -391,7 +389,7 @@ class TestCommonTokenStream(unittest.TestCase):
+stream = antlr3.CommonTokenStream(self.source)
+
+lt1 = stream.LT(1)
+-        self.failUnlessEqual(lt1.type, antlr3.EOF)
++        self.assertEqual(lt1.type, antlr3.EOF)
+
+
+def testLT1(self):
+@@ -404,7 +402,7 @@ class TestCommonTokenStream(unittest.TestCase):
+stream = antlr3.CommonTokenStream(self.source)
+
+lt1 = stream.LT(1)
+-        self.failUnlessEqual(lt1.type, 12)
++        self.assertEqual(lt1.type, 12)
+
+
+def testLT1WithHidden(self):
+@@ -421,7 +419,7 @@ class TestCommonTokenStream(unittest.TestCase):
+stream = antlr3.CommonTokenStream(self.source)
+
+lt1 = stream.LT(1)
+-        self.failUnlessEqual(lt1.type, 13)
++        self.assertEqual(lt1.type, 13)
+
+
+def testLT2BeyondEnd(self):
+@@ -438,7 +436,7 @@ class TestCommonTokenStream(unittest.TestCase):
+stream = antlr3.CommonTokenStream(self.source)
+
+lt1 = stream.LT(2)
+-        self.failUnlessEqual(lt1.type, antlr3.EOF)
++        self.assertEqual(lt1.type, antlr3.EOF)
+
+
+# not yet implemented
+@@ -458,7 +456,7 @@ class TestCommonTokenStream(unittest.TestCase):
+stream.consume()
+
+lt1 = stream.LT(-1)
+-        self.failUnlessEqual(lt1.type, 12)
++        self.assertEqual(lt1.type, 12)
+
+
+def testLB1(self):
+@@ -476,7 +474,7 @@ class TestCommonTokenStream(unittest.TestCase):
+stream.fillBuffer()
+stream.consume()
+
+-        self.failUnlessEqual(stream.LB(1).type, 12)
++        self.assertEqual(stream.LB(1).type, 12)
+
+
+def testLTZero(self):
+@@ -493,7 +491,7 @@ class TestCommonTokenStream(unittest.TestCase):
+stream = antlr3.CommonTokenStream(self.source)
+
+lt1 = stream.LT(0)
+-        self.failUnless(lt1 is None)
++        self.assertIsNone(lt1)
+
+
+def testLBBeyondBegin(self):
+@@ -516,11 +514,11 @@ class TestCommonTokenStream(unittest.TestCase):
+)
+
+stream = antlr3.CommonTokenStream(self.source)
+-        self.failUnless(stream.LB(1) is None)
++        self.assertIsNone(stream.LB(1))
+
+stream.consume()
+stream.consume()
+-        self.failUnless(stream.LB(3) is None)
++        self.assertIsNone(stream.LB(3))
+
+
+def testFillBuffer(self):
+@@ -545,10 +543,10 @@ class TestCommonTokenStream(unittest.TestCase):
+stream = antlr3.CommonTokenStream(self.source)
+stream.fillBuffer()
+
+-        self.failUnlessEqual(len(stream.tokens), 3)
+-        self.failUnlessEqual(stream.tokens[0].type, 12)
+-        self.failUnlessEqual(stream.tokens[1].type, 13)
+-        self.failUnlessEqual(stream.tokens[2].type, 14)
++        self.assertEqual(len(stream.tokens), 3)
++        self.assertEqual(stream.tokens[0].type, 12)
++        self.assertEqual(stream.tokens[1].type, 13)
++        self.assertEqual(stream.tokens[2].type, 14)
+
+
+def testConsume(self):
+@@ -567,16 +565,16 @@ class TestCommonTokenStream(unittest.TestCase):
+)
+
+stream = antlr3.CommonTokenStream(self.source)
+-        self.failUnlessEqual(stream.LA(1), 12)
++        self.assertEqual(stream.LA(1), 12)
+
+stream.consume()
+-        self.failUnlessEqual(stream.LA(1), 13)
++        self.assertEqual(stream.LA(1), 13)
+
+stream.consume()
+-        self.failUnlessEqual(stream.LA(1), antlr3.EOF)
++        self.assertEqual(stream.LA(1), antlr3.EOF)
+
+stream.consume()
+-        self.failUnlessEqual(stream.LA(1), antlr3.EOF)
++        self.assertEqual(stream.LA(1), antlr3.EOF)
+
+
+def testSeek(self):
+@@ -595,13 +593,13 @@ class TestCommonTokenStream(unittest.TestCase):
+)
+
+stream = antlr3.CommonTokenStream(self.source)
+-        self.failUnlessEqual(stream.LA(1), 12)
++        self.assertEqual(stream.LA(1), 12)
+
+stream.seek(2)
+-        self.failUnlessEqual(stream.LA(1), antlr3.EOF)
++        self.assertEqual(stream.LA(1), antlr3.EOF)
+
+stream.seek(0)
+-        self.failUnlessEqual(stream.LA(1), 12)
++        self.assertEqual(stream.LA(1), 12)
+
+
+def testMarkRewind(self):
+@@ -628,7 +626,7 @@ class TestCommonTokenStream(unittest.TestCase):
+stream.consume()
+stream.rewind(marker)
+
+-        self.failUnlessEqual(stream.LA(1), 13)
++        self.assertEqual(stream.LA(1), 13)
+
+
+def testToString(self):
+@@ -652,9 +650,9 @@ class TestCommonTokenStream(unittest.TestCase):
+
+stream = antlr3.CommonTokenStream(self.source)
+
+-        assert stream.toString() == "foobargnurzblarz"
+-        assert stream.toString(1, 2) == "bargnurz"
+-        assert stream.toString(stream.tokens[1], stream.tokens[-2]) == "bargnurz"
++        self.assertEqual(stream.toString(), "foobargnurzblarz")
++        self.assertEqual(stream.toString(1, 2), "bargnurz")
++        self.assertEqual(stream.toString(stream.tokens[1], stream.tokens[-2]), "bargnurz")
+
+
+if __name__ == "__main__":
+diff --git a/runtime/Python3/unittests/testtree.py b/runtime/Python3/unittests/testtree.py
+index 1f4e36f..83c3876 100644
+--- a/runtime/Python3/unittests/testtree.py
++++ b/runtime/Python3/unittests/testtree.py
+@@ -1,8 +1,7 @@
+-# -*- coding: utf-8 -*-
+
++from io import StringIO
+import os
+import unittest
+-from StringIO import StringIO
+
+from antlr3.tree import (CommonTreeNodeStream, CommonTree, CommonTreeAdaptor,
+TreeParser, TreeVisitor, TreeIterator)
+@@ -27,27 +26,25 @@ class TestTreeNodeStream(unittest.TestCase):
+stream = self.newStream(t)
+expecting = "101"
+found = self.toNodesOnlyString(stream)
+-        self.failUnlessEqual(expecting, found)
++        self.assertEqual(expecting, found)
+
+expecting = "101"
+found = str(stream)
+-        self.failUnlessEqual(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testTwoChildrenOfNilRoot(self):
+class V(CommonTree):
+-            def __init__(self, token=None, ttype=None, x=None):
+-                if x is not None:
+-                    self.x = x
+-
+-                if ttype is not None and token is None:
+-                    self.token = CommonToken(type=ttype)
+-
+-                if token is not None:
++            def __init__(self, token=None, ttype=None):
++                if token:
+self.token = token
++
++                elif ttype:
++                    self.token = CommonToken(type=ttype)
++
+
+def __str__(self):
+-                if self.token is not None:
++                if self.token:
+txt = self.token.text
+else:
+txt = ""
+@@ -55,15 +52,15 @@ class TestTreeNodeStream(unittest.TestCase):
+txt += "<V>"
+return txt
+
+-        root_0 = self.adaptor.nil();
+-        t = V(ttype=101, x=2)
++        root_0 = self.adaptor.nil()
++        t = V(ttype=101)
+u = V(token=CommonToken(type=102, text="102"))
+self.adaptor.addChild(root_0, t)
+self.adaptor.addChild(root_0, u)
+-        self.assert_(root_0.parent is None)
+-        self.assertEquals(-1, root_0.childIndex)
+-        self.assertEquals(0, t.childIndex)
+-        self.assertEquals(1, u.childIndex)
++        self.assertIsNone(root_0.parent)
++        self.assertEqual(-1, root_0.childIndex)
++        self.assertEqual(0, t.childIndex)
++        self.assertEqual(1, u.childIndex)
+
+
+def test4Nodes(self):
+@@ -76,11 +73,11 @@ class TestTreeNodeStream(unittest.TestCase):
+stream = self.newStream(t)
+expecting = "101 102 103 104"
+found = self.toNodesOnlyString(stream)
+-        self.failUnlessEqual(expecting, found)
++        self.assertEqual(expecting, found)
+
+expecting = "101 2 102 2 103 3 104 3"
+found = str(stream)
+-        self.failUnlessEqual(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testList(self):
+@@ -99,11 +96,11 @@ class TestTreeNodeStream(unittest.TestCase):
+stream = CommonTreeNodeStream(root)
+expecting = "101 102 103 104 105"
+found = self.toNodesOnlyString(stream)
+-        self.failUnlessEqual(expecting, found)
++        self.assertEqual(expecting, found)
+
+expecting = "101 2 102 2 103 3 104 3 105"
+found = str(stream)
+-        self.failUnlessEqual(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testFlatList(self):
+@@ -116,11 +113,11 @@ class TestTreeNodeStream(unittest.TestCase):
+stream = CommonTreeNodeStream(root)
+expecting = "101 102 103"
+found = self.toNodesOnlyString(stream)
+-        self.failUnlessEqual(expecting, found)
++        self.assertEqual(expecting, found)
+
+expecting = "101 102 103"
+found = str(stream)
+-        self.failUnlessEqual(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testListWithOneNode(self):
+@@ -131,11 +128,11 @@ class TestTreeNodeStream(unittest.TestCase):
+stream = CommonTreeNodeStream(root)
+expecting = "101"
+found = self.toNodesOnlyString(stream)
+-        self.failUnlessEqual(expecting, found)
++        self.assertEqual(expecting, found)
+
+expecting = "101"
+found = str(stream)
+-        self.failUnlessEqual(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testAoverB(self):
+@@ -145,11 +142,11 @@ class TestTreeNodeStream(unittest.TestCase):
+stream = self.newStream(t)
+expecting = "101 102"
+found = self.toNodesOnlyString(stream)
+-        self.failUnlessEqual(expecting, found)
++        self.assertEqual(expecting, found)
+
+expecting = "101 2 102 3"
+found = str(stream)
+-        self.failUnlessEqual(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testLT(self):
+@@ -160,17 +157,17 @@ class TestTreeNodeStream(unittest.TestCase):
+t.addChild(CommonTree(CommonToken(104)))
+
+stream = self.newStream(t)
+-        self.failUnlessEqual(101, stream.LT(1).getType())
+-        self.failUnlessEqual(DOWN, stream.LT(2).getType())
+-        self.failUnlessEqual(102, stream.LT(3).getType())
+-        self.failUnlessEqual(DOWN, stream.LT(4).getType())
+-        self.failUnlessEqual(103, stream.LT(5).getType())
+-        self.failUnlessEqual(UP, stream.LT(6).getType())
+-        self.failUnlessEqual(104, stream.LT(7).getType())
+-        self.failUnlessEqual(UP, stream.LT(8).getType())
+-        self.failUnlessEqual(EOF, stream.LT(9).getType())
++        self.assertEqual(101, stream.LT(1).getType())
++        self.assertEqual(DOWN, stream.LT(2).getType())
++        self.assertEqual(102, stream.LT(3).getType())
++        self.assertEqual(DOWN, stream.LT(4).getType())
++        self.assertEqual(103, stream.LT(5).getType())
++        self.assertEqual(UP, stream.LT(6).getType())
++        self.assertEqual(104, stream.LT(7).getType())
++        self.assertEqual(UP, stream.LT(8).getType())
++        self.assertEqual(EOF, stream.LT(9).getType())
+# check way ahead
+-        self.failUnlessEqual(EOF, stream.LT(100).getType())
++        self.assertEqual(EOF, stream.LT(100).getType())
+
+
+def testMarkRewindEntire(self):
+@@ -193,8 +190,8 @@ class TestTreeNodeStream(unittest.TestCase):
+stream.LT(1)
+stream.consume()
+
+-        self.failUnlessEqual(EOF, stream.LT(1).getType())
+-        self.failUnlessEqual(UP, stream.LT(-1).getType())  #TODO: remove?
++        self.assertEqual(EOF, stream.LT(1).getType())
++        self.assertEqual(UP, stream.LT(-1).getType())  #TODO: remove?
+stream.rewind(m)      # REWIND
+
+# consume til end again :)
+@@ -202,8 +199,8 @@ class TestTreeNodeStream(unittest.TestCase):
+stream.LT(1)
+stream.consume()
+
+-        self.failUnlessEqual(EOF, stream.LT(1).getType())
+-        self.failUnlessEqual(UP, stream.LT(-1).getType())  #TODO: remove?
++        self.assertEqual(EOF, stream.LT(1).getType())
++        self.assertEqual(UP, stream.LT(-1).getType())  #TODO: remove?
+
+
+def testMarkRewindInMiddle(self):
+@@ -225,7 +222,7 @@ class TestTreeNodeStream(unittest.TestCase):
+#System.out.println(tream.LT(1).getType())
+stream.consume()
+
+-        self.failUnlessEqual(107, stream.LT(1).getType())
++        self.assertEqual(107, stream.LT(1).getType())
+m = stream.mark() # MARK
+stream.consume() # consume 107
+stream.consume() # consume UP
+@@ -233,21 +230,21 @@ class TestTreeNodeStream(unittest.TestCase):
+stream.consume() # consume 104
+stream.rewind(m)      # REWIND
+
+-        self.failUnlessEqual(107, stream.LT(1).getType())
++        self.assertEqual(107, stream.LT(1).getType())
+stream.consume()
+-        self.failUnlessEqual(UP, stream.LT(1).getType())
++        self.assertEqual(UP, stream.LT(1).getType())
+stream.consume()
+-        self.failUnlessEqual(UP, stream.LT(1).getType())
++        self.assertEqual(UP, stream.LT(1).getType())
+stream.consume()
+-        self.failUnlessEqual(104, stream.LT(1).getType())
++        self.assertEqual(104, stream.LT(1).getType())
+stream.consume()
+# now we're past rewind position
+-        self.failUnlessEqual(105, stream.LT(1).getType())
++        self.assertEqual(105, stream.LT(1).getType())
+stream.consume()
+-        self.failUnlessEqual(UP, stream.LT(1).getType())
++        self.assertEqual(UP, stream.LT(1).getType())
+stream.consume()
+-        self.failUnlessEqual(EOF, stream.LT(1).getType())
+-        self.failUnlessEqual(UP, stream.LT(-1).getType())
++        self.assertEqual(EOF, stream.LT(1).getType())
++        self.assertEqual(UP, stream.LT(-1).getType())
+
+
+def testMarkRewindNested(self):
+@@ -274,19 +271,19 @@ class TestTreeNodeStream(unittest.TestCase):
+stream.consume() # consume 103
+stream.consume() # consume 106
+stream.rewind(m2)      # REWIND to 102
+-        self.failUnlessEqual(102, stream.LT(1).getType())
++        self.assertEqual(102, stream.LT(1).getType())
+stream.consume()
+-        self.failUnlessEqual(DOWN, stream.LT(1).getType())
++        self.assertEqual(DOWN, stream.LT(1).getType())
+stream.consume()
+# stop at 103 and rewind to start
+stream.rewind(m) # REWIND to 101
+-        self.failUnlessEqual(101, stream.LT(1).getType())
++        self.assertEqual(101, stream.LT(1).getType())
+stream.consume()
+-        self.failUnlessEqual(DOWN, stream.LT(1).getType())
++        self.assertEqual(DOWN, stream.LT(1).getType())
+stream.consume()
+-        self.failUnlessEqual(102, stream.LT(1).getType())
++        self.assertEqual(102, stream.LT(1).getType())
+stream.consume()
+-        self.failUnlessEqual(DOWN, stream.LT(1).getType())
++        self.assertEqual(DOWN, stream.LT(1).getType())
+
+
+def testSeek(self):
+@@ -308,11 +305,11 @@ class TestTreeNodeStream(unittest.TestCase):
+stream.consume() # consume DN
+stream.consume() # consume 102
+stream.seek(7)   # seek to 107
+-        self.failUnlessEqual(107, stream.LT(1).getType())
++        self.assertEqual(107, stream.LT(1).getType())
+stream.consume() # consume 107
+stream.consume() # consume UP
+stream.consume() # consume UP
+-        self.failUnlessEqual(104, stream.LT(1).getType())
++        self.assertEqual(104, stream.LT(1).getType())
+
+
+def testSeekFromStart(self):
+@@ -331,11 +328,11 @@ class TestTreeNodeStream(unittest.TestCase):
+
+stream = CommonTreeNodeStream(r0)
+stream.seek(7)   # seek to 107
+-        self.failUnlessEqual(107, stream.LT(1).getType())
++        self.assertEqual(107, stream.LT(1).getType())
+stream.consume() # consume 107
+stream.consume() # consume UP
+stream.consume() # consume UP
+-        self.failUnlessEqual(104, stream.LT(1).getType())
++        self.assertEqual(104, stream.LT(1).getType())
+
+
+def testReset(self):
+@@ -356,7 +353,7 @@ class TestTreeNodeStream(unittest.TestCase):
+v1 = self.toNodesOnlyString(stream) # scan all
+stream.reset()
+v2 = self.toNodesOnlyString(stream) # scan all
+-        self.assertEquals(v1, v2)
++        self.assertEqual(v1, v2)
+
+
+def testIterator(self):
+@@ -381,9 +378,9 @@ class TestTreeNodeStream(unittest.TestCase):
+def toNodesOnlyString(self, nodes):
+buf = []
+for i in range(nodes.size()):
+-            t = nodes.LT(i+1)
++            t = nodes.LT(i + 1)
+type = nodes.getTreeAdaptor().getType(t)
+-            if not (type==DOWN or type==UP):
++            if type not in {DOWN, UP}:
+buf.append(str(type))
+
+return ' '.join(buf)
+@@ -412,7 +409,7 @@ class TestCommonTreeNodeStream(unittest.TestCase):
+stream = CommonTreeNodeStream(r0)
+expecting = "101 2 102 2 103 3 104 2 105 3 106 2 107 3 108 109 3"
+found = str(stream)
+-        self.failUnlessEqual(expecting, found)
++        self.assertEqual(expecting, found)
+
+# Assume we want to hit node 107 and then "call 102" then return
+
+@@ -422,18 +419,18 @@ class TestCommonTreeNodeStream(unittest.TestCase):
+stream.consume()
+
+# CALL 102
+-        self.failUnlessEqual(107, stream.LT(1).getType())
++        self.assertEqual(107, stream.LT(1).getType())
+stream.push(indexOf102)
+-        self.failUnlessEqual(102, stream.LT(1).getType())
++        self.assertEqual(102, stream.LT(1).getType())
+stream.consume() # consume 102
+-        self.failUnlessEqual(DOWN, stream.LT(1).getType())
++        self.assertEqual(DOWN, stream.LT(1).getType())
+stream.consume() # consume DN
+-        self.failUnlessEqual(103, stream.LT(1).getType())
++        self.assertEqual(103, stream.LT(1).getType())
+stream.consume() # consume 103
+-        self.failUnlessEqual(UP, stream.LT(1).getType())
++        self.assertEqual(UP, stream.LT(1).getType())
+# RETURN
+stream.pop()
+-        self.failUnlessEqual(107, stream.LT(1).getType())
++        self.assertEqual(107, stream.LT(1).getType())
+
+
+def testNestedPushPop(self):
+@@ -463,33 +460,33 @@ class TestCommonTreeNodeStream(unittest.TestCase):
+for _ in range(indexOf107): # consume til 107 node
+stream.consume()
+
+-        self.failUnlessEqual(107, stream.LT(1).getType())
++        self.assertEqual(107, stream.LT(1).getType())
+# CALL 102
+stream.push(indexOf102)
+-        self.failUnlessEqual(102, stream.LT(1).getType())
++        self.assertEqual(102, stream.LT(1).getType())
+stream.consume() # consume 102
+-        self.failUnlessEqual(DOWN, stream.LT(1).getType())
++        self.assertEqual(DOWN, stream.LT(1).getType())
+stream.consume() # consume DN
+-        self.failUnlessEqual(103, stream.LT(1).getType())
++        self.assertEqual(103, stream.LT(1).getType())
+stream.consume() # consume 103
+
+# CALL 104
+indexOf104 = 6
+stream.push(indexOf104)
+-        self.failUnlessEqual(104, stream.LT(1).getType())
++        self.assertEqual(104, stream.LT(1).getType())
+stream.consume() # consume 102
+-        self.failUnlessEqual(DOWN, stream.LT(1).getType())
++        self.assertEqual(DOWN, stream.LT(1).getType())
+stream.consume() # consume DN
+-        self.failUnlessEqual(105, stream.LT(1).getType())
++        self.assertEqual(105, stream.LT(1).getType())
+stream.consume() # consume 103
+-        self.failUnlessEqual(UP, stream.LT(1).getType())
++        self.assertEqual(UP, stream.LT(1).getType())
+# RETURN (to UP node in 102 subtree)
+stream.pop()
+
+-        self.failUnlessEqual(UP, stream.LT(1).getType())
++        self.assertEqual(UP, stream.LT(1).getType())
+# RETURN (to empty stack)
+stream.pop()
+-        self.failUnlessEqual(107, stream.LT(1).getType())
++        self.assertEqual(107, stream.LT(1).getType())
+
+
+def testPushPopFromEOF(self):
+@@ -516,33 +513,33 @@ class TestCommonTreeNodeStream(unittest.TestCase):
+
+indexOf102 = 2
+indexOf104 = 6
+-        self.failUnlessEqual(EOF, stream.LT(1).getType())
++        self.assertEqual(EOF, stream.LT(1).getType())
+
+# CALL 102
+stream.push(indexOf102)
+-        self.failUnlessEqual(102, stream.LT(1).getType())
++        self.assertEqual(102, stream.LT(1).getType())
+stream.consume() # consume 102
+-        self.failUnlessEqual(DOWN, stream.LT(1).getType())
++        self.assertEqual(DOWN, stream.LT(1).getType())
+stream.consume() # consume DN
+-        self.failUnlessEqual(103, stream.LT(1).getType())
++        self.assertEqual(103, stream.LT(1).getType())
+stream.consume() # consume 103
+-        self.failUnlessEqual(UP, stream.LT(1).getType())
++        self.assertEqual(UP, stream.LT(1).getType())
+# RETURN (to empty stack)
+stream.pop()
+-        self.failUnlessEqual(EOF, stream.LT(1).getType())
++        self.assertEqual(EOF, stream.LT(1).getType())
+
+# CALL 104
+stream.push(indexOf104)
+-        self.failUnlessEqual(104, stream.LT(1).getType())
++        self.assertEqual(104, stream.LT(1).getType())
+stream.consume() # consume 102
+-        self.failUnlessEqual(DOWN, stream.LT(1).getType())
++        self.assertEqual(DOWN, stream.LT(1).getType())
+stream.consume() # consume DN
+-        self.failUnlessEqual(105, stream.LT(1).getType())
++        self.assertEqual(105, stream.LT(1).getType())
+stream.consume() # consume 103
+-        self.failUnlessEqual(UP, stream.LT(1).getType())
++        self.assertEqual(UP, stream.LT(1).getType())
+# RETURN (to empty stack)
+stream.pop()
+-        self.failUnlessEqual(EOF, stream.LT(1).getType())
++        self.assertEqual(EOF, stream.LT(1).getType())
+
+
+class TestCommonTree(unittest.TestCase):
+@@ -556,8 +553,8 @@ class TestCommonTree(unittest.TestCase):
+
+def testSingleNode(self):
+t = CommonTree(CommonToken(101))
+-        self.failUnless(t.parent is None)
+-        self.failUnlessEqual(-1, t.childIndex)
++        self.assertIsNone(t.parent)
++        self.assertEqual(-1, t.childIndex)
+
+
+def test4Nodes(self):
+@@ -567,8 +564,8 @@ class TestCommonTree(unittest.TestCase):
+r0.getChild(0).addChild(CommonTree(CommonToken(103)))
+r0.addChild(CommonTree(CommonToken(104)))
+
+-        self.failUnless(r0.parent is None)
+-        self.failUnlessEqual(-1, r0.childIndex)
++        self.assertIsNone(r0.parent)
++        self.assertEqual(-1, r0.childIndex)
+
+
+def testList(self):
+@@ -581,14 +578,14 @@ class TestCommonTree(unittest.TestCase):
+c2=CommonTree(CommonToken(103))
+r0.addChild(c2)
+
+-        self.failUnless(r0.parent is None)
+-        self.failUnlessEqual(-1, r0.childIndex)
+-        self.failUnlessEqual(r0, c0.parent)
+-        self.failUnlessEqual(0, c0.childIndex)
+-        self.failUnlessEqual(r0, c1.parent)
+-        self.failUnlessEqual(1, c1.childIndex)
+-        self.failUnlessEqual(r0, c2.parent)
+-        self.failUnlessEqual(2, c2.childIndex)
++        self.assertIsNone(r0.parent)
++        self.assertEqual(-1, r0.childIndex)
++        self.assertEqual(r0, c0.parent)
++        self.assertEqual(0, c0.childIndex)
++        self.assertEqual(r0, c1.parent)
++        self.assertEqual(1, c1.childIndex)
++        self.assertEqual(r0, c2.parent)
++        self.assertEqual(2, c2.childIndex)
+
+
+def testList2(self):
+@@ -607,15 +604,15 @@ class TestCommonTree(unittest.TestCase):
+
+root.addChild(r0)
+
+-        self.failUnless(root.parent is None)
+-        self.failUnlessEqual(-1, root.childIndex)
++        self.assertIsNone(root.parent)
++        self.assertEqual(-1, root.childIndex)
+# check children of root all point at root
+-        self.failUnlessEqual(root, c0.parent)
+-        self.failUnlessEqual(0, c0.childIndex)
+-        self.failUnlessEqual(root, c0.parent)
+-        self.failUnlessEqual(1, c1.childIndex)
+-        self.failUnlessEqual(root, c0.parent)
+-        self.failUnlessEqual(2, c2.childIndex)
++        self.assertEqual(root, c0.parent)
++        self.assertEqual(0, c0.childIndex)
++        self.assertEqual(root, c0.parent)
++        self.assertEqual(1, c1.childIndex)
++        self.assertEqual(root, c0.parent)
++        self.assertEqual(2, c2.childIndex)
+
+
+def testAddListToExistChildren(self):
+@@ -635,15 +632,15 @@ class TestCommonTree(unittest.TestCase):
+
+root.addChild(r0)
+
+-        self.failUnless(root.parent is None)
+-        self.failUnlessEqual(-1, root.childIndex)
++        self.assertIsNone(root.parent)
++        self.assertEqual(-1, root.childIndex)
+# check children of root all point at root
+-        self.failUnlessEqual(root, c0.parent)
+-        self.failUnlessEqual(1, c0.childIndex)
+-        self.failUnlessEqual(root, c0.parent)
+-        self.failUnlessEqual(2, c1.childIndex)
+-        self.failUnlessEqual(root, c0.parent)
+-        self.failUnlessEqual(3, c2.childIndex)
++        self.assertEqual(root, c0.parent)
++        self.assertEqual(1, c0.childIndex)
++        self.assertEqual(root, c0.parent)
++        self.assertEqual(2, c1.childIndex)
++        self.assertEqual(root, c0.parent)
++        self.assertEqual(3, c2.childIndex)
+
+
+def testDupTree(self):
+@@ -660,8 +657,8 @@ class TestCommonTree(unittest.TestCase):
+
+dup = self.adaptor.dupTree(r0)
+
+-        self.failUnless(dup.parent is None)
+-        self.failUnlessEqual(-1, dup.childIndex)
++        self.assertIsNone(dup.parent)
++        self.assertEqual(-1, dup.childIndex)
+dup.sanityCheckParentAndChildIndexes()
+
+
+@@ -736,13 +733,7 @@ class TestCommonTree(unittest.TestCase):
+t = CommonTree(CommonToken(101))
+newChild = CommonTree(CommonToken(5))
+error = False
+-        try:
+-        	t.replaceChildren(0, 0, newChild)
+-
+-        except IndexError:
+-        	error = True
+-
+-        self.failUnless(error)
++        self.assertRaises(IndexError, t.replaceChildren, 0, 0, newChild)
+
+
+def testReplaceWithOneChildren(self):
+@@ -754,7 +745,7 @@ class TestCommonTree(unittest.TestCase):
+newChild = CommonTree(CommonToken(99, text="c"))
+t.replaceChildren(0, 0, newChild)
+expecting = "(a c)"
+-        self.failUnlessEqual(expecting, t.toStringTree())
++        self.assertEqual(expecting, t.toStringTree())
+t.sanityCheckParentAndChildIndexes()
+
+
+@@ -767,7 +758,7 @@ class TestCommonTree(unittest.TestCase):
+newChild = CommonTree(CommonToken(99, text="x"))
+t.replaceChildren(1, 1, newChild)
+expecting = "(a b x d)"
+-        self.failUnlessEqual(expecting, t.toStringTree())
++        self.assertEqual(expecting, t.toStringTree())
+t.sanityCheckParentAndChildIndexes()
+
+
+@@ -780,7 +771,7 @@ class TestCommonTree(unittest.TestCase):
+newChild = CommonTree(CommonToken(99, text="x"))
+t.replaceChildren(0, 0, newChild)
+expecting = "(a x c d)"
+-        self.failUnlessEqual(expecting, t.toStringTree())
++        self.assertEqual(expecting, t.toStringTree())
+t.sanityCheckParentAndChildIndexes()
+
+
+@@ -793,7 +784,7 @@ class TestCommonTree(unittest.TestCase):
+newChild = CommonTree(CommonToken(99, text="x"))
+t.replaceChildren(2, 2, newChild)
+expecting = "(a b c x)"
+-        self.failUnlessEqual(expecting, t.toStringTree())
++        self.assertEqual(expecting, t.toStringTree())
+t.sanityCheckParentAndChildIndexes()
+
+
+@@ -809,7 +800,7 @@ class TestCommonTree(unittest.TestCase):
+
+t.replaceChildren(0, 0, newChildren)
+expecting = "(a x y c d)"
+-        self.failUnlessEqual(expecting, t.toStringTree())
++        self.assertEqual(expecting, t.toStringTree())
+t.sanityCheckParentAndChildIndexes()
+
+
+@@ -825,7 +816,7 @@ class TestCommonTree(unittest.TestCase):
+
+t.replaceChildren(2, 2, newChildren)
+expecting = "(a b c x y)"
+-        self.failUnlessEqual(expecting, t.toStringTree())
++        self.assertEqual(expecting, t.toStringTree())
+t.sanityCheckParentAndChildIndexes()
+
+
+@@ -841,7 +832,7 @@ class TestCommonTree(unittest.TestCase):
+
+t.replaceChildren(1, 1, newChildren)
+expecting = "(a b x y d)"
+-        self.failUnlessEqual(expecting, t.toStringTree())
++        self.assertEqual(expecting, t.toStringTree())
+t.sanityCheckParentAndChildIndexes()
+
+
+@@ -855,7 +846,7 @@ class TestCommonTree(unittest.TestCase):
+
+t.replaceChildren(0, 1, newChild)
+expecting = "(a x d)"
+-        self.failUnlessEqual(expecting, t.toStringTree())
++        self.assertEqual(expecting, t.toStringTree())
+t.sanityCheckParentAndChildIndexes()
+
+
+@@ -869,7 +860,7 @@ class TestCommonTree(unittest.TestCase):
+
+t.replaceChildren(1, 2, newChild)
+expecting = "(a b x)"
+-        self.failUnlessEqual(expecting, t.toStringTree())
++        self.assertEqual(expecting, t.toStringTree())
+t.sanityCheckParentAndChildIndexes()
+
+
+@@ -883,7 +874,7 @@ class TestCommonTree(unittest.TestCase):
+
+t.replaceChildren(0, 2, newChild)
+expecting = "(a x)"
+-        self.failUnlessEqual(expecting, t.toStringTree())
++        self.assertEqual(expecting, t.toStringTree())
+t.sanityCheckParentAndChildIndexes()
+
+
+@@ -899,7 +890,7 @@ class TestCommonTree(unittest.TestCase):
+
+t.replaceChildren(0, 2, newChildren)
+expecting = "(a x y)"
+-        self.failUnlessEqual(expecting, t.toStringTree())
++        self.assertEqual(expecting, t.toStringTree())
+t.sanityCheckParentAndChildIndexes()
+
+
+@@ -927,7 +918,7 @@ class TestTreeContext(unittest.TestCase):
+
+expecting = True
+found = TreeParser._inContext(adaptor, self.tokenNames, node, "VEC")
+-        self.assertEquals(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testNoParent(self):
+@@ -946,7 +937,7 @@ class TestTreeContext(unittest.TestCase):
+
+expecting = False
+found = TreeParser._inContext(adaptor, self.tokenNames, node, "VEC")
+-        self.assertEquals(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testParentWithWildcard(self):
+@@ -965,7 +956,7 @@ class TestTreeContext(unittest.TestCase):
+
+expecting = True
+found = TreeParser._inContext(adaptor, self.tokenNames, node, "VEC ...")
+-        self.assertEquals(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testWildcardAtStartIgnored(self):
+@@ -984,7 +975,7 @@ class TestTreeContext(unittest.TestCase):
+
+expecting = True
+found = TreeParser._inContext(adaptor, self.tokenNames, node, "...VEC")
+-        self.assertEquals(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testWildcardInBetween(self):
+@@ -1003,7 +994,7 @@ class TestTreeContext(unittest.TestCase):
+
+expecting = True
+found = TreeParser._inContext(adaptor, self.tokenNames, node, "PRINT...VEC")
+-        self.assertEquals(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testLotsOfWildcards(self):
+@@ -1022,7 +1013,7 @@ class TestTreeContext(unittest.TestCase):
+
+expecting = True
+found = TreeParser._inContext(adaptor, self.tokenNames, node, "... PRINT ... VEC ...")
+-        self.assertEquals(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testDeep(self):
+@@ -1041,7 +1032,7 @@ class TestTreeContext(unittest.TestCase):
+
+expecting = True
+found = TreeParser._inContext(adaptor, self.tokenNames, node, "VEC ...")
+-        self.assertEquals(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testDeepAndFindRoot(self):
+@@ -1060,7 +1051,7 @@ class TestTreeContext(unittest.TestCase):
+
+expecting = True
+found = TreeParser._inContext(adaptor, self.tokenNames, node, "PRINT ...")
+-        self.assertEquals(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testDeepAndFindRoot2(self):
+@@ -1079,7 +1070,7 @@ class TestTreeContext(unittest.TestCase):
+
+expecting = True
+found = TreeParser._inContext(adaptor, self.tokenNames, node, "PRINT ... VEC ...")
+-        self.assertEquals(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testChain(self):
+@@ -1098,7 +1089,7 @@ class TestTreeContext(unittest.TestCase):
+
+expecting = True
+found = TreeParser._inContext(adaptor, self.tokenNames, node, "PRINT MULT VEC MULT")
+-        self.assertEquals(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+## TEST INVALID CONTEXTS
+@@ -1119,7 +1110,7 @@ class TestTreeContext(unittest.TestCase):
+
+expecting = False
+found = TreeParser._inContext(adaptor, self.tokenNames, node, "VEC")
+-        self.assertEquals(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testMismatch(self):
+@@ -1139,7 +1130,7 @@ class TestTreeContext(unittest.TestCase):
+expecting = False
+## missing MULT
+found = TreeParser._inContext(adaptor, self.tokenNames, node, "PRINT VEC MULT")
+-        self.assertEquals(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testMismatch2(self):
+@@ -1158,7 +1149,7 @@ class TestTreeContext(unittest.TestCase):
+
+expecting = False
+found = TreeParser._inContext(adaptor, self.tokenNames, node, "PRINT VEC ...")
+-        self.assertEquals(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testMismatch3(self):
+@@ -1177,7 +1168,7 @@ class TestTreeContext(unittest.TestCase):
+
+expecting = False
+found = TreeParser._inContext(adaptor, self.tokenNames, node, "VEC ... VEC MULT")
+-        self.assertEquals(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testDoubleEtc(self):
+@@ -1194,13 +1185,9 @@ class TestTreeContext(unittest.TestCase):
+self.assertTrue(valid)
+node = labels.get("x")
+
+-        try:
+-            TreeParser._inContext(adaptor, self.tokenNames, node, "PRINT ... ... VEC")
+-            self.fail()
+-        except ValueError, exc:
+-            expecting = "invalid syntax: ... ..."
+-            found = str(exc)
+-            self.assertEquals(expecting, found)
++        self.assertRaisesRegex(
++            ValueError, r'invalid syntax: \.\.\. \.\.\.',
++            TreeParser._inContext, adaptor, self.tokenNames, node, "PRINT ... ... VEC")
+
+
+def testDotDot(self):
+@@ -1217,13 +1204,9 @@ class TestTreeContext(unittest.TestCase):
+self.assertTrue(valid)
+node = labels.get("x")
+
+-        try:
+-            TreeParser._inContext(adaptor, self.tokenNames, node, "PRINT .. VEC")
+-            self.fail()
+-        except ValueError, exc:
+-            expecting = "invalid syntax: .."
+-            found = str(exc)
+-            self.assertEquals(expecting, found)
++        self.assertRaisesRegex(
++            ValueError, r'invalid syntax: \.\.',
++            TreeParser._inContext, adaptor, self.tokenNames, node, "PRINT .. VEC")
+
+
+class TestTreeVisitor(unittest.TestCase):
+@@ -1242,10 +1225,10 @@ class TestTreeVisitor(unittest.TestCase):
+
+found = []
+def pre(t):
+-            found.append("pre(%s)" % t)
++            found.append("pre({})".format(t))
+return t
+def post(t):
+-            found.append("post(%s)" % t)
++            found.append("post({})".format(t))
+return t
+
+visitor = TreeVisitor(adaptor)
+@@ -1256,7 +1239,7 @@ class TestTreeVisitor(unittest.TestCase):
+"post(1)", "post(MULT)", "pre(2)", "post(2)", "pre(3)",
+"post(3)", "post(VEC)", "post(MULT)", "post(PRINT)" ]
+
+-        self.assertEquals(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+class TestTreeIterator(unittest.TestCase):
+@@ -1271,7 +1254,7 @@ class TestTreeIterator(unittest.TestCase):
+it = TreeIterator(t)
+expecting = "A EOF"
+found = self.toString(it)
+-        self.assertEquals(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testFlatAB(self):
+@@ -1281,7 +1264,7 @@ class TestTreeIterator(unittest.TestCase):
+it = TreeIterator(t)
+expecting = "nil DOWN A B UP EOF"
+found = self.toString(it)
+-        self.assertEquals(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testAB(self):
+@@ -1291,7 +1274,7 @@ class TestTreeIterator(unittest.TestCase):
+it = TreeIterator(t)
+expecting = "A DOWN B UP EOF"
+found = self.toString(it)
+-        self.assertEquals(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testABC(self):
+@@ -1301,7 +1284,7 @@ class TestTreeIterator(unittest.TestCase):
+it = TreeIterator(t)
+expecting = "A DOWN B C UP EOF"
+found = self.toString(it)
+-        self.assertEquals(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testVerticalList(self):
+@@ -1311,7 +1294,7 @@ class TestTreeIterator(unittest.TestCase):
+it = TreeIterator(t)
+expecting = "A DOWN B DOWN C UP UP EOF"
+found = self.toString(it)
+-        self.assertEquals(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testComplex(self):
+@@ -1321,7 +1304,7 @@ class TestTreeIterator(unittest.TestCase):
+it = TreeIterator(t)
+expecting = "A DOWN B DOWN C DOWN D E UP F UP G UP EOF"
+found = self.toString(it)
+-        self.assertEquals(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testReset(self):
+@@ -1331,12 +1314,12 @@ class TestTreeIterator(unittest.TestCase):
+it = TreeIterator(t)
+expecting = "A DOWN B DOWN C DOWN D E UP F UP G UP EOF"
+found = self.toString(it)
+-        self.assertEquals(expecting, found)
++        self.assertEqual(expecting, found)
+
+it.reset()
+expecting = "A DOWN B DOWN C DOWN D E UP F UP G UP EOF"
+found = self.toString(it)
+-        self.assertEquals(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def toString(self, it):
+diff --git a/runtime/Python3/unittests/testtreewizard.py b/runtime/Python3/unittests/testtreewizard.py
+index 2ad99be..5ffaa4d 100644
+--- a/runtime/Python3/unittests/testtreewizard.py
++++ b/runtime/Python3/unittests/testtreewizard.py
+@@ -1,8 +1,7 @@
+-# -*- coding: utf-8 -*-
+
++from io import StringIO
+import os
+import unittest
+-from StringIO import StringIO
+
+from antlr3.tree import CommonTreeAdaptor, CommonTree, INVALID_TOKEN_TYPE
+from antlr3.treewizard import TreeWizard, computeTokenTypes, \
+@@ -18,16 +17,16 @@ class TestComputeTokenTypes(unittest.TestCase):
+"""computeTokenTypes(None) -> {}"""
+
+typeMap = computeTokenTypes(None)
+-        self.failUnless(isinstance(typeMap, dict))
+-        self.failUnlessEqual(typeMap, {})
++        self.assertIsInstance(typeMap, dict)
++        self.assertEqual(typeMap, {})
+
+
+def testList(self):
+"""computeTokenTypes(['a', 'b']) -> { 'a': 0, 'b': 1 }"""
+
+typeMap = computeTokenTypes(['a', 'b'])
+-        self.failUnless(isinstance(typeMap, dict))
+-        self.failUnlessEqual(typeMap, { 'a': 0, 'b': 1 })
++        self.assertIsInstance(typeMap, dict)
++        self.assertEqual(typeMap, { 'a': 0, 'b': 1 })
+
+
+class TestTreePatternLexer(unittest.TestCase):
+@@ -38,9 +37,9 @@ class TestTreePatternLexer(unittest.TestCase):
+
+lexer = TreePatternLexer('(')
+type = lexer.nextToken()
+-        self.failUnlessEqual(type, BEGIN)
+-        self.failUnlessEqual(lexer.sval, '')
+-        self.failUnlessEqual(lexer.error, False)
++        self.assertEqual(type, BEGIN)
++        self.assertEqual(lexer.sval, '')
++        self.assertFalse(lexer.error)
+
+
+def testEnd(self):
+@@ -48,9 +47,9 @@ class TestTreePatternLexer(unittest.TestCase):
+
+lexer = TreePatternLexer(')')
+type = lexer.nextToken()
+-        self.failUnlessEqual(type, END)
+-        self.failUnlessEqual(lexer.sval, '')
+-        self.failUnlessEqual(lexer.error, False)
++        self.assertEqual(type, END)
++        self.assertEqual(lexer.sval, '')
++        self.assertFalse(lexer.error)
+
+
+def testPercent(self):
+@@ -58,9 +57,9 @@ class TestTreePatternLexer(unittest.TestCase):
+
+lexer = TreePatternLexer('%')
+type = lexer.nextToken()
+-        self.failUnlessEqual(type, PERCENT)
+-        self.failUnlessEqual(lexer.sval, '')
+-        self.failUnlessEqual(lexer.error, False)
++        self.assertEqual(type, PERCENT)
++        self.assertEqual(lexer.sval, '')
++        self.assertFalse(lexer.error)
+
+
+def testDot(self):
+@@ -68,9 +67,9 @@ class TestTreePatternLexer(unittest.TestCase):
+
+lexer = TreePatternLexer('.')
+type = lexer.nextToken()
+-        self.failUnlessEqual(type, DOT)
+-        self.failUnlessEqual(lexer.sval, '')
+-        self.failUnlessEqual(lexer.error, False)
++        self.assertEqual(type, DOT)
++        self.assertEqual(lexer.sval, '')
++        self.assertFalse(lexer.error)
+
+
+def testColon(self):
+@@ -78,9 +77,9 @@ class TestTreePatternLexer(unittest.TestCase):
+
+lexer = TreePatternLexer(':')
+type = lexer.nextToken()
+-        self.failUnlessEqual(type, COLON)
+-        self.failUnlessEqual(lexer.sval, '')
+-        self.failUnlessEqual(lexer.error, False)
++        self.assertEqual(type, COLON)
++        self.assertEqual(lexer.sval, '')
++        self.assertFalse(lexer.error)
+
+
+def testEOF(self):
+@@ -88,9 +87,9 @@ class TestTreePatternLexer(unittest.TestCase):
+
+lexer = TreePatternLexer('  \n \r \t ')
+type = lexer.nextToken()
+-        self.failUnlessEqual(type, EOF)
+-        self.failUnlessEqual(lexer.sval, '')
+-        self.failUnlessEqual(lexer.error, False)
++        self.assertEqual(type, EOF)
++        self.assertEqual(lexer.sval, '')
++        self.assertFalse(lexer.error)
+
+
+def testID(self):
+@@ -98,19 +97,19 @@ class TestTreePatternLexer(unittest.TestCase):
+
+lexer = TreePatternLexer('_foo12_bar')
+type = lexer.nextToken()
+-        self.failUnlessEqual(type, ID)
+-        self.failUnlessEqual(lexer.sval, '_foo12_bar')
+-        self.failUnlessEqual(lexer.error, False)
++        self.assertEqual(type, ID)
++        self.assertEqual(lexer.sval, '_foo12_bar')
++        self.assertFalse(lexer.error)
+
+
+def testARG(self):
+"""TreePatternLexer(): ARG"""
+
+-        lexer = TreePatternLexer('[ \\]bla\\n]')
++        lexer = TreePatternLexer(r'[ \]bla\n]')
+type = lexer.nextToken()
+-        self.failUnlessEqual(type, ARG)
+-        self.failUnlessEqual(lexer.sval, ' ]bla\\n')
+-        self.failUnlessEqual(lexer.error, False)
++        self.assertEqual(type, ARG)
++        self.assertEqual(lexer.sval, r' ]bla\n')
++        self.assertFalse(lexer.error)
+
+
+def testError(self):
+@@ -118,9 +117,9 @@ class TestTreePatternLexer(unittest.TestCase):
+
+lexer = TreePatternLexer('1')
+type = lexer.nextToken()
+-        self.failUnlessEqual(type, EOF)
+-        self.failUnlessEqual(lexer.sval, '')
+-        self.failUnlessEqual(lexer.error, True)
++        self.assertEqual(type, EOF)
++        self.assertEqual(lexer.sval, '')
++        self.assertTrue(lexer.error)
+
+
+class TestTreePatternParser(unittest.TestCase):
+@@ -146,9 +145,9 @@ class TestTreePatternParser(unittest.TestCase):
+lexer = TreePatternLexer('ID')
+parser = TreePatternParser(lexer, self.wizard, self.adaptor)
+tree = parser.pattern()
+-        self.failUnless(isinstance(tree, CommonTree))
+-        self.failUnlessEqual(tree.getType(), 10)
+-        self.failUnlessEqual(tree.getText(), 'ID')
++        self.assertIsInstance(tree, CommonTree)
++        self.assertEqual(tree.getType(), 10)
++        self.assertEqual(tree.getText(), 'ID')
+
+
+def testSingleNodeWithArg(self):
+@@ -156,9 +155,9 @@ class TestTreePatternParser(unittest.TestCase):
+lexer = TreePatternLexer('ID[foo]')
+parser = TreePatternParser(lexer, self.wizard, self.adaptor)
+tree = parser.pattern()
+-        self.failUnless(isinstance(tree, CommonTree))
+-        self.failUnlessEqual(tree.getType(), 10)
+-        self.failUnlessEqual(tree.getText(), 'foo')
++        self.assertIsInstance(tree, CommonTree)
++        self.assertEqual(tree.getType(), 10)
++        self.assertEqual(tree.getText(), 'foo')
+
+
+def testSingleLevelTree(self):
+@@ -166,12 +165,12 @@ class TestTreePatternParser(unittest.TestCase):
+lexer = TreePatternLexer('(A B)')
+parser = TreePatternParser(lexer, self.wizard, self.adaptor)
+tree = parser.pattern()
+-        self.failUnless(isinstance(tree, CommonTree))
+-        self.failUnlessEqual(tree.getType(), 5)
+-        self.failUnlessEqual(tree.getText(), 'A')
+-        self.failUnlessEqual(tree.getChildCount(), 1)
+-        self.failUnlessEqual(tree.getChild(0).getType(), 6)
+-        self.failUnlessEqual(tree.getChild(0).getText(), 'B')
++        self.assertIsInstance(tree, CommonTree)
++        self.assertEqual(tree.getType(), 5)
++        self.assertEqual(tree.getText(), 'A')
++        self.assertEqual(tree.getChildCount(), 1)
++        self.assertEqual(tree.getChild(0).getType(), 6)
++        self.assertEqual(tree.getChild(0).getText(), 'B')
+
+
+def testNil(self):
+@@ -179,9 +178,9 @@ class TestTreePatternParser(unittest.TestCase):
+lexer = TreePatternLexer('nil')
+parser = TreePatternParser(lexer, self.wizard, self.adaptor)
+tree = parser.pattern()
+-        self.failUnless(isinstance(tree, CommonTree))
+-        self.failUnlessEqual(tree.getType(), 0)
+-        self.failUnlessEqual(tree.getText(), None)
++        self.assertIsInstance(tree, CommonTree)
++        self.assertEqual(tree.getType(), 0)
++        self.assertIsNone(tree.getText())
+
+
+def testWildcard(self):
+@@ -189,7 +188,7 @@ class TestTreePatternParser(unittest.TestCase):
+lexer = TreePatternLexer('(.)')
+parser = TreePatternParser(lexer, self.wizard, self.adaptor)
+tree = parser.pattern()
+-        self.failUnless(isinstance(tree, WildcardTreePattern))
++        self.assertIsInstance(tree, WildcardTreePattern)
+
+
+def testLabel(self):
+@@ -197,8 +196,8 @@ class TestTreePatternParser(unittest.TestCase):
+lexer = TreePatternLexer('(%a:A)')
+parser = TreePatternParser(lexer, self.wizard, TreePatternTreeAdaptor())
+tree = parser.pattern()
+-        self.failUnless(isinstance(tree, TreePattern))
+-        self.failUnlessEqual(tree.label, 'a')
++        self.assertIsInstance(tree, TreePattern)
++        self.assertEqual(tree.label, 'a')
+
+
+def testError1(self):
+@@ -206,7 +205,7 @@ class TestTreePatternParser(unittest.TestCase):
+lexer = TreePatternLexer(')')
+parser = TreePatternParser(lexer, self.wizard, self.adaptor)
+tree = parser.pattern()
+-        self.failUnless(tree is None)
++        self.assertIsNone(tree)
+
+
+def testError2(self):
+@@ -214,7 +213,7 @@ class TestTreePatternParser(unittest.TestCase):
+lexer = TreePatternLexer('()')
+parser = TreePatternParser(lexer, self.wizard, self.adaptor)
+tree = parser.pattern()
+-        self.failUnless(tree is None)
++        self.assertIsNone(tree)
+
+
+def testError3(self):
+@@ -222,7 +221,7 @@ class TestTreePatternParser(unittest.TestCase):
+lexer = TreePatternLexer('(A ])')
+parser = TreePatternParser(lexer, self.wizard, self.adaptor)
+tree = parser.pattern()
+-        self.failUnless(tree is None)
++        self.assertIsNone(tree)
+
+
+class TestTreeWizard(unittest.TestCase):
+@@ -250,8 +249,8 @@ class TestTreeWizard(unittest.TestCase):
+tokenNames=['a', 'b']
+)
+
+-        self.failUnless(wiz.adaptor is self.adaptor)
+-        self.failUnlessEqual(
++        self.assertIs(wiz.adaptor, self.adaptor)
++        self.assertEqual(
+wiz.tokenNameToTypeMap,
+{ 'a': 0, 'b': 1 }
+)
+@@ -265,17 +264,17 @@ class TestTreeWizard(unittest.TestCase):
+tokenNames=self.tokens
+)
+
+-        self.failUnlessEqual(
++        self.assertEqual(
+wiz.getTokenType('A'),
+5
+)
+
+-        self.failUnlessEqual(
++        self.assertEqual(
+wiz.getTokenType('VAR'),
+11
+)
+
+-        self.failUnlessEqual(
++        self.assertEqual(
+wiz.getTokenType('invalid'),
+INVALID_TOKEN_TYPE
+)
+@@ -285,7 +284,7 @@ class TestTreeWizard(unittest.TestCase):
+t = wiz.create("ID")
+found = t.toStringTree()
+expecting = "ID"
+-        self.failUnlessEqual(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testSingleNodeWithArg(self):
+@@ -293,7 +292,7 @@ class TestTreeWizard(unittest.TestCase):
+t = wiz.create("ID[foo]")
+found = t.toStringTree()
+expecting = "foo"
+-        self.failUnlessEqual(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testSingleNodeTree(self):
+@@ -301,7 +300,7 @@ class TestTreeWizard(unittest.TestCase):
+t = wiz.create("(A)")
+found = t.toStringTree()
+expecting = "A"
+-        self.failUnlessEqual(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testSingleLevelTree(self):
+@@ -309,7 +308,7 @@ class TestTreeWizard(unittest.TestCase):
+t = wiz.create("(A B C D)")
+found = t.toStringTree()
+expecting = "(A B C D)"
+-        self.failUnlessEqual(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testListTree(self):
+@@ -317,13 +316,13 @@ class TestTreeWizard(unittest.TestCase):
+t = wiz.create("(nil A B C)")
+found = t.toStringTree()
+expecting = "A B C"
+-        self.failUnlessEqual(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testInvalidListTree(self):
+wiz = TreeWizard(self.adaptor, self.tokens)
+t = wiz.create("A B C")
+-        self.failUnless(t is None)
++        self.assertIsNone(t)
+
+
+def testDoubleLevelTree(self):
+@@ -331,7 +330,7 @@ class TestTreeWizard(unittest.TestCase):
+t = wiz.create("(A (B C) (B D) E)")
+found = t.toStringTree()
+expecting = "(A (B C) (B D) E)"
+-        self.failUnlessEqual(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def __simplifyIndexMap(self, indexMap):
+@@ -346,7 +345,7 @@ class TestTreeWizard(unittest.TestCase):
+indexMap = wiz.index(tree)
+found = self.__simplifyIndexMap(indexMap)
+expecting = { 10: ["ID"] }
+-        self.failUnlessEqual(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testNoRepeatsIndex(self):
+@@ -355,7 +354,7 @@ class TestTreeWizard(unittest.TestCase):
+indexMap = wiz.index(tree)
+found = self.__simplifyIndexMap(indexMap)
+expecting = { 8:['D'], 6:['B'], 7:['C'], 5:['A'] }
+-        self.failUnlessEqual(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testRepeatsIndex(self):
+@@ -364,7 +363,7 @@ class TestTreeWizard(unittest.TestCase):
+indexMap = wiz.index(tree)
+found = self.__simplifyIndexMap(indexMap)
+expecting = { 8: ['D', 'D'], 6: ['B', 'B', 'B'], 7: ['C'], 5: ['A', 'A'] }
+-        self.failUnlessEqual(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testNoRepeatsVisit(self):
+@@ -378,7 +377,7 @@ class TestTreeWizard(unittest.TestCase):
+wiz.visit(tree, wiz.getTokenType("B"), visitor)
+
+expecting = ['B']
+-        self.failUnlessEqual(expecting, elements)
++        self.assertEqual(expecting, elements)
+
+
+def testNoRepeatsVisit2(self):
+@@ -392,7 +391,7 @@ class TestTreeWizard(unittest.TestCase):
+wiz.visit(tree, wiz.getTokenType("C"), visitor)
+
+expecting = ['C']
+-        self.failUnlessEqual(expecting, elements)
++        self.assertEqual(expecting, elements)
+
+
+def testRepeatsVisit(self):
+@@ -406,7 +405,7 @@ class TestTreeWizard(unittest.TestCase):
+wiz.visit(tree, wiz.getTokenType("B"), visitor)
+
+expecting = ['B', 'B', 'B']
+-        self.failUnlessEqual(expecting, elements)
++        self.assertEqual(expecting, elements)
+
+
+def testRepeatsVisit2(self):
+@@ -420,7 +419,7 @@ class TestTreeWizard(unittest.TestCase):
+wiz.visit(tree, wiz.getTokenType("A"), visitor)
+
+expecting = ['A', 'A']
+-        self.failUnlessEqual(expecting, elements)
++        self.assertEqual(expecting, elements)
+
+
+def testRepeatsVisitWithContext(self):
+@@ -429,12 +428,12 @@ class TestTreeWizard(unittest.TestCase):
+
+elements = []
+def visitor(node, parent, childIndex, labels):
+-            elements.append('%s@%s[%d]' % (node, parent, childIndex))
++            elements.append('{}@{}[{}]'.format(node, parent, childIndex))
+
+wiz.visit(tree, wiz.getTokenType("B"), visitor)
+
+expecting = ['B@A[0]', 'B@A[1]', 'B@A[2]']
+-        self.failUnlessEqual(expecting, elements)
++        self.assertEqual(expecting, elements)
+
+
+def testRepeatsVisitWithNullParentAndContext(self):
+@@ -444,14 +443,14 @@ class TestTreeWizard(unittest.TestCase):
+elements = []
+def visitor(node, parent, childIndex, labels):
+elements.append(
+-                '%s@%s[%d]'
+-                % (node, ['nil', parent][parent is not None], childIndex)
++                '{}@{}[{}]'.format(
++                    node, parent or 'nil', childIndex)
+)
+
+wiz.visit(tree, wiz.getTokenType("A"), visitor)
+
+expecting = ['A@nil[0]', 'A@A[1]']
+-        self.failUnlessEqual(expecting, elements)
++        self.assertEqual(expecting, elements)
+
+
+def testVisitPattern(self):
+@@ -467,7 +466,7 @@ class TestTreeWizard(unittest.TestCase):
+wiz.visit(tree, '(A B)', visitor)
+
+expecting = ['A'] # shouldn't match overall root, just (A B)
+-        self.failUnlessEqual(expecting, elements)
++        self.assertEqual(expecting, elements)
+
+
+def testVisitPatternMultiple(self):
+@@ -477,14 +476,13 @@ class TestTreeWizard(unittest.TestCase):
+elements = []
+def visitor(node, parent, childIndex, labels):
+elements.append(
+-                '%s@%s[%d]'
+-                % (node, ['nil', parent][parent is not None], childIndex)
++                '{}@{}[{}]'.format(node, parent or 'nil', childIndex)
+)
+
+wiz.visit(tree, '(A B)', visitor)
+
+expecting = ['A@A[2]', 'A@D[0]']
+-        self.failUnlessEqual(expecting, elements)
++        self.assertEqual(expecting, elements)
+
+
+def testVisitPatternMultipleWithLabels(self):
+@@ -494,68 +492,68 @@ class TestTreeWizard(unittest.TestCase):
+elements = []
+def visitor(node, parent, childIndex, labels):
+elements.append(
+-                '%s@%s[%d]%s&%s'
+-                % (node,
+-                   ['nil', parent][parent is not None],
+-                   childIndex,
+-                   labels['a'],
+-                   labels['b'],
+-                   )
++                '{}@{}[{}]{}&{}'.format(
++                    node,
++                    parent or 'nil',
++                    childIndex,
++                    labels['a'],
++                    labels['b'],
++                    )
+)
+
+wiz.visit(tree, '(%a:A %b:B)', visitor)
+
+expecting = ['foo@A[2]foo&bar', 'big@D[0]big&dog']
+-        self.failUnlessEqual(expecting, elements)
++        self.assertEqual(expecting, elements)
+
+
+def testParse(self):
+wiz = TreeWizard(self.adaptor, self.tokens)
+t = wiz.create("(A B C)")
+valid = wiz.parse(t, "(A B C)")
+-        self.failUnless(valid)
++        self.assertTrue(valid)
+
+
+def testParseSingleNode(self):
+wiz = TreeWizard(self.adaptor, self.tokens)
+t = wiz.create("A")
+valid = wiz.parse(t, "A")
+-        self.failUnless(valid)
++        self.assertTrue(valid)
+
+
+def testParseSingleNodeFails(self):
+wiz = TreeWizard(self.adaptor, self.tokens)
+t = wiz.create("A")
+valid = wiz.parse(t, "B")
+-        self.failUnless(not valid)
++        self.assertFalse(valid)
+
+
+def testParseFlatTree(self):
+wiz = TreeWizard(self.adaptor, self.tokens)
+t = wiz.create("(nil A B C)")
+valid = wiz.parse(t, "(nil A B C)")
+-        self.failUnless(valid)
++        self.assertTrue(valid)
+
+
+def testParseFlatTreeFails(self):
+wiz = TreeWizard(self.adaptor, self.tokens)
+t = wiz.create("(nil A B C)")
+valid = wiz.parse(t, "(nil A B)")
+-        self.failUnless(not valid)
++        self.assertFalse(valid)
+
+
+def testParseFlatTreeFails2(self):
+wiz = TreeWizard(self.adaptor, self.tokens)
+t = wiz.create("(nil A B C)")
+valid = wiz.parse(t, "(nil A B A)")
+-        self.failUnless(not valid)
++        self.assertFalse(valid)
+
+
+def testWildcard(self):
+wiz = TreeWizard(self.adaptor, self.tokens)
+t = wiz.create("(A B C)")
+valid = wiz.parse(t, "(A . .)")
+-        self.failUnless(valid)
++        self.assertTrue(valid)
+
+
+def testParseWithText(self):
+@@ -564,7 +562,7 @@ class TestTreeWizard(unittest.TestCase):
+# C pattern has no text arg so despite [bar] in t, no need
+# to match text--check structure only.
+valid = wiz.parse(t, "(A B[foo] C)")
+-        self.failUnless(valid)
++        self.assertTrue(valid)
+
+
+def testParseWithText2(self):
+@@ -573,14 +571,14 @@ class TestTreeWizard(unittest.TestCase):
+# C pattern has no text arg so despite [bar] in t, no need
+# to match text--check structure only.
+valid = wiz.parse(t, "(A B[foo] C)")
+-        self.assertEquals("(A T__32 (C (D a)))", t.toStringTree())
++        self.assertEqual("(A T__32 (C (D a)))", t.toStringTree())
+
+
+def testParseWithTextFails(self):
+wiz = TreeWizard(self.adaptor, self.tokens)
+t = wiz.create("(A B C)")
+valid = wiz.parse(t, "(A[foo] B C)")
+-        self.failUnless(not valid) # fails
++        self.assertFalse(valid) # fails
+
+
+def testParseLabels(self):
+@@ -588,10 +586,10 @@ class TestTreeWizard(unittest.TestCase):
+t = wiz.create("(A B C)")
+labels = {}
+valid = wiz.parse(t, "(%a:A %b:B %c:C)", labels)
+-        self.failUnless(valid)
+-        self.failUnlessEqual("A", str(labels["a"]))
+-        self.failUnlessEqual("B", str(labels["b"]))
+-        self.failUnlessEqual("C", str(labels["c"]))
++        self.assertTrue(valid)
++        self.assertEqual("A", str(labels["a"]))
++        self.assertEqual("B", str(labels["b"]))
++        self.assertEqual("C", str(labels["c"]))
+
+
+def testParseWithWildcardLabels(self):
+@@ -599,9 +597,9 @@ class TestTreeWizard(unittest.TestCase):
+t = wiz.create("(A B C)")
+labels = {}
+valid = wiz.parse(t, "(A %b:. %c:.)", labels)
+-        self.failUnless(valid)
+-        self.failUnlessEqual("B", str(labels["b"]))
+-        self.failUnlessEqual("C", str(labels["c"]))
++        self.assertTrue(valid)
++        self.assertEqual("B", str(labels["b"]))
++        self.assertEqual("C", str(labels["c"]))
+
+
+def testParseLabelsAndTestText(self):
+@@ -609,10 +607,10 @@ class TestTreeWizard(unittest.TestCase):
+t = wiz.create("(A B[foo] C)")
+labels = {}
+valid = wiz.parse(t, "(%a:A %b:B[foo] %c:C)", labels)
+-        self.failUnless(valid)
+-        self.failUnlessEqual("A", str(labels["a"]))
+-        self.failUnlessEqual("foo", str(labels["b"]))
+-        self.failUnlessEqual("C", str(labels["c"]))
++        self.assertTrue(valid)
++        self.assertEqual("A", str(labels["a"]))
++        self.assertEqual("foo", str(labels["b"]))
++        self.assertEqual("C", str(labels["c"]))
+
+
+def testParseLabelsInNestedTree(self):
+@@ -620,12 +618,12 @@ class TestTreeWizard(unittest.TestCase):
+t = wiz.create("(A (B C) (D E))")
+labels = {}
+valid = wiz.parse(t, "(%a:A (%b:B %c:C) (%d:D %e:E) )", labels)
+-        self.failUnless(valid)
+-        self.failUnlessEqual("A", str(labels["a"]))
+-        self.failUnlessEqual("B", str(labels["b"]))
+-        self.failUnlessEqual("C", str(labels["c"]))
+-        self.failUnlessEqual("D", str(labels["d"]))
+-        self.failUnlessEqual("E", str(labels["e"]))
++        self.assertTrue(valid)
++        self.assertEqual("A", str(labels["a"]))
++        self.assertEqual("B", str(labels["b"]))
++        self.assertEqual("C", str(labels["c"]))
++        self.assertEqual("D", str(labels["d"]))
++        self.assertEqual("E", str(labels["e"]))
+
+
+def testEquals(self):
+@@ -633,7 +631,7 @@ class TestTreeWizard(unittest.TestCase):
+t1 = wiz.create("(A B C)")
+t2 = wiz.create("(A B C)")
+same = wiz.equals(t1, t2)
+-        self.failUnless(same)
++        self.assertTrue(same)
+
+
+def testEqualsWithText(self):
+@@ -641,7 +639,7 @@ class TestTreeWizard(unittest.TestCase):
+t1 = wiz.create("(A B[foo] C)")
+t2 = wiz.create("(A B[foo] C)")
+same = wiz.equals(t1, t2)
+-        self.failUnless(same)
++        self.assertTrue(same)
+
+
+def testEqualsWithMismatchedText(self):
+@@ -649,7 +647,7 @@ class TestTreeWizard(unittest.TestCase):
+t1 = wiz.create("(A B[foo] C)")
+t2 = wiz.create("(A B C)")
+same = wiz.equals(t1, t2)
+-        self.failUnless(not same)
++        self.assertFalse(same)
+
+
+def testEqualsWithMismatchedList(self):
+@@ -657,7 +655,7 @@ class TestTreeWizard(unittest.TestCase):
+t1 = wiz.create("(A B C)")
+t2 = wiz.create("(A B A)")
+same = wiz.equals(t1, t2)
+-        self.failUnless(not same)
++        self.assertFalse(same)
+
+
+def testEqualsWithMismatchedListLength(self):
+@@ -665,7 +663,7 @@ class TestTreeWizard(unittest.TestCase):
+t1 = wiz.create("(A B C)")
+t2 = wiz.create("(A B)")
+same = wiz.equals(t1, t2)
+-        self.failUnless(not same)
++        self.assertFalse(same)
+
+
+def testFindPattern(self):
+@@ -674,7 +672,7 @@ class TestTreeWizard(unittest.TestCase):
+subtrees = wiz.find(t, "(A B)")
+found = [str(node) for node in subtrees]
+expecting = ['foo', 'big']
+-        self.failUnlessEqual(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+def testFindTokenType(self):
+@@ -683,7 +681,7 @@ class TestTreeWizard(unittest.TestCase):
+subtrees = wiz.find(t, wiz.getTokenType('A'))
+found = [str(node) for node in subtrees]
+expecting = ['A', 'foo', 'big']
+-        self.failUnlessEqual(expecting, found)
++        self.assertEqual(expecting, found)
+
+
+
+

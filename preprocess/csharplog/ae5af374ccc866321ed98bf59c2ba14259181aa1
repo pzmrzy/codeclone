@@ -1,0 +1,524 @@
+commit ae5af374ccc866321ed98bf59c2ba14259181aa1
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sun Dec 13 23:20:34 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sun Dec 13 23:20:34 2009 -0800
+
+C# Port:
+* Merge CL6392-6393
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6501]
+
+diff --git a/Antlr3.Test/ST4/TestDebugEvents.cs b/Antlr3.Test/ST4/TestDebugEvents.cs
+index bf9c13e..2e5f14a 100644
+--- a/Antlr3.Test/ST4/TestDebugEvents.cs
++++ b/Antlr3.Test/ST4/TestDebugEvents.cs
+@@ -85,5 +85,27 @@ namespace AntlrUnitTests.ST4
+String result = events.ToString();
+Assert.AreEqual(expected, result);
+}
++
++        [TestMethod]
++        public void TestTemplateCall()
++        {
++            String templates =
++                "t(x) ::= <<[<u()>]>>\n" +
++                "u() ::= << <x> >>\n";
++
++            WriteFile(tmpdir, "t.stg", templates);
++            STGroup group = new STGroupFile(tmpdir + "/" + "t.stg");
++            ST st = group.GetInstanceOf("t");
++            st.code.Dump();
++            st.Add("x", "foo");
++            StringWriter sw = new StringWriter();
++            Interpreter interp = new Interpreter(group, new AutoIndentWriter(sw));
++            interp.Debug = true;
++            interp.Exec(st);
++            String expected = "";
++            IList<Interpreter.DebugEvent> events = interp.Events;
++            String result = events.ToString();
++            Assert.AreEqual(expected, result);
++        }
+}
+}
+diff --git a/Antlr3.sln b/Antlr3.sln
+index 10b67bc..ddf8122 100644
+--- a/Antlr3.sln
++++ b/Antlr3.sln
+@@ -72,7 +72,7 @@ Global
+CategoryFile = Antlr3.vsmdi
+EndGlobalSection
+GlobalSection(SourceCodeControl) = preSolution
+-		SccNumberOfProjects = 22
++		SccNumberOfProjects = 23
+SccProjectName0 = Perforce\u0020Project
+SccLocalPath0 = ..\\..
+SccProvider0 = MSSCCI:Perforce\u0020SCM
+@@ -152,6 +152,9 @@ Global
+SccProjectUniqueName21 = StringTemplate4\\StringTemplate4.csproj
+SccLocalPath21 = ..\\..
+SccProjectFilePathRelativizedFromConnection21 = antlrcs\\main\\StringTemplate4\\
++		SccProjectUniqueName22 = STViz\\STViz.csproj
++		SccLocalPath22 = ..\\..
++		SccProjectFilePathRelativizedFromConnection22 = antlrcs\\main\\STViz\\
+EndGlobalSection
+GlobalSection(SolutionConfigurationPlatforms) = preSolution
+Debug|Any CPU = Debug|Any CPU
+diff --git a/STViz/DebugEventToTemplateEnumerationConverter.cs b/STViz/DebugEventToTemplateEnumerationConverter.cs
+new file mode 100644
+index 0000000..af54354
+--- /dev/null
++++ b/STViz/DebugEventToTemplateEnumerationConverter.cs
+@@ -0,0 +1,58 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace STViz
++{
++    using System;
++    using System.Collections.Generic;
++    using System.Globalization;
++    using System.Linq;
++    using System.Windows.Data;
++    using StringTemplate;
++
++    public class DebugEventToTemplateEnumerationConverter : IValueConverter
++    {
++        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
++        {
++            IEnumerable<Interpreter.DebugEvent> events = value as IEnumerable<Interpreter.DebugEvent>;
++            if (events == null)
++                return null;
++
++            return events.Select(e => e.Template);
++        }
++
++        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
++        {
++            throw new NotImplementedException();
++        }
++    }
++}
+diff --git a/STViz/STViz.csproj b/STViz/STViz.csproj
+index f58fb82..bc621b5 100644
+--- a/STViz/STViz.csproj
++++ b/STViz/STViz.csproj
+@@ -75,6 +75,7 @@
+</Compile>
+</ItemGroup>
+<ItemGroup>
++    <Compile Include="DebugEventToTemplateEnumerationConverter.cs" />
+<Compile Include="Properties\AssemblyInfo.cs">
+<SubType>Code</SubType>
+</Compile>
+diff --git a/STViz/Window1.xaml b/STViz/Window1.xaml
+index 39eddaf..0214907 100644
+--- a/STViz/Window1.xaml
++++ b/STViz/Window1.xaml
+@@ -1,18 +1,25 @@
+﻿<Window x:Class="STViz.Window1"
+xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
++    xmlns:stviz="clr-namespace:STViz"
+Title="StringTemplate Visualizer" Height="522" Width="591">
+-
++
+<Window.Resources>
++        <stviz:DebugEventToTemplateEnumerationConverter x:Key="DebugEventToTemplateEnumerationConverter" />
++
+<DataTemplate x:Key="AttributeListItemTemplate">
+<TextBlock><TextBlock Text="{Binding Key}" /><Run> = </Run><TextBlock Text="{Binding Value}" /></TextBlock>
+</DataTemplate>
+-
++
+<DataTemplate x:Key="TemplateStackListItemTemplate">
+<TextBlock Text="{Binding Name}" />
+</DataTemplate>
++
++        <HierarchicalDataTemplate x:Key="TemplateEventsItemTemplate" ItemsSource="{Binding Path=Events, Converter={StaticResource DebugEventToTemplateEnumerationConverter}}">
++            <TextBlock Text="{Binding Name}" />
++        </HierarchicalDataTemplate>
+</Window.Resources>
+-
++
+<DockPanel>
+<Menu Height="22" Name="menu1" VerticalAlignment="Top" DockPanel.Dock="Top">
+<MenuItem Header="File">
+@@ -23,10 +30,19 @@
+</MenuItem>
+</Menu>
+<Grid Name="grid1">
+-            <TextBox Height="159" Margin="237,0,44,69" Name="txtTemplate" VerticalAlignment="Bottom" IsReadOnly="True">Template</TextBox>
+-            <TextBox Height="140" Margin="237,21,30,0" Name="txtOutput" VerticalAlignment="Top" IsReadOnly="True">Output</TextBox>
+-            <ListBox Margin="16,21,0,224" Name="lstStack" ItemsSource="{Binding}" ItemTemplate="{StaticResource TemplateStackListItemTemplate}" HorizontalAlignment="Left" Width="201" />
+-            <ListBox Margin="24,0,0,31" Name="lstAttributes" ItemsSource="{Binding}" ItemTemplate="{StaticResource AttributeListItemTemplate}" HorizontalAlignment="Left" Width="193" Height="151" VerticalAlignment="Bottom" />
++            <TextBox Height="159" Margin="0,0,6,6" Name="txtTemplate" VerticalAlignment="Bottom" IsReadOnly="True" HorizontalAlignment="Right" Width="201">
++                <TextBox.DataContext>
++                    <Binding ElementName="lstStack" Path="SelectedItem" Mode="OneWay" />
++                    <!--<Binding ElementName="templatesTree" Path="SelectedValue" />-->
++                </TextBox.DataContext>
++                <TextBox.Text>
++                    <Binding Path="CompiledTemplate.Template" Mode="OneWay"/>
++                </TextBox.Text>
++            </TextBox>
++            <TextBox Margin="164,6,6,171" Name="txtOutput" IsReadOnly="True">Output</TextBox>
++            <ListBox Margin="6,0,0,6" Name="lstStack" DataContext="{Binding ElementName=templatesTree, Path=SelectedItem, Mode=OneWay}" ItemsSource="{Binding Path=EnclosingInstanceStack}" ItemTemplate="{StaticResource TemplateStackListItemTemplate}" HorizontalAlignment="Left" Width="152" Height="217" VerticalAlignment="Bottom" />
++            <ListBox Margin="164,0,213,6" Name="lstAttributes" DataContext="{Binding ElementName=templatesTree, Path=SelectedItem, Mode=OneWay}" ItemsSource="{Binding Path=Attributes}" ItemTemplate="{StaticResource AttributeListItemTemplate}" Height="159" VerticalAlignment="Bottom" />
++            <TreeView Margin="6,6,0,229" Name="templatesTree" ItemsSource="{Binding}" ItemTemplate="{StaticResource TemplateEventsItemTemplate}" HorizontalAlignment="Left" Width="152" />
+</Grid>
+</DockPanel>
+</Window>
+diff --git a/STViz/Window1.xaml.cs b/STViz/Window1.xaml.cs
+index 8aeffdb..b19345e 100644
+--- a/STViz/Window1.xaml.cs
++++ b/STViz/Window1.xaml.cs
+@@ -47,16 +47,33 @@ namespace STViz
+InitializeComponent();
+
+string templates =
+-                "t(x) ::= <<[<u()>]>>\n" +
+-                "u() ::= << <x> >>\n";
++                "method(type,name,args,stats) ::= <<\n" +
++                "public <type> <name>(<args:{a| int <a>}; separator=\", \">) {\n" +
++                "    <stats;separator=\"\\n\">\n" +
++                "}\n" +
++                ">>\n" +
++                "assign(a,b) ::= \"<a> = <b>;\"\n" +
++                "return(x) ::= <<return <x>;>>\n";
+
+string tmpdir = Path.GetTempPath();
+File.WriteAllText(Path.Combine(tmpdir, "t.stg"), templates);
+TemplateGroup group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
+-            Template st = group.GetInstanceOf("t");
++            Template st = group.GetInstanceOf("method");
+st.code.Dump();
+-            st.Add("x", "foo");
+-            st.Add("y", "bar");
++            st.Add("type", "float");
++            st.Add("name", "foo");
++            st.Add("args", new String[] { "x", "y", "z" });
++            Template s1 = group.GetInstanceOf("assign");
++            s1.Add("a", "x");
++            s1.Add("b", "y");
++            Template s2 = group.GetInstanceOf("assign");
++            s2.Add("a", "y");
++            s2.Add("b", "z");
++            Template s3 = group.GetInstanceOf("return");
++            s3.Add("x", "3.14159");
++            st.Add("stats", s1);
++            st.Add("stats", s2);
++            st.Add("stats", s3);
+
+StringWriter sw = new StringWriter();
+Interpreter interp = new Interpreter(group, new AutoIndentWriter(sw));
+@@ -64,31 +81,8 @@ namespace STViz
+interp.Exec(st);
+IList<Interpreter.DebugEvent> events = interp.Events;
+
+-            //STViewFrame m = new STViewFrame();
+-            //DefaultListModel stackModel = new DefaultListModel();
+-            //IList<Template> stack = st.GetEnclosingInstanceStack();
+-            //foreach (ST s in stack) stackModel.addElement(s.getName());
+-            //m.stack.setModel(stackModel);
+-            //m.stack.addListSelectionListener(
+-            //    new ListSelectionListener() {
+-            //        public void valueChanged(ListSelectionEvent e) {
+-            //            System.out.println("touched "+e.getFirstIndex());
+-            //        }
+-            //    }
+-            //);
+-
+-            //DefaultListModel attrModel = new DefaultListModel();
+-            //IDictionary<string, object> attrs = st.Attributes;
+-            //foreach (var pair in attrs)
+-            //{
+-            //    attrModel.addElement(a + " = " + attrs.get(a));
+-            //}
+-            //m.attributes.setModel(attrModel);
+-
+-            lstStack.DataContext = st.GetEnclosingInstanceStack();
+-            lstAttributes.DataContext = st.Attributes;
++            templatesTree.Items.Add(st);
+txtOutput.Text = sw.ToString();
+-            txtTemplate.Text = st.code.template;
+}
+}
+}
+diff --git a/StringTemplate4/CompiledTemplate.cs b/StringTemplate4/CompiledTemplate.cs
+index 5dbdf74..6255f80 100644
+--- a/StringTemplate4/CompiledTemplate.cs
++++ b/StringTemplate4/CompiledTemplate.cs
+@@ -44,6 +44,10 @@ namespace StringTemplate
+*/
+public string template;
+
++        // for subtemplates:
++        public int embeddedStart = -1;
++        public int embeddedStop = -1;
++
+protected internal IDictionary<string, FormalArgument> formalArguments;
+
+protected internal List<CompiledTemplate> implicitlyDefinedTemplates;
+@@ -73,6 +77,17 @@ namespace StringTemplate
+public byte[] instrs;        // byte-addressable code memory.
+public int codeSize;
+
++        public string Template
++        {
++            get
++            {
++                if (embeddedStart >= 0)
++                    return template.Substring(embeddedStart, embeddedStop - embeddedStart);
++
++                return template;
++            }
++        }
++
+public virtual string Instructions()
+{
+var disassembler = new BytecodeDisassembler(instrs, codeSize, strings);
+diff --git a/StringTemplate4/Compiler.cs b/StringTemplate4/Compiler.cs
+index a044130..32af889 100644
+--- a/StringTemplate4/Compiler.cs
++++ b/StringTemplate4/Compiler.cs
+@@ -226,12 +226,27 @@ namespace StringTemplate
+{
+subtemplateCount++;
+string name = templatePathPrefix + "_sub" + subtemplateCount;
++            ITokenSource tokenSource = input.TokenSource;
++            TemplateLexer lexer = tokenSource as TemplateLexer;
++            int start = -1;
++            int stop = -1;
++            if (tokenSource != null)
++                start = lexer.input.Index;
+Compiler c = new Compiler(templatePathPrefix, enclosingTemplateName);
+CompiledTemplate sub = c.Compile(input, state);
++            sub.name = name;
++            if (lexer != null)
++            {
++                stop = lexer.input.Index;
++                //sub.template = lexer.input.Substring(start, stop - start - 1);
++                Console.WriteLine(start + ".." + stop);
++                sub.embeddedStart = start;
++                sub.embeddedStop = stop - 1;
++                sub.template = lexer.input.Substring(0, lexer.input.Count - 1);
++            }
+if (code.implicitlyDefinedTemplates == null)
+code.implicitlyDefinedTemplates = new List<CompiledTemplate>();
+code.implicitlyDefinedTemplates.Add(sub);
+-            sub.name = name;
+if (argIDs != null)
+{
+sub.formalArguments = new Dictionary<string, FormalArgument>();
+diff --git a/StringTemplate4/Interpreter.cs b/StringTemplate4/Interpreter.cs
+index f6c30e2..4795dcc 100644
+--- a/StringTemplate4/Interpreter.cs
++++ b/StringTemplate4/Interpreter.cs
+@@ -402,6 +402,8 @@ namespace StringTemplate
+if (debug)
+{
+events.Add(new EvalTemplateEvent(self, start, @out.Index));
++                if (self.enclosingInstance != null)
++                    self.enclosingInstance.events.Add(new EvalTemplateEvent(self, start, @out.Index));
+}
+
+return n;
+@@ -413,7 +415,10 @@ namespace StringTemplate
+int n = WriteObject(@out, self, o, (string[])null);
+
+if (debug)
++            {
+events.Add(new EvalExprEvent(self, start, @out.Index, exprStart, exprStop));
++                //self.events.Add(new EvalExprEvent(self, start, @out.Index, exprStart, exprStop));
++            }
+
+return n;
+}
+@@ -441,7 +446,10 @@ namespace StringTemplate
+@out.PopAnchorPoint();
+
+if (debug)
++            {
+events.Add(new EvalTemplateEvent(self, start, @out.Index));
++                //self.events.Add(new EvalTemplateEvent(self, start, @out.Index));
++            }
+
+return n;
+}
+@@ -1159,21 +1167,26 @@ namespace StringTemplate
+
+public class DebugEvent
+{
+-            protected Template self;
+// output location
+protected int start;
+protected int stop;
+
+public DebugEvent(Template self, int start, int stop)
+{
+-                this.self = self;
++                this.Template = self;
+this.start = start;
+this.stop = stop;
+}
+
++            public Template Template
++            {
++                get;
++                private set;
++            }
++
+public override string ToString()
+{
+-                return string.Format("{0}{{self={1},attr={2},start={3},stop={4}}}", GetType().Name, self, self.attributes, start, stop);
++                return string.Format("{0}{{self={1},attr={2},start={3},stop={4}}}", GetType().Name, Template, Template.Attributes, start, stop);
+}
+}
+
+@@ -1202,7 +1215,7 @@ namespace StringTemplate
+
+public override string ToString()
+{
+-                return string.Format("{0}{{self={1},attr={2},start={3},stop={4},expr={5}}}", GetType().Name, self, self.attributes, start, stop, expr);
++                return string.Format("{0}{{self={1},attr={2},start={3},stop={4},expr={5}}}", GetType().Name, Template, Template.Attributes, start, stop, expr);
+}
+}
+}
+diff --git a/StringTemplate4/Template.cs b/StringTemplate4/Template.cs
+index 530d9ca..9909de9 100644
+--- a/StringTemplate4/Template.cs
++++ b/StringTemplate4/Template.cs
+@@ -42,6 +42,7 @@ namespace StringTemplate
+using IOException = System.IO.IOException;
+using StringBuilder = System.Text.StringBuilder;
+using StringWriter = System.IO.StringWriter;
++    using System.Diagnostics;
+
+public class Template
+{
+@@ -56,6 +57,9 @@ namespace StringTemplate
+/** Map an attribute name to its value(s). */
+internal IDictionary<string, object> attributes;
+
++        // TEMPORARY! TODO move to DebugTemplate
++        public IList<Interpreter.DebugEvent> events = new List<Interpreter.DebugEvent>();
++
+/** Enclosing instance if I'm embedded within another template.
+*  IF-subtemplates are considered embedded as well.
+*/
+@@ -116,6 +120,31 @@ namespace StringTemplate
+}
+}
+
++        public CompiledTemplate CompiledTemplate
++        {
++            get
++            {
++                return code;
++            }
++        }
++
++        [DebuggerHidden]
++        public IEnumerable<Template> EnclosingInstanceStack
++        {
++            get
++            {
++                return GetEnclosingInstanceStack(false);
++            }
++        }
++
++        public ICollection<Interpreter.DebugEvent> Events
++        {
++            get
++            {
++                return this.events;
++            }
++        }
++
+public string Name
+{
+get
+@@ -260,7 +289,7 @@ namespace StringTemplate
+*/
+public virtual string GetEnclosingInstanceStackString()
+{
+-            IList<Template> templates = GetEnclosingInstanceStack();
++            IList<Template> templates = GetEnclosingInstanceStack(true);
+StringBuilder builder = new StringBuilder();
+int i = 0;
+foreach (var st in templates)
+@@ -275,13 +304,17 @@ namespace StringTemplate
+return builder.ToString();
+}
+
+-        public IList<Template> GetEnclosingInstanceStack()
++        public IList<Template> GetEnclosingInstanceStack(bool topdown)
+{
+var stack = new List<Template>();
+Template p = this;
+while (p != null)
+{
+-                stack.Insert(0, p);
++                if (topdown)
++                    stack.Insert(0, p);
++                else
++                    stack.Add(p);
++
+p = p.enclosingInstance;
+}
+
+diff --git a/StringTemplate4/TemplateGroup.cs b/StringTemplate4/TemplateGroup.cs
+index a90ff6d..04cd611 100644
+--- a/StringTemplate4/TemplateGroup.cs
++++ b/StringTemplate4/TemplateGroup.cs
+@@ -322,6 +322,7 @@ namespace StringTemplate
+Compiler c = new Compiler(prefix, enclosingTemplateName);
+CompiledTemplate code = c.Compile(template);
+code.nativeGroup = this;
++            code.template = template;
+return code;
+}
+
+diff --git a/StringTemplate4/TemplateLexer.cs b/StringTemplate4/TemplateLexer.cs
+index c716447..09767be 100644
+--- a/StringTemplate4/TemplateLexer.cs
++++ b/StringTemplate4/TemplateLexer.cs
+@@ -118,7 +118,7 @@ namespace StringTemplate
+bool scanningInsideExpr = false;
+internal int subtemplateDepth = 0; // start out *not* in a {...} subtemplate
+
+-        ICharStream input;
++        internal ICharStream input;
+char c;        // current character
+int startCharIndex;
+int startLine;
+

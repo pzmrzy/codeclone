@@ -1,0 +1,86 @@
+commit e54f3118333e082ef0fb18ebae9cabab99cf0645
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Dec 1 11:48:00 2010 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Dec 1 11:48:00 2010 -0800
+
+(C# 3) char list labels
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7261]
+
+diff --git a/Antlr3/Tool/Grammar.cs b/Antlr3/Tool/Grammar.cs
+index 2247e9e..fbd53bf 100644
+--- a/Antlr3/Tool/Grammar.cs
++++ b/Antlr3/Tool/Grammar.cs
+@@ -2340,7 +2340,19 @@ namespace Antlr3.Tool
+Rule r = GetLocallyDefinedRule( ruleName );
+if ( r != null )
+{
+-                DefineLabel( r, label, element, LabelType.TokenList );
++                if (type == GrammarType.Lexer &&
++                     (element.Type == ANTLRParser.CHAR_LITERAL ||
++                      element.Type == ANTLRParser.BLOCK ||
++                      element.Type == ANTLRParser.NOT ||
++                      element.Type == ANTLRParser.CHAR_RANGE ||
++                      element.Type == ANTLRParser.WILDCARD))
++                {
++                    DefineLabel(r, label, element, LabelType.CharList);
++                }
++                else
++                {
++                    DefineLabel( r, label, element, LabelType.TokenList );
++                }
+}
+}
+
+diff --git a/Antlr3/Tool/LabelType.cs b/Antlr3/Tool/LabelType.cs
+index 34e3d8f..92ea6ba 100644
+--- a/Antlr3/Tool/LabelType.cs
++++ b/Antlr3/Tool/LabelType.cs
+@@ -42,6 +42,8 @@ namespace Antlr3.Tool
+TokenList,
+// used in lexer for x='a'
+Char,
++        // used in lexer for x+='a' (or x+='a'..'z', x+=~'a'...)
++        CharList,
+// Used in tree grammar x=.
+WildcardTree,
+// Used in tree grammar x+=.
+diff --git a/Antlr3/Tool/Rule.cs b/Antlr3/Tool/Rule.cs
+index 84f3bf4..5fd0618 100644
+--- a/Antlr3/Tool/Rule.cs
++++ b/Antlr3/Tool/Rule.cs
+@@ -37,6 +37,7 @@ namespace Antlr3.Tool
+using Antlr.Runtime.JavaExtensions;
+
+using ANTLRParser = Antlr3.Grammars.ANTLRParser;
++    using ArgumentException = System.ArgumentException;
+using CLSCompliant = System.CLSCompliantAttribute;
+using CodeGenerator = Antlr3.Codegen.CodeGenerator;
+using CommonToken = Antlr.Runtime.CommonToken;
+@@ -109,6 +110,9 @@ namespace Antlr3.Tool
+/** A list of all LabelElementPair attached to single char literals like x='a' */
+public Dictionary<string, Grammar.LabelElementPair> charLabels;
+
++        /** A list of all LabelElementPair attached to char literals like x+='a' */
++        public Dictionary<string, Grammar.LabelElementPair> charListLabels;
++
+/** A list of all LabelElementPair attached to rule references like f=field */
+public Dictionary<string, Grammar.LabelElementPair> ruleLabels;
+
+@@ -351,6 +355,14 @@ namespace Antlr3.Tool
+}
+charLabels[label.Text] = pair;
+break;
++
++            case LabelType.CharList:
++                charListLabels = charListLabels ?? new Dictionary<string, Grammar.LabelElementPair>();
++                charListLabels[label.Text] = pair;
++                break;
++
++            default:
++                throw new ArgumentException(string.Format("Unexpected label type {0}.", type), "type");
+}
+}
+
+

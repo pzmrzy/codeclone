@@ -1,0 +1,2051 @@
+commit ddddd9761c91c3fc2b677efc85efb0093c6b6240
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Fri Jul 29 17:29:19 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Fri Jul 29 17:29:19 2011 -0800
+
+(C# 3) Add the Antlr3.Runtime.Visualizer project
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8936]
+
+diff --git a/Antlr3.Runtime.Visualizer/Antlr3.Runtime.Visualizer.csproj b/Antlr3.Runtime.Visualizer/Antlr3.Runtime.Visualizer.csproj
+new file mode 100644
+index 0000000..c711258
+--- /dev/null
++++ b/Antlr3.Runtime.Visualizer/Antlr3.Runtime.Visualizer.csproj
+@@ -0,0 +1,131 @@
++﻿<?xml version="1.0" encoding="utf-8"?>
++<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
++  <PropertyGroup>
++    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
++    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
++    <ProductVersion>8.0.30703</ProductVersion>
++    <SchemaVersion>2.0</SchemaVersion>
++    <ProjectGuid>{2F59DA1C-A502-440C-ABE8-240BDE2D0664}</ProjectGuid>
++    <OutputType>library</OutputType>
++    <AppDesignerFolder>Properties</AppDesignerFolder>
++    <RootNamespace>Antlr3.Runtime.Visualizer</RootNamespace>
++    <AssemblyName>Antlr3.Runtime.Visualizer</AssemblyName>
++    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
++    <FileAlignment>512</FileAlignment>
++    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
++    <WarningLevel>4</WarningLevel>
++    <SccProjectName>SAK</SccProjectName>
++    <SccLocalPath>SAK</SccLocalPath>
++    <SccAuxPath>SAK</SccAuxPath>
++    <SccProvider>SAK</SccProvider>
++  </PropertyGroup>
++  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
++    <DebugSymbols>true</DebugSymbols>
++    <DebugType>full</DebugType>
++    <Optimize>false</Optimize>
++    <OutputPath>bin\Debug\</OutputPath>
++    <DefineConstants>DEBUG;TRACE</DefineConstants>
++    <ErrorReport>prompt</ErrorReport>
++    <WarningLevel>4</WarningLevel>
++  </PropertyGroup>
++  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
++    <DebugType>pdbonly</DebugType>
++    <Optimize>true</Optimize>
++    <OutputPath>bin\Release\</OutputPath>
++    <DefineConstants>TRACE</DefineConstants>
++    <ErrorReport>prompt</ErrorReport>
++    <WarningLevel>4</WarningLevel>
++  </PropertyGroup>
++  <PropertyGroup>
++    <SignAssembly>true</SignAssembly>
++  </PropertyGroup>
++  <PropertyGroup>
++    <AssemblyOriginatorKeyFile>..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
++  </PropertyGroup>
++  <ItemGroup>
++    <Reference Include="System" />
++    <Reference Include="System.Data" />
++    <Reference Include="System.Drawing" />
++    <Reference Include="System.Windows.Forms" />
++    <Reference Include="System.Xml" />
++    <Reference Include="System.Core" />
++    <Reference Include="System.Xml.Linq" />
++    <Reference Include="System.Data.DataSetExtensions" />
++    <Reference Include="WindowsBase" />
++    <Reference Include="PresentationCore" />
++    <Reference Include="PresentationFramework" />
++    <Reference Include="WindowsFormsIntegration" />
++  </ItemGroup>
++  <ItemGroup>
++    <Compile Include="..\Antlr4.StringTemplate.Visualizer\Extensions\FlowDocumentExtensions.cs">
++      <Link>Extensions\FlowDocumentExtensions.cs</Link>
++    </Compile>
++    <Compile Include="Interval.cs" />
++    <Compile Include="RuntimeVisualizerExtensions.cs" />
++    <Compile Include="TreeViewModel.cs" />
++    <Compile Include="BaseTreeVisualizerForm.cs">
++      <SubType>Form</SubType>
++    </Compile>
++    <Compile Include="BaseTreeVisualizerForm.Designer.cs">
++      <DependentUpon>BaseTreeVisualizerForm.cs</DependentUpon>
++    </Compile>
++    <Compile Include="BaseTreeVisualizerViewControl.xaml.cs">
++      <DependentUpon>BaseTreeVisualizerViewControl.xaml</DependentUpon>
++    </Compile>
++    <Compile Include="Properties\AssemblyInfo.cs">
++      <SubType>Code</SubType>
++    </Compile>
++    <Compile Include="Properties\Resources.Designer.cs">
++      <AutoGen>True</AutoGen>
++      <DesignTime>True</DesignTime>
++      <DependentUpon>Resources.resx</DependentUpon>
++    </Compile>
++    <Compile Include="Properties\Settings.Designer.cs">
++      <AutoGen>True</AutoGen>
++      <DependentUpon>Settings.settings</DependentUpon>
++      <DesignTimeSharedInput>True</DesignTimeSharedInput>
++    </Compile>
++    <Compile Include="TokenStreamVisualizerForm.cs">
++      <SubType>Form</SubType>
++    </Compile>
++    <Compile Include="TokenStreamVisualizerForm.Designer.cs">
++      <DependentUpon>TokenStreamVisualizerForm.cs</DependentUpon>
++    </Compile>
++    <Compile Include="TreeVisualizerViewModel.cs" />
++    <EmbeddedResource Include="BaseTreeVisualizerForm.resx">
++      <DependentUpon>BaseTreeVisualizerForm.cs</DependentUpon>
++    </EmbeddedResource>
++    <EmbeddedResource Include="Properties\Resources.resx">
++      <Generator>ResXFileCodeGenerator</Generator>
++      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
++    </EmbeddedResource>
++    <EmbeddedResource Include="TokenStreamVisualizerForm.resx">
++      <DependentUpon>TokenStreamVisualizerForm.cs</DependentUpon>
++    </EmbeddedResource>
++    <None Include="Properties\Settings.settings">
++      <Generator>SettingsSingleFileGenerator</Generator>
++      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
++    </None>
++    <AppDesigner Include="Properties\" />
++  </ItemGroup>
++  <ItemGroup>
++    <Page Include="BaseTreeVisualizerViewControl.xaml">
++      <Generator>MSBuild:Compile</Generator>
++      <SubType>Designer</SubType>
++    </Page>
++  </ItemGroup>
++  <ItemGroup>
++    <ProjectReference Include="..\..\..\antlr\antlr3-main\runtime\CSharp3\Sources\Antlr3.Runtime\Antlr3.Runtime.csproj">
++      <Project>{8FDC0A87-9005-4D5A-AB75-E55CEB575559}</Project>
++      <Name>Antlr3.Runtime</Name>
++    </ProjectReference>
++  </ItemGroup>
++  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
++  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
++       Other similar extension points exist, see Microsoft.Common.targets.
++  <Target Name="BeforeBuild">
++  </Target>
++  <Target Name="AfterBuild">
++  </Target>
++  -->
++</Project>
+\ No newline at end of file
+diff --git a/Antlr3.Runtime.Visualizer/Antlr3.Runtime.Visualizer.csproj.vspscc b/Antlr3.Runtime.Visualizer/Antlr3.Runtime.Visualizer.csproj.vspscc
+new file mode 100644
+index 0000000..b6d3289
+--- /dev/null
++++ b/Antlr3.Runtime.Visualizer/Antlr3.Runtime.Visualizer.csproj.vspscc
+@@ -0,0 +1,10 @@
++﻿""
++{
++"FILE_VERSION" = "9237"
++"ENLISTMENT_CHOICE" = "NEVER"
++"PROJECT_FILE_RELATIVE_PATH" = ""
++"NUMBER_OF_EXCLUDED_FILES" = "0"
++"ORIGINAL_PROJECT_FILE_PATH" = ""
++"NUMBER_OF_NESTED_PROJECTS" = "0"
++"SOURCE_CONTROL_SETTINGS_PROVIDER" = "PROVIDER"
++}
+diff --git a/Antlr3.Runtime.Visualizer/BaseTreeVisualizerForm.Designer.cs b/Antlr3.Runtime.Visualizer/BaseTreeVisualizerForm.Designer.cs
+new file mode 100644
+index 0000000..3ff55bf
+--- /dev/null
++++ b/Antlr3.Runtime.Visualizer/BaseTreeVisualizerForm.Designer.cs
+@@ -0,0 +1,99 @@
++﻿namespace Antlr3.Runtime.Visualizer
++{
++    partial class BaseTreeVisualizerForm
++    {
++        /// <summary>
++        /// Required designer variable.
++        /// </summary>
++        private System.ComponentModel.IContainer components = null;
++
++        /// <summary>
++        /// Clean up any resources being used.
++        /// </summary>
++        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
++        protected override void Dispose( bool disposing )
++        {
++            if ( disposing && ( components != null ) )
++            {
++                components.Dispose();
++            }
++            base.Dispose( disposing );
++        }
++
++        #region Windows Form Designer generated code
++
++        /// <summary>
++        /// Required method for Designer support - do not modify
++        /// the contents of this method with the code editor.
++        /// </summary>
++        private void InitializeComponent()
++        {
++            this.elementHost1 = new System.Windows.Forms.Integration.ElementHost();
++            this.baseTreeVisualizerViewControl1 = new Antlr3.Runtime.Visualizer.BaseTreeVisualizerViewControl();
++            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
++            this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
++            this.closeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
++            this.menuStrip1.SuspendLayout();
++            this.SuspendLayout();
++            //
++            // elementHost1
++            //
++            this.elementHost1.Dock = System.Windows.Forms.DockStyle.Fill;
++            this.elementHost1.Location = new System.Drawing.Point(0, 24);
++            this.elementHost1.Name = "elementHost1";
++            this.elementHost1.Size = new System.Drawing.Size(486, 438);
++            this.elementHost1.TabIndex = 0;
++            this.elementHost1.Text = "elementHost1";
++            this.elementHost1.Child = this.baseTreeVisualizerViewControl1;
++            //
++            // menuStrip1
++            //
++            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
++            this.fileToolStripMenuItem});
++            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
++            this.menuStrip1.Name = "menuStrip1";
++            this.menuStrip1.Size = new System.Drawing.Size(486, 24);
++            this.menuStrip1.TabIndex = 1;
++            this.menuStrip1.Text = "menuStrip1";
++            //
++            // fileToolStripMenuItem
++            //
++            this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
++            this.closeToolStripMenuItem});
++            this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
++            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
++            this.fileToolStripMenuItem.Text = "File";
++            //
++            // closeToolStripMenuItem
++            //
++            this.closeToolStripMenuItem.Name = "closeToolStripMenuItem";
++            this.closeToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
++            this.closeToolStripMenuItem.Text = "Close";
++            this.closeToolStripMenuItem.Click += new System.EventHandler(this.closeToolStripMenuItem_Click);
++            //
++            // BaseTreeVisualizerForm
++            //
++            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
++            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
++            this.ClientSize = new System.Drawing.Size(486, 462);
++            this.Controls.Add(this.elementHost1);
++            this.Controls.Add(this.menuStrip1);
++            this.MainMenuStrip = this.menuStrip1;
++            this.Name = "BaseTreeVisualizerForm";
++            this.Text = "Tree Visualizer";
++            this.menuStrip1.ResumeLayout(false);
++            this.menuStrip1.PerformLayout();
++            this.ResumeLayout(false);
++            this.PerformLayout();
++
++        }
++
++        #endregion
++
++        private System.Windows.Forms.Integration.ElementHost elementHost1;
++        private BaseTreeVisualizerViewControl baseTreeVisualizerViewControl1;
++        private System.Windows.Forms.MenuStrip menuStrip1;
++        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
++        private System.Windows.Forms.ToolStripMenuItem closeToolStripMenuItem;
++    }
++}
+\ No newline at end of file
+diff --git a/Antlr3.Runtime.Visualizer/BaseTreeVisualizerForm.cs b/Antlr3.Runtime.Visualizer/BaseTreeVisualizerForm.cs
+new file mode 100644
+index 0000000..80919d3
+--- /dev/null
++++ b/Antlr3.Runtime.Visualizer/BaseTreeVisualizerForm.cs
+@@ -0,0 +1,76 @@
++﻿/*
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2011 Sam Harwell, Tunnel Vision Laboratories, LLC
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace Antlr3.Runtime.Visualizer
++{
++    using ArgumentNullException = System.ArgumentNullException;
++    using EventArgs = System.EventArgs;
++    using Form = System.Windows.Forms.Form;
++    using ITokenStream = Antlr.Runtime.ITokenStream;
++    using ITreeAdaptor = Antlr.Runtime.Tree.ITreeAdaptor;
++
++    public partial class BaseTreeVisualizerForm : Form
++    {
++        public BaseTreeVisualizerForm(ITreeAdaptor adaptor, object tree)
++            : this(adaptor, tree, null, null)
++        {
++        }
++
++        public BaseTreeVisualizerForm(ITreeAdaptor adaptor, object tree, ITokenStream tokenStream)
++            : this(adaptor, tree, tokenStream, null)
++        {
++        }
++
++        public BaseTreeVisualizerForm(ITreeAdaptor adaptor, object tree, string sourceText)
++            : this(adaptor, tree, null, sourceText)
++        {
++        }
++
++        public BaseTreeVisualizerForm(ITreeAdaptor adaptor, object tree, ITokenStream tokenStream, string sourceText)
++        {
++            if (adaptor == null)
++                throw new ArgumentNullException("adaptor");
++            if (tree == null)
++                throw new ArgumentNullException("tree");
++
++            InitializeComponent();
++
++            TreeVisualizerViewModel viewModel = new TreeVisualizerViewModel(adaptor, tree, tokenStream, sourceText);
++            ((BaseTreeVisualizerViewControl)elementHost1.Child).ViewModel = viewModel;
++        }
++
++        private void closeToolStripMenuItem_Click(object sender, EventArgs e)
++        {
++            Close();
++        }
++    }
++}
+diff --git a/Antlr3.Runtime.Visualizer/BaseTreeVisualizerForm.resx b/Antlr3.Runtime.Visualizer/BaseTreeVisualizerForm.resx
+new file mode 100644
+index 0000000..541af56
+--- /dev/null
++++ b/Antlr3.Runtime.Visualizer/BaseTreeVisualizerForm.resx
+@@ -0,0 +1,123 @@
++<?xml version="1.0" encoding="utf-8"?>
++<root>
++  <!--
++    Microsoft ResX Schema
++
++    Version 2.0
++
++    The primary goals of this format is to allow a simple XML format
++    that is mostly human readable. The generation and parsing of the
++    various data types are done through the TypeConverter classes
++    associated with the data types.
++
++    Example:
++
++    ... ado.net/XML headers & schema ...
++    <resheader name="resmimetype">text/microsoft-resx</resheader>
++    <resheader name="version">2.0</resheader>
++    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
++    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
++    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
++    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
++    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
++        <value>[base64 mime encoded serialized .NET Framework object]</value>
++    </data>
++    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
++        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
++        <comment>This is a comment</comment>
++    </data>
++
++    There are any number of "resheader" rows that contain simple
++    name/value pairs.
++
++    Each data row contains a name, and value. The row also contains a
++    type or mimetype. Type corresponds to a .NET class that support
++    text/value conversion through the TypeConverter architecture.
++    Classes that don't support this are serialized and stored with the
++    mimetype set.
++
++    The mimetype is used for serialized objects, and tells the
++    ResXResourceReader how to depersist the object. This is currently not
++    extensible. For a given mimetype the value must be set accordingly:
++
++    Note - application/x-microsoft.net.object.binary.base64 is the format
++    that the ResXResourceWriter will generate, however the reader can
++    read any of the formats listed below.
++
++    mimetype: application/x-microsoft.net.object.binary.base64
++    value   : The object must be serialized with
++            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
++            : and then encoded with base64 encoding.
++
++    mimetype: application/x-microsoft.net.object.soap.base64
++    value   : The object must be serialized with
++            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
++            : and then encoded with base64 encoding.
++
++    mimetype: application/x-microsoft.net.object.bytearray.base64
++    value   : The object must be serialized into a byte array
++            : using a System.ComponentModel.TypeConverter
++            : and then encoded with base64 encoding.
++    -->
++  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
++    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
++    <xsd:element name="root" msdata:IsDataSet="true">
++      <xsd:complexType>
++        <xsd:choice maxOccurs="unbounded">
++          <xsd:element name="metadata">
++            <xsd:complexType>
++              <xsd:sequence>
++                <xsd:element name="value" type="xsd:string" minOccurs="0" />
++              </xsd:sequence>
++              <xsd:attribute name="name" use="required" type="xsd:string" />
++              <xsd:attribute name="type" type="xsd:string" />
++              <xsd:attribute name="mimetype" type="xsd:string" />
++              <xsd:attribute ref="xml:space" />
++            </xsd:complexType>
++          </xsd:element>
++          <xsd:element name="assembly">
++            <xsd:complexType>
++              <xsd:attribute name="alias" type="xsd:string" />
++              <xsd:attribute name="name" type="xsd:string" />
++            </xsd:complexType>
++          </xsd:element>
++          <xsd:element name="data">
++            <xsd:complexType>
++              <xsd:sequence>
++                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
++                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
++              </xsd:sequence>
++              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
++              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
++              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
++              <xsd:attribute ref="xml:space" />
++            </xsd:complexType>
++          </xsd:element>
++          <xsd:element name="resheader">
++            <xsd:complexType>
++              <xsd:sequence>
++                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
++              </xsd:sequence>
++              <xsd:attribute name="name" type="xsd:string" use="required" />
++            </xsd:complexType>
++          </xsd:element>
++        </xsd:choice>
++      </xsd:complexType>
++    </xsd:element>
++  </xsd:schema>
++  <resheader name="resmimetype">
++    <value>text/microsoft-resx</value>
++  </resheader>
++  <resheader name="version">
++    <value>2.0</value>
++  </resheader>
++  <resheader name="reader">
++    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
++  </resheader>
++  <resheader name="writer">
++    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
++  </resheader>
++  <metadata name="menuStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
++    <value>17, 17</value>
++  </metadata>
++</root>
+\ No newline at end of file
+diff --git a/Antlr3.Runtime.Visualizer/BaseTreeVisualizerViewControl.xaml b/Antlr3.Runtime.Visualizer/BaseTreeVisualizerViewControl.xaml
+new file mode 100644
+index 0000000..579b879
+--- /dev/null
++++ b/Antlr3.Runtime.Visualizer/BaseTreeVisualizerViewControl.xaml
+@@ -0,0 +1,61 @@
++﻿<!--
++  [The "BSD license"]
++  Copyright (c) 2011 Terence Parr
++  All rights reserved.
++
++  Conversion to C#:
++  Copyright (c) 2011 Sam Harwell, Tunnel Vision Laboratories, LLC
++  All rights reserved.
++
++  Redistribution and use in source and binary forms, with or without
++  modification, are permitted provided that the following conditions
++  are met:
++  1. Redistributions of source code must retain the above copyright
++     notice, this list of conditions and the following disclaimer.
++  2. Redistributions in binary form must reproduce the above copyright
++     notice, this list of conditions and the following disclaimer in the
++     documentation and/or other materials provided with the distribution.
++  3. The name of the author may not be used to endorse or promote products
++     derived from this software without specific prior written permission.
++
++  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ -->
++<UserControl x:Class="Antlr3.Runtime.Visualizer.BaseTreeVisualizerViewControl"
++             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
++             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
++             Height="300" Width="300">
++    <UserControl.Resources>
++        <HierarchicalDataTemplate x:Key="astItemTemplate"
++                                  x:Name="astItemTemplate"
++                                  ItemsSource="{Binding Path=Children}">
++            <StackPanel Orientation="Horizontal">
++                <TextBlock VerticalAlignment="Center" Width="Auto" Height="Auto" Text="{Binding Path=Text, Mode=OneTime}" HorizontalAlignment="Left"/>
++            </StackPanel>
++        </HierarchicalDataTemplate>
++    </UserControl.Resources>
++    <Grid>
++        <Grid.ColumnDefinitions>
++            <ColumnDefinition />
++            <ColumnDefinition Width="Auto" />
++            <ColumnDefinition />
++        </Grid.ColumnDefinitions>
++
++        <TreeView Name="AstTreeView" Grid.Column="0" Grid.ColumnSpan="1"
++                  ItemTemplate="{StaticResource astItemTemplate}"
++                  ItemsSource="{Binding Path=TreeViewModel.Children}"
++                  SelectedItemChanged="HandleAstTreeViewSelectedItemChanged" />
++
++        <GridSplitter Width="5" Grid.Column="1" Grid.ColumnSpan="1" ResizeBehavior="PreviousAndNext" />
++
++        <RichTextBox Grid.Column="2" Grid.ColumnSpan="1" Name="SourceTextBox" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" />
++    </Grid>
++</UserControl>
+diff --git a/Antlr3.Runtime.Visualizer/BaseTreeVisualizerViewControl.xaml.cs b/Antlr3.Runtime.Visualizer/BaseTreeVisualizerViewControl.xaml.cs
+new file mode 100644
+index 0000000..28d52c9
+--- /dev/null
++++ b/Antlr3.Runtime.Visualizer/BaseTreeVisualizerViewControl.xaml.cs
+@@ -0,0 +1,135 @@
++﻿/*
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2011 Sam Harwell, Tunnel Vision Laboratories, LLC
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace Antlr3.Runtime.Visualizer
++{
++    using System.Windows.Controls;
++    using System.Windows;
++    using Antlr.Runtime;
++    using Antlr.Runtime.Tree;
++    using System.Windows.Documents;
++    using System;
++    using Antlr4.StringTemplate.Visualizer.Extensions;
++    using System.Windows.Media;
++
++    public partial class BaseTreeVisualizerViewControl : UserControl
++    {
++        public BaseTreeVisualizerViewControl()
++        {
++            InitializeComponent();
++        }
++
++        public TreeVisualizerViewModel ViewModel
++        {
++            get
++            {
++                return DataContext as TreeVisualizerViewModel;
++            }
++
++            set
++            {
++                DataContext = value;
++            }
++        }
++
++        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
++        {
++            if (e.Property == DataContextProperty)
++            {
++                var viewModel = ViewModel;
++                if (viewModel == null)
++                    return;
++
++                SourceTextBox.Document = new FlowDocument(new Paragraph(new Run(viewModel.SourceText)
++                {
++                    FontFamily = new FontFamily("Consolas")
++                }));
++            }
++
++            base.OnPropertyChanged(e);
++        }
++
++        private void HandleAstTreeViewSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
++        {
++            TreeVisualizerViewModel viewModel = ViewModel;
++            if (viewModel == null)
++            {
++                Highlight(SourceTextBox.Document, null);
++                return;
++            }
++
++            TreeViewModel node = AstTreeView.SelectedItem as TreeViewModel;
++            if (node == null)
++            {
++                Highlight(SourceTextBox.Document, null);
++                return;
++            }
++
++            IToken a = viewModel.GetToken(node.Adaptor.GetTokenStartIndex(node.Tree));
++            IToken b = viewModel.GetToken(node.Adaptor.GetTokenStopIndex(node.Tree));
++            if (a == null || b == null)
++            {
++                Highlight(SourceTextBox.Document, null);
++                return;
++            }
++
++            Highlight(SourceTextBox.Document, Interval.FromBounds(a.StartIndex, b.StopIndex + 1));
++        }
++
++        private static TextPointer Highlight(FlowDocument document, Interval interval)
++        {
++            if (document == null)
++                throw new ArgumentNullException("document");
++
++            TextPointer contentStart = document.ContentStart;
++
++            // clear any existing highlight
++            TextRange documentRange = new TextRange(document.ContentStart, document.ContentEnd);
++            documentRange.ApplyPropertyValue(FlowDocument.BackgroundProperty, FlowDocument.BackgroundProperty.DefaultMetadata.DefaultValue);
++
++            if (interval == null)
++                return null;
++
++            // highlight the new text
++            int startOffset = interval.Start;
++            int endOffset = interval.End;
++            TextPointer highlightStart = document.GetPointerFromCharOffset(ref startOffset);
++            TextPointer highlightStop = document.GetPointerFromCharOffset(ref endOffset);
++            if (startOffset != 0 || endOffset != 0)
++                return null;
++
++            var textRange = new TextRange(highlightStart, highlightStop);
++            textRange.ApplyPropertyValue(FlowDocument.BackgroundProperty, Brushes.Yellow);
++            return textRange.Start;
++        }
++    }
++}
+diff --git a/Antlr3.Runtime.Visualizer/Interval.cs b/Antlr3.Runtime.Visualizer/Interval.cs
+new file mode 100644
+index 0000000..5931a17
+--- /dev/null
++++ b/Antlr3.Runtime.Visualizer/Interval.cs
+@@ -0,0 +1,173 @@
++﻿/*
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2011 Sam Harwell, Tunnel Vision Laboratories, LLC
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace Antlr3.Runtime.Visualizer
++{
++    using System.Diagnostics;
++    using ArgumentNullException = System.ArgumentNullException;
++    using ArgumentOutOfRangeException = System.ArgumentOutOfRangeException;
++
++    /// <summary>
++    /// Represents a range.
++    /// </summary>
++    /// <remarks>
++    /// This structure represents an immutable integer interval that describes a range of values, from Start to End.
++    /// It is closed on the left and open on the right: [Start .. End). In the context of a Template it represents a
++    /// span of text, but the Interval structure itself is independent of any particular text.
++    /// </remarks>
++    [DebuggerDisplay("[{Start}..{End})")]
++    internal sealed class Interval
++    {
++        private readonly int _start;
++        private readonly int _length;
++
++        /// <summary>
++        /// Initializes a new instance of an Interval with the given start point and length.
++        /// </summary>
++        /// <param name="start">The starting point of the interval.</param>
++        /// <param name="length">The length of the interval.</param>
++        /// <exception cref="System.ArgumentOutOfRangeException">
++        /// <paramref name="start"/> or <paramref name="length"/> is less than zero.
++        /// </exception>
++        public Interval(int start, int length)
++        {
++            if (start < 0)
++                throw new ArgumentOutOfRangeException("start");
++            if (length < 0)
++                throw new ArgumentOutOfRangeException("length");
++
++            this._start = start;
++            this._length = length;
++        }
++
++        /// <summary>
++        /// Gets the starting index of the span.
++        /// </summary>
++        /// <value>
++        /// The starting index of the span.
++        /// </value>
++        public int Start
++        {
++            get
++            {
++                return _start;
++            }
++        }
++
++        /// <summary>
++        /// Gets the end of the interval.
++        /// </summary>
++        /// <remarks>
++        /// The interval is open-ended on the right side, so that Start + Length = End.
++        /// </remarks>
++        public int End
++        {
++            get
++            {
++                return _start + _length;
++            }
++        }
++
++        /// <summary>
++        /// Gets the length of the interval, which is always non-negative.
++        /// </summary>
++        /// <value>
++        /// The length of the interval, which is always non-negative.
++        /// </value>
++        public int Length
++        {
++            get
++            {
++                return _length;
++            }
++        }
++
++        /// <summary>
++        /// Determines whether or not this interval is empty.
++        /// </summary>
++        /// <value>
++        /// true if the length of the interval is zero, otherwise false.
++        /// </value>
++        public bool IsEmpty
++        {
++            get
++            {
++                return _length == 0;
++            }
++        }
++
++        /// <summary>
++        /// Initializes a new instance of an Interval with the given start and end positions.
++        /// </summary>
++        /// <param name="start">The start position of the new interval.</param>
++        /// <param name="end">The end position of the new interval.</param>
++        /// <returns>The new interval.</returns>
++        /// <exception cref="System.ArgumentOutOfRangeException"><paramref name="start"/> is less than 0, or <paramref name="end"/> is less than <paramref name="start"/>.</exception>
++        public static Interval FromBounds(int start, int end)
++        {
++            if (start < 0)
++                throw new ArgumentOutOfRangeException("start");
++            if (end < 0)
++                throw new ArgumentOutOfRangeException("end");
++
++            return new Interval(start, end - start);
++        }
++
++        /// <summary>
++        /// Determines whether the position lies within the interval.
++        /// </summary>
++        /// <param name="position">The position to check.</param>
++        /// <returns>true if the position is greater than or equal to Start and less than End, otherwise false.</returns>
++        public bool Contains(int position)
++        {
++            return position >= Start && position < End;
++        }
++
++        /// <summary>
++        /// Determines whether the specified interval falls completely within this interval.
++        /// </summary>
++        /// <param name="interval">The interval to check.</param>
++        /// <returns>true if the specified interval falls completely within this interval, otherwise false.</returns>
++        public bool Contains(Interval interval)
++        {
++            if (interval == null)
++                throw new ArgumentNullException("interval");
++
++            return interval.Start >= this.Start && interval.End <= this.End;
++        }
++
++        public override string ToString()
++        {
++            return string.Format("[{0}..{1})", Start, End);
++        }
++    }
++}
+diff --git a/Antlr3.Runtime.Visualizer/Properties/AssemblyInfo.cs b/Antlr3.Runtime.Visualizer/Properties/AssemblyInfo.cs
+new file mode 100644
+index 0000000..ecd45b3
+--- /dev/null
++++ b/Antlr3.Runtime.Visualizer/Properties/AssemblyInfo.cs
+@@ -0,0 +1,87 @@
++﻿/*
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2011 Sam Harwell, Tunnel Vision Laboratories, LLC
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++using System;
++using System.Reflection;
++using System.Runtime.InteropServices;
++using System.Windows;
++
++// General Information about an assembly is controlled through the following
++// set of attributes. Change these attribute values to modify the information
++// associated with an assembly.
++[assembly: AssemblyTitle("Antlr3.Runtime.Visualizer")]
++[assembly: AssemblyDescription("")]
++[assembly: AssemblyConfiguration("")]
++[assembly: AssemblyCompany("Tunnel Vision Laboratories, LLC")]
++[assembly: AssemblyProduct("Antlr3.Runtime.Visualizer")]
++[assembly: AssemblyCopyright("Copyright © Sam Harwell 2011")]
++[assembly: AssemblyTrademark("")]
++[assembly: AssemblyCulture("")]
++[assembly: CLSCompliant(true)]
++
++// Setting ComVisible to false makes the types in this assembly not visible
++// to COM components.  If you need to access a type in this assembly from
++// COM, set the ComVisible attribute to true on that type.
++[assembly: ComVisible(false)]
++
++//In order to begin building localizable applications, set
++//<UICulture>CultureYouAreCodingWith</UICulture> in your .csproj file
++//inside a <PropertyGroup>.  For example, if you are using US english
++//in your source files, set the <UICulture> to en-US.  Then uncomment
++//the NeutralResourceLanguage attribute below.  Update the "en-US" in
++//the line below to match the UICulture setting in the project file.
++
++//[assembly: NeutralResourcesLanguage("en-US", UltimateResourceFallbackLocation.Satellite)]
++
++
++[assembly: ThemeInfo(
++    ResourceDictionaryLocation.None, //where theme specific resource dictionaries are located
++    //(used if a resource is not found in the page,
++    // or application resource dictionaries)
++    ResourceDictionaryLocation.SourceAssembly //where the generic resource dictionary is located
++    //(used if a resource is not found in the page,
++    // app, or any theme specific resource dictionaries)
++)]
++
++
++// Version information for an assembly consists of the following four values:
++//
++//      Major Version
++//      Minor Version
++//      Build Number
++//      Revision
++//
++// You can specify all the values or you can default the Build and Revision Numbers
++// by using the '*' as shown below:
++// [assembly: AssemblyVersion("1.0.*")]
++[assembly: AssemblyVersion("1.0.0.0")]
++[assembly: AssemblyFileVersion("1.0.0.0")]
+diff --git a/Antlr3.Runtime.Visualizer/Properties/Resources.Designer.cs b/Antlr3.Runtime.Visualizer/Properties/Resources.Designer.cs
+new file mode 100644
+index 0000000..a53193b
+--- /dev/null
++++ b/Antlr3.Runtime.Visualizer/Properties/Resources.Designer.cs
+@@ -0,0 +1,71 @@
++﻿//------------------------------------------------------------------------------
++// <auto-generated>
++//     This code was generated by a tool.
++//     Runtime Version:4.0.30319.235
++//
++//     Changes to this file may cause incorrect behavior and will be lost if
++//     the code is regenerated.
++// </auto-generated>
++//------------------------------------------------------------------------------
++
++namespace Antlr3.Runtime.Visualizer.Properties
++{
++
++
++    /// <summary>
++    ///   A strongly-typed resource class, for looking up localized strings, etc.
++    /// </summary>
++    // This class was auto-generated by the StronglyTypedResourceBuilder
++    // class via a tool like ResGen or Visual Studio.
++    // To add or remove a member, edit your .ResX file then rerun ResGen
++    // with the /str option, or rebuild your VS project.
++    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
++    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
++    [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
++    internal class Resources
++    {
++
++        private static global::System.Resources.ResourceManager resourceMan;
++
++        private static global::System.Globalization.CultureInfo resourceCulture;
++
++        [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
++        internal Resources()
++        {
++        }
++
++        /// <summary>
++        ///   Returns the cached ResourceManager instance used by this class.
++        /// </summary>
++        [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
++        internal static global::System.Resources.ResourceManager ResourceManager
++        {
++            get
++            {
++                if ((resourceMan == null))
++                {
++                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Antlr3.Runtime.Visualizer.Properties.Resources", typeof(Resources).Assembly);
++                    resourceMan = temp;
++                }
++                return resourceMan;
++            }
++        }
++
++        /// <summary>
++        ///   Overrides the current thread's CurrentUICulture property for all
++        ///   resource lookups using this strongly typed resource class.
++        /// </summary>
++        [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
++        internal static global::System.Globalization.CultureInfo Culture
++        {
++            get
++            {
++                return resourceCulture;
++            }
++            set
++            {
++                resourceCulture = value;
++            }
++        }
++    }
++}
+diff --git a/Antlr3.Runtime.Visualizer/Properties/Resources.resx b/Antlr3.Runtime.Visualizer/Properties/Resources.resx
+new file mode 100644
+index 0000000..af7dbeb
+--- /dev/null
++++ b/Antlr3.Runtime.Visualizer/Properties/Resources.resx
+@@ -0,0 +1,117 @@
++﻿<?xml version="1.0" encoding="utf-8"?>
++<root>
++  <!--
++    Microsoft ResX Schema
++
++    Version 2.0
++
++    The primary goals of this format is to allow a simple XML format
++    that is mostly human readable. The generation and parsing of the
++    various data types are done through the TypeConverter classes
++    associated with the data types.
++
++    Example:
++
++    ... ado.net/XML headers & schema ...
++    <resheader name="resmimetype">text/microsoft-resx</resheader>
++    <resheader name="version">2.0</resheader>
++    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
++    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
++    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
++    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
++    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
++        <value>[base64 mime encoded serialized .NET Framework object]</value>
++    </data>
++    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
++        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
++        <comment>This is a comment</comment>
++    </data>
++
++    There are any number of "resheader" rows that contain simple
++    name/value pairs.
++
++    Each data row contains a name, and value. The row also contains a
++    type or mimetype. Type corresponds to a .NET class that support
++    text/value conversion through the TypeConverter architecture.
++    Classes that don't support this are serialized and stored with the
++    mimetype set.
++
++    The mimetype is used for serialized objects, and tells the
++    ResXResourceReader how to depersist the object. This is currently not
++    extensible. For a given mimetype the value must be set accordingly:
++
++    Note - application/x-microsoft.net.object.binary.base64 is the format
++    that the ResXResourceWriter will generate, however the reader can
++    read any of the formats listed below.
++
++    mimetype: application/x-microsoft.net.object.binary.base64
++    value   : The object must be serialized with
++            : System.Serialization.Formatters.Binary.BinaryFormatter
++            : and then encoded with base64 encoding.
++
++    mimetype: application/x-microsoft.net.object.soap.base64
++    value   : The object must be serialized with
++            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
++            : and then encoded with base64 encoding.
++
++    mimetype: application/x-microsoft.net.object.bytearray.base64
++    value   : The object must be serialized into a byte array
++            : using a System.ComponentModel.TypeConverter
++            : and then encoded with base64 encoding.
++    -->
++  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
++    <xsd:element name="root" msdata:IsDataSet="true">
++      <xsd:complexType>
++        <xsd:choice maxOccurs="unbounded">
++          <xsd:element name="metadata">
++            <xsd:complexType>
++              <xsd:sequence>
++                <xsd:element name="value" type="xsd:string" minOccurs="0" />
++              </xsd:sequence>
++              <xsd:attribute name="name" type="xsd:string" />
++              <xsd:attribute name="type" type="xsd:string" />
++              <xsd:attribute name="mimetype" type="xsd:string" />
++            </xsd:complexType>
++          </xsd:element>
++          <xsd:element name="assembly">
++            <xsd:complexType>
++              <xsd:attribute name="alias" type="xsd:string" />
++              <xsd:attribute name="name" type="xsd:string" />
++            </xsd:complexType>
++          </xsd:element>
++          <xsd:element name="data">
++            <xsd:complexType>
++              <xsd:sequence>
++                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
++                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
++              </xsd:sequence>
++              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
++              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
++              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
++            </xsd:complexType>
++          </xsd:element>
++          <xsd:element name="resheader">
++            <xsd:complexType>
++              <xsd:sequence>
++                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
++              </xsd:sequence>
++              <xsd:attribute name="name" type="xsd:string" use="required" />
++            </xsd:complexType>
++          </xsd:element>
++        </xsd:choice>
++      </xsd:complexType>
++    </xsd:element>
++  </xsd:schema>
++  <resheader name="resmimetype">
++    <value>text/microsoft-resx</value>
++  </resheader>
++  <resheader name="version">
++    <value>2.0</value>
++  </resheader>
++  <resheader name="reader">
++    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
++  </resheader>
++  <resheader name="writer">
++    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
++  </resheader>
++</root>
+\ No newline at end of file
+diff --git a/Antlr3.Runtime.Visualizer/Properties/Settings.Designer.cs b/Antlr3.Runtime.Visualizer/Properties/Settings.Designer.cs
+new file mode 100644
+index 0000000..adf72ec
+--- /dev/null
++++ b/Antlr3.Runtime.Visualizer/Properties/Settings.Designer.cs
+@@ -0,0 +1,30 @@
++﻿//------------------------------------------------------------------------------
++// <auto-generated>
++//     This code was generated by a tool.
++//     Runtime Version:4.0.30319.235
++//
++//     Changes to this file may cause incorrect behavior and will be lost if
++//     the code is regenerated.
++// </auto-generated>
++//------------------------------------------------------------------------------
++
++namespace Antlr3.Runtime.Visualizer.Properties
++{
++
++
++    [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
++    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "10.0.0.0")]
++    internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase
++    {
++
++        private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
++
++        public static Settings Default
++        {
++            get
++            {
++                return defaultInstance;
++            }
++        }
++    }
++}
+diff --git a/Antlr3.Runtime.Visualizer/Properties/Settings.settings b/Antlr3.Runtime.Visualizer/Properties/Settings.settings
+new file mode 100644
+index 0000000..033d7a5
+--- /dev/null
++++ b/Antlr3.Runtime.Visualizer/Properties/Settings.settings
+@@ -0,0 +1,7 @@
++﻿<?xml version='1.0' encoding='utf-8'?>
++<SettingsFile xmlns="uri:settings" CurrentProfile="(Default)">
++  <Profiles>
++    <Profile Name="(Default)" />
++  </Profiles>
++  <Settings />
++</SettingsFile>
+\ No newline at end of file
+diff --git a/Antlr3.Runtime.Visualizer/RuntimeVisualizerExtensions.cs b/Antlr3.Runtime.Visualizer/RuntimeVisualizerExtensions.cs
+new file mode 100644
+index 0000000..6bd1df3
+--- /dev/null
++++ b/Antlr3.Runtime.Visualizer/RuntimeVisualizerExtensions.cs
+@@ -0,0 +1,114 @@
++﻿/*
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2011 Sam Harwell, Tunnel Vision Laboratories, LLC
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace Antlr3.Runtime.Visualizer
++{
++    using ArgumentNullException = System.ArgumentNullException;
++    using CommonTreeAdaptor = Antlr.Runtime.Tree.CommonTreeAdaptor;
++    using ITokenStream = Antlr.Runtime.ITokenStream;
++    using ITree = Antlr.Runtime.Tree.ITree;
++    using ITreeAdaptor = Antlr.Runtime.Tree.ITreeAdaptor;
++    using IWin32Window = System.Windows.Forms.IWin32Window;
++
++    public static class RuntimeVisualizerExtensions
++    {
++        public static void Visualize(this ITree tree)
++        {
++            Visualize(new CommonTreeAdaptor(), tree, default(ITokenStream));
++        }
++
++        public static void Visualize(this ITree tree, ITokenStream tokenStream)
++        {
++            Visualize(new CommonTreeAdaptor(), tree, tokenStream);
++        }
++
++        public static void Visualize(this ITree tree, IWin32Window owner)
++        {
++            Visualize(new CommonTreeAdaptor(), tree, null, owner);
++        }
++
++        public static void Visualize(this ITree tree, ITokenStream tokenStream, IWin32Window owner)
++        {
++            Visualize(new CommonTreeAdaptor(), tree, tokenStream, owner);
++        }
++
++        public static void Visualize(this ITreeAdaptor treeAdaptor, object tree)
++        {
++            Visualize(treeAdaptor, tree, default(ITokenStream));
++        }
++
++        public static void Visualize(this ITreeAdaptor treeAdaptor, object tree, ITokenStream tokenStream)
++        {
++            if (treeAdaptor == null)
++                throw new ArgumentNullException("treeAdaptor");
++            if (tree == null)
++                throw new ArgumentNullException("tree");
++
++            BaseTreeVisualizerForm visualizer = new BaseTreeVisualizerForm(treeAdaptor, tree, tokenStream);
++            visualizer.ShowDialog();
++        }
++
++        public static void Visualize(this ITreeAdaptor treeAdaptor, object tree, IWin32Window owner)
++        {
++            Visualize(treeAdaptor, tree, null, owner);
++        }
++
++        public static void Visualize(this ITreeAdaptor treeAdaptor, object tree, ITokenStream tokenStream, IWin32Window owner)
++        {
++            if (treeAdaptor == null)
++                throw new ArgumentNullException("treeAdaptor");
++            if (tree == null)
++                throw new ArgumentNullException("tree");
++
++            BaseTreeVisualizerForm visualizer = new BaseTreeVisualizerForm(treeAdaptor, tree, tokenStream);
++            visualizer.ShowDialog(owner);
++        }
++
++        public static void Visualize(this ITokenStream tokenStream)
++        {
++            if (tokenStream == null)
++                throw new ArgumentNullException("tokenStream");
++
++            TokenStreamVisualizerForm visualizer = new TokenStreamVisualizerForm(tokenStream);
++            visualizer.ShowDialog();
++        }
++
++        public static void Visualize(this ITokenStream tokenStream, IWin32Window owner)
++        {
++            if (tokenStream == null)
++                throw new ArgumentNullException("tokenStream");
++
++            TokenStreamVisualizerForm visualizer = new TokenStreamVisualizerForm(tokenStream);
++            visualizer.ShowDialog(owner);
++        }
++    }
++}
+diff --git a/Antlr3.Runtime.Visualizer/TokenStreamVisualizerForm.Designer.cs b/Antlr3.Runtime.Visualizer/TokenStreamVisualizerForm.Designer.cs
+new file mode 100644
+index 0000000..d76865b
+--- /dev/null
++++ b/Antlr3.Runtime.Visualizer/TokenStreamVisualizerForm.Designer.cs
+@@ -0,0 +1,110 @@
++﻿namespace Antlr3.Runtime.Visualizer
++{
++    partial class TokenStreamVisualizerForm
++    {
++        /// <summary>
++        /// Required designer variable.
++        /// </summary>
++        private System.ComponentModel.IContainer components = null;
++
++        /// <summary>
++        /// Clean up any resources being used.
++        /// </summary>
++        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
++        protected override void Dispose( bool disposing )
++        {
++            if ( disposing && ( components != null ) )
++            {
++                components.Dispose();
++            }
++            base.Dispose( disposing );
++        }
++
++        #region Windows Form Designer generated code
++
++        /// <summary>
++        /// Required method for Designer support - do not modify
++        /// the contents of this method with the code editor.
++        /// </summary>
++        private void InitializeComponent()
++        {
++            this.listBox1 = new System.Windows.Forms.ListBox();
++            this.richTextBox1 = new System.Windows.Forms.RichTextBox();
++            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
++            this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
++            this.closeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
++            this.menuStrip1.SuspendLayout();
++            this.SuspendLayout();
++            //
++            // listBox1
++            //
++            this.listBox1.Dock = System.Windows.Forms.DockStyle.Left;
++            this.listBox1.FormattingEnabled = true;
++            this.listBox1.Location = new System.Drawing.Point(0, 24);
++            this.listBox1.Name = "listBox1";
++            this.listBox1.Size = new System.Drawing.Size(120, 242);
++            this.listBox1.TabIndex = 0;
++            this.listBox1.SelectedIndexChanged += new System.EventHandler(this.listBox1_SelectedIndexChanged);
++            //
++            // richTextBox1
++            //
++            this.richTextBox1.Dock = System.Windows.Forms.DockStyle.Fill;
++            this.richTextBox1.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
++            this.richTextBox1.Location = new System.Drawing.Point(120, 24);
++            this.richTextBox1.Name = "richTextBox1";
++            this.richTextBox1.Size = new System.Drawing.Size(172, 242);
++            this.richTextBox1.TabIndex = 1;
++            this.richTextBox1.Text = "";
++            //
++            // menuStrip1
++            //
++            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
++            this.fileToolStripMenuItem});
++            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
++            this.menuStrip1.Name = "menuStrip1";
++            this.menuStrip1.Size = new System.Drawing.Size(292, 24);
++            this.menuStrip1.TabIndex = 2;
++            this.menuStrip1.Text = "menuStrip1";
++            //
++            // fileToolStripMenuItem
++            //
++            this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
++            this.closeToolStripMenuItem});
++            this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
++            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
++            this.fileToolStripMenuItem.Text = "File";
++            //
++            // closeToolStripMenuItem
++            //
++            this.closeToolStripMenuItem.Name = "closeToolStripMenuItem";
++            this.closeToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
++            this.closeToolStripMenuItem.Text = "Close";
++            this.closeToolStripMenuItem.Click += new System.EventHandler(this.closeToolStripMenuItem_Click);
++            //
++            // TokenStreamVisualizerForm
++            //
++            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
++            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
++            this.ClientSize = new System.Drawing.Size(292, 266);
++            this.Controls.Add(this.richTextBox1);
++            this.Controls.Add(this.listBox1);
++            this.Controls.Add(this.menuStrip1);
++            this.MainMenuStrip = this.menuStrip1;
++            this.Name = "TokenStreamVisualizerForm";
++            this.Text = "Token Stream Visualizer";
++            this.menuStrip1.ResumeLayout(false);
++            this.menuStrip1.PerformLayout();
++            this.ResumeLayout(false);
++            this.PerformLayout();
++
++        }
++
++        #endregion
++
++        private System.Windows.Forms.ListBox listBox1;
++        private System.Windows.Forms.RichTextBox richTextBox1;
++        private System.Windows.Forms.MenuStrip menuStrip1;
++        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
++        private System.Windows.Forms.ToolStripMenuItem closeToolStripMenuItem;
++    }
++}
+\ No newline at end of file
+diff --git a/Antlr3.Runtime.Visualizer/TokenStreamVisualizerForm.cs b/Antlr3.Runtime.Visualizer/TokenStreamVisualizerForm.cs
+new file mode 100644
+index 0000000..db79ac9
+--- /dev/null
++++ b/Antlr3.Runtime.Visualizer/TokenStreamVisualizerForm.cs
+@@ -0,0 +1,176 @@
++﻿/*
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2011 Sam Harwell, Tunnel Vision Laboratories, LLC
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace Antlr3.Runtime.Visualizer
++{
++    using System;
++    using System.Collections.Generic;
++    using System.Linq;
++    using Antlr.Runtime;
++
++    using Color = System.Drawing.Color;
++    using Form = System.Windows.Forms.Form;
++
++    public partial class TokenStreamVisualizerForm : Form
++    {
++        private readonly ITokenStream _tokenStream;
++        private readonly IToken[] _tokens;
++        private readonly string[] _tokenNames;
++
++        public TokenStreamVisualizerForm( ITokenStream tokenStream )
++        {
++            if (tokenStream == null)
++                throw new ArgumentNullException("tokenStream");
++
++            InitializeComponent();
++
++            List<IToken> tokens = new List<IToken>();
++
++            int marker = tokenStream.Mark();
++            int currentPosition = tokenStream.Index;
++            try
++            {
++                tokenStream.Seek(0);
++                while (tokenStream.LA(1) != CharStreamConstants.EndOfFile)
++                    tokenStream.Consume();
++
++                for (int i = 0; i < tokenStream.Count; i++)
++                    tokens.Add(tokenStream.Get(i));
++            }
++            finally
++            {
++                tokenStream.Rewind(marker);
++            }
++
++            this._tokenStream = tokenStream;
++            this._tokens = tokens.ToArray();
++
++            if (tokenStream.TokenSource != null)
++                this._tokenNames = tokenStream.TokenSource.TokenNames;
++
++            this._tokenNames = this._tokenNames ?? new string[0];
++
++            UpdateTokenTypes();
++            UpdateHighlighting();
++
++            listBox1.BackColor = Color.Wheat;
++        }
++
++        private IToken[] Tokens
++        {
++            get
++            {
++                return _tokens;
++            }
++        }
++
++        private string[] TokenNames
++        {
++            get
++            {
++                return _tokenNames;
++            }
++        }
++
++        private void UpdateHighlighting()
++        {
++            Dictionary<string, string> selected = listBox1.SelectedItems.Cast<string>().ToDictionary( i => i );
++
++            int selectionStart = richTextBox1.SelectionStart;
++            int selectionLength = richTextBox1.SelectionLength;
++            bool modify = ( richTextBox1.TextLength == Tokens.Select(GetTokenText).Sum( text => text.Replace( "\r\n", "\n" ).Length ) );
++
++            if ( modify )
++            {
++                richTextBox1.SelectAll();
++                richTextBox1.SelectionBackColor = Color.White;
++            }
++            else
++            {
++                richTextBox1.Clear();
++            }
++
++            int index = 0;
++            foreach ( IToken token in Tokens )
++            {
++                string text = GetTokenText(token).Replace( "\r\n", "\n" );
++
++                if ( modify )
++                    richTextBox1.Select( index, text.Length );
++
++                if ( selected.ContainsKey( GetTokenName( token.Type ) ) )
++                    richTextBox1.SelectionBackColor = Color.Yellow;
++                else
++                    richTextBox1.SelectionBackColor = Color.White;
++
++                if ( !modify )
++                    richTextBox1.AppendText( text );
++
++                index += text.Length;
++            }
++
++            richTextBox1.Select( selectionStart, selectionLength );
++        }
++
++        private string GetTokenText(IToken token)
++        {
++            if (token.InputStream != null && token.StartIndex >= 0 && token.StopIndex < token.InputStream.Count)
++                return token.InputStream.Substring(token.StartIndex, token.StopIndex - token.StartIndex + 1);
++
++            return token.Text ?? string.Empty;
++        }
++
++        private void UpdateTokenTypes()
++        {
++            listBox1.Items.Clear();
++            listBox1.Items.AddRange( Tokens.Select( token => token.Type ).Distinct().OrderBy( i => i ).Select( i => (object)GetTokenName( i ) ).ToArray() );
++        }
++
++        private string GetTokenName(int i)
++        {
++            if ( i >= 0 && TokenNames != null && i < TokenNames.Length )
++                return TokenNames[i];
++
++            return i.ToString();
++        }
++
++        private void listBox1_SelectedIndexChanged( object sender, EventArgs e )
++        {
++            UpdateHighlighting();
++        }
++
++        private void closeToolStripMenuItem_Click( object sender, EventArgs e )
++        {
++            Close();
++        }
++    }
++}
+diff --git a/Antlr3.Runtime.Visualizer/TokenStreamVisualizerForm.resx b/Antlr3.Runtime.Visualizer/TokenStreamVisualizerForm.resx
+new file mode 100644
+index 0000000..541af56
+--- /dev/null
++++ b/Antlr3.Runtime.Visualizer/TokenStreamVisualizerForm.resx
+@@ -0,0 +1,123 @@
++<?xml version="1.0" encoding="utf-8"?>
++<root>
++  <!--
++    Microsoft ResX Schema
++
++    Version 2.0
++
++    The primary goals of this format is to allow a simple XML format
++    that is mostly human readable. The generation and parsing of the
++    various data types are done through the TypeConverter classes
++    associated with the data types.
++
++    Example:
++
++    ... ado.net/XML headers & schema ...
++    <resheader name="resmimetype">text/microsoft-resx</resheader>
++    <resheader name="version">2.0</resheader>
++    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
++    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
++    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
++    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
++    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
++        <value>[base64 mime encoded serialized .NET Framework object]</value>
++    </data>
++    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
++        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
++        <comment>This is a comment</comment>
++    </data>
++
++    There are any number of "resheader" rows that contain simple
++    name/value pairs.
++
++    Each data row contains a name, and value. The row also contains a
++    type or mimetype. Type corresponds to a .NET class that support
++    text/value conversion through the TypeConverter architecture.
++    Classes that don't support this are serialized and stored with the
++    mimetype set.
++
++    The mimetype is used for serialized objects, and tells the
++    ResXResourceReader how to depersist the object. This is currently not
++    extensible. For a given mimetype the value must be set accordingly:
++
++    Note - application/x-microsoft.net.object.binary.base64 is the format
++    that the ResXResourceWriter will generate, however the reader can
++    read any of the formats listed below.
++
++    mimetype: application/x-microsoft.net.object.binary.base64
++    value   : The object must be serialized with
++            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
++            : and then encoded with base64 encoding.
++
++    mimetype: application/x-microsoft.net.object.soap.base64
++    value   : The object must be serialized with
++            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
++            : and then encoded with base64 encoding.
++
++    mimetype: application/x-microsoft.net.object.bytearray.base64
++    value   : The object must be serialized into a byte array
++            : using a System.ComponentModel.TypeConverter
++            : and then encoded with base64 encoding.
++    -->
++  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
++    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
++    <xsd:element name="root" msdata:IsDataSet="true">
++      <xsd:complexType>
++        <xsd:choice maxOccurs="unbounded">
++          <xsd:element name="metadata">
++            <xsd:complexType>
++              <xsd:sequence>
++                <xsd:element name="value" type="xsd:string" minOccurs="0" />
++              </xsd:sequence>
++              <xsd:attribute name="name" use="required" type="xsd:string" />
++              <xsd:attribute name="type" type="xsd:string" />
++              <xsd:attribute name="mimetype" type="xsd:string" />
++              <xsd:attribute ref="xml:space" />
++            </xsd:complexType>
++          </xsd:element>
++          <xsd:element name="assembly">
++            <xsd:complexType>
++              <xsd:attribute name="alias" type="xsd:string" />
++              <xsd:attribute name="name" type="xsd:string" />
++            </xsd:complexType>
++          </xsd:element>
++          <xsd:element name="data">
++            <xsd:complexType>
++              <xsd:sequence>
++                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
++                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
++              </xsd:sequence>
++              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
++              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
++              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
++              <xsd:attribute ref="xml:space" />
++            </xsd:complexType>
++          </xsd:element>
++          <xsd:element name="resheader">
++            <xsd:complexType>
++              <xsd:sequence>
++                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
++              </xsd:sequence>
++              <xsd:attribute name="name" type="xsd:string" use="required" />
++            </xsd:complexType>
++          </xsd:element>
++        </xsd:choice>
++      </xsd:complexType>
++    </xsd:element>
++  </xsd:schema>
++  <resheader name="resmimetype">
++    <value>text/microsoft-resx</value>
++  </resheader>
++  <resheader name="version">
++    <value>2.0</value>
++  </resheader>
++  <resheader name="reader">
++    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
++  </resheader>
++  <resheader name="writer">
++    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
++  </resheader>
++  <metadata name="menuStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
++    <value>17, 17</value>
++  </metadata>
++</root>
+\ No newline at end of file
+diff --git a/Antlr3.Runtime.Visualizer/TreeViewModel.cs b/Antlr3.Runtime.Visualizer/TreeViewModel.cs
+new file mode 100644
+index 0000000..af92268
+--- /dev/null
++++ b/Antlr3.Runtime.Visualizer/TreeViewModel.cs
+@@ -0,0 +1,107 @@
++﻿/*
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2011 Sam Harwell, Tunnel Vision Laboratories, LLC
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace Antlr3.Runtime.Visualizer
++{
++    using System;
++    using System.Collections.Generic;
++    using System.Collections.ObjectModel;
++    using System.Diagnostics;
++    using Antlr.Runtime.Tree;
++
++    public class TreeViewModel
++    {
++        private readonly ITreeAdaptor _adaptor;
++        private readonly object _tree;
++        private ReadOnlyCollection<TreeViewModel> _children;
++
++        public TreeViewModel(ITreeAdaptor adaptor, object tree)
++        {
++            if (adaptor == null)
++                throw new ArgumentNullException("adaptor");
++            if (tree == null)
++                throw new ArgumentNullException("tree");
++
++            _adaptor = adaptor;
++            _tree = tree;
++        }
++
++        public ITreeAdaptor Adaptor
++        {
++            get
++            {
++                return _adaptor;
++            }
++        }
++
++        public object Tree
++        {
++            get
++            {
++                return _tree;
++            }
++        }
++
++        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
++        public ReadOnlyCollection<TreeViewModel> Children
++        {
++            get
++            {
++                if (_children == null)
++                {
++                    List<TreeViewModel> children = new List<TreeViewModel>();
++                    int count = _adaptor.GetChildCount(_tree);
++                    for (int i = 0; i < count; i++)
++                    {
++                        object child = _adaptor.GetChild(_tree, i);
++                        if (child == null)
++                            continue;
++
++                        children.Add(new TreeViewModel(_adaptor, child));
++                    }
++
++                    _children = children.AsReadOnly();
++                }
++
++                return _children;
++            }
++        }
++
++        public string Text
++        {
++            get
++            {
++                return _adaptor.GetText(_tree);
++            }
++        }
++    }
++}
+diff --git a/Antlr3.Runtime.Visualizer/TreeVisualizerViewModel.cs b/Antlr3.Runtime.Visualizer/TreeVisualizerViewModel.cs
+new file mode 100644
+index 0000000..a5d2722
+--- /dev/null
++++ b/Antlr3.Runtime.Visualizer/TreeVisualizerViewModel.cs
+@@ -0,0 +1,128 @@
++﻿/*
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2011 Sam Harwell, Tunnel Vision Laboratories, LLC
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace Antlr3.Runtime.Visualizer
++{
++    using System;
++    using Antlr.Runtime;
++    using Antlr.Runtime.Tree;
++
++    public class TreeVisualizerViewModel
++    {
++        private readonly ITreeAdaptor _adaptor;
++        private readonly object _tree;
++        private readonly TreeViewModel _treeViewModel;
++        private readonly ITokenStream _tokenStream;
++        private readonly string _sourceText;
++
++        public TreeVisualizerViewModel(ITreeAdaptor adaptor, object tree, ITokenStream tokenStream, string sourceText)
++        {
++            if (adaptor == null)
++                throw new ArgumentNullException("adaptor");
++            if (tree == null)
++                throw new ArgumentNullException("tree");
++
++            _adaptor = adaptor;
++            _tree = tree;
++            _tokenStream = tokenStream;
++            _sourceText = sourceText;
++
++            object root = adaptor.Nil();
++            adaptor.AddChild(root, tree);
++            _treeViewModel = new TreeViewModel(_adaptor, root);
++
++        }
++
++        public ITreeAdaptor Adaptor
++        {
++            get
++            {
++                return _adaptor;
++            }
++        }
++
++        public object Tree
++        {
++            get
++            {
++                return _tree;
++            }
++        }
++
++        public TreeViewModel TreeViewModel
++        {
++            get
++            {
++                return _treeViewModel;
++            }
++        }
++
++        public ITokenStream TokenStream
++        {
++            get
++            {
++                return _tokenStream;
++            }
++        }
++
++        public string SourceText
++        {
++            get
++            {
++                if (_sourceText != null)
++                    return _sourceText;
++
++                ITokenStream tokenStream = TokenStream;
++                if (tokenStream == null)
++                    return null;
++
++                Lexer lexer = tokenStream.TokenSource as Lexer;
++                if (lexer != null)
++                    return lexer.CharStream.Substring(0, lexer.CharStream.Count - 1);
++
++                return _tokenStream.ToString(0, _tokenStream.Count - 1);
++            }
++        }
++
++        public IToken GetToken(int index)
++        {
++            ITokenStream tokenStream = TokenStream;
++            if (tokenStream == null)
++                return null;
++
++            if (index < 0 || index >= tokenStream.Count)
++                return null;
++
++            return _tokenStream.Get(index);
++        }
++    }
++}
+diff --git a/Antlr3.sln b/Antlr3.sln
+index 0efb67d..5cfb474 100644
+--- a/Antlr3.sln
++++ b/Antlr3.sln
+@@ -70,12 +70,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr4.Test.StringTemplate"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr4.StringTemplate.Visualizer", "Antlr4.StringTemplate.Visualizer\Antlr4.StringTemplate.Visualizer.csproj", "{DC0A9616-0B69-4A3B-ADC7-62FCA9207B98}"
+EndProject
++Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Runtime.Visualizer", "Antlr3.Runtime.Visualizer\Antlr3.Runtime.Visualizer.csproj", "{2F59DA1C-A502-440C-ABE8-240BDE2D0664}"
++EndProject
+Global
+GlobalSection(TestCaseManagementSettings) = postSolution
+CategoryFile = Antlr3.vsmdi
+EndGlobalSection
+GlobalSection(SourceCodeControl) = preSolution
+-		SccNumberOfProjects = 24
++		SccNumberOfProjects = 25
+SccProjectName0 = Perforce\u0020Project
+SccLocalPath0 = ..\\..
+SccProvider0 = MSSCCI:Perforce\u0020SCM
+@@ -161,6 +163,9 @@ Global
+SccProjectUniqueName23 = ..\\..\\antlr\\antlr3-main\\runtime\\CSharp3\\Sources\\Antlr3.Runtime.Test\\Antlr3.Runtime.Test.csproj
+SccLocalPath23 = ..\\..
+SccProjectFilePathRelativizedFromConnection23 = antlr\\antlr3-main\\runtime\\CSharp3\\Sources\\Antlr3.Runtime.Test\\
++		SccProjectUniqueName24 = Antlr3.Runtime.Visualizer\\Antlr3.Runtime.Visualizer.csproj
++		SccLocalPath24 = ..\\..
++		SccProjectFilePathRelativizedFromConnection24 = antlrcs\\main\\Antlr3.Runtime.Visualizer\\
+EndGlobalSection
+GlobalSection(SolutionConfigurationPlatforms) = preSolution
+Debug|Any CPU = Debug|Any CPU
+@@ -259,6 +264,10 @@ Global
+{DC0A9616-0B69-4A3B-ADC7-62FCA9207B98}.Debug|Any CPU.Build.0 = Debug|Any CPU
+{DC0A9616-0B69-4A3B-ADC7-62FCA9207B98}.Release|Any CPU.ActiveCfg = Release|Any CPU
+{DC0A9616-0B69-4A3B-ADC7-62FCA9207B98}.Release|Any CPU.Build.0 = Release|Any CPU
++		{2F59DA1C-A502-440C-ABE8-240BDE2D0664}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
++		{2F59DA1C-A502-440C-ABE8-240BDE2D0664}.Debug|Any CPU.Build.0 = Debug|Any CPU
++		{2F59DA1C-A502-440C-ABE8-240BDE2D0664}.Release|Any CPU.ActiveCfg = Release|Any CPU
++		{2F59DA1C-A502-440C-ABE8-240BDE2D0664}.Release|Any CPU.Build.0 = Release|Any CPU
+EndGlobalSection
+GlobalSection(SolutionProperties) = preSolution
+HideSolutionNode = FALSE
+

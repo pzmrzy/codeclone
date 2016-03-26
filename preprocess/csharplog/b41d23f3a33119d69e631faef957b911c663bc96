@@ -1,0 +1,35 @@
+commit b41d23f3a33119d69e631faef957b911c663bc96
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sat Apr 2 19:46:13 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sat Apr 2 19:46:13 2011 -0800
+
+(C# 3) Merge 7883
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8027]
+
+diff --git a/Antlr4.StringTemplate/TemplateGroupString.cs b/Antlr4.StringTemplate/TemplateGroupString.cs
+index 9d3bdf0..45bee88 100644
+--- a/Antlr4.StringTemplate/TemplateGroupString.cs
++++ b/Antlr4.StringTemplate/TemplateGroupString.cs
+@@ -44,7 +44,6 @@ namespace Antlr4.StringTemplate
+private string sourceName;
+private string text;
+private bool alreadyLoaded = false;
+-        private CommonTokenStream tokens; // keep around for tools that display ST files
+
+public TemplateGroupString(string text)
+: this("<string>", text, '<', '>')
+@@ -100,11 +99,6 @@ namespace Antlr4.StringTemplate
+}
+}
+
+-        public virtual IList<IToken> GetTokens()
+-        {
+-            return tokens.GetTokens();
+-        }
+-
+protected override CompiledTemplate Load(string name)
+{
+if (!alreadyLoaded)
+

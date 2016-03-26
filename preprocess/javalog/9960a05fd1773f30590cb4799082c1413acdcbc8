@@ -1,0 +1,11 @@
+commit 9960a05fd1773f30590cb4799082c1413acdcbc8
+Merge: 4be10fb 7532e07
+Author:     Terence Parr <parrt@cs.usfca.edu>
+AuthorDate: Tue Jul 21 13:11:45 2015 -0700
+Commit:     Terence Parr <parrt@cs.usfca.edu>
+CommitDate: Tue Jul 21 13:11:45 2015 -0700
+
+Merge pull request #176 from afester/master
+
+Fix for antlr Cpp runtime bug #173: added const qualifier to ImplTrai…
+

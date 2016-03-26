@@ -1,0 +1,22 @@
+commit e348617acc524b2f0eb478bf940eb1552e97c000
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Wed Mar 7 08:18:44 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Wed Mar 7 08:18:44 2012 -0600
+
+Update Tool display version to 3.4.1-SNAPSHOT
+
+diff --git a/tool/src/main/java/org/antlr/Tool.java b/tool/src/main/java/org/antlr/Tool.java
+index e8de283..ee2da7a 100644
+--- a/tool/src/main/java/org/antlr/Tool.java
++++ b/tool/src/main/java/org/antlr/Tool.java
+@@ -41,7 +41,7 @@ import java.util.*;
+public class Tool {
+
+public final Properties antlrSettings = new Properties();
+-    public String VERSION = "3.4";
++    public String VERSION = "3.4.1-SNAPSHOT";
+//public static final String VERSION = "${project.version}";
+public static final String UNINITIALIZED_DIR = "<unset-dir>";
+private List<String> grammarFileNames = new ArrayList<String>();
+

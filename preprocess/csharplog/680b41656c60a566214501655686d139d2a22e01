@@ -1,0 +1,915 @@
+commit 680b41656c60a566214501655686d139d2a22e01
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Sun Jul 22 17:33:56 2012 -0500
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Sun Jul 22 17:33:56 2012 -0500
+
+Remove P4 bindings since the project is now in Git, update reference paths for new layout
+
+diff --git a/Antlr3.Runtime.Visualizer/Antlr3.Runtime.Visualizer.csproj b/Antlr3.Runtime.Visualizer/Antlr3.Runtime.Visualizer.csproj
+index c711258..6cf0f53 100644
+--- a/Antlr3.Runtime.Visualizer/Antlr3.Runtime.Visualizer.csproj
++++ b/Antlr3.Runtime.Visualizer/Antlr3.Runtime.Visualizer.csproj
+@@ -14,10 +14,6 @@
+<FileAlignment>512</FileAlignment>
+<ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+<WarningLevel>4</WarningLevel>
+-    <SccProjectName>SAK</SccProjectName>
+-    <SccLocalPath>SAK</SccLocalPath>
+-    <SccAuxPath>SAK</SccAuxPath>
+-    <SccProvider>SAK</SccProvider>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+@@ -115,7 +111,7 @@
+</Page>
+</ItemGroup>
+<ItemGroup>
+-    <ProjectReference Include="..\..\..\antlr\antlr3-main\runtime\CSharp3\Sources\Antlr3.Runtime\Antlr3.Runtime.csproj">
++    <ProjectReference Include="..\..\antlr3\runtime\CSharp3\Sources\Antlr3.Runtime\Antlr3.Runtime.csproj">
+<Project>{8FDC0A87-9005-4D5A-AB75-E55CEB575559}</Project>
+<Name>Antlr3.Runtime</Name>
+</ProjectReference>
+diff --git a/Antlr3.StringTemplate/Antlr3.StringTemplate.csproj b/Antlr3.StringTemplate/Antlr3.StringTemplate.csproj
+index 542b447..293ebd9 100644
+--- a/Antlr3.StringTemplate/Antlr3.StringTemplate.csproj
++++ b/Antlr3.StringTemplate/Antlr3.StringTemplate.csproj
+@@ -12,13 +12,6 @@
+<AssemblyName>Antlr3.StringTemplate</AssemblyName>
+<TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+<FileAlignment>512</FileAlignment>
+-    <StartupObject>
+-    </StartupObject>
+-    <SccProjectName>Perforce Project</SccProjectName>
+-    <SccLocalPath>..\..\..</SccLocalPath>
+-    <SccAuxPath>
+-    </SccAuxPath>
+-    <SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+<AssemblyOriginatorKeyFile>..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+@@ -129,7 +122,7 @@
+<Compile Include="TypeRegistry`1.cs" />
+</ItemGroup>
+<ItemGroup>
+-    <ProjectReference Include="..\..\..\antlr\antlr3-main\runtime\CSharp3\Sources\Antlr3.Runtime\Antlr3.Runtime.csproj">
++    <ProjectReference Include="..\..\antlr3\runtime\CSharp3\Sources\Antlr3.Runtime\Antlr3.Runtime.csproj">
+<Project>{8FDC0A87-9005-4D5A-AB75-E55CEB575559}</Project>
+<Name>Antlr3.Runtime</Name>
+</ProjectReference>
+diff --git a/Antlr3.Targets/Antlr3.Targets.ActionScript/Antlr3.Targets.ActionScript.csproj b/Antlr3.Targets/Antlr3.Targets.ActionScript/Antlr3.Targets.ActionScript.csproj
+index bd3b87c..7ba70d4 100644
+--- a/Antlr3.Targets/Antlr3.Targets.ActionScript/Antlr3.Targets.ActionScript.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.ActionScript/Antlr3.Targets.ActionScript.csproj
+@@ -12,11 +12,6 @@
+<AssemblyName>Antlr3.Targets.ActionScript</AssemblyName>
+<TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+<FileAlignment>512</FileAlignment>
+-    <SccProjectName>Perforce Project</SccProjectName>
+-    <SccLocalPath>..\..\..\..</SccLocalPath>
+-    <SccAuxPath>
+-    </SccAuxPath>
+-    <SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+<AssemblyOriginatorKeyFile>..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+diff --git a/Antlr3.Targets/Antlr3.Targets.C/Antlr3.Targets.C.csproj b/Antlr3.Targets/Antlr3.Targets.C/Antlr3.Targets.C.csproj
+index 4e25597..d7361cb 100644
+--- a/Antlr3.Targets/Antlr3.Targets.C/Antlr3.Targets.C.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.C/Antlr3.Targets.C.csproj
+@@ -12,11 +12,6 @@
+<AssemblyName>Antlr3.Targets.C</AssemblyName>
+<TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+<FileAlignment>512</FileAlignment>
+-    <SccProjectName>Perforce Project</SccProjectName>
+-    <SccLocalPath>..\..\..\..</SccLocalPath>
+-    <SccAuxPath>
+-    </SccAuxPath>
+-    <SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+<AssemblyOriginatorKeyFile>..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+diff --git a/Antlr3.Targets/Antlr3.Targets.CSharp2/Antlr3.Targets.CSharp2.csproj b/Antlr3.Targets/Antlr3.Targets.CSharp2/Antlr3.Targets.CSharp2.csproj
+index eb91b52..d62ca56 100644
+--- a/Antlr3.Targets/Antlr3.Targets.CSharp2/Antlr3.Targets.CSharp2.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.CSharp2/Antlr3.Targets.CSharp2.csproj
+@@ -12,11 +12,6 @@
+<AssemblyName>Antlr3.Targets.CSharp2</AssemblyName>
+<TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+<FileAlignment>512</FileAlignment>
+-    <SccProjectName>Perforce Project</SccProjectName>
+-    <SccLocalPath>..\..\..\..</SccLocalPath>
+-    <SccAuxPath>
+-    </SccAuxPath>
+-    <SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+<AssemblyOriginatorKeyFile>..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+diff --git a/Antlr3.Targets/Antlr3.Targets.CSharp3/Antlr3.Targets.CSharp3.csproj b/Antlr3.Targets/Antlr3.Targets.CSharp3/Antlr3.Targets.CSharp3.csproj
+index fafad39..d425d82 100644
+--- a/Antlr3.Targets/Antlr3.Targets.CSharp3/Antlr3.Targets.CSharp3.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.CSharp3/Antlr3.Targets.CSharp3.csproj
+@@ -12,11 +12,6 @@
+<AssemblyName>Antlr3.Targets.CSharp3</AssemblyName>
+<TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+<FileAlignment>512</FileAlignment>
+-    <SccProjectName>Perforce Project</SccProjectName>
+-    <SccLocalPath>..\..\..\..</SccLocalPath>
+-    <SccAuxPath>
+-    </SccAuxPath>
+-    <SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+<DelaySign>false</DelaySign>
+<AssemblyOriginatorKeyFile>..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+diff --git a/Antlr3.Targets/Antlr3.Targets.Cpp/Antlr3.Targets.Cpp.csproj b/Antlr3.Targets/Antlr3.Targets.Cpp/Antlr3.Targets.Cpp.csproj
+index 541ac5d..44e9d07 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Cpp/Antlr3.Targets.Cpp.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.Cpp/Antlr3.Targets.Cpp.csproj
+@@ -12,11 +12,6 @@
+<AssemblyName>Antlr3.Targets.Cpp</AssemblyName>
+<TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+<FileAlignment>512</FileAlignment>
+-    <SccProjectName>Perforce Project</SccProjectName>
+-    <SccLocalPath>..\..\..\..</SccLocalPath>
+-    <SccAuxPath>
+-    </SccAuxPath>
+-    <SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+<AssemblyOriginatorKeyFile>..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+diff --git a/Antlr3.Targets/Antlr3.Targets.Delphi/Antlr3.Targets.Delphi.csproj b/Antlr3.Targets/Antlr3.Targets.Delphi/Antlr3.Targets.Delphi.csproj
+index 184d023..1a311a0 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Delphi/Antlr3.Targets.Delphi.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.Delphi/Antlr3.Targets.Delphi.csproj
+@@ -12,11 +12,6 @@
+<AssemblyName>Antlr3.Targets.Delphi</AssemblyName>
+<TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+<FileAlignment>512</FileAlignment>
+-    <SccProjectName>Perforce Project</SccProjectName>
+-    <SccLocalPath>..\..\..\..</SccLocalPath>
+-    <SccAuxPath>
+-    </SccAuxPath>
+-    <SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+<AssemblyOriginatorKeyFile>..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+diff --git a/Antlr3.Targets/Antlr3.Targets.Java/Antlr3.Targets.Java.csproj b/Antlr3.Targets/Antlr3.Targets.Java/Antlr3.Targets.Java.csproj
+index f0cdcd7..f5e73fd 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Java/Antlr3.Targets.Java.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.Java/Antlr3.Targets.Java.csproj
+@@ -12,11 +12,6 @@
+<AssemblyName>Antlr3.Targets.Java</AssemblyName>
+<TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+<FileAlignment>512</FileAlignment>
+-    <SccProjectName>Perforce Project</SccProjectName>
+-    <SccLocalPath>..\..\..\..</SccLocalPath>
+-    <SccAuxPath>
+-    </SccAuxPath>
+-    <SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+<AssemblyOriginatorKeyFile>..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+diff --git a/Antlr3.Targets/Antlr3.Targets.JavaScript/Antlr3.Targets.JavaScript.csproj b/Antlr3.Targets/Antlr3.Targets.JavaScript/Antlr3.Targets.JavaScript.csproj
+index 1ba2256..8365b61 100644
+--- a/Antlr3.Targets/Antlr3.Targets.JavaScript/Antlr3.Targets.JavaScript.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.JavaScript/Antlr3.Targets.JavaScript.csproj
+@@ -12,11 +12,6 @@
+<AssemblyName>Antlr3.Targets.JavaScript</AssemblyName>
+<TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+<FileAlignment>512</FileAlignment>
+-    <SccProjectName>Perforce Project</SccProjectName>
+-    <SccLocalPath>..\..\..\..</SccLocalPath>
+-    <SccAuxPath>
+-    </SccAuxPath>
+-    <SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+<AssemblyOriginatorKeyFile>..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+diff --git a/Antlr3.Targets/Antlr3.Targets.ObjC/Antlr3.Targets.ObjC.csproj b/Antlr3.Targets/Antlr3.Targets.ObjC/Antlr3.Targets.ObjC.csproj
+index fdc52b6..e328212 100644
+--- a/Antlr3.Targets/Antlr3.Targets.ObjC/Antlr3.Targets.ObjC.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.ObjC/Antlr3.Targets.ObjC.csproj
+@@ -12,11 +12,6 @@
+<AssemblyName>Antlr3.Targets.ObjC</AssemblyName>
+<TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+<FileAlignment>512</FileAlignment>
+-    <SccProjectName>Perforce Project</SccProjectName>
+-    <SccLocalPath>..\..\..\..</SccLocalPath>
+-    <SccAuxPath>
+-    </SccAuxPath>
+-    <SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+<AssemblyOriginatorKeyFile>..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+diff --git a/Antlr3.Targets/Antlr3.Targets.Perl5/Antlr3.Targets.Perl5.csproj b/Antlr3.Targets/Antlr3.Targets.Perl5/Antlr3.Targets.Perl5.csproj
+index c9d5106..af6b60e 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Perl5/Antlr3.Targets.Perl5.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.Perl5/Antlr3.Targets.Perl5.csproj
+@@ -12,11 +12,6 @@
+<AssemblyName>Antlr3.Targets.Perl5</AssemblyName>
+<TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+<FileAlignment>512</FileAlignment>
+-    <SccProjectName>Perforce Project</SccProjectName>
+-    <SccLocalPath>..\..\..\..</SccLocalPath>
+-    <SccAuxPath>
+-    </SccAuxPath>
+-    <SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+<AssemblyOriginatorKeyFile>..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+diff --git a/Antlr3.Targets/Antlr3.Targets.Python/Antlr3.Targets.Python.csproj b/Antlr3.Targets/Antlr3.Targets.Python/Antlr3.Targets.Python.csproj
+index f7bd4aa..7f6a0e8 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Python/Antlr3.Targets.Python.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.Python/Antlr3.Targets.Python.csproj
+@@ -12,11 +12,6 @@
+<AssemblyName>Antlr3.Targets.Python</AssemblyName>
+<TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+<FileAlignment>512</FileAlignment>
+-    <SccProjectName>Perforce Project</SccProjectName>
+-    <SccLocalPath>..\..\..\..</SccLocalPath>
+-    <SccAuxPath>
+-    </SccAuxPath>
+-    <SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+<AssemblyOriginatorKeyFile>..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+@@ -49,7 +44,7 @@
+<Compile Include="PythonTarget.cs" />
+</ItemGroup>
+<ItemGroup>
+-    <ProjectReference Include="..\..\..\..\antlr\antlr3-main\runtime\CSharp3\Sources\Antlr3.Runtime\Antlr3.Runtime.csproj">
++    <ProjectReference Include="..\..\..\antlr3\runtime\CSharp3\Sources\Antlr3.Runtime\Antlr3.Runtime.csproj">
+<Project>{8FDC0A87-9005-4D5A-AB75-E55CEB575559}</Project>
+<Name>Antlr3.Runtime</Name>
+<Private>False</Private>
+diff --git a/Antlr3.Targets/Antlr3.Targets.Ruby/Antlr3.Targets.Ruby.csproj b/Antlr3.Targets/Antlr3.Targets.Ruby/Antlr3.Targets.Ruby.csproj
+index 46fe20a..088cbe4 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Ruby/Antlr3.Targets.Ruby.csproj
++++ b/Antlr3.Targets/Antlr3.Targets.Ruby/Antlr3.Targets.Ruby.csproj
+@@ -12,11 +12,6 @@
+<AssemblyName>Antlr3.Targets.Ruby</AssemblyName>
+<TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+<FileAlignment>512</FileAlignment>
+-    <SccProjectName>Perforce Project</SccProjectName>
+-    <SccLocalPath>..\..\..\..</SccLocalPath>
+-    <SccAuxPath>
+-    </SccAuxPath>
+-    <SccProvider>MSSCCI:Perforce SCM</SccProvider>
+<SignAssembly>true</SignAssembly>
+<AssemblyOriginatorKeyFile>..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+diff --git a/Antlr3.Test/Antlr3.Test.csproj b/Antlr3.Test/Antlr3.Test.csproj
+index 8a12065..68bc8c3 100644
+--- a/Antlr3.Test/Antlr3.Test.csproj
++++ b/Antlr3.Test/Antlr3.Test.csproj
+@@ -13,10 +13,6 @@
+<TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+<FileAlignment>512</FileAlignment>
+<ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+-    <SccProjectName>SAK</SccProjectName>
+-    <SccLocalPath>SAK</SccLocalPath>
+-    <SccAuxPath>SAK</SccAuxPath>
+-    <SccProvider>SAK</SccProvider>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+@@ -105,15 +101,15 @@
+</EmbeddedResource>
+</ItemGroup>
+<ItemGroup>
+-    <ProjectReference Include="..\..\..\antlr\antlr3-main\runtime\CSharp3\Sources\Antlr3.Runtime.Debug\Antlr3.Runtime.Debug.csproj">
++    <ProjectReference Include="..\..\antlr3\runtime\CSharp3\Sources\Antlr3.Runtime.Debug\Antlr3.Runtime.Debug.csproj">
+<Project>{5EE27A90-B023-42C9-AAF1-52B0424C5D0B}</Project>
+<Name>Antlr3.Runtime.Debug</Name>
+</ProjectReference>
+-    <ProjectReference Include="..\..\..\antlr\antlr3-main\runtime\CSharp3\Sources\Antlr3.Runtime.JavaExtensions\Antlr3.Runtime.JavaExtensions.csproj">
++    <ProjectReference Include="..\..\antlr3\runtime\CSharp3\Sources\Antlr3.Runtime.JavaExtensions\Antlr3.Runtime.JavaExtensions.csproj">
+<Project>{A7EEC557-EB14-451C-9616-B7A61F4ECE69}</Project>
+<Name>Antlr3.Runtime.JavaExtensions</Name>
+</ProjectReference>
+-    <ProjectReference Include="..\..\..\antlr\antlr3-main\runtime\CSharp3\Sources\Antlr3.Runtime\Antlr3.Runtime.csproj">
++    <ProjectReference Include="..\..\antlr3\runtime\CSharp3\Sources\Antlr3.Runtime\Antlr3.Runtime.csproj">
+<Project>{8FDC0A87-9005-4D5A-AB75-E55CEB575559}</Project>
+<Name>Antlr3.Runtime</Name>
+</ProjectReference>
+diff --git a/Antlr3.sln b/Antlr3.sln
+index 5cfb474..85bd9ae 100644
+--- a/Antlr3.sln
++++ b/Antlr3.sln
+@@ -54,13 +54,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Targets.Python", "An
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Targets.Ruby", "Antlr3.Targets\Antlr3.Targets.Ruby\Antlr3.Targets.Ruby.csproj", "{64418260-E75A-4556-BB7E-8BDAAFC2EFB9}"
+EndProject
+-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Runtime", "..\..\antlr\antlr3-main\runtime\CSharp3\Sources\Antlr3.Runtime\Antlr3.Runtime.csproj", "{8FDC0A87-9005-4D5A-AB75-E55CEB575559}"
++Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Runtime", "..\antlr3\runtime\CSharp3\Sources\Antlr3.Runtime\Antlr3.Runtime.csproj", "{8FDC0A87-9005-4D5A-AB75-E55CEB575559}"
+EndProject
+-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Runtime.Debug", "..\..\antlr\antlr3-main\runtime\CSharp3\Sources\Antlr3.Runtime.Debug\Antlr3.Runtime.Debug.csproj", "{5EE27A90-B023-42C9-AAF1-52B0424C5D0B}"
++Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Runtime.Debug", "..\antlr3\runtime\CSharp3\Sources\Antlr3.Runtime.Debug\Antlr3.Runtime.Debug.csproj", "{5EE27A90-B023-42C9-AAF1-52B0424C5D0B}"
+EndProject
+-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Runtime.JavaExtensions", "..\..\antlr\antlr3-main\runtime\CSharp3\Sources\Antlr3.Runtime.JavaExtensions\Antlr3.Runtime.JavaExtensions.csproj", "{A7EEC557-EB14-451C-9616-B7A61F4ECE69}"
++Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Runtime.JavaExtensions", "..\antlr3\runtime\CSharp3\Sources\Antlr3.Runtime.JavaExtensions\Antlr3.Runtime.JavaExtensions.csproj", "{A7EEC557-EB14-451C-9616-B7A61F4ECE69}"
+EndProject
+-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Runtime.Test", "..\..\antlr\antlr3-main\runtime\CSharp3\Sources\Antlr3.Runtime.Test\Antlr3.Runtime.Test.csproj", "{19B965DE-5100-4064-A580-159644F6980E}"
++Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Runtime.Test", "..\antlr3\runtime\CSharp3\Sources\Antlr3.Runtime.Test\Antlr3.Runtime.Test.csproj", "{19B965DE-5100-4064-A580-159644F6980E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AntlrBuildTask", "AntlrBuildTask\AntlrBuildTask.csproj", "{60F8B554-5C53-4DE2-B868-A0BFEF4EF80E}"
+EndProject
+@@ -76,97 +76,6 @@ Global
+GlobalSection(TestCaseManagementSettings) = postSolution
+CategoryFile = Antlr3.vsmdi
+EndGlobalSection
+-	GlobalSection(SourceCodeControl) = preSolution
+-		SccNumberOfProjects = 25
+-		SccProjectName0 = Perforce\u0020Project
+-		SccLocalPath0 = ..\\..
+-		SccProvider0 = MSSCCI:Perforce\u0020SCM
+-		SccProjectFilePathRelativizedFromConnection0 = antlrcs\\main\\
+-		SccProjectUniqueName1 = Antlr3\\Antlr3.csproj
+-		SccLocalPath1 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection1 = antlrcs\\main\\Antlr3\\
+-		SccProjectUniqueName2 = AntlrBuildTask\\AntlrBuildTask.csproj
+-		SccLocalPath2 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection2 = antlrcs\\main\\AntlrBuildTask\\
+-		SccProjectUniqueName3 = Antlr3.StringTemplate\\Antlr3.StringTemplate.csproj
+-		SccLocalPath3 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection3 = antlrcs\\main\\Antlr3.StringTemplate\\
+-		SccProjectUniqueName4 = Antlr3.Test\\Antlr3.Test.csproj
+-		SccLocalPath4 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection4 = antlrcs\\main\\Antlr3.Test\\
+-		SccProjectUniqueName5 = Antlr3.Targets\\Antlr3.Targets.ActionScript\\Antlr3.Targets.ActionScript.csproj
+-		SccProjectTopLevelParentUniqueName5 = Antlr3.sln
+-		SccLocalPath5 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection5 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.ActionScript\\
+-		SccProjectUniqueName6 = Antlr3.Targets\\Antlr3.Targets.C\\Antlr3.Targets.C.csproj
+-		SccProjectTopLevelParentUniqueName6 = Antlr3.sln
+-		SccLocalPath6 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection6 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.C\\
+-		SccProjectUniqueName7 = Antlr3.Targets\\Antlr3.Targets.Cpp\\Antlr3.Targets.Cpp.csproj
+-		SccProjectTopLevelParentUniqueName7 = Antlr3.sln
+-		SccLocalPath7 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection7 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.Cpp\\
+-		SccProjectUniqueName8 = Antlr3.Targets\\Antlr3.Targets.CSharp2\\Antlr3.Targets.CSharp2.csproj
+-		SccProjectTopLevelParentUniqueName8 = Antlr3.sln
+-		SccLocalPath8 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection8 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.CSharp2\\
+-		SccProjectUniqueName9 = Antlr3.Targets\\Antlr3.Targets.CSharp3\\Antlr3.Targets.CSharp3.csproj
+-		SccProjectTopLevelParentUniqueName9 = Antlr3.sln
+-		SccLocalPath9 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection9 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.CSharp3\\
+-		SccProjectUniqueName10 = Antlr3.Targets\\Antlr3.Targets.Delphi\\Antlr3.Targets.Delphi.csproj
+-		SccProjectTopLevelParentUniqueName10 = Antlr3.sln
+-		SccLocalPath10 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection10 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.Delphi\\
+-		SccProjectUniqueName11 = Antlr3.Targets\\Antlr3.Targets.Java\\Antlr3.Targets.Java.csproj
+-		SccProjectTopLevelParentUniqueName11 = Antlr3.sln
+-		SccLocalPath11 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection11 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.Java\\
+-		SccProjectUniqueName12 = Antlr3.Targets\\Antlr3.Targets.JavaScript\\Antlr3.Targets.JavaScript.csproj
+-		SccProjectTopLevelParentUniqueName12 = Antlr3.sln
+-		SccLocalPath12 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection12 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.JavaScript\\
+-		SccProjectUniqueName13 = Antlr3.Targets\\Antlr3.Targets.ObjC\\Antlr3.Targets.ObjC.csproj
+-		SccProjectTopLevelParentUniqueName13 = Antlr3.sln
+-		SccLocalPath13 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection13 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.ObjC\\
+-		SccProjectUniqueName14 = Antlr3.Targets\\Antlr3.Targets.Perl5\\Antlr3.Targets.Perl5.csproj
+-		SccProjectTopLevelParentUniqueName14 = Antlr3.sln
+-		SccLocalPath14 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection14 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.Perl5\\
+-		SccProjectUniqueName15 = Antlr3.Targets\\Antlr3.Targets.Python\\Antlr3.Targets.Python.csproj
+-		SccProjectTopLevelParentUniqueName15 = Antlr3.sln
+-		SccLocalPath15 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection15 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.Python\\
+-		SccProjectUniqueName16 = Antlr3.Targets\\Antlr3.Targets.Ruby\\Antlr3.Targets.Ruby.csproj
+-		SccProjectTopLevelParentUniqueName16 = Antlr3.sln
+-		SccLocalPath16 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection16 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.Ruby\\
+-		SccProjectUniqueName17 = Antlr4.StringTemplate\\Antlr4.StringTemplate.csproj
+-		SccLocalPath17 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection17 = antlrcs\\main\\Antlr4.StringTemplate\\
+-		SccProjectUniqueName18 = Antlr4.Test.StringTemplate\\Antlr4.Test.StringTemplate.csproj
+-		SccLocalPath18 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection18 = antlrcs\\main\\Antlr4.Test.StringTemplate\\
+-		SccProjectUniqueName19 = Antlr4.StringTemplate.Visualizer\\Antlr4.StringTemplate.Visualizer.csproj
+-		SccLocalPath19 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection19 = antlrcs\\main\\Antlr4.StringTemplate.Visualizer\\
+-		SccProjectUniqueName20 = ..\\..\\antlr\\antlr3-main\\runtime\\CSharp3\\Sources\\Antlr3.Runtime.Debug\\Antlr3.Runtime.Debug.csproj
+-		SccLocalPath20 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection20 = antlr\\antlr3-main\\runtime\\CSharp3\\Sources\\Antlr3.Runtime.Debug\\
+-		SccProjectUniqueName21 = ..\\..\\antlr\\antlr3-main\\runtime\\CSharp3\\Sources\\Antlr3.Runtime\\Antlr3.Runtime.csproj
+-		SccLocalPath21 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection21 = antlr\\antlr3-main\\runtime\\CSharp3\\Sources\\Antlr3.Runtime\\
+-		SccProjectUniqueName22 = ..\\..\\antlr\\antlr3-main\\runtime\\CSharp3\\Sources\\Antlr3.Runtime.JavaExtensions\\Antlr3.Runtime.JavaExtensions.csproj
+-		SccLocalPath22 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection22 = antlr\\antlr3-main\\runtime\\CSharp3\\Sources\\Antlr3.Runtime.JavaExtensions\\
+-		SccProjectUniqueName23 = ..\\..\\antlr\\antlr3-main\\runtime\\CSharp3\\Sources\\Antlr3.Runtime.Test\\Antlr3.Runtime.Test.csproj
+-		SccLocalPath23 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection23 = antlr\\antlr3-main\\runtime\\CSharp3\\Sources\\Antlr3.Runtime.Test\\
+-		SccProjectUniqueName24 = Antlr3.Runtime.Visualizer\\Antlr3.Runtime.Visualizer.csproj
+-		SccLocalPath24 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection24 = antlrcs\\main\\Antlr3.Runtime.Visualizer\\
+-	EndGlobalSection
+GlobalSection(SolutionConfigurationPlatforms) = preSolution
+Debug|Any CPU = Debug|Any CPU
+Release|Any CPU = Release|Any CPU
+diff --git a/Antlr3.vsscc b/Antlr3.vsscc
+deleted file mode 100644
+index 731fd75..0000000
+--- a/Antlr3.vsscc
++++ /dev/null
+@@ -1 +0,0 @@
+-Jay0antlrcs\main
+\ No newline at end of file
+diff --git a/Antlr3.vssscc b/Antlr3.vssscc
+deleted file mode 100644
+index 6cb031b..0000000
+--- a/Antlr3.vssscc
++++ /dev/null
+@@ -1,10 +0,0 @@
+-﻿""
+-{
+-"FILE_VERSION" = "9237"
+-"ENLISTMENT_CHOICE" = "NEVER"
+-"PROJECT_FILE_RELATIVE_PATH" = ""
+-"NUMBER_OF_EXCLUDED_FILES" = "0"
+-"ORIGINAL_PROJECT_FILE_PATH" = ""
+-"NUMBER_OF_NESTED_PROJECTS" = "0"
+-"SOURCE_CONTROL_SETTINGS_PROVIDER" = "PROJECT"
+-}
+diff --git a/Antlr3/Antlr3.csproj b/Antlr3/Antlr3.csproj
+index 2271e3e..a7aff96 100644
+--- a/Antlr3/Antlr3.csproj
++++ b/Antlr3/Antlr3.csproj
+@@ -12,13 +12,6 @@
+<AssemblyName>Antlr3</AssemblyName>
+<TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+<FileAlignment>512</FileAlignment>
+-    <SccProjectName>Perforce Project</SccProjectName>
+-    <SccLocalPath>..\..\..</SccLocalPath>
+-    <SccAuxPath>
+-    </SccAuxPath>
+-    <SccProvider>MSSCCI:Perforce SCM</SccProvider>
+-    <StartupObject>
+-    </StartupObject>
+<SignAssembly>true</SignAssembly>
+<AssemblyOriginatorKeyFile>..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+@@ -207,281 +200,281 @@
+<Compile Include="Tool\Strip.cs" />
+</ItemGroup>
+<ItemGroup>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\ActionScript\ActionScript.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\ActionScript\ActionScript.stg">
+<Link>Codegen\Templates\ActionScript\ActionScript.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\ActionScript\AST.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\ActionScript\AST.stg">
+<Link>Codegen\Templates\ActionScript\AST.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\ActionScript\ASTParser.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\ActionScript\ASTParser.stg">
+<Link>Codegen\Templates\ActionScript\ASTParser.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\ActionScript\ASTTreeParser.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\ActionScript\ASTTreeParser.stg">
+<Link>Codegen\Templates\ActionScript\ASTTreeParser.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\CSharp3\AST.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\CSharp3\AST.stg">
+<Link>Codegen\Templates\CSharp3\AST.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\CSharp3\ASTDbg.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\CSharp3\ASTDbg.stg">
+<Link>Codegen\Templates\CSharp3\ASTDbg.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\CSharp3\ASTParser.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\CSharp3\ASTParser.stg">
+<Link>Codegen\Templates\CSharp3\ASTParser.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\CSharp3\ASTTreeParser.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\CSharp3\ASTTreeParser.stg">
+<Link>Codegen\Templates\CSharp3\ASTTreeParser.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\CSharp3\CSharp3.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\CSharp3\CSharp3.stg">
+<Link>Codegen\Templates\CSharp3\CSharp3.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\CSharp3\Dbg.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\CSharp3\Dbg.stg">
+<Link>Codegen\Templates\CSharp3\Dbg.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\CSharp3\ST.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\CSharp3\ST.stg">
+<Link>Codegen\Templates\CSharp3\ST.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\CSharp2\AST.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\CSharp2\AST.stg">
+<Link>Codegen\Templates\CSharp2\AST.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\CSharp2\ASTDbg.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\CSharp2\ASTDbg.stg">
+<Link>Codegen\Templates\CSharp2\ASTDbg.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\CSharp2\ASTParser.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\CSharp2\ASTParser.stg">
+<Link>Codegen\Templates\CSharp2\ASTParser.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\CSharp2\ASTTreeParser.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\CSharp2\ASTTreeParser.stg">
+<Link>Codegen\Templates\CSharp2\ASTTreeParser.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\CSharp2\CSharp2.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\CSharp2\CSharp2.stg">
+<Link>Codegen\Templates\CSharp2\CSharp2.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\CSharp2\Dbg.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\CSharp2\Dbg.stg">
+<Link>Codegen\Templates\CSharp2\Dbg.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\CSharp2\ST.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\CSharp2\ST.stg">
+<Link>Codegen\Templates\CSharp2\ST.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\C\AST.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\C\AST.stg">
+<Link>Codegen\Templates\C\AST.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\C\ASTDbg.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\C\ASTDbg.stg">
+<Link>Codegen\Templates\C\ASTDbg.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\C\ASTParser.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\C\ASTParser.stg">
+<Link>Codegen\Templates\C\ASTParser.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\C\ASTTreeParser.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\C\ASTTreeParser.stg">
+<Link>Codegen\Templates\C\ASTTreeParser.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\C\C.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\C\C.stg">
+<Link>Codegen\Templates\C\C.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\C\Dbg.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\C\Dbg.stg">
+<Link>Codegen\Templates\C\Dbg.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\CPP\CPP.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\CPP\CPP.stg">
+<Link>Codegen\Templates\CPP\CPP.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\Delphi\AST.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\Delphi\AST.stg">
+<Link>Codegen\Templates\Delphi\AST.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\Delphi\ASTParser.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\Delphi\ASTParser.stg">
+<Link>Codegen\Templates\Delphi\ASTParser.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\Delphi\ASTTreeParser.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\Delphi\ASTTreeParser.stg">
+<Link>Codegen\Templates\Delphi\ASTTreeParser.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\Delphi\Delphi.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\Delphi\Delphi.stg">
+<Link>Codegen\Templates\Delphi\Delphi.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\JavaScript\AST.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\JavaScript\AST.stg">
+<Link>Codegen\Templates\JavaScript\AST.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\JavaScript\ASTParser.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\JavaScript\ASTParser.stg">
+<Link>Codegen\Templates\JavaScript\ASTParser.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\JavaScript\ASTTreeParser.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\JavaScript\ASTTreeParser.stg">
+<Link>Codegen\Templates\JavaScript\ASTTreeParser.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\JavaScript\JavaScript.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\JavaScript\JavaScript.stg">
+<Link>Codegen\Templates\JavaScript\JavaScript.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\Java\AST.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\Java\AST.stg">
+<Link>Codegen\Templates\Java\AST.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\Java\ASTDbg.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\Java\ASTDbg.stg">
+<Link>Codegen\Templates\Java\ASTDbg.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\Java\ASTParser.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\Java\ASTParser.stg">
+<Link>Codegen\Templates\Java\ASTParser.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\Java\ASTTreeParser.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\Java\ASTTreeParser.stg">
+<Link>Codegen\Templates\Java\ASTTreeParser.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\Java\Dbg.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\Java\Dbg.stg">
+<Link>Codegen\Templates\Java\Dbg.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\Java\Java.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\Java\Java.stg">
+<Link>Codegen\Templates\Java\Java.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\Java\ST.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\Java\ST.stg">
+<Link>Codegen\Templates\Java\ST.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\ObjC\AST.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\ObjC\AST.stg">
+<Link>Codegen\Templates\ObjC\AST.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\ObjC\ASTDbg.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\ObjC\ASTDbg.stg">
+<Link>Codegen\Templates\ObjC\ASTDbg.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\ObjC\ASTParser.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\ObjC\ASTParser.stg">
+<Link>Codegen\Templates\ObjC\ASTParser.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\ObjC\ASTTreeParser.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\ObjC\ASTTreeParser.stg">
+<Link>Codegen\Templates\ObjC\ASTTreeParser.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\ObjC\Dbg.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\ObjC\Dbg.stg">
+<Link>Codegen\Templates\ObjC\Dbg.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\ObjC\ObjC.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\ObjC\ObjC.stg">
+<Link>Codegen\Templates\ObjC\ObjC.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\Perl5\ASTTreeParser.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\Perl5\ASTTreeParser.stg">
+<Link>Codegen\Templates\Perl5\ASTTreeParser.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\Perl5\Perl5.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\Perl5\Perl5.stg">
+<Link>Codegen\Templates\Perl5\Perl5.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\Python\AST.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\Python\AST.stg">
+<Link>Codegen\Templates\Python\AST.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\Python\ASTDbg.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\Python\ASTDbg.stg">
+<Link>Codegen\Templates\Python\ASTDbg.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\Python\ASTParser.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\Python\ASTParser.stg">
+<Link>Codegen\Templates\Python\ASTParser.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\Python\ASTTreeParser.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\Python\ASTTreeParser.stg">
+<Link>Codegen\Templates\Python\ASTTreeParser.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\Python\Dbg.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\Python\Dbg.stg">
+<Link>Codegen\Templates\Python\Dbg.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\Python\Python.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\Python\Python.stg">
+<Link>Codegen\Templates\Python\Python.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\Python\ST.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\Python\ST.stg">
+<Link>Codegen\Templates\Python\ST.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\Ruby\Ruby.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\Ruby\Ruby.stg">
+<Link>Codegen\Templates\Ruby\Ruby.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+</ItemGroup>
+<ItemGroup>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\tool\templates\depend.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\tool\templates\depend.stg">
+<Link>Tool\Templates\depend.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <EmbeddedResource Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\tool\templates\messages\formats\antlr.stg">
++    <EmbeddedResource Include="..\..\antlr3\tool\src\main\resources\org\antlr\tool\templates\messages\formats\antlr.stg">
+<Link>Tool\Templates\messages\formats\antlr.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</EmbeddedResource>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\tool\templates\messages\formats\gnu.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\tool\templates\messages\formats\gnu.stg">
+<Link>Tool\Templates\messages\formats\gnu.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\tool\templates\messages\formats\vs2005.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\tool\templates\messages\formats\vs2005.stg">
+<Link>Tool\Templates\messages\formats\vs2005.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <EmbeddedResource Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\tool\templates\messages\languages\en.stg">
++    <EmbeddedResource Include="..\..\antlr3\tool\src\main\resources\org\antlr\tool\templates\messages\languages\en.stg">
+<Link>Tool\Templates\messages\languages\en.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</EmbeddedResource>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\tool\templates\dot\dot.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\tool\templates\dot\dot.stg">
+<Link>Tool\Templates\dot\dot.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\Ruby\AST.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\Ruby\AST.stg">
+<Link>Codegen\Templates\Ruby\AST.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\Ruby\ASTDbg.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\Ruby\ASTDbg.stg">
+<Link>Codegen\Templates\Ruby\ASTDbg.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\Ruby\ASTParser.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\Ruby\ASTParser.stg">
+<Link>Codegen\Templates\Ruby\ASTParser.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\Ruby\ASTTreeParser.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\Ruby\ASTTreeParser.stg">
+<Link>Codegen\Templates\Ruby\ASTTreeParser.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\Ruby\Dbg.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\Ruby\Dbg.stg">
+<Link>Codegen\Templates\Ruby\Dbg.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\Ruby\ST.stg">
++    <Content Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\Ruby\ST.stg">
+<Link>Codegen\Templates\Ruby\ST.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <EmbeddedResource Include="..\..\..\antlr\antlr3-main\tool\src\main\resources\org\antlr\codegen\templates\LeftRecursiveRules.stg">
++    <EmbeddedResource Include="..\..\antlr3\tool\src\main\resources\org\antlr\codegen\templates\LeftRecursiveRules.stg">
+<Link>Codegen\Templates\LeftRecursiveRules.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</EmbeddedResource>
+@@ -494,15 +487,15 @@
+</Antlr3>
+</ItemGroup>
+<ItemGroup>
+-    <ProjectReference Include="..\..\..\antlr\antlr3-main\runtime\CSharp3\Sources\Antlr3.Runtime.Debug\Antlr3.Runtime.Debug.csproj">
++    <ProjectReference Include="..\..\antlr3\runtime\CSharp3\Sources\Antlr3.Runtime.Debug\Antlr3.Runtime.Debug.csproj">
+<Project>{5EE27A90-B023-42C9-AAF1-52B0424C5D0B}</Project>
+<Name>Antlr3.Runtime.Debug</Name>
+</ProjectReference>
+-    <ProjectReference Include="..\..\..\antlr\antlr3-main\runtime\CSharp3\Sources\Antlr3.Runtime.JavaExtensions\Antlr3.Runtime.JavaExtensions.csproj">
++    <ProjectReference Include="..\..\antlr3\runtime\CSharp3\Sources\Antlr3.Runtime.JavaExtensions\Antlr3.Runtime.JavaExtensions.csproj">
+<Project>{A7EEC557-EB14-451C-9616-B7A61F4ECE69}</Project>
+<Name>Antlr3.Runtime.JavaExtensions</Name>
+</ProjectReference>
+-    <ProjectReference Include="..\..\..\antlr\antlr3-main\runtime\CSharp3\Sources\Antlr3.Runtime\Antlr3.Runtime.csproj">
++    <ProjectReference Include="..\..\antlr3\runtime\CSharp3\Sources\Antlr3.Runtime\Antlr3.Runtime.csproj">
+<Project>{8FDC0A87-9005-4D5A-AB75-E55CEB575559}</Project>
+<Name>Antlr3.Runtime</Name>
+</ProjectReference>
+diff --git a/Antlr4.StringTemplate.Visualizer/Antlr4.StringTemplate.Visualizer.csproj b/Antlr4.StringTemplate.Visualizer/Antlr4.StringTemplate.Visualizer.csproj
+index 4f5120b..ef73e2f 100644
+--- a/Antlr4.StringTemplate.Visualizer/Antlr4.StringTemplate.Visualizer.csproj
++++ b/Antlr4.StringTemplate.Visualizer/Antlr4.StringTemplate.Visualizer.csproj
+@@ -15,10 +15,6 @@
+<FileAlignment>512</FileAlignment>
+<ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+<WarningLevel>4</WarningLevel>
+-    <SccProjectName>SAK</SccProjectName>
+-    <SccLocalPath>SAK</SccLocalPath>
+-    <SccAuxPath>SAK</SccAuxPath>
+-    <SccProvider>SAK</SccProvider>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+@@ -109,7 +105,7 @@
+</Page>
+</ItemGroup>
+<ItemGroup>
+-    <ProjectReference Include="..\..\..\antlr\antlr3-main\runtime\CSharp3\Sources\Antlr3.Runtime\Antlr3.Runtime.csproj">
++    <ProjectReference Include="..\..\antlr3\runtime\CSharp3\Sources\Antlr3.Runtime\Antlr3.Runtime.csproj">
+<Project>{8FDC0A87-9005-4D5A-AB75-E55CEB575559}</Project>
+<Name>Antlr3.Runtime</Name>
+</ProjectReference>
+diff --git a/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj b/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj
+index eda9d82..0131d43 100644
+--- a/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj
++++ b/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj
+@@ -12,10 +12,6 @@
+<AssemblyName>Antlr4.StringTemplate</AssemblyName>
+<TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+<FileAlignment>512</FileAlignment>
+-    <SccProjectName>SAK</SccProjectName>
+-    <SccLocalPath>SAK</SccLocalPath>
+-    <SccAuxPath>SAK</SccAuxPath>
+-    <SccProvider>SAK</SccProvider>
+<TargetFrameworkProfile>Client</TargetFrameworkProfile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+@@ -136,7 +132,7 @@
+</Compile>
+</ItemGroup>
+<ItemGroup>
+-    <ProjectReference Include="..\..\..\antlr\antlr3-main\runtime\CSharp3\Sources\Antlr3.Runtime\Antlr3.Runtime.csproj">
++    <ProjectReference Include="..\..\antlr3\runtime\CSharp3\Sources\Antlr3.Runtime\Antlr3.Runtime.csproj">
+<Project>{8FDC0A87-9005-4D5A-AB75-E55CEB575559}</Project>
+<Name>Antlr3.Runtime</Name>
+</ProjectReference>
+diff --git a/Antlr4.Test.StringTemplate/Antlr4.Test.StringTemplate.csproj b/Antlr4.Test.StringTemplate/Antlr4.Test.StringTemplate.csproj
+index cdc02da..352d26b 100644
+--- a/Antlr4.Test.StringTemplate/Antlr4.Test.StringTemplate.csproj
++++ b/Antlr4.Test.StringTemplate/Antlr4.Test.StringTemplate.csproj
+@@ -14,10 +14,6 @@
+<TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+<FileAlignment>512</FileAlignment>
+<ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+-    <SccProjectName>SAK</SccProjectName>
+-    <SccLocalPath>SAK</SccLocalPath>
+-    <SccAuxPath>SAK</SccAuxPath>
+-    <SccProvider>SAK</SccProvider>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+@@ -87,7 +83,7 @@
+<Compile Include="TestWhitespace.cs" />
+</ItemGroup>
+<ItemGroup>
+-    <ProjectReference Include="..\..\..\antlr\antlr3-main\runtime\CSharp3\Sources\Antlr3.Runtime\Antlr3.Runtime.csproj">
++    <ProjectReference Include="..\..\antlr3\runtime\CSharp3\Sources\Antlr3.Runtime\Antlr3.Runtime.csproj">
+<Project>{8FDC0A87-9005-4D5A-AB75-E55CEB575559}</Project>
+<Name>Antlr3.Runtime</Name>
+</ProjectReference>
+diff --git a/AntlrBuildTask/AntlrBuildTask.csproj b/AntlrBuildTask/AntlrBuildTask.csproj
+index f1330f3..8e6a725 100644
+--- a/AntlrBuildTask/AntlrBuildTask.csproj
++++ b/AntlrBuildTask/AntlrBuildTask.csproj
+@@ -14,11 +14,6 @@
+<FileAlignment>512</FileAlignment>
+<SignAssembly>true</SignAssembly>
+<AssemblyOriginatorKeyFile>..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+-    <SccProjectName>Perforce Project</SccProjectName>
+-    <SccLocalPath>..\..\..</SccLocalPath>
+-    <SccAuxPath>
+-    </SccAuxPath>
+-    <SccProvider>MSSCCI:Perforce SCM</SccProvider>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+

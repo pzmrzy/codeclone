@@ -1,0 +1,22 @@
+commit b2abe9c9a68b9dc3c7b44b3dbe872f2e19ad7044
+Author:     sharwell <sam@tunnelvisionlabs.com>
+AuthorDate: Mon Feb 6 15:09:22 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Fri Feb 10 15:29:49 2012 -0600
+
+Add .gitignore
+
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..f779560
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1,6 @@
++/runtime/Java/target/
++/tool/target/
++/antlr3-maven-plugin/target/
++/gunit/target/
++/gunit-maven-plugin/target/
++/antlr3-maven-archetype/target/
+\ No newline at end of file
+

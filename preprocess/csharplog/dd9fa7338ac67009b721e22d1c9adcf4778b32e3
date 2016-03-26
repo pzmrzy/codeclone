@@ -1,0 +1,81 @@
+commit dd9fa7338ac67009b721e22d1c9adcf4778b32e3
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Thu Apr 7 12:40:36 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Thu Apr 7 12:40:36 2011 -0800
+
+(C# 3) Update assembly info for a first build of 3.3.2
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8099]
+
+diff --git a/Antlr3.Runtime.Test/Properties/AssemblyInfo.cs b/Antlr3.Runtime.Test/Properties/AssemblyInfo.cs
+index 2e1a593..fd2190d 100644
+--- a/Antlr3.Runtime.Test/Properties/AssemblyInfo.cs
++++ b/Antlr3.Runtime.Test/Properties/AssemblyInfo.cs
+@@ -1,10 +1,10 @@
+﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+* Conversion to C#:
+- * Copyright (c) 2008-2010 Sam Harwell, Pixel Mine, Inc.
++ * Copyright (c) 2011 Sam Harwell, Pixel Mine, Inc.
+* All rights reserved.
+*
+* Redistribution and use in source and binary forms, with or without
+@@ -42,7 +42,7 @@ using System.Runtime.InteropServices;
+[assembly: AssemblyConfiguration( "" )]
+[assembly: AssemblyCompany( "Pixel Mine, Inc." )]
+[assembly: AssemblyProduct( "Antlr3.Runtime.Test" )]
+-[assembly: AssemblyCopyright( "Copyright © Pixel Mine 2010" )]
++[assembly: AssemblyCopyright("Copyright © Sam Harwell 2011")]
+[assembly: AssemblyTrademark( "" )]
+[assembly: AssemblyCulture( "" )]
+[assembly: CLSCompliant( true )]
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.3.0.7239")]
+-[assembly: AssemblyFileVersion("3.3.0.7239")]
++[assembly: AssemblyVersion("3.3.2.8098")]
++[assembly: AssemblyFileVersion("3.3.2.8098")]
+diff --git a/Antlr3.Runtime/Properties/AssemblyInfo.cs b/Antlr3.Runtime/Properties/AssemblyInfo.cs
+index 4a81c06..b425e95 100644
+--- a/Antlr3.Runtime/Properties/AssemblyInfo.cs
++++ b/Antlr3.Runtime/Properties/AssemblyInfo.cs
+@@ -1,10 +1,10 @@
+﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+* Conversion to C#:
+- * Copyright (c) 2008-2010 Sam Harwell, Pixel Mine, Inc.
++ * Copyright (c) 2011 Sam Harwell, Pixel Mine, Inc.
+* All rights reserved.
+*
+* Redistribution and use in source and binary forms, with or without
+@@ -42,7 +42,7 @@ using System.Runtime.InteropServices;
+[assembly: AssemblyConfiguration( "" )]
+[assembly: AssemblyCompany( "Pixel Mine, Inc." )]
+[assembly: AssemblyProduct( "Antlr3.Runtime" )]
+-[assembly: AssemblyCopyright( "Copyright © Pixel Mine 2010" )]
++[assembly: AssemblyCopyright("Copyright © Sam Harwell 2011")]
+[assembly: AssemblyTrademark( "" )]
+[assembly: AssemblyCulture( "" )]
+[assembly: CLSCompliant( true )]
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.3.1.7705")]
+-[assembly: AssemblyFileVersion("3.3.1.7705")]
++[assembly: AssemblyVersion("3.3.2.8079")]
++[assembly: AssemblyFileVersion("3.3.2.8079")]
+

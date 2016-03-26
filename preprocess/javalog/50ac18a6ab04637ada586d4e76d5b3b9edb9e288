@@ -1,0 +1,174 @@
+commit 50ac18a6ab04637ada586d4e76d5b3b9edb9e288
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sun May 15 13:12:47 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sun May 15 13:12:47 2011 -0800
+
+(C# 3) Add ListStack<T> to allow indexing on the attribute scope stacks
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8500]
+
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime/Antlr3.Runtime.csproj b/runtime/CSharp3/Sources/Antlr3.Runtime/Antlr3.Runtime.csproj
+index a311d92..6de4bf7 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime/Antlr3.Runtime.csproj
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime/Antlr3.Runtime.csproj
+@@ -76,6 +76,7 @@
+<Compile Include="Lexer.cs" />
+<Compile Include="Misc\FastQueue.cs" />
+<Compile Include="Misc\FunctionDelegates.cs" />
++    <Compile Include="Misc\ListStack`1.cs" />
+<Compile Include="Misc\LookaheadStream.cs" />
+<Compile Include="MismatchedNotSetException.cs" />
+<Compile Include="MismatchedRangeException.cs" />
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime/Misc/ListStack`1.cs b/runtime/CSharp3/Sources/Antlr3.Runtime/Misc/ListStack`1.cs
+new file mode 100644
+index 0000000..e66adcb
+--- /dev/null
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime/Misc/ListStack`1.cs
+@@ -0,0 +1,98 @@
++﻿/*
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2011 Sam Harwell, Pixel Mine, Inc.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace Antlr.Runtime.Misc
++{
++    using System.Collections.Generic;
++    using InvalidOperationException = System.InvalidOperationException;
++
++    public class ListStack<T> : List<T>
++    {
++        public T Peek()
++        {
++            return Peek(0);
++        }
++
++        public T Peek(int depth)
++        {
++            T item;
++            if (!TryPeek(depth, out item))
++                throw new InvalidOperationException();
++
++            return item;
++        }
++
++        public bool TryPeek(out T item)
++        {
++            return TryPeek(0, out item);
++        }
++
++        public bool TryPeek(int depth, out T item)
++        {
++            if (depth >= Count)
++            {
++                item = default(T);
++                return false;
++            }
++
++            item = this[Count - depth - 1];
++            return true;
++        }
++
++        public T Pop()
++        {
++            T result;
++            if (!TryPop(out result))
++                throw new InvalidOperationException();
++
++            return result;
++        }
++
++        public bool TryPop(out T item)
++        {
++            if (Count == 0)
++            {
++                item = default(T);
++                return false;
++            }
++
++            item = this[Count - 1];
++            RemoveAt(Count - 1);
++            return true;
++        }
++
++        public void Push(T item)
++        {
++            Add(item);
++        }
++    }
++}
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg
+index a5da1f7..bae33a1 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg
+@@ -73,6 +73,7 @@ outputFile(	LEXER,PARSER,TREE_PARSER, actionScope, actions,
+<@imports>
+using System.Collections.Generic;
+using Antlr.Runtime;
++using Antlr.Runtime.Misc;
+<if(TREE_PARSER)>
+using Antlr.Runtime.Tree;
+using RewriteRuleITokenStream = Antlr.Runtime.Tree.RewriteRuleTokenStream;
+@@ -1430,7 +1431,7 @@ protected void <scope.name>_scopeAfter( <scope.name>_scope scope )
+<else>
+partial void <scope.name>_scopeAfter( <scope.name>_scope scope );
+<endif>
+-protected readonly Stack\<<scope.name>_scope\> <scope.name>_stack = new Stack\<<scope.name>_scope\>();
++protected readonly ListStack\<<scope.name>_scope\> <scope.name>_stack = new ListStack\<<scope.name>_scope\>();
+<endif>
+>>
+
+@@ -1524,10 +1525,10 @@ parameterSetAttributeRef(attr,expr) ::= <<
+
+scopeAttributeRef(scope,attr,index,negIndex) ::= <%
+<if(negIndex)>
+-System.Linq.Enumerable.ElementAt(<scope>_stack, <negIndex>).<attr.name; format="id">
++<scope>_stack[<scope>_stack.Count - <negIndex> - 1].<attr.name; format="id">
+<else>
+<if(index)>
+-System.Linq.Enumerable.ElementAt(<scope>_stack, <scope>_stack.Count-<index>-1).<attr.name; format="id">
++<scope>_stack[<index>].<attr.name; format="id">
+<else>
+<scope>_stack.Peek().<attr.name; format="id">
+<endif>
+@@ -1536,10 +1537,10 @@ System.Linq.Enumerable.ElementAt(<scope>_stack, <scope>_stack.Count-<index>-1).<
+
+scopeSetAttributeRef(scope,attr,expr,index,negIndex) ::= <%
+<if(negIndex)>
+-System.Linq.Enumerable.ElementAt(<scope>_stack, <negIndex>).<attr.name; format="id"> = <expr>;
++<scope>_stack[<scope>_stack.Count - <negIndex> - 1].<attr.name; format="id"> = <expr>;
+<else>
+<if(index)>
+-System.Linq.Enumerable.ElementAt(<scope>_stack, <scope>_stack.Count-<index>-1).<attr.name; format="id"> = <expr>;
++<scope>_stack[<index>].<attr.name; format="id"> = <expr>;
+<else>
+<scope>_stack.Peek().<attr.name; format="id"> = <expr>;
+<endif>
+

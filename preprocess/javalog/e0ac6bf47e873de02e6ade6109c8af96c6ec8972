@@ -1,0 +1,25 @@
+commit e0ac6bf47e873de02e6ade6109c8af96c6ec8972
+Author:     parrt <parrt@antlr.org>
+AuthorDate: Sat Jul 2 11:27:22 2011 -0800
+Commit:     parrt <parrt@antlr.org>
+CommitDate: Sat Jul 2 11:27:22 2011 -0800
+
+small  optimization
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8818]
+
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/CommonToken.java b/runtime/Java/src/main/java/org/antlr/runtime/CommonToken.java
+index 13dcb1c..6bd9b89 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/CommonToken.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/CommonToken.java
+@@ -98,7 +98,8 @@ public class CommonToken implements Token, Serializable {
+if ( input==null ) {
+return null;
+}
+-		if ( start<input.size() && stop<input.size() ) {
++		int n = input.size();
++		if ( start<n && stop<n) {
+return input.substring(start,stop);
+}
+else {
+

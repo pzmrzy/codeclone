@@ -1,0 +1,24 @@
+commit f4dd86759394ec32f9de9a73d3b7bd43931d9ab3
+Author:     Ivan Brezina <ibrezina@ibrezina.net>
+AuthorDate: Wed Oct 2 00:30:47 2013 +0200
+Commit:     Ivan Brezina <ibrezina@ibrezina.net>
+CommitDate: Wed Oct 2 00:30:47 2013 +0200
+
+Fix order of evaluating conditions having synpreds in them
+
+- significant performance improvement
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Cpp/Cpp.stg b/tool/src/main/resources/org/antlr/codegen/templates/Cpp/Cpp.stg
+index f027455..1c7c98c 100755
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Cpp/Cpp.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Cpp/Cpp.stg
+@@ -2181,7 +2181,7 @@ break;
+*  state to jump to next if successful.
+*/
+cyclicDFAEdge(labelExpr, targetStateNumber, edgeNumber, predicates) ::= <<
+-if ( <if(predicates)>(<predicates>) && <endif>(<labelExpr>) )
++if ( (<labelExpr>) <if(predicates)>&& (<predicates>)<endif> )
+{
+s = <targetStateNumber>;
+}<\n>
+

@@ -1,0 +1,4219 @@
+commit f609227ed521622d8de8cab385bdb21987e485c0
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Thu Apr 16 16:18:10 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Thu Apr 16 16:18:10 2009 -0800
+
+C# Port:
+* More Capitalized method names
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6037]
+
+diff --git a/Antlr3.Targets/Antlr3.Targets.Cpp/CPPTarget.cs b/Antlr3.Targets/Antlr3.Targets.Cpp/CPPTarget.cs
+index d77c6da..b390bc9 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Cpp/CPPTarget.cs
++++ b/Antlr3.Targets/Antlr3.Targets.Cpp/CPPTarget.cs
+@@ -104,7 +104,7 @@ namespace Antlr3.Targets
+StringTemplate headerFileST,
+string extName )
+{
+-            StringTemplateGroup templates = generator.GetTemplates();
++            StringTemplateGroup templates = generator.Templates;
+generator.Write( headerFileST, grammar.name + extName );
+}
+
+diff --git a/Antlr3.Test/BaseTest.cs b/Antlr3.Test/BaseTest.cs
+index 67a083b..83e175c 100644
+--- a/Antlr3.Test/BaseTest.cs
++++ b/Antlr3.Test/BaseTest.cs
+@@ -184,7 +184,7 @@ namespace AntlrUnitTests
+protected AntlrTool newTool( string[] args )
+{
+AntlrTool tool = new AntlrTool( args );
+-            tool.setOutputDirectory( tmpdir );
++            tool.SetOutputDirectory( tmpdir );
+tool.TestMode = true;
+return tool;
+}
+@@ -192,7 +192,7 @@ namespace AntlrUnitTests
+protected AntlrTool newTool()
+{
+AntlrTool tool = new AntlrTool();
+-            tool.setOutputDirectory( tmpdir );
++            tool.SetOutputDirectory( tmpdir );
+tool.TestMode = true;
+return tool;
+}
+@@ -322,7 +322,7 @@ namespace AntlrUnitTests
+ErrorManager.setErrorListener(equeue);
+*/
+AntlrTool antlr = new AntlrTool( optionsA );
+-                antlr.process();
++                antlr.Process();
+IANTLRErrorListener listener = ErrorManager.getErrorListener();
+if ( listener is ErrorQueue )
+{
+diff --git a/Antlr3.Test/TestAttributes.cs b/Antlr3.Test/TestAttributes.cs
+index f2788fd..48f6e68 100644
+--- a/Antlr3.Test/TestAttributes.cs
++++ b/Antlr3.Test/TestAttributes.cs
+@@ -739,7 +739,7 @@ namespace AntlrUnitTests
+"b : r=a {###" + action + "!!!}\n" +
+"  ;" );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer(); // codegen phase sets some vars we need
+@@ -759,7 +759,7 @@ namespace AntlrUnitTests
+"parser grammar t;\n" +
+"a : A a {$a.text} | B ;" );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -784,7 +784,7 @@ namespace AntlrUnitTests
+"b : r=a {###" + action + "!!!}\n" +
+"  ;" );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer(); // codegen phase sets some vars we need
+@@ -811,7 +811,7 @@ namespace AntlrUnitTests
+"a returns [int x]\n" +
+"  : ;\n" );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer(); // codegen phase sets some vars we need
+@@ -2302,7 +2302,7 @@ namespace AntlrUnitTests
+"a : ID {" + action + "} ;" +
+"ID : 'a';\n" );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+
+ActionTranslator translator =
+@@ -2334,7 +2334,7 @@ namespace AntlrUnitTests
+"a : r {###" + action + "!!!} ;" +
+"r : 'a';\n" );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -2359,7 +2359,7 @@ namespace AntlrUnitTests
+"a : x=r {###" + action + "!!!} ;" +
+"r : 'a';\n" );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -2385,7 +2385,7 @@ namespace AntlrUnitTests
+"a : x+=r {###" + action + "!!!} ;" +
+"r : 'a';\n" );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -2410,7 +2410,7 @@ namespace AntlrUnitTests
+"a : x=ID {" + action + "} ;" +
+"ID : 'a';\n" );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -2440,7 +2440,7 @@ namespace AntlrUnitTests
+"a : x+=ID {" + action + "} ;" +
+"ID : 'a';\n" );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -2469,7 +2469,7 @@ namespace AntlrUnitTests
+"b : 'b';\n" +
+"WS : ' '|'\n';\n" );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -2523,7 +2523,7 @@ namespace AntlrUnitTests
+"a : r ;" +
+"r[int i] : 'a';\n" );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -2545,7 +2545,7 @@ namespace AntlrUnitTests
+"a : r[32,34] ;" +
+"r : 'a';\n" );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -2627,7 +2627,7 @@ namespace AntlrUnitTests
+"a : r[32,34] ;" +
+"r[int x, int y=3] : 'a';\n" );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -2649,7 +2649,7 @@ namespace AntlrUnitTests
+"a : ID[32,34] ;" +
+"ID : 'a';\n" );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -2671,7 +2671,7 @@ namespace AntlrUnitTests
+"R : 'z' ID[32,34] ;" +
+"ID : 'a';\n" );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -2844,7 +2844,7 @@ namespace AntlrUnitTests
+"A : R ;" +
+"R[int i] : 'a';\n" );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -2967,7 +2967,7 @@ namespace AntlrUnitTests
+sr.Close();
+
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, lexerGrammar, "Java" );
+lexerGrammar.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -3001,7 +3001,7 @@ namespace AntlrUnitTests
+sr.Close();
+
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, lexerGrammar, "Java" );
+lexerGrammar.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -3029,7 +3029,7 @@ namespace AntlrUnitTests
+"ID : 'a';\n" );
+
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+ActionTranslator translator =
+new ActionTranslator( generator,
+@@ -3060,7 +3060,7 @@ namespace AntlrUnitTests
+"a : ID {" + action + "} ;" +
+"ID : 'a';\n" );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -3088,7 +3088,7 @@ namespace AntlrUnitTests
+"a : ID ID {" + action + "};" +
+"ID : 'a';\n" );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -3112,7 +3112,7 @@ namespace AntlrUnitTests
+"a : ID ID {" + action + "};" +
+"ID : 'a';\n" );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -3474,7 +3474,7 @@ namespace AntlrUnitTests
+"b : r=a {###" + action + "!!!}\n" +
+"  ;" );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer(); // codegen phase sets some vars we need
+@@ -3508,7 +3508,7 @@ namespace AntlrUnitTests
+"  ;\n" );
+
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer(); // codegen phase sets some vars we need
+diff --git a/Antlr3.Test/TestDFAConversion.cs b/Antlr3.Test/TestDFAConversion.cs
+index aead3d4..098c924 100644
+--- a/Antlr3.Test/TestDFAConversion.cs
++++ b/Antlr3.Test/TestDFAConversion.cs
+@@ -766,7 +766,7 @@ namespace AntlrUnitTests
+"a : A a | X;" ); // single rule 'a' refers to itself; no start rule
+
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -1654,9 +1654,9 @@ namespace AntlrUnitTests
+if ( expectingUnreachableAlts != null )
+{
+BitSet s = new BitSet();
+-                s.addAll( expectingUnreachableAlts );
++                s.AddAll( expectingUnreachableAlts );
+BitSet s2 = new BitSet();
+-                s2.addAll( unreachableAlts );
++                s2.AddAll( unreachableAlts );
+assertEquals( "unreachable alts mismatch", s, s2 );
+}
+else
+@@ -1702,9 +1702,9 @@ namespace AntlrUnitTests
+}
+// compare nonDetAlts with expectingNonDetAlts
+BitSet s = new BitSet();
+-                s.addAll( expectingNonDetAlts );
++                s.AddAll( expectingNonDetAlts );
+BitSet s2 = new BitSet();
+-                s2.addAll( nonDetAlts );
++                s2.AddAll( nonDetAlts );
+assertEquals( "nondet alts mismatch", s, s2 );
+assertTrue( "found no nondet alts; expecting: " +
+str( expectingNonDetAlts ),
+diff --git a/Antlr3.Test/TestIntervalSet.cs b/Antlr3.Test/TestIntervalSet.cs
+index 90cc322..5b29652 100644
+--- a/Antlr3.Test/TestIntervalSet.cs
++++ b/Antlr3.Test/TestIntervalSet.cs
+@@ -52,7 +52,7 @@ namespace AntlrUnitTests
+
+[TestMethod]
+public void TestSingleElement() /*throws Exception*/ {
+-            IntervalSet s = IntervalSet.of( 99 );
++            IntervalSet s = IntervalSet.Of( 99 );
+string expecting = "99";
+assertEquals( s.ToString(), expecting );
+}
+@@ -60,9 +60,9 @@ namespace AntlrUnitTests
+[TestMethod]
+public void TestIsolatedElements() /*throws Exception*/ {
+IntervalSet s = new IntervalSet();
+-            s.add( 1 );
+-            s.add( 'z' );
+-            s.add( '\uFFF0' );
++            s.Add( 1 );
++            s.Add( 'z' );
++            s.Add( '\uFFF0' );
+string expecting = "{1, 122, 65520}";
+assertEquals( s.ToString(), expecting );
+}
+@@ -70,161 +70,161 @@ namespace AntlrUnitTests
+[TestMethod]
+public void TestMixedRangesAndElements() /*throws Exception*/ {
+IntervalSet s = new IntervalSet();
+-            s.add( 1 );
+-            s.add( 'a', 'z' );
+-            s.add( '0', '9' );
++            s.Add( 1 );
++            s.Add( 'a', 'z' );
++            s.Add( '0', '9' );
+string expecting = "{1, 48..57, 97..122}";
+assertEquals( s.ToString(), expecting );
+}
+
+[TestMethod]
+public void TestSimpleAnd() /*throws Exception*/ {
+-            IntervalSet s = IntervalSet.of( 10, 20 );
+-            IntervalSet s2 = IntervalSet.of( 13, 15 );
++            IntervalSet s = IntervalSet.Of( 10, 20 );
++            IntervalSet s2 = IntervalSet.Of( 13, 15 );
+string expecting = "13..15";
+-            string result = ( s.and( s2 ) ).ToString();
++            string result = ( s.And( s2 ) ).ToString();
+assertEquals( result, expecting );
+}
+
+[TestMethod]
+public void TestRangeAndIsolatedElement() /*throws Exception*/ {
+-            IntervalSet s = IntervalSet.of( 'a', 'z' );
+-            IntervalSet s2 = IntervalSet.of( 'd' );
++            IntervalSet s = IntervalSet.Of( 'a', 'z' );
++            IntervalSet s2 = IntervalSet.Of( 'd' );
+string expecting = "100";
+-            string result = ( s.and( s2 ) ).ToString();
++            string result = ( s.And( s2 ) ).ToString();
+assertEquals( result, expecting );
+}
+
+[TestMethod]
+public void TestEmptyIntersection() /*throws Exception*/ {
+-            IntervalSet s = IntervalSet.of( 'a', 'z' );
+-            IntervalSet s2 = IntervalSet.of( '0', '9' );
++            IntervalSet s = IntervalSet.Of( 'a', 'z' );
++            IntervalSet s2 = IntervalSet.Of( '0', '9' );
+string expecting = "{}";
+-            string result = ( s.and( s2 ) ).ToString();
++            string result = ( s.And( s2 ) ).ToString();
+assertEquals( result, expecting );
+}
+
+[TestMethod]
+public void TestEmptyIntersectionSingleElements() /*throws Exception*/ {
+-            IntervalSet s = IntervalSet.of( 'a' );
+-            IntervalSet s2 = IntervalSet.of( 'd' );
++            IntervalSet s = IntervalSet.Of( 'a' );
++            IntervalSet s2 = IntervalSet.Of( 'd' );
+string expecting = "{}";
+-            string result = ( s.and( s2 ) ).ToString();
++            string result = ( s.And( s2 ) ).ToString();
+assertEquals( result, expecting );
+}
+
+[TestMethod]
+public void TestNotSingleElement() /*throws Exception*/ {
+-            IntervalSet vocabulary = IntervalSet.of( 1, 1000 );
+-            vocabulary.add( 2000, 3000 );
+-            IntervalSet s = IntervalSet.of( 50, 50 );
++            IntervalSet vocabulary = IntervalSet.Of( 1, 1000 );
++            vocabulary.Add( 2000, 3000 );
++            IntervalSet s = IntervalSet.Of( 50, 50 );
+string expecting = "{1..49, 51..1000, 2000..3000}";
+-            string result = ( s.complement( vocabulary ) ).ToString();
++            string result = ( s.Complement( vocabulary ) ).ToString();
+assertEquals( result, expecting );
+}
+
+[TestMethod]
+public void TestNotSet() /*throws Exception*/ {
+-            IntervalSet vocabulary = IntervalSet.of( 1, 1000 );
+-            IntervalSet s = IntervalSet.of( 50, 60 );
+-            s.add( 5 );
+-            s.add( 250, 300 );
++            IntervalSet vocabulary = IntervalSet.Of( 1, 1000 );
++            IntervalSet s = IntervalSet.Of( 50, 60 );
++            s.Add( 5 );
++            s.Add( 250, 300 );
+string expecting = "{1..4, 6..49, 61..249, 301..1000}";
+-            string result = ( s.complement( vocabulary ) ).ToString();
++            string result = ( s.Complement( vocabulary ) ).ToString();
+assertEquals( result, expecting );
+}
+
+[TestMethod]
+public void TestNotEqualSet() /*throws Exception*/ {
+-            IntervalSet vocabulary = IntervalSet.of( 1, 1000 );
+-            IntervalSet s = IntervalSet.of( 1, 1000 );
++            IntervalSet vocabulary = IntervalSet.Of( 1, 1000 );
++            IntervalSet s = IntervalSet.Of( 1, 1000 );
+string expecting = "{}";
+-            string result = ( s.complement( vocabulary ) ).ToString();
++            string result = ( s.Complement( vocabulary ) ).ToString();
+assertEquals( result, expecting );
+}
+
+[TestMethod]
+public void TestNotSetEdgeElement() /*throws Exception*/ {
+-            IntervalSet vocabulary = IntervalSet.of( 1, 2 );
+-            IntervalSet s = IntervalSet.of( 1 );
++            IntervalSet vocabulary = IntervalSet.Of( 1, 2 );
++            IntervalSet s = IntervalSet.Of( 1 );
+string expecting = "2";
+-            string result = ( s.complement( vocabulary ) ).ToString();
++            string result = ( s.Complement( vocabulary ) ).ToString();
+assertEquals( result, expecting );
+}
+
+[TestMethod]
+public void TestNotSetFragmentedVocabulary() /*throws Exception*/ {
+-            IntervalSet vocabulary = IntervalSet.of( 1, 255 );
+-            vocabulary.add( 1000, 2000 );
+-            vocabulary.add( 9999 );
+-            IntervalSet s = IntervalSet.of( 50, 60 );
+-            s.add( 3 );
+-            s.add( 250, 300 );
+-            s.add( 10000 ); // this is outside range of vocab and should be ignored
++            IntervalSet vocabulary = IntervalSet.Of( 1, 255 );
++            vocabulary.Add( 1000, 2000 );
++            vocabulary.Add( 9999 );
++            IntervalSet s = IntervalSet.Of( 50, 60 );
++            s.Add( 3 );
++            s.Add( 250, 300 );
++            s.Add( 10000 ); // this is outside range of vocab and should be ignored
+string expecting = "{1..2, 4..49, 61..249, 1000..2000, 9999}";
+-            string result = ( s.complement( vocabulary ) ).ToString();
++            string result = ( s.Complement( vocabulary ) ).ToString();
+assertEquals( result, expecting );
+}
+
+[TestMethod]
+public void TestSubtractOfCompletelyContainedRange() /*throws Exception*/ {
+-            IntervalSet s = IntervalSet.of( 10, 20 );
+-            IntervalSet s2 = IntervalSet.of( 12, 15 );
++            IntervalSet s = IntervalSet.Of( 10, 20 );
++            IntervalSet s2 = IntervalSet.Of( 12, 15 );
+string expecting = "{10..11, 16..20}";
+-            string result = ( s.subtract( s2 ) ).ToString();
++            string result = ( s.Subtract( s2 ) ).ToString();
+assertEquals( result, expecting );
+}
+
+[TestMethod]
+public void TestSubtractOfOverlappingRangeFromLeft() /*throws Exception*/ {
+-            IntervalSet s = IntervalSet.of( 10, 20 );
+-            IntervalSet s2 = IntervalSet.of( 5, 11 );
++            IntervalSet s = IntervalSet.Of( 10, 20 );
++            IntervalSet s2 = IntervalSet.Of( 5, 11 );
+string expecting = "12..20";
+-            string result = ( s.subtract( s2 ) ).ToString();
++            string result = ( s.Subtract( s2 ) ).ToString();
+assertEquals( result, expecting );
+
+-            IntervalSet s3 = IntervalSet.of( 5, 10 );
++            IntervalSet s3 = IntervalSet.Of( 5, 10 );
+expecting = "11..20";
+-            result = ( s.subtract( s3 ) ).ToString();
++            result = ( s.Subtract( s3 ) ).ToString();
+assertEquals( result, expecting );
+}
+
+[TestMethod]
+public void TestSubtractOfOverlappingRangeFromRight() /*throws Exception*/ {
+-            IntervalSet s = IntervalSet.of( 10, 20 );
+-            IntervalSet s2 = IntervalSet.of( 15, 25 );
++            IntervalSet s = IntervalSet.Of( 10, 20 );
++            IntervalSet s2 = IntervalSet.Of( 15, 25 );
+string expecting = "10..14";
+-            string result = ( s.subtract( s2 ) ).ToString();
++            string result = ( s.Subtract( s2 ) ).ToString();
+assertEquals( result, expecting );
+
+-            IntervalSet s3 = IntervalSet.of( 20, 25 );
++            IntervalSet s3 = IntervalSet.Of( 20, 25 );
+expecting = "10..19";
+-            result = ( s.subtract( s3 ) ).ToString();
++            result = ( s.Subtract( s3 ) ).ToString();
+assertEquals( result, expecting );
+}
+
+[TestMethod]
+public void TestSubtractOfCompletelyCoveredRange() /*throws Exception*/ {
+-            IntervalSet s = IntervalSet.of( 10, 20 );
+-            IntervalSet s2 = IntervalSet.of( 1, 25 );
++            IntervalSet s = IntervalSet.Of( 10, 20 );
++            IntervalSet s2 = IntervalSet.Of( 1, 25 );
+string expecting = "{}";
+-            string result = ( s.subtract( s2 ) ).ToString();
++            string result = ( s.Subtract( s2 ) ).ToString();
+assertEquals( result, expecting );
+}
+
+[TestMethod]
+public void TestSubtractOfRangeSpanningMultipleRanges() /*throws Exception*/ {
+-            IntervalSet s = IntervalSet.of( 10, 20 );
+-            s.add( 30, 40 );
+-            s.add( 50, 60 ); // s has 3 ranges now: 10..20, 30..40, 50..60
+-            IntervalSet s2 = IntervalSet.of( 5, 55 ); // covers one and touches 2nd range
++            IntervalSet s = IntervalSet.Of( 10, 20 );
++            s.Add( 30, 40 );
++            s.Add( 50, 60 ); // s has 3 ranges now: 10..20, 30..40, 50..60
++            IntervalSet s2 = IntervalSet.Of( 5, 55 ); // covers one and touches 2nd range
+string expecting = "56..60";
+-            string result = ( s.subtract( s2 ) ).ToString();
++            string result = ( s.Subtract( s2 ) ).ToString();
+assertEquals( result, expecting );
+
+-            IntervalSet s3 = IntervalSet.of( 15, 55 ); // touches both
++            IntervalSet s3 = IntervalSet.Of( 15, 55 ); // touches both
+expecting = "{10..14, 56..60}";
+-            result = ( s.subtract( s3 ) ).ToString();
++            result = ( s.Subtract( s3 ) ).ToString();
+assertEquals( result, expecting );
+}
+
+@@ -233,24 +233,24 @@ namespace AntlrUnitTests
+*/
+[TestMethod]
+public void TestSubtractOfWackyRange() /*throws Exception*/ {
+-            IntervalSet s = IntervalSet.of( 0, 113 );
+-            s.add( 115, 200 );
+-            IntervalSet s2 = IntervalSet.of( 0, 115 );
+-            s2.add( 117, 200 );
++            IntervalSet s = IntervalSet.Of( 0, 113 );
++            s.Add( 115, 200 );
++            IntervalSet s2 = IntervalSet.Of( 0, 115 );
++            s2.Add( 117, 200 );
+string expecting = "116";
+-            string result = ( s.subtract( s2 ) ).ToString();
++            string result = ( s.Subtract( s2 ) ).ToString();
+assertEquals( result, expecting );
+}
+
+[TestMethod]
+public void TestSimpleEquals() /*throws Exception*/ {
+-            IntervalSet s = IntervalSet.of( 10, 20 );
+-            IntervalSet s2 = IntervalSet.of( 10, 20 );
++            IntervalSet s = IntervalSet.Of( 10, 20 );
++            IntervalSet s2 = IntervalSet.Of( 10, 20 );
+Boolean expecting = true;
+Boolean result = s.Equals( s2 );
+assertEquals( result, expecting );
+
+-            IntervalSet s3 = IntervalSet.of( 15, 55 );
++            IntervalSet s3 = IntervalSet.Of( 15, 55 );
+expecting = false;
+result = s.Equals( s3 );
+assertEquals( result, expecting );
+@@ -258,18 +258,18 @@ namespace AntlrUnitTests
+
+[TestMethod]
+public void TestEquals() /*throws Exception*/ {
+-            IntervalSet s = IntervalSet.of( 10, 20 );
+-            s.add( 2 );
+-            s.add( 499, 501 );
+-            IntervalSet s2 = IntervalSet.of( 10, 20 );
+-            s2.add( 2 );
+-            s2.add( 499, 501 );
++            IntervalSet s = IntervalSet.Of( 10, 20 );
++            s.Add( 2 );
++            s.Add( 499, 501 );
++            IntervalSet s2 = IntervalSet.Of( 10, 20 );
++            s2.Add( 2 );
++            s2.Add( 499, 501 );
+Boolean expecting = true;
+Boolean result = s.Equals( s2 );
+assertEquals( result, expecting );
+
+-            IntervalSet s3 = IntervalSet.of( 10, 20 );
+-            s3.add( 2 );
++            IntervalSet s3 = IntervalSet.Of( 10, 20 );
++            s3.Add( 2 );
+expecting = false;
+result = s.Equals( s3 );
+assertEquals( result, expecting );
+@@ -277,84 +277,84 @@ namespace AntlrUnitTests
+
+[TestMethod]
+public void TestSingleElementMinusDisjointSet() /*throws Exception*/ {
+-            IntervalSet s = IntervalSet.of( 15, 15 );
+-            IntervalSet s2 = IntervalSet.of( 1, 5 );
+-            s2.add( 10, 20 );
++            IntervalSet s = IntervalSet.Of( 15, 15 );
++            IntervalSet s2 = IntervalSet.Of( 1, 5 );
++            s2.Add( 10, 20 );
+string expecting = "{}"; // 15 - {1..5, 10..20} = {}
+-            string result = s.subtract( s2 ).ToString();
++            string result = s.Subtract( s2 ).ToString();
+assertEquals( result, expecting );
+}
+
+[TestMethod]
+public void TestMembership() /*throws Exception*/ {
+-            IntervalSet s = IntervalSet.of( 15, 15 );
+-            s.add( 50, 60 );
+-            assertTrue( !s.member( 0 ) );
+-            assertTrue( !s.member( 20 ) );
+-            assertTrue( !s.member( 100 ) );
+-            assertTrue( s.member( 15 ) );
+-            assertTrue( s.member( 55 ) );
+-            assertTrue( s.member( 50 ) );
+-            assertTrue( s.member( 60 ) );
++            IntervalSet s = IntervalSet.Of( 15, 15 );
++            s.Add( 50, 60 );
++            assertTrue( !s.Contains( 0 ) );
++            assertTrue( !s.Contains( 20 ) );
++            assertTrue( !s.Contains( 100 ) );
++            assertTrue( s.Contains( 15 ) );
++            assertTrue( s.Contains( 55 ) );
++            assertTrue( s.Contains( 50 ) );
++            assertTrue( s.Contains( 60 ) );
+}
+
+// {2,15,18} & 10..20
+[TestMethod]
+public void TestIntersectionWithTwoContainedElements() /*throws Exception*/ {
+-            IntervalSet s = IntervalSet.of( 10, 20 );
+-            IntervalSet s2 = IntervalSet.of( 2, 2 );
+-            s2.add( 15 );
+-            s2.add( 18 );
++            IntervalSet s = IntervalSet.Of( 10, 20 );
++            IntervalSet s2 = IntervalSet.Of( 2, 2 );
++            s2.Add( 15 );
++            s2.Add( 18 );
+string expecting = "{15, 18}";
+-            string result = ( s.and( s2 ) ).ToString();
++            string result = ( s.And( s2 ) ).ToString();
+assertEquals( result, expecting );
+}
+
+[TestMethod]
+public void TestIntersectionWithTwoContainedElementsReversed() /*throws Exception*/ {
+-            IntervalSet s = IntervalSet.of( 10, 20 );
+-            IntervalSet s2 = IntervalSet.of( 2, 2 );
+-            s2.add( 15 );
+-            s2.add( 18 );
++            IntervalSet s = IntervalSet.Of( 10, 20 );
++            IntervalSet s2 = IntervalSet.Of( 2, 2 );
++            s2.Add( 15 );
++            s2.Add( 18 );
+string expecting = "{15, 18}";
+-            string result = ( s2.and( s ) ).ToString();
++            string result = ( s2.And( s ) ).ToString();
+assertEquals( result, expecting );
+}
+
+[TestMethod]
+public void TestComplement() /*throws Exception*/ {
+-            IntervalSet s = IntervalSet.of( 100, 100 );
+-            s.add( 101, 101 );
+-            IntervalSet s2 = IntervalSet.of( 100, 102 );
++            IntervalSet s = IntervalSet.Of( 100, 100 );
++            s.Add( 101, 101 );
++            IntervalSet s2 = IntervalSet.Of( 100, 102 );
+string expecting = "102";
+-            string result = ( s.complement( s2 ) ).ToString();
++            string result = ( s.Complement( s2 ) ).ToString();
+assertEquals( result, expecting );
+}
+
+[TestMethod]
+public void TestComplement2() /*throws Exception*/ {
+-            IntervalSet s = IntervalSet.of( 100, 101 );
+-            IntervalSet s2 = IntervalSet.of( 100, 102 );
++            IntervalSet s = IntervalSet.Of( 100, 101 );
++            IntervalSet s2 = IntervalSet.Of( 100, 102 );
+string expecting = "102";
+-            string result = ( s.complement( s2 ) ).ToString();
++            string result = ( s.Complement( s2 ) ).ToString();
+assertEquals( result, expecting );
+}
+
+[TestMethod]
+public void TestComplement3() /*throws Exception*/ {
+-            IntervalSet s = IntervalSet.of( 1, 96 );
+-            s.add( 99, Label.MAX_CHAR_VALUE );
++            IntervalSet s = IntervalSet.Of( 1, 96 );
++            s.Add( 99, Label.MAX_CHAR_VALUE );
+string expecting = "97..98";
+-            string result = ( s.complement( 1, Label.MAX_CHAR_VALUE ) ).ToString();
++            string result = ( s.Complement( 1, Label.MAX_CHAR_VALUE ) ).ToString();
+assertEquals( result, expecting );
+}
+
+[TestMethod]
+public void TestMergeOfRangesAndSingleValues() /*throws Exception*/ {
+// {0..41, 42, 43..65534}
+-            IntervalSet s = IntervalSet.of( 0, 41 );
+-            s.add( 42 );
+-            s.add( 43, 65534 );
++            IntervalSet s = IntervalSet.Of( 0, 41 );
++            s.Add( 42 );
++            s.Add( 43, 65534 );
+string expecting = "0..65534";
+string result = s.ToString();
+assertEquals( result, expecting );
+@@ -362,9 +362,9 @@ namespace AntlrUnitTests
+
+[TestMethod]
+public void TestMergeOfRangesAndSingleValuesReverse() /*throws Exception*/ {
+-            IntervalSet s = IntervalSet.of( 43, 65534 );
+-            s.add( 42 );
+-            s.add( 0, 41 );
++            IntervalSet s = IntervalSet.Of( 43, 65534 );
++            s.Add( 42 );
++            s.Add( 0, 41 );
+string expecting = "0..65534";
+string result = s.ToString();
+assertEquals( result, expecting );
+@@ -373,11 +373,11 @@ namespace AntlrUnitTests
+[TestMethod]
+public void TestMergeWhereAdditionMergesTwoExistingIntervals() /*throws Exception*/ {
+// 42, 10, {0..9, 11..41, 43..65534}
+-            IntervalSet s = IntervalSet.of( 42 );
+-            s.add( 10 );
+-            s.add( 0, 9 );
+-            s.add( 43, 65534 );
+-            s.add( 11, 41 );
++            IntervalSet s = IntervalSet.Of( 42 );
++            s.Add( 10 );
++            s.Add( 0, 9 );
++            s.Add( 43, 65534 );
++            s.Add( 11, 41 );
+string expecting = "0..65534";
+string result = s.ToString();
+assertEquals( result, expecting );
+@@ -385,9 +385,9 @@ namespace AntlrUnitTests
+
+[TestMethod]
+public void TestMergeWithDoubleOverlap() /*throws Exception*/ {
+-            IntervalSet s = IntervalSet.of( 1, 10 );
+-            s.add( 20, 30 );
+-            s.add( 5, 25 ); // overlaps two!
++            IntervalSet s = IntervalSet.Of( 1, 10 );
++            s.Add( 20, 30 );
++            s.Add( 5, 25 ); // overlaps two!
+string expecting = "1..30";
+string result = s.ToString();
+assertEquals( result, expecting );
+@@ -395,23 +395,23 @@ namespace AntlrUnitTests
+
+[TestMethod]
+public void TestSize() /*throws Exception*/ {
+-            IntervalSet s = IntervalSet.of( 20, 30 );
+-            s.add( 50, 55 );
+-            s.add( 5, 19 );
++            IntervalSet s = IntervalSet.Of( 20, 30 );
++            s.Add( 50, 55 );
++            s.Add( 5, 19 );
+string expecting = "32";
+-            string result = s.size().ToString();
++            string result = s.Count.ToString();
+assertEquals( result, expecting );
+}
+
+[TestMethod]
+public void TestToList() /*throws Exception*/ {
+-            IntervalSet s = IntervalSet.of( 20, 25 );
+-            s.add( 50, 55 );
+-            s.add( 5, 5 );
++            IntervalSet s = IntervalSet.Of( 20, 25 );
++            s.Add( 50, 55 );
++            s.Add( 5, 5 );
+string expecting = "[5, 20, 21, 22, 23, 24, 25, 50, 51, 52, 53, 54, 55]";
+IList foo = new List<object>();
+//String result = String.valueOf( s.toList() );
+-            string result = "[" + string.Join( ", ", s.toArray().Select( i => i.ToString() ).ToArray() ) + "]";
++            string result = "[" + string.Join( ", ", s.ToArray().Select( i => i.ToString() ).ToArray() ) + "]";
+assertEquals( result, expecting );
+}
+
+@@ -423,12 +423,12 @@ namespace AntlrUnitTests
+*/
+[TestMethod]
+public void TestNotRIntersectionNotT() /*throws Exception*/ {
+-            IntervalSet s = IntervalSet.of( 0, 's' );
+-            s.add( 'u', 200 );
+-            IntervalSet s2 = IntervalSet.of( 0, 'q' );
+-            s2.add( 's', 200 );
++            IntervalSet s = IntervalSet.Of( 0, 's' );
++            s.Add( 'u', 200 );
++            IntervalSet s2 = IntervalSet.Of( 0, 'q' );
++            s2.Add( 's', 200 );
+string expecting = "{0..113, 115, 117..200}";
+-            string result = ( s.and( s2 ) ).ToString();
++            string result = ( s.And( s2 ) ).ToString();
+assertEquals( result, expecting );
+}
+
+diff --git a/Antlr3.Test/TestLexer.cs b/Antlr3.Test/TestLexer.cs
+index 0190dae..5896b6e 100644
+--- a/Antlr3.Test/TestLexer.cs
++++ b/Antlr3.Test/TestLexer.cs
+@@ -272,7 +272,7 @@ namespace AntlrUnitTests
+string expecting = "match(\"\\n\\n\")";
+
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer(); // codegen phase sets some vars we need
+diff --git a/Antlr3.Test/TestRewriteAST.cs b/Antlr3.Test/TestRewriteAST.cs
+index 41a580b..5eb7275 100644
+--- a/Antlr3.Test/TestRewriteAST.cs
++++ b/Antlr3.Test/TestRewriteAST.cs
+@@ -936,7 +936,7 @@ namespace AntlrUnitTests
+
+Grammar g = new Grammar( grammar );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -1251,7 +1251,7 @@ namespace AntlrUnitTests
+
+Grammar g = new Grammar( grammar );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -1281,7 +1281,7 @@ namespace AntlrUnitTests
+
+Grammar g = new Grammar( grammar );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -1310,7 +1310,7 @@ namespace AntlrUnitTests
+
+Grammar g = new Grammar( grammar );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -1339,7 +1339,7 @@ namespace AntlrUnitTests
+
+Grammar g = new Grammar( grammar );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -1368,7 +1368,7 @@ namespace AntlrUnitTests
+
+Grammar g = new Grammar( grammar );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -1397,7 +1397,7 @@ namespace AntlrUnitTests
+
+Grammar g = new Grammar( grammar );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+diff --git a/Antlr3.Test/TestRewriteTemplates.cs b/Antlr3.Test/TestRewriteTemplates.cs
+index 887f754..9540229 100644
+--- a/Antlr3.Test/TestRewriteTemplates.cs
++++ b/Antlr3.Test/TestRewriteTemplates.cs
+@@ -269,7 +269,7 @@ namespace AntlrUnitTests
+" ;\n"
+);
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -292,7 +292,7 @@ namespace AntlrUnitTests
+" ;\n"
+);
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -312,7 +312,7 @@ namespace AntlrUnitTests
+"   ;\n"
+);
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+@@ -333,7 +333,7 @@ namespace AntlrUnitTests
+"b  : B ;\n"
+);
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+diff --git a/Antlr3.Test/TestSemanticPredicates.cs b/Antlr3.Test/TestSemanticPredicates.cs
+index 1d04650..72c4c5d 100644
+--- a/Antlr3.Test/TestSemanticPredicates.cs
++++ b/Antlr3.Test/TestSemanticPredicates.cs
+@@ -874,9 +874,9 @@ namespace AntlrUnitTests
+if ( expectingUnreachableAlts != null )
+{
+BitSet s = new BitSet();
+-                s.addAll( expectingUnreachableAlts );
++                s.AddAll( expectingUnreachableAlts );
+BitSet s2 = new BitSet();
+-                s2.addAll( unreachableAlts );
++                s2.AddAll( unreachableAlts );
+assertEquals( "unreachable alts mismatch", s, s2 );
+}
+else
+@@ -912,9 +912,9 @@ namespace AntlrUnitTests
+nondetMsg.probe.GetNonDeterministicAltsForState( nondetMsg.problemState );
+// compare nonDetAlts with expectingNonDetAlts
+BitSet s = new BitSet();
+-                s.addAll( expectingNonDetAlts );
++                s.AddAll( expectingNonDetAlts );
+BitSet s2 = new BitSet();
+-                s2.addAll( nonDetAlts );
++                s2.AddAll( nonDetAlts );
+assertEquals( "nondet alts mismatch", s, s2 );
+assertEquals( "mismatch between expected hasPredHiddenByAction", hasPredHiddenByAction,
+nondetMsg.problemState.dfa.hasPredicateBlockedByAction );
+@@ -936,9 +936,9 @@ namespace AntlrUnitTests
+var locations = insuffPredMsg.altToLocations;
+var actualAlts = locations.Keys;
+BitSet s = new BitSet();
+-                s.addAll( expectingInsufficientPredAlts );
++                s.AddAll( expectingInsufficientPredAlts );
+BitSet s2 = new BitSet();
+-                s2.addAll( actualAlts );
++                s2.AddAll( actualAlts );
+assertEquals( "mismatch between insufficiently covered alts", s, s2 );
+assertEquals( "mismatch between expected hasPredHiddenByAction", hasPredHiddenByAction,
+insuffPredMsg.problemState.dfa.hasPredicateBlockedByAction );
+diff --git a/Antlr3.Test/TestTreeGrammarRewriteAST.cs b/Antlr3.Test/TestTreeGrammarRewriteAST.cs
+index b966ee6..2a6a3ab 100644
+--- a/Antlr3.Test/TestTreeGrammarRewriteAST.cs
++++ b/Antlr3.Test/TestTreeGrammarRewriteAST.cs
+@@ -259,7 +259,7 @@ namespace AntlrUnitTests
+
+Grammar g = new Grammar( treeGrammar );
+AntlrTool antlr = newTool();
+-            antlr.setOutputDirectory( null ); // write to /dev/null
++            antlr.SetOutputDirectory( null ); // write to /dev/null
+CodeGenerator generator = new CodeGenerator( antlr, g, "Java" );
+g.setCodeGenerator( generator );
+generator.GenRecognizer();
+diff --git a/Antlr3/Analysis/DFA.cs b/Antlr3/Analysis/DFA.cs
+index 2482e09..19176cc 100644
+--- a/Antlr3/Analysis/DFA.cs
++++ b/Antlr3/Analysis/DFA.cs
+@@ -791,15 +791,15 @@ namespace Antlr3.Analysis
+else if ( label.IsSet )
+{
+IntervalSet labels = (IntervalSet)label.Set;
+-                    int lmin = labels.getMinElement();
++                    int lmin = labels.GetMinElement();
+// if valid char (don't do EOF) and less than current min
+if ( lmin < smin && lmin >= Label.MIN_CHAR_VALUE )
+{
+-                        smin = labels.getMinElement();
++                        smin = labels.GetMinElement();
+}
+-                    if ( labels.getMaxElement() > smax )
++                    if ( labels.GetMaxElement() > smax )
+{
+-                        smax = labels.getMaxElement();
++                        smax = labels.GetMaxElement();
+}
+}
+}
+@@ -894,12 +894,12 @@ namespace Antlr3.Analysis
+}
+else if ( label.IsSet )
+{
+-                    if ( label.Set.member( Label.EOT ) )
++                    if ( label.Set.Contains( Label.EOT ) )
+{
+_eot[s.stateNumber] = edge.target.stateNumber;
+}
+
+-                    if ( label.Set.member( Label.EOF ) )
++                    if ( label.Set.Contains( Label.EOF ) )
+{
+_eof[s.stateNumber] = edge.target.stateNumber;
+}
+diff --git a/Antlr3/Analysis/DFAState.cs b/Antlr3/Analysis/DFAState.cs
+index 7fb36fa..3eee67b 100644
+--- a/Antlr3/Analysis/DFAState.cs
++++ b/Antlr3/Analysis/DFAState.cs
+@@ -306,7 +306,7 @@ namespace Antlr3.Analysis
+return;
+}
+
+-            nfaConfigurations.add( c );
++            nfaConfigurations.Add( c );
+
+// track min alt rather than compute later
+if ( c.alt < minAltInConfigurations )
+@@ -408,11 +408,11 @@ namespace Antlr3.Analysis
+}
+IIntSet t = label.Set;
+IIntSet remainder = t; // remainder starts out as whole set to add
+-            int n = _reachableLabels.size(); // only look at initial elements
++            int n = _reachableLabels.Size(); // only look at initial elements
+// walk the existing list looking for the collision
+for ( int i = 0; i < n; i++ )
+{
+-                Label rl = _reachableLabels.get( i );
++                Label rl = _reachableLabels.Get( i );
+/*
+JSystem.@out.println("comparing ["+i+"]: "+label.toString(dfa.nfa.grammar)+" & "+
+rl.toString(dfa.nfa.grammar)+"="+
+@@ -430,18 +430,18 @@ namespace Antlr3.Analysis
+// Replace existing s_i with intersection since we
+// know that will always be a non nil character class
+IIntSet s_i = rl.Set;
+-                IIntSet intersection = s_i.and( t );
+-                _reachableLabels.set( i, new Label( intersection ) );
++                IIntSet intersection = s_i.And( t );
++                _reachableLabels.Set( i, new Label( intersection ) );
+
+// Compute s_i-t to see what is in current set and not in incoming
+-                IIntSet existingMinusNewElements = s_i.subtract( t );
++                IIntSet existingMinusNewElements = s_i.Subtract( t );
+//JSystem.@out.println(s_i+"-"+t+"="+existingMinusNewElements);
+if ( !existingMinusNewElements.IsNil )
+{
+// found a new character class, add to the end (doesn't affect
+// outer loop duration due to n computation a priori.
+Label newLabel = new Label( existingMinusNewElements );
+-                    _reachableLabels.add( newLabel );
++                    _reachableLabels.Add( newLabel );
+}
+
+/*
+@@ -450,7 +450,7 @@ namespace Antlr3.Analysis
+*/
+
+// anything left to add to the reachableLabels?
+-                remainder = t.subtract( s_i );
++                remainder = t.Subtract( s_i );
+if ( remainder.IsNil )
+{
+break; // nothing left to add to set.  done!
+@@ -466,7 +466,7 @@ namespace Antlr3.Analysis
+JSystem.@out.println("remainder state "+dfa.decisionNumber+"."+stateNumber+": "+remainder.toString(dfa.nfa.grammar));
+*/
+Label newLabel = new Label( remainder );
+-                _reachableLabels.add( newLabel );
++                _reachableLabels.Add( newLabel );
+}
+/*
+JSystem.@out.println("#END of add to state "+dfa.decisionNumber+"."+stateNumber+": " +
+@@ -541,10 +541,10 @@ namespace Antlr3.Analysis
+return cachedUniquelyPredicatedAlt;
+}
+int alt = NFA.INVALID_ALT_NUMBER;
+-            int numConfigs = nfaConfigurations.size();
++            int numConfigs = nfaConfigurations.Size();
+for ( int i = 0; i < numConfigs; i++ )
+{
+-                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations.get( i );
++                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations.Get( i );
+// ignore anything we resolved; predicates will still result
+// in transitions out of this state, so must count those
+// configurations; i.e., don't ignore resolveWithPredicate configs
+@@ -572,10 +572,10 @@ namespace Antlr3.Analysis
+public virtual int GetUniqueAlt()
+{
+int alt = NFA.INVALID_ALT_NUMBER;
+-            int numConfigs = nfaConfigurations.size();
++            int numConfigs = nfaConfigurations.Size();
+for ( int i = 0; i < numConfigs; i++ )
+{
+-                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations.get( i );
++                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations.Get( i );
+if ( alt == NFA.INVALID_ALT_NUMBER )
+{
+alt = configuration.alt; // found first alt
+@@ -603,10 +603,10 @@ namespace Antlr3.Analysis
+public virtual ICollection<int> GetDisabledAlternatives()
+{
+HashSet<int> disabled = new HashSet<int>();
+-            int numConfigs = nfaConfigurations.size();
++            int numConfigs = nfaConfigurations.Size();
+for ( int i = 0; i < numConfigs; i++ )
+{
+-                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations.get( i );
++                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations.Get( i );
+if ( configuration.resolved )
+{
+disabled.Add( configuration.alt );
+@@ -661,7 +661,7 @@ namespace Antlr3.Analysis
+// save the overhead.  There are many o-a->o NFA transitions
+// and so we save a hash map and iterator creation for each
+// state.
+-            int numConfigs = nfaConfigurations.size();
++            int numConfigs = nfaConfigurations.Size();
+if ( numConfigs <= 1 )
+{
+return null;
+@@ -673,9 +673,9 @@ namespace Antlr3.Analysis
+new MultiMap<int, NFAConfiguration>();
+for ( int i = 0; i < numConfigs; i++ )
+{
+-                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations.get( i );
++                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations.Get( i );
+int stateI = configuration.state;
+-                stateToConfigListMap.map( stateI, configuration );
++                stateToConfigListMap.Map( stateI, configuration );
+}
+// potential conflicts are states with > 1 configuration and diff alts
+ICollection<int> states = stateToConfigListMap.Keys.ToArray();
+@@ -785,11 +785,11 @@ namespace Antlr3.Analysis
+*/
+public virtual HashSet<int> GetAltSet()
+{
+-            int numConfigs = nfaConfigurations.size();
++            int numConfigs = nfaConfigurations.Size();
+HashSet<int> alts = new HashSet<int>();
+for ( int i = 0; i < numConfigs; i++ )
+{
+-                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations.get( i );
++                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations.Get( i );
+alts.Add( configuration.alt );
+}
+if ( alts.Count == 0 )
+@@ -801,11 +801,11 @@ namespace Antlr3.Analysis
+
+public virtual HashSet<SemanticContext> GetGatedSyntacticPredicatesInNFAConfigurations()
+{
+-            int numConfigs = nfaConfigurations.size();
++            int numConfigs = nfaConfigurations.Size();
+HashSet<SemanticContext> synpreds = new HashSet<SemanticContext>();
+for ( int i = 0; i < numConfigs; i++ )
+{
+-                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations.get( i );
++                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations.Get( i );
+SemanticContext gatedPredExpr =
+configuration.semanticContext.GatedPredicateContext;
+// if this is a manual syn pred (gated and syn pred), add
+@@ -851,10 +851,10 @@ namespace Antlr3.Analysis
+public virtual SemanticContext GetGatedPredicatesInNFAConfigurations()
+{
+SemanticContext unionOfPredicatesFromAllAlts = null;
+-            int numConfigs = nfaConfigurations.size();
++            int numConfigs = nfaConfigurations.Size();
+for ( int i = 0; i < numConfigs; i++ )
+{
+-                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations.get( i );
++                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations.Get( i );
+SemanticContext gatedPredExpr =
+configuration.semanticContext.GatedPredicateContext;
+if ( gatedPredExpr == null )
+@@ -894,9 +894,9 @@ namespace Antlr3.Analysis
+{
+StringBuilder buf = new StringBuilder();
+buf.Append( stateNumber + ":{" );
+-            for ( int i = 0; i < nfaConfigurations.size(); i++ )
++            for ( int i = 0; i < nfaConfigurations.Size(); i++ )
+{
+-                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations.get( i );
++                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations.Get( i );
+if ( i > 0 )
+{
+buf.Append( ", " );
+diff --git a/Antlr3/Analysis/DecisionProbe.cs b/Antlr3/Analysis/DecisionProbe.cs
+index d81dd39..e010e7f 100644
+--- a/Antlr3/Analysis/DecisionProbe.cs
++++ b/Antlr3/Analysis/DecisionProbe.cs
+@@ -760,7 +760,7 @@ namespace Antlr3.Analysis
+if ( d.stateNumber > 0 )
+{
+int stateI = d.stateNumber;
+-                _stateToRecursionOverflowConfigurationsMap.map( stateI, recursionNFAConfiguration );
++                _stateToRecursionOverflowConfigurationsMap.Map( stateI, recursionNFAConfiguration );
+}
+}
+
+diff --git a/Antlr3/Analysis/LL1DFA.cs b/Antlr3/Analysis/LL1DFA.cs
+index f9c4f0f..fc1b225 100644
+--- a/Antlr3/Analysis/LL1DFA.cs
++++ b/Antlr3/Analysis/LL1DFA.cs
+@@ -154,7 +154,7 @@ namespace Antlr3.Analysis
+protected virtual Label GetLabelForSet( IntervalSet edgeSet )
+{
+Label e = null;
+-            int atom = edgeSet.getSingleElement();
++            int atom = edgeSet.GetSingleElement();
+if ( atom != Label.INVALID )
+{
+e = new Label( atom );
+diff --git a/Antlr3/Analysis/Label.cs b/Antlr3/Analysis/Label.cs
+index 2b03876..a278589 100644
+--- a/Antlr3/Analysis/Label.cs
++++ b/Antlr3/Analysis/Label.cs
+@@ -141,10 +141,10 @@ namespace Antlr3.Analysis
+if ( labelSet == null )
+{
+this.label = SET;
+-                this._labelSet = IntervalSet.of( INVALID );
++                this._labelSet = IntervalSet.Of( INVALID );
+return;
+}
+-            int singleAtom = labelSet.getSingleElement();
++            int singleAtom = labelSet.GetSingleElement();
+if ( singleAtom != INVALID )
+{
+// convert back to a single atomic element if |labelSet|==1
+@@ -217,7 +217,7 @@ namespace Antlr3.Analysis
+if ( label != SET )
+{
+// convert single element to a set if they ask for it.
+-                    return IntervalSet.of( label );
++                    return IntervalSet.Of( label );
+}
+return _labelSet;
+}
+@@ -238,7 +238,7 @@ namespace Antlr3.Analysis
+l = new Label( label );
+l.label = this.label;
+l._labelSet = new IntervalSet();
+-                l._labelSet.addAll( this._labelSet );
++                l._labelSet.AddAll( this._labelSet );
+//}
+//catch ( CloneNotSupportedException e )
+//{
+@@ -251,7 +251,7 @@ namespace Antlr3.Analysis
+{
+if ( IsAtom )
+{
+-                _labelSet = IntervalSet.of( label );
++                _labelSet = IntervalSet.Of( label );
+label = SET;
+if ( a.IsAtom )
+{
+@@ -259,7 +259,7 @@ namespace Antlr3.Analysis
+}
+else if ( a.IsSet )
+{
+-                    _labelSet.addAll( a.Set );
++                    _labelSet.AddAll( a.Set );
+}
+else
+{
+@@ -275,7 +275,7 @@ namespace Antlr3.Analysis
+}
+else if ( a.IsSet )
+{
+-                    _labelSet.addAll( a.Set );
++                    _labelSet.AddAll( a.Set );
+}
+else
+{
+@@ -294,7 +294,7 @@ namespace Antlr3.Analysis
+}
+if ( IsSet )
+{
+-                return _labelSet.member( atom );
++                return _labelSet.Contains( atom );
+}
+return false;
+}
+@@ -303,12 +303,12 @@ namespace Antlr3.Analysis
+{
+if ( IsAtom )
+{
+-                return set.member( Atom );
++                return set.Contains( Atom );
+}
+if ( IsSet )
+{
+// matches if intersection non-nil
+-                return !Set.and( set ).IsNil;
++                return !Set.And( set ).IsNil;
+}
+return false;
+}
+@@ -445,17 +445,17 @@ namespace Antlr3.Analysis
+hasIntersection = true;
+}
+else if ( labelIsSet && edgeIsSet &&
+-                      !edgeLabel.Set.and( label.Set ).IsNil )
++                      !edgeLabel.Set.And( label.Set ).IsNil )
+{
+hasIntersection = true;
+}
+else if ( labelIsSet && !edgeIsSet &&
+-                      label.Set.member( edgeLabel.label ) )
++                      label.Set.Contains( edgeLabel.label ) )
+{
+hasIntersection = true;
+}
+else if ( !labelIsSet && edgeIsSet &&
+-                      edgeLabel.Set.member( label.label ) )
++                      edgeLabel.Set.Contains( label.label ) )
+{
+hasIntersection = true;
+}
+diff --git a/Antlr3/Analysis/LookaheadSet.cs b/Antlr3/Analysis/LookaheadSet.cs
+index 5b797c7..fd3ac6d 100644
+--- a/Antlr3/Analysis/LookaheadSet.cs
++++ b/Antlr3/Analysis/LookaheadSet.cs
+@@ -53,18 +53,18 @@ namespace Antlr3.Analysis
+public LookaheadSet( IIntSet s )
+: this()
+{
+-            tokenTypeSet.addAll( s );
++            tokenTypeSet.AddAll( s );
+}
+
+public LookaheadSet( int atom )
+{
+-            tokenTypeSet = IntervalSet.of( atom );
++            tokenTypeSet = IntervalSet.Of( atom );
+}
+
+public LookaheadSet( LookaheadSet other )
+: this()
+{
+-            this.tokenTypeSet.addAll( other.tokenTypeSet );
++            this.tokenTypeSet.AddAll( other.tokenTypeSet );
+}
+
+#region Properties
+@@ -79,34 +79,34 @@ namespace Antlr3.Analysis
+
+public virtual void OrInPlace( LookaheadSet other )
+{
+-            this.tokenTypeSet.addAll( other.tokenTypeSet );
++            this.tokenTypeSet.AddAll( other.tokenTypeSet );
+}
+
+public virtual LookaheadSet Or( LookaheadSet other )
+{
+-            return new LookaheadSet( tokenTypeSet.or( other.tokenTypeSet ) );
++            return new LookaheadSet( tokenTypeSet.Or( other.tokenTypeSet ) );
+}
+
+public virtual LookaheadSet Subtract( LookaheadSet other )
+{
+-            return new LookaheadSet( this.tokenTypeSet.subtract( other.tokenTypeSet ) );
++            return new LookaheadSet( this.tokenTypeSet.Subtract( other.tokenTypeSet ) );
+}
+
+public virtual bool Member( int a )
+{
+-            return tokenTypeSet.member( a );
++            return tokenTypeSet.Contains( a );
+}
+
+public virtual LookaheadSet Intersection( LookaheadSet s )
+{
+-            IIntSet i = this.tokenTypeSet.and( s.tokenTypeSet );
++            IIntSet i = this.tokenTypeSet.And( s.tokenTypeSet );
+LookaheadSet intersection = new LookaheadSet( i );
+return intersection;
+}
+
+public virtual void Remove( int a )
+{
+-            tokenTypeSet = (IntervalSet)tokenTypeSet.subtract( IntervalSet.of( a ) );
++            tokenTypeSet = (IntervalSet)tokenTypeSet.Subtract( IntervalSet.Of( a ) );
+}
+
+public override int GetHashCode()
+diff --git a/Antlr3/Analysis/NFAtoDFAConverter.cs b/Antlr3/Analysis/NFAtoDFAConverter.cs
+index 3f9d99b..6345418 100644
+--- a/Antlr3/Analysis/NFAtoDFAConverter.cs
++++ b/Antlr3/Analysis/NFAtoDFAConverter.cs
+@@ -98,7 +98,7 @@ namespace Antlr3.Analysis
+if ( _dfa.nfa.grammar.composite.watchNFAConversion )
+{
+Console.Out.WriteLine( "convert DFA state " + d.stateNumber +
+-                                       " (" + d.nfaConfigurations.size() + " nfa states)" );
++                                       " (" + d.nfaConfigurations.Size() + " nfa states)" );
+}
+int k = _dfa.UserMaxLookahead;
+if ( k > 0 && k == d.LookaheadDepth )
+@@ -684,7 +684,7 @@ namespace Antlr3.Analysis
+if ( depth == 1 && d.dfa.UserMaxLookahead == 0 )
+{ // k=* only
+d.dfa.recursiveAltSet.Add( alt ); // indicate that this alt is recursive
+-                    if ( d.dfa.recursiveAltSet.size() > 1 )
++                    if ( d.dfa.recursiveAltSet.Count > 1 )
+{
+//JSystem.@out.println("recursive alts: "+d.dfa.recursiveAltSet.toString());
+d.abortedDueToMultipleRecursiveAlts = true;
+@@ -958,7 +958,7 @@ namespace Antlr3.Analysis
+c.semanticContext );
+}
+}
+-            if ( labelDFATarget.nfaConfigurations.size() == 0 )
++            if ( labelDFATarget.nfaConfigurations.Size() == 0 )
+{
+// kill; it's empty
+_dfa.SetState( labelDFATarget.stateNumber, null );
+@@ -981,10 +981,10 @@ namespace Antlr3.Analysis
+protected virtual void ConvertToEOTAcceptState( DFAState d )
+{
+Label eot = new Label( Label.EOT );
+-            int numConfigs = d.nfaConfigurations.size();
++            int numConfigs = d.nfaConfigurations.Size();
+for ( int i = 0; i < numConfigs; i++ )
+{
+-                NFAConfiguration c = (NFAConfiguration)d.nfaConfigurations.get( i );
++                NFAConfiguration c = (NFAConfiguration)d.nfaConfigurations.Get( i );
+if ( c.resolved || c.resolveWithPredicate )
+{
+continue; // the conflict resolver indicates we must leave alone
+@@ -997,7 +997,7 @@ namespace Antlr3.Analysis
+//JSystem.@out.println("config with EOT: "+c);
+d.IsAcceptState = true;
+//JSystem.@out.println("d goes from "+d);
+-                    d.nfaConfigurations.clear();
++                    d.nfaConfigurations.Clear();
+d.AddNFAConfiguration( p, c.alt, c.context, c.semanticContext );
+//JSystem.@out.println("to "+d);
+return; // assume only one EOT transition
+@@ -1259,7 +1259,7 @@ namespace Antlr3.Analysis
+// transition on EOT to get to this DFA state as well so all
+// states in d must be targets of EOT.  These are the end states
+// created in NFAFactory.build_EOFState
+-            NFAConfiguration anyConfig = d.nfaConfigurations.get( 0 );
++            NFAConfiguration anyConfig = d.nfaConfigurations.Get( 0 );
+NFAState anyState = _dfa.nfa.GetState( anyConfig.state );
+
+// if d is target of EOT and more than one predicted alt
+@@ -1393,10 +1393,10 @@ namespace Antlr3.Analysis
+*/
+protected static void TurnOffOtherAlts( DFAState d, int min, ICollection<int> nondeterministicAlts )
+{
+-            int numConfigs = d.nfaConfigurations.size();
++            int numConfigs = d.nfaConfigurations.Size();
+for ( int i = 0; i < numConfigs; i++ )
+{
+-                NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations.get( i );
++                NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations.Get( i );
+if ( configuration.alt != min )
+{
+if ( nondeterministicAlts == null ||
+@@ -1486,9 +1486,9 @@ namespace Antlr3.Analysis
+if ( altToPredMap.Count == nondeterministicAlts.Count - 1 )
+{
+// if there are n-1 predicates for n nondeterministic alts, can fix
+-                BitSet ndSet = BitSet.of( nondeterministicAlts );
+-                BitSet predSet = BitSet.of( altToPredMap.Keys );
+-                int nakedAlt = ndSet.subtract( predSet ).getSingleElement();
++                BitSet ndSet = BitSet.Of( nondeterministicAlts );
++                BitSet predSet = BitSet.Of( altToPredMap.Keys );
++                int nakedAlt = ndSet.Subtract( predSet ).GetSingleElement();
+SemanticContext nakedAltPred = null;
+if ( nakedAlt == Max( nondeterministicAlts ) )
+{
+@@ -1518,10 +1518,10 @@ namespace Antlr3.Analysis
+
+altToPredMap[nakedAlt] = nakedAltPred;
+// set all config with alt=nakedAlt to have the computed predicate
+-                int numConfigs = d.nfaConfigurations.size();
++                int numConfigs = d.nfaConfigurations.Size();
+for ( int i = 0; i < numConfigs; i++ )
+{
+-                    NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations.get( i );
++                    NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations.Get( i );
+if ( configuration.alt == nakedAlt )
+{
+configuration.semanticContext = nakedAltPred;
+@@ -1539,10 +1539,10 @@ namespace Antlr3.Analysis
+{
+d.dfa.probe.RemoveRecursiveOverflowState( d );
+}
+-                int numConfigs = d.nfaConfigurations.size();
++                int numConfigs = d.nfaConfigurations.Size();
+for ( int i = 0; i < numConfigs; i++ )
+{
+-                    NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations.get( i );
++                    NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations.Get( i );
+SemanticContext semCtx = (SemanticContext)
+altToPredMap.get( configuration.alt );
+if ( semCtx != null )
+@@ -1619,10 +1619,10 @@ namespace Antlr3.Analysis
+//JSystem.@out.println("configs="+d.nfaConfigurations);
+//JSystem.@out.println("configs with preds?"+d.atLeastOneConfigurationHasAPredicate);
+//JSystem.@out.println("configs with preds="+d.configurationsWithPredicateEdges);
+-            int numConfigs = d.nfaConfigurations.size();
++            int numConfigs = d.nfaConfigurations.Size();
+for ( int i = 0; i < numConfigs; i++ )
+{
+-                NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations.get( i );
++                NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations.Get( i );
+int altI = configuration.alt;
+// if alt is nondeterministic, combine its predicates
+if ( nondeterministicAlts.Contains( altI ) )
+@@ -1703,7 +1703,7 @@ namespace Antlr3.Analysis
+*/
+for ( int i = 0; i < numConfigs; i++ )
+{
+-                    NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations.get( i );
++                    NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations.Get( i );
+int altI = configuration.alt;
+if ( incompletelyCoveredAlts.Contains( altI ) &&
+configuration.semanticContext == SemanticContext.EmptySemanticContext )
+@@ -1791,10 +1791,10 @@ namespace Antlr3.Analysis
+{
+List<NFAConfiguration> configsWithPreds = new List<NFAConfiguration>();
+// get a list of all configs with predicates
+-            int numConfigs = d.nfaConfigurations.size();
++            int numConfigs = d.nfaConfigurations.Size();
+for ( int i = 0; i < numConfigs; i++ )
+{
+-                NFAConfiguration c = (NFAConfiguration)d.nfaConfigurations.get( i );
++                NFAConfiguration c = (NFAConfiguration)d.nfaConfigurations.Get( i );
+if ( c.resolveWithPredicate )
+{
+configsWithPreds.Add( c );
+diff --git a/Antlr3/Antlr3.csproj b/Antlr3/Antlr3.csproj
+index 0ffa68b..b423be8 100644
+--- a/Antlr3/Antlr3.csproj
++++ b/Antlr3/Antlr3.csproj
+@@ -75,7 +75,6 @@
+<Compile Include="Codegen\Target.cs" />
+<Compile Include="Misc\Barrier.cs" />
+<Compile Include="Misc\BitSet.cs" />
+-    <Compile Include="Misc\IntArrayList.cs" />
+<Compile Include="Misc\Interval.cs" />
+<Compile Include="Misc\IntervalSet.cs" />
+<Compile Include="Misc\IntSet.cs" />
+diff --git a/Antlr3/AntlrTool.cs b/Antlr3/AntlrTool.cs
+index 51255f4..38f8e39 100644
+--- a/Antlr3/AntlrTool.cs
++++ b/Antlr3/AntlrTool.cs
+@@ -108,7 +108,7 @@ namespace Antlr3
+AntlrTool antlr = new AntlrTool( args );
+if ( !exitNow )
+{
+-                antlr.process();
++                antlr.Process();
+Environment.ExitCode = ( ErrorManager.getNumErrors() > 0 ) ? 1 : 0;
+}
+}
+@@ -119,10 +119,10 @@ namespace Antlr3
+
+public AntlrTool( string[] args )
+{
+-            processArgs( args );
++            ProcessArgs( args );
+}
+
+-        public virtual void processArgs( string[] args )
++        public virtual void ProcessArgs( string[] args )
+{
+if ( verbose )
+{
+@@ -132,7 +132,7 @@ namespace Antlr3
+
+if ( args == null || args.Length == 0 )
+{
+-                help();
++                Help();
+return;
+}
+
+@@ -225,7 +225,7 @@ namespace Antlr3
+}
+else if ( args[i] == "-version" )
+{
+-                    version();
++                    Version();
+exitNow = true;
+}
+else if ( args[i] == "-make" )
+@@ -338,21 +338,21 @@ namespace Antlr3
+}
+else if ( args[i] == "-X" )
+{
+-                    Xhelp();
++                    ExtendedHelp();
+}
+else
+{
+if ( args[i][0] != '-' )
+{
+// Must be the grammar file
+-                        addGrammarFile( args[i] );
++                        AddGrammarFile( args[i] );
+}
+}
+}
+}
+
+#if false
+-        protected virtual void checkForInvalidArguments( string[] args, Antlr.Runtime.BitSet cmdLineArgValid )
++        protected virtual void CheckForInvalidArguments( string[] args, Antlr.Runtime.BitSet cmdLineArgValid )
+{
+// check for invalid command line args
+for ( int a = 0; a < args.Length; a++ )
+@@ -376,7 +376,7 @@ namespace Antlr3
+* @param outputFiles
+* @return
+*/
+-        public virtual bool buildRequired( string grammarFileName )
++        public virtual bool BuildRequired( string grammarFileName )
+{
+BuildDependencyGenerator bd = new BuildDependencyGenerator( this, grammarFileName );
+IList<string> outputFiles = bd.getGeneratedFileList();
+@@ -411,7 +411,7 @@ namespace Antlr3
+return false;
+}
+
+-        public virtual void process()
++        public virtual void Process()
+{
+bool exceptionWhenWritingLexerFile = false;
+string lexerGrammarFileName = null;		// necessary at this scope to have access in the catch below
+@@ -426,7 +426,7 @@ namespace Antlr3
+
+try
+{
+-                sortGrammarFiles(); // update grammarFileNames
++                SortGrammarFiles(); // update grammarFileNames
+}
+catch ( Exception e )
+{
+@@ -442,7 +442,7 @@ namespace Antlr3
+{
+try
+{
+-                        if ( !buildRequired( grammarFileName ) )
++                        if ( !BuildRequired( grammarFileName ) )
+continue;
+}
+catch ( Exception e )
+@@ -470,14 +470,14 @@ namespace Antlr3
+continue;
+}
+
+-                    Grammar grammar = getRootGrammar( grammarFileName );
++                    Grammar grammar = GetRootGrammar( grammarFileName );
+// we now have all grammars read in as ASTs
+// (i.e., root and all delegates)
+grammar.composite.assignTokenTypes();
+grammar.composite.defineGrammarSymbols();
+grammar.composite.createNFAs();
+
+-                    generateRecognizer( grammar );
++                    GenerateRecognizer( grammar );
+
+if ( PrintGrammar )
+{
+@@ -508,7 +508,7 @@ namespace Antlr3
+lexerGrammarFileName = grammar.ImplicitlyGeneratedLexerFileName;
+try
+{
+-                            TextWriter w = getOutputFile( grammar, lexerGrammarFileName );
++                            TextWriter w = GetOutputFile( grammar, lexerGrammarFileName );
+w.Write( lexerGrammarStr );
+w.Close();
+}
+@@ -528,7 +528,7 @@ namespace Antlr3
+lexerGrammar.Tool = this;
+if ( TestMode )
+lexerGrammar.DefaultRuleModifier = "public";
+-                            FileInfo lexerGrammarFullFile = new FileInfo( System.IO.Path.Combine( getFileDirectory( lexerGrammarFileName ), lexerGrammarFileName ) );
++                            FileInfo lexerGrammarFullFile = new FileInfo( System.IO.Path.Combine( GetFileDirectory( lexerGrammarFileName ), lexerGrammarFileName ) );
+lexerGrammar.FileName = lexerGrammarFullFile.ToString();
+
+lexerGrammar.importTokenVocabulary( grammar );
+@@ -540,14 +540,14 @@ namespace Antlr3
+lexerGrammar.composite.defineGrammarSymbols();
+lexerGrammar.composite.createNFAs();
+
+-                            generateRecognizer( lexerGrammar );
++                            GenerateRecognizer( lexerGrammar );
+}
+finally
+{
+// make sure we clean up
+if ( deleteTempLexer )
+{
+-                                System.IO.DirectoryInfo outputDir = getOutputDirectory( lexerGrammarFileName );
++                                System.IO.DirectoryInfo outputDir = GetOutputDirectory( lexerGrammarFileName );
+FileInfo outputFile = new FileInfo( System.IO.Path.Combine( outputDir.FullName, lexerGrammarFileName ) );
+outputFile.Delete();
+}
+@@ -583,7 +583,7 @@ namespace Antlr3
+}
+}
+
+-        public virtual void sortGrammarFiles()
++        public virtual void SortGrammarFiles()
+{
+//Console.Out.WriteLine( "Grammar names " + GrammarFileNames );
+Graph<string> g = new Graph<string>();
+@@ -606,13 +606,13 @@ namespace Antlr3
+{
+string f = (string)sorted[i];
+if ( GrammarExtensions.Any( ext => f.EndsWith( ext, StringComparison.OrdinalIgnoreCase ) ) )
+-                    addGrammarFile( f );
++                    AddGrammarFile( f );
+}
+//Console.Out.WriteLine( "new grammars=" + grammarFileNames );
+}
+
+/** Get a grammar mentioned on the command-line and any delegates */
+-        public virtual Grammar getRootGrammar( string grammarFileName )
++        public virtual Grammar GetRootGrammar( string grammarFileName )
+{
+//StringTemplate.setLintMode(true);
+// grammars mentioned on command line are either roots or single grammars.
+@@ -663,21 +663,21 @@ namespace Antlr3
+*  After all NFA, comes DFA conversion for root grammar then code gen for
+*  root grammar.  DFA and code gen for delegates comes next.
+*/
+-        protected virtual void generateRecognizer( Grammar grammar )
++        protected virtual void GenerateRecognizer( Grammar grammar )
+{
+string language = (string)grammar.getOption( "language" );
+if ( language != null )
+{
+CodeGenerator generator = new CodeGenerator( this, grammar, language );
+grammar.setCodeGenerator( generator );
+-                generator.SetDebug( Debug );
+-                generator.SetProfile( Profile );
+-                generator.SetTrace( Trace );
++                generator.Debug = Debug;
++                generator.Profile = Profile;
++                generator.Trace = Trace;
+
+// generate NFA early in case of crash later (for debugging)
+if ( Generate_NFA_dot )
+{
+-                    generateNFAs( grammar );
++                    GenerateNFAs( grammar );
+}
+
+// GENERATE CODE
+@@ -685,7 +685,7 @@ namespace Antlr3
+
+if ( Generate_DFA_dot )
+{
+-                    generateDFAs( grammar );
++                    GenerateDFAs( grammar );
+}
+
+IList<Grammar> delegates = grammar.getDirectDelegates();
+@@ -695,13 +695,13 @@ namespace Antlr3
+if ( @delegate != grammar )
+{
+// already processing this one
+-                        generateRecognizer( @delegate );
++                        GenerateRecognizer( @delegate );
+}
+}
+}
+}
+
+-        public virtual void generateDFAs( Grammar g )
++        public virtual void GenerateDFAs( Grammar g )
+{
+for ( int d = 1; d <= g.NumberOfDecisions; d++ )
+{
+@@ -719,7 +719,7 @@ namespace Antlr3
+}
+try
+{
+-                    writeDOTFile( g, dotFileName, dot );
++                    WriteDOTFile( g, dotFileName, dot );
+}
+catch ( IOException ioe )
+{
+@@ -730,7 +730,7 @@ namespace Antlr3
+}
+}
+
+-        protected virtual void generateNFAs( Grammar g )
++        protected virtual void GenerateNFAs( Grammar g )
+{
+DOTGenerator dotGenerator = new DOTGenerator( g );
+ICollection<Rule> rules = g.getAllImportedRules();
+@@ -743,7 +743,7 @@ namespace Antlr3
+string dot = dotGenerator.getDOT( r.startState );
+if ( dot != null )
+{
+-                        writeDOTFile( g, r, dot );
++                        WriteDOTFile( g, r, dot );
+}
+}
+catch ( IOException ioe )
+@@ -753,26 +753,26 @@ namespace Antlr3
+}
+}
+
+-        protected virtual void writeDOTFile( Grammar g, Rule r, string dot )
++        protected virtual void WriteDOTFile( Grammar g, Rule r, string dot )
+{
+-            writeDOTFile( g, r.grammar.name + "." + r.name, dot );
++            WriteDOTFile( g, r.grammar.name + "." + r.name, dot );
+}
+
+-        protected virtual void writeDOTFile( Grammar g, string name, string dot )
++        protected virtual void WriteDOTFile( Grammar g, string name, string dot )
+{
+-            TextWriter fw = getOutputFile( g, name + ".dot" );
++            TextWriter fw = GetOutputFile( g, name + ".dot" );
+fw.Write( dot );
+fw.Close();
+}
+
+-        private static void version()
++        private static void Version()
+{
+ErrorManager.info( "ANTLR Parser Generator  Version " + new AntlrTool().VERSION );
+}
+
+-        private static void help()
++        private static void Help()
+{
+-            version();
++            Version();
+Console.Error.WriteLine( "usage: java org.antlr.Tool [args] file.g [file2.g file3.g ...]" );
+Console.Error.WriteLine( "  -o outputDir          specify output directory where all output is generated" );
+Console.Error.WriteLine( "  -fo outputDir         same as -o but force even files with relative paths to dir" );
+@@ -792,9 +792,9 @@ namespace Antlr3
+Console.Error.WriteLine( "  -X                    display extended argument list" );
+}
+
+-        private static void Xhelp()
++        private static void ExtendedHelp()
+{
+-            version();
++            Version();
+Console.Error.WriteLine( "  -Xgrtree               print the grammar AST" );
+Console.Error.WriteLine( "  -Xdfa                  print DFA as text " );
+Console.Error.WriteLine( "  -Xnoprune              test lookahead against EBNF block exit branches" );
+@@ -816,7 +816,7 @@ namespace Antlr3
+/// Set the location (base directory) where output files should be produced by the ANTLR tool.
+/// </summary>
+/// <param name="outputDirectory"></param>
+-        public virtual void setOutputDirectory( string outputDirectory )
++        public virtual void SetOutputDirectory( string outputDirectory )
+{
+haveOutputDir = true;
+this.outputDirectory = outputDirectory;
+@@ -831,7 +831,7 @@ namespace Antlr3
+*
+* @param forceRelativeOutput true if output files hould always be relative to base output directory
+*/
+-        public virtual void setForceRelativeOutput( bool forceRelativeOutput )
++        public virtual void SetForceRelativeOutput( bool forceRelativeOutput )
+{
+this.forceRelativeOutput = forceRelativeOutput;
+}
+@@ -847,13 +847,13 @@ namespace Antlr3
+*
+* @param inputDirectory Input source base directory
+*/
+-        public virtual void setInputDirectory( string inputDirectory )
++        public virtual void SetInputDirectory( string inputDirectory )
+{
+this.inputDirectory = inputDirectory;
+haveInputDir = true;
+}
+
+-        public virtual TextWriter getOutputFile( Grammar g, string fileName )
++        public virtual TextWriter GetOutputFile( Grammar g, string fileName )
+{
+if ( OutputDirectory == null )
+return new StringWriter();
+@@ -881,7 +881,7 @@ namespace Antlr3
+outputDir = getOutputDirectory( g.FileName );
+}
+#else
+-            System.IO.DirectoryInfo outputDir = getOutputDirectory( g.FileName );
++            System.IO.DirectoryInfo outputDir = GetOutputDirectory( g.FileName );
+#endif
+FileInfo outputFile = new FileInfo( System.IO.Path.Combine( outputDir.FullName, fileName ) );
+
+@@ -903,7 +903,7 @@ namespace Antlr3
+* @param fileNameWithPath path to input source
+* @return
+*/
+-        public virtual System.IO.DirectoryInfo getOutputDirectory( string fileNameWithPath )
++        public virtual System.IO.DirectoryInfo GetOutputDirectory( string fileNameWithPath )
+{
+string outputDir = OutputDirectory;
+
+@@ -983,7 +983,7 @@ namespace Antlr3
+*
+* @throws java.io.IOException
+*/
+-        public virtual string getLibraryFile( string fileName )
++        public virtual string GetLibraryFile( string fileName )
+{
+// First, see if we can find the file in the library directory
+//
+@@ -1013,7 +1013,7 @@ namespace Antlr3
+*  we must find the directory relative to this directory, unless the
+*  file name is given to us in absolute terms.
+*/
+-        public virtual string getFileDirectory( string fileName )
++        public virtual string GetFileDirectory( string fileName )
+{
+string f;
+if ( haveInputDir && !( fileName.StartsWith( Path.DirectorySeparatorChar.ToString() ) || fileName.StartsWith( Path.AltDirectorySeparatorChar.ToString() ) ) )
+@@ -1039,7 +1039,7 @@ namespace Antlr3
+*  directory, which means the current directory for the command line tool if there
+*  was no output directory specified.
+*/
+-        public virtual FileInfo getImportedVocabFile( string vocabName )
++        public virtual FileInfo GetImportedVocabFile( string vocabName )
+{
+string path = System.IO.Path.Combine( LibraryDirectory, vocabName + CodeGenerator.VOCAB_FILE_EXTENSION );
+if ( System.IO.File.Exists( path ) )
+@@ -1063,7 +1063,7 @@ namespace Antlr3
+
+/** If the tool needs to panic/exit, how do we do that?
+*/
+-        public virtual void panic()
++        public virtual void Panic()
+{
+throw new Exception( "ANTLR panic" );
+}
+@@ -1071,7 +1071,7 @@ namespace Antlr3
+/// <summary>
+/// Return a time stamp string accurate to sec: yyyy-mm-dd hh:mm:ss
+/// </summary>
+-        public static string getCurrentTimeStamp()
++        public static string GetCurrentTimeStamp()
+{
+return DateTime.Now.ToString( "yyyy\\-MM\\-dd HH\\:mm\\:ss" );
+}
+@@ -1391,7 +1391,7 @@ namespace Antlr3
+}
+}
+
+-        public virtual void addGrammarFile( string grammarFileName )
++        public virtual void AddGrammarFile( string grammarFileName )
+{
+if ( !GrammarFileNames.Contains( grammarFileName ) )
+GrammarFileNames.Add( grammarFileName );
+diff --git a/Antlr3/Codegen/CodeGenerator.cs b/Antlr3/Codegen/CodeGenerator.cs
+index e332b48..b75b3d4 100644
+--- a/Antlr3/Codegen/CodeGenerator.cs
++++ b/Antlr3/Codegen/CodeGenerator.cs
+@@ -69,7 +69,6 @@ namespace Antlr3.Codegen
+using MethodImpl = System.Runtime.CompilerServices.MethodImplAttribute;
+using MethodImplOptions = System.Runtime.CompilerServices.MethodImplOptions;
+using NFAState = Antlr3.Analysis.NFAState;
+-    using Obsolete = System.ObsoleteAttribute;
+using RecognitionException = Antlr.Runtime.RecognitionException;
+using Rule = Antlr3.Tool.Rule;
+using StringTemplate = Antlr3.ST.StringTemplate;
+@@ -197,21 +196,21 @@ namespace Antlr3.Codegen
+{
+get
+{
+-                return GetBaseTemplates();
++                return baseTemplates;
+}
+}
+public StringTemplate RecognizerST
+{
+get
+{
+-                return GetRecognizerST();
++                return outputFileST;
+}
+}
+public StringTemplateGroup Templates
+{
+get
+{
+-                return GetTemplates();
++                return templates;
+}
+}
+public string VocabFileName
+@@ -227,6 +226,10 @@ namespace Antlr3.Codegen
+{
+return debug;
+}
++            set
++            {
++                debug = value;
++            }
+}
+public bool Profile
+{
+@@ -234,6 +237,15 @@ namespace Antlr3.Codegen
+{
+return profile;
+}
++            set
++            {
++                profile = value;
++                if ( profile )
++                {
++                    // requires debug events
++                    Debug = true;
++                }
++            }
+}
+public bool Trace
+{
+@@ -241,6 +253,10 @@ namespace Antlr3.Codegen
+{
+return trace;
+}
++            set
++            {
++                trace = value;
++            }
+}
+#endregion
+
+@@ -549,8 +565,8 @@ namespace Antlr3.Codegen
+headerFileST.SetAttribute( "fileName", targetAppropriateFileNameString );
+outputFileST.SetAttribute( "ANTLRVersion", tool.VERSION );
+headerFileST.SetAttribute( "ANTLRVersion", tool.VERSION );
+-            outputFileST.SetAttribute( "generatedTimestamp", AntlrTool.getCurrentTimeStamp() );
+-            headerFileST.SetAttribute( "generatedTimestamp", AntlrTool.getCurrentTimeStamp() );
++            outputFileST.SetAttribute( "generatedTimestamp", AntlrTool.GetCurrentTimeStamp() );
++            headerFileST.SetAttribute( "generatedTimestamp", AntlrTool.GetCurrentTimeStamp() );
+
+{
+// GENERATE RECOGNIZER
+@@ -743,8 +759,8 @@ namespace Antlr3.Codegen
+}
+else
+{
+-                BitSet bits = BitSet.of( follow.tokenTypeSet );
+-                words = bits.toPackedArray();
++                BitSet bits = BitSet.Of( follow.tokenTypeSet );
++                words = bits.ToPackedArray();
+tokenTypeList = follow.tokenTypeSet.ToList();
+}
+// use the target to convert to hex strings (typically)
+@@ -944,7 +960,7 @@ namespace Antlr3.Codegen
+}
+StringTemplate setST = templates.GetInstanceOf( "setTest" );
+int rangeNumber = 1;
+-            foreach ( Interval I in iset.getIntervals() )
++            foreach ( Interval I in iset.GetIntervals() )
+{
+int a = I.a;
+int b = I.b;
+@@ -1425,46 +1441,6 @@ namespace Antlr3.Codegen
+
+// M I S C
+
+-        [Obsolete]
+-        public virtual StringTemplateGroup GetTemplates()
+-        {
+-            return templates;
+-        }
+-
+-        [Obsolete]
+-        public virtual StringTemplateGroup GetBaseTemplates()
+-        {
+-            return baseTemplates;
+-        }
+-
+-        [Obsolete]
+-        public virtual void SetDebug( bool debug )
+-        {
+-            this.debug = debug;
+-        }
+-
+-        [Obsolete]
+-        public virtual void SetTrace( bool trace )
+-        {
+-            this.trace = trace;
+-        }
+-
+-        [Obsolete]
+-        public virtual void SetProfile( bool profile )
+-        {
+-            this.profile = profile;
+-            if ( profile )
+-            {
+-                SetDebug( true ); // requires debug events
+-            }
+-        }
+-
+-        [Obsolete]
+-        public virtual StringTemplate GetRecognizerST()
+-        {
+-            return outputFileST;
+-        }
+-
+/** Generate TParser.java and TLexer.java from T.g if combined, else
+*  just use T.java as output regardless of type.
+*/
+@@ -1499,7 +1475,7 @@ namespace Antlr3.Codegen
+public virtual void Write( StringTemplate code, string fileName )
+{
+DateTime start = DateTime.Now;
+-            TextWriter w = tool.getOutputFile( grammar, fileName );
++            TextWriter w = tool.GetOutputFile( grammar, fileName );
+// Write the output to a StringWriter
+IStringTemplateWriter wr = templates.GetStringTemplateWriter( w );
+wr.SetLineWidth( lineWidth );
+@@ -1545,7 +1521,7 @@ namespace Antlr3.Codegen
+{
+return false;
+}
+-                size += edge.label.Set.size();
++                size += edge.label.Set.Count;
+}
+if ( s.NumberOfTransitions < MIN_SWITCH_ALTS ||
+size > MAX_SWITCH_CASE_LABELS )
+diff --git a/Antlr3/Grammars/CodeGenTreeWalker.cs b/Antlr3/Grammars/CodeGenTreeWalker.cs
+index 9e910ad..61c314f 100644
+--- a/Antlr3/Grammars/CodeGenTreeWalker.cs
++++ b/Antlr3/Grammars/CodeGenTreeWalker.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Grammars\\CodeGenTreeWalker.g3 2009-04-16 18:07:30
++// $ANTLR 3.1.2 Grammars\\CodeGenTreeWalker.g3 2009-04-16 19:01:29
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -1034,7 +1034,7 @@ public partial class CodeGenTreeWalker : TreeParser
+StringTemplateGroup saveGroup = templates;
+if ( ruleDescr.isSynPred )
+{
+-				templates = generator.GetBaseTemplates();
++				templates = generator.BaseTemplates;
+}
+
+string description = string.Empty;
+diff --git a/Antlr3/Grammars/CodeGenTreeWalker.g3 b/Antlr3/Grammars/CodeGenTreeWalker.g3
+index c8e2fc9..9867598 100644
+--- a/Antlr3/Grammars/CodeGenTreeWalker.g3
++++ b/Antlr3/Grammars/CodeGenTreeWalker.g3
+@@ -208,7 +208,7 @@ rule returns [StringTemplate code=null]
+StringTemplateGroup saveGroup = templates;
+if ( ruleDescr.isSynPred )
+{
+-		templates = generator.GetBaseTemplates();
++		templates = generator.BaseTemplates;
+}
+
+string description = string.Empty;
+diff --git a/Antlr3/Grammars/TreeToNFAConverter.cs b/Antlr3/Grammars/TreeToNFAConverter.cs
+index 33d61d3..7532fed 100644
+--- a/Antlr3/Grammars/TreeToNFAConverter.cs
++++ b/Antlr3/Grammars/TreeToNFAConverter.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Grammars\\TreeToNFAConverter.g3 2009-04-16 17:19:06
++// $ANTLR 3.1.2 Grammars\\TreeToNFAConverter.g3 2009-04-16 19:02:09
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -4174,7 +4174,7 @@ public partial class TreeToNFAConverter : TreeParser
+{
+ttype = grammar.getTokenType((c!=null?c.Text:null));
+}
+-								if ( elements.member(ttype) )
++								if ( elements.Contains(ttype) )
+{
+ErrorManager.grammarError(
+ErrorManager.MSG_DUPLICATE_SET_ENTRY,
+@@ -4209,13 +4209,13 @@ public partial class TreeToNFAConverter : TreeParser
+}
+else
+{
+-										elements.addAll(ruleSet);
++										elements.AddAll(ruleSet);
+}
+}
+else
+{
+ttype = grammar.getTokenType((t!=null?t.Text:null));
+-									if ( elements.member(ttype) )
++									if ( elements.Contains(ttype) )
+{
+ErrorManager.grammarError(
+ErrorManager.MSG_DUPLICATE_SET_ENTRY,
+@@ -4238,7 +4238,7 @@ public partial class TreeToNFAConverter : TreeParser
+{
+
+ttype = grammar.getTokenType((s!=null?s.Text:null));
+-								if ( elements.member(ttype) )
++								if ( elements.Contains(ttype) )
+{
+ErrorManager.grammarError(
+ErrorManager.MSG_DUPLICATE_SET_ENTRY,
+@@ -4269,7 +4269,7 @@ public partial class TreeToNFAConverter : TreeParser
+{
+int a = Grammar.getCharValueFromGrammarCharLiteral((c1!=null?c1.Text:null));
+int b = Grammar.getCharValueFromGrammarCharLiteral((c2!=null?c2.Text:null));
+-									elements.addAll(IntervalSet.of(a,b));
++									elements.AddAll(IntervalSet.Of(a,b));
+}
+
+}
+@@ -4288,7 +4288,7 @@ public partial class TreeToNFAConverter : TreeParser
+{
+
+Transition setTrans = (gset!=null?gset.g:default(StateCluster)).left.GetTransition(0);
+-								elements.addAll(setTrans.label.Set);
++								elements.AddAll(setTrans.label.Set);
+
+}
+
+@@ -4314,7 +4314,7 @@ public partial class TreeToNFAConverter : TreeParser
+{
+
+IIntSet not = grammar.complement(ns);
+-									elements.addAll(not);
++									elements.AddAll(not);
+
+}
+
+@@ -4874,7 +4874,7 @@ public partial class TreeToNFAConverter : TreeParser
+c2=(GrammarAST)Match(input,CHAR_LITERAL,Follow._CHAR_LITERAL_in_testSetElement1938); if (state.failed) return alts;
+
+Match(input, TokenConstants.Up, null); if (state.failed) return alts;
+-				 alts = IntervalSet.of( Grammar.getCharValueFromGrammarCharLiteral((c1!=null?c1.Text:null)), Grammar.getCharValueFromGrammarCharLiteral((c2!=null?c2.Text:null)) ).size();
++				 alts = IntervalSet.Of( Grammar.getCharValueFromGrammarCharLiteral((c1!=null?c1.Text:null)), Grammar.getCharValueFromGrammarCharLiteral((c2!=null?c2.Text:null)) ).Count;
+
+}
+break;
+@@ -4903,7 +4903,7 @@ public partial class TreeToNFAConverter : TreeParser
+if (state.failed) return alts;
+
+Match(input, TokenConstants.Up, null); if (state.failed) return alts;
+-				 alts = grammar.TokenTypes.size() - tse;
++				 alts = grammar.TokenTypes.Count - tse;
+
+}
+break;
+diff --git a/Antlr3/Grammars/TreeToNFAConverter.g3 b/Antlr3/Grammars/TreeToNFAConverter.g3
+index ea16b8e..d6e11e1 100644
+--- a/Antlr3/Grammars/TreeToNFAConverter.g3
++++ b/Antlr3/Grammars/TreeToNFAConverter.g3
+@@ -570,7 +570,7 @@ set returns [StateCluster g=null]
+$b.followingNFAState = $g.right;
+$b.SetValue = elements; // track set value of this block
+}
+-		//{System.out.println("set elements="+elements.toString(grammar));}
++		//{System.out.println("set elements="+elements.ToString(grammar));}
+;
+
+setRule returns [IIntSet elements=new IntervalSet()]
+@@ -606,7 +606,7 @@ setElement[IIntSet elements]
+{
+ttype = grammar.getTokenType($c.text);
+}
+-			if ( elements.member(ttype) )
++			if ( elements.Contains(ttype) )
+{
+ErrorManager.grammarError(
+ErrorManager.MSG_DUPLICATE_SET_ENTRY,
+@@ -632,13 +632,13 @@ setElement[IIntSet elements]
+}
+else
+{
+-					elements.addAll(ruleSet);
++					elements.AddAll(ruleSet);
+}
+}
+else
+{
+ttype = grammar.getTokenType($t.text);
+-				if ( elements.member(ttype) )
++				if ( elements.Contains(ttype) )
+{
+ErrorManager.grammarError(
+ErrorManager.MSG_DUPLICATE_SET_ENTRY,
+@@ -653,7 +653,7 @@ setElement[IIntSet elements]
+|	s=STRING_LITERAL
+{
+ttype = grammar.getTokenType($s.text);
+-			if ( elements.member(ttype) )
++			if ( elements.Contains(ttype) )
+{
+ErrorManager.grammarError(
+ErrorManager.MSG_DUPLICATE_SET_ENTRY,
+@@ -669,21 +669,21 @@ setElement[IIntSet elements]
+{
+int a = Grammar.getCharValueFromGrammarCharLiteral($c1.text);
+int b = Grammar.getCharValueFromGrammarCharLiteral($c2.text);
+-				elements.addAll(IntervalSet.of(a,b));
++				elements.AddAll(IntervalSet.Of(a,b));
+}
+}
+
+|	gset=set
+{
+Transition setTrans = $gset.g.left.GetTransition(0);
+-			elements.addAll(setTrans.label.Set);
++			elements.AddAll(setTrans.label.Set);
+}
+
+|	^(	NOT {ns=new IntervalSet();}
+setElement[ns]
+{
+IIntSet not = grammar.complement(ns);
+-				elements.addAll(not);
++				elements.AddAll(not);
+}
+)
+;
+@@ -748,10 +748,10 @@ testSetElement returns [int alts=1]
+}}
+|   {grammar.type!=Grammar.LEXER}? => s=STRING_LITERAL
+|	^(CHAR_RANGE c1=CHAR_LITERAL c2=CHAR_LITERAL)
+-		{{ $alts = IntervalSet.of( Grammar.getCharValueFromGrammarCharLiteral($c1.text), Grammar.getCharValueFromGrammarCharLiteral($c2.text) ).size(); }}
++		{{ $alts = IntervalSet.Of( Grammar.getCharValueFromGrammarCharLiteral($c1.text), Grammar.getCharValueFromGrammarCharLiteral($c2.text) ).Count; }}
+|   testBlockAsSet
+{{ $alts = $testBlockAsSet.alts; }}
+|   ^( NOT tse=testSetElement )
+-		{{ $alts = grammar.TokenTypes.size() - $tse.alts; }}
++		{{ $alts = grammar.TokenTypes.Count - $tse.alts; }}
+;
+catch[RecognitionException re] { throw re; }
+diff --git a/Antlr3/Misc/BitSet.cs b/Antlr3/Misc/BitSet.cs
+index bc2252f..2c70ddd 100644
+--- a/Antlr3/Misc/BitSet.cs
++++ b/Antlr3/Misc/BitSet.cs
+@@ -46,6 +46,7 @@ namespace Antlr3.Misc
+using Label = Antlr3.Analysis.Label;
+using Math = System.Math;
+using NotImplementedException = System.NotImplementedException;
++    using Obsolete = System.ObsoleteAttribute;
+using StringBuilder = System.Text.StringBuilder;
+
+/**A BitSet to replace java.util.BitSet.
+@@ -63,7 +64,7 @@ namespace Antlr3.Misc
+*
+* @author Terence Parr
+*/
+-    public class BitSet : IIntSet, ICloneable
++    public class BitSet : IIntSet, ICloneable, ICollection<int>
+{
+const int Bits = 64;    // number of bits / long
+const int LogBits = 6; // 2^6 == 64
+@@ -111,25 +112,44 @@ namespace Antlr3.Misc
+return true;
+}
+}
++        /** return how much space is being used by the bits array not
++         *  how many actually have member bits on.
++         */
+public int LengthInLongWords
+{
+get
+{
+-                return lengthInLongWords();
++                return _bits.Length;
+}
+}
+public int NumBits
+{
+get
+{
+-                return numBits();
++                // num words * bits per word
++                return _bits.Length << LogBits;
+}
+}
+-        public int Size
++        public int Count
+{
+get
+{
+-                return size();
++                int deg = 0;
++                for ( int i = _bits.Length - 1; i >= 0; i-- )
++                {
++                    ulong word = _bits[i];
++                    if ( word != 0L )
++                    {
++                        for ( int bit = Bits - 1; bit >= 0; bit-- )
++                        {
++                            if ( ( word & ( 1UL << bit ) ) != 0 )
++                            {
++                                deg++;
++                            }
++                        }
++                    }
++                }
++                return deg;
+}
+}
+#endregion
+@@ -138,21 +158,21 @@ namespace Antlr3.Misc
+public virtual void Add( int el )
+{
+//System.Console.Out.WriteLine( "add(" + el + ")" );
+-            int n = wordNumber( el );
++            int n = WordNumber( el );
+//System.Console.Out.WriteLine( "word number is " + n );
+//System.Console.Out.WriteLine( "bits.length " + _bits.Length );
+if ( n >= _bits.Length )
+{
+-                growToInclude( el );
++                GrowToInclude( el );
+}
+-            _bits[n] |= bitMask( el );
++            _bits[n] |= BitMask( el );
+}
+
+-        public virtual void addAll( IIntSet set )
++        public virtual void AddAll( IIntSet set )
+{
+if ( set is BitSet )
+{
+-                this.orInPlace( (BitSet)set );
++                this.OrInPlace( (BitSet)set );
+}
+else if ( set is IntervalSet )
+{
+@@ -160,7 +180,7 @@ namespace Antlr3.Misc
+// walk set and add each interval
+foreach ( Interval I in other.intervals )
+{
+-                    this.orInPlace( BitSet.range( I.a, I.b ) );
++                    this.OrInPlace( BitSet.Range( I.a, I.b ) );
+}
+}
+else
+@@ -171,7 +191,7 @@ namespace Antlr3.Misc
+}
+}
+
+-        public virtual void addAll( int[] elements )
++        public virtual void AddAll( int[] elements )
+{
+if ( elements == null )
+{
+@@ -184,7 +204,7 @@ namespace Antlr3.Misc
+}
+}
+
+-        public virtual void addAll( IEnumerable elements )
++        public virtual void AddAll( IEnumerable elements )
+{
+if ( elements == null )
+{
+@@ -201,14 +221,14 @@ namespace Antlr3.Misc
+}
+}
+
+-        public virtual IIntSet and( IIntSet a )
++        public virtual IIntSet And( IIntSet a )
+{
+BitSet s = (BitSet)this.Clone();
+-            s.andInPlace( (BitSet)a );
++            s.AndInPlace( (BitSet)a );
+return s;
+}
+
+-        public virtual void andInPlace( BitSet a )
++        public virtual void AndInPlace( BitSet a )
+{
+int min = Math.Min( _bits.Length, a._bits.Length );
+for ( int i = min - 1; i >= 0; i-- )
+@@ -222,13 +242,13 @@ namespace Antlr3.Misc
+}
+}
+
+-        private static ulong bitMask( int bitNumber )
++        private static ulong BitMask( int bitNumber )
+{
+int bitPosition = bitNumber & ModMask; // bitNumber mod BITS
+return 1UL << bitPosition;
+}
+
+-        public virtual void clear()
++        public virtual void Clear()
+{
+for ( int i = _bits.Length - 1; i >= 0; i-- )
+{
+@@ -236,14 +256,14 @@ namespace Antlr3.Misc
+}
+}
+
+-        public virtual void clear( int el )
++        public virtual void Clear( int el )
+{
+-            int n = wordNumber( el );
++            int n = WordNumber( el );
+if ( n >= _bits.Length )
+{	// grow as necessary to accommodate
+-                growToInclude( el );
++                GrowToInclude( el );
+}
+-            _bits[n] &= ~bitMask( el );
++            _bits[n] &= ~BitMask( el );
+}
+
+public virtual object Clone()
+@@ -251,26 +271,6 @@ namespace Antlr3.Misc
+return new BitSet( (ulong[])_bits.Clone() );
+}
+
+-        public virtual int size()
+-        {
+-            int deg = 0;
+-            for ( int i = _bits.Length - 1; i >= 0; i-- )
+-            {
+-                ulong word = _bits[i];
+-                if ( word != 0L )
+-                {
+-                    for ( int bit = Bits - 1; bit >= 0; bit-- )
+-                    {
+-                        if ( ( word & ( 1UL << bit ) ) != 0 )
+-                        {
+-                            deg++;
+-                        }
+-                    }
+-                }
+-            }
+-            return deg;
+-        }
+-
+public override int GetHashCode()
+{
+throw new System.NotImplementedException();
+@@ -326,30 +326,30 @@ namespace Antlr3.Misc
+* Grows the set to a larger number of bits.
+* @param bit element that must fit in set
+*/
+-        public virtual void growToInclude( int bit )
++        public virtual void GrowToInclude( int bit )
+{
+-            int newSize = Math.Max( _bits.Length << 1, numWordsToHold( bit ) );
++            int newSize = Math.Max( _bits.Length << 1, NumWordsToHold( bit ) );
+ulong[] newbits = new ulong[newSize];
+Array.Copy( _bits, newbits, _bits.Length );
+_bits = newbits;
+}
+
+-        public virtual bool member( int el )
++        public virtual bool Contains( int el )
+{
+-            int n = wordNumber( el );
++            int n = WordNumber( el );
+if ( n >= _bits.Length )
+return false;
+-            return ( _bits[n] & bitMask( el ) ) != 0;
++            return ( _bits[n] & BitMask( el ) ) != 0;
+}
+
+/** Get the first element you find and return it.  Return Label.INVALID
+*  otherwise.
+*/
+-        public virtual int getSingleElement()
++        public virtual int GetSingleElement()
+{
+for ( int i = 0; i < ( _bits.Length << LogBits ); i++ )
+{
+-                if ( member( i ) )
++                if ( Contains( i ) )
+{
+return i;
+}
+@@ -357,23 +357,23 @@ namespace Antlr3.Misc
+return Label.INVALID;
+}
+
+-        public virtual IIntSet complement()
++        public virtual IIntSet Complement()
+{
+BitSet s = (BitSet)this.Clone();
+-            s.notInPlace();
++            s.NotInPlace();
+return s;
+}
+
+-        public virtual IIntSet complement( IIntSet set )
++        public virtual IIntSet Complement( IIntSet set )
+{
+if ( set == null )
+{
+-                return this.complement();
++                return this.Complement();
+}
+-            return set.subtract( this );
++            return set.Subtract( this );
+}
+
+-        public virtual void notInPlace()
++        public virtual void NotInPlace()
+{
+for ( int i = _bits.Length - 1; i >= 0; i-- )
+{
+@@ -382,36 +382,36 @@ namespace Antlr3.Misc
+}
+
+/** complement bits in the range 0..maxBit. */
+-        public virtual void notInPlace( int maxBit )
++        public virtual void NotInPlace( int maxBit )
+{
+-            notInPlace( 0, maxBit );
++            NotInPlace( 0, maxBit );
+}
+
+/** complement bits in the range minBit..maxBit.*/
+-        public virtual void notInPlace( int minBit, int maxBit )
++        public virtual void NotInPlace( int minBit, int maxBit )
+{
+// make sure that we have room for maxBit
+-            growToInclude( maxBit );
++            GrowToInclude( maxBit );
+for ( int i = minBit; i <= maxBit; i++ )
+{
+-                int n = wordNumber( i );
+-                _bits[n] ^= bitMask( i );
++                int n = WordNumber( i );
++                _bits[n] ^= BitMask( i );
+}
+}
+
+-        private /*final*/ int numWordsToHold( int el )
++        private int NumWordsToHold( int el )
+{
+return ( el >> LogBits ) + 1;
+}
+
+-        public static BitSet of( int el )
++        public static BitSet Of( int el )
+{
+BitSet s = new BitSet( el + 1 );
+s.Add( el );
+return s;
+}
+
+-        public static BitSet of<T>( T elements )
++        public static BitSet Of<T>( T elements )
+where T : IEnumerable<int>
+{
+BitSet s = new BitSet();
+@@ -422,11 +422,11 @@ namespace Antlr3.Misc
+return s;
+}
+
+-        public static BitSet of( IntervalSet set )
++        public static BitSet Of( IntervalSet set )
+{
+-            return of( (IIntSet)set );
++            return Of( (IIntSet)set );
+}
+-        public static BitSet of( IIntSet set )
++        public static BitSet Of( IIntSet set )
+{
+if ( set == null )
+{
+@@ -440,46 +440,46 @@ namespace Antlr3.Misc
+if ( set is IntervalSet )
+{
+BitSet s = new BitSet();
+-                s.addAll( set );
++                s.AddAll( set );
+return s;
+}
+throw new ArgumentException( "can't create BitSet from " + set.GetType().Name );
+}
+
+-        public static BitSet of( IDictionary elements )
++        public static BitSet Of( IDictionary elements )
+{
+-            return BitSet.of( elements.Keys.Cast<int>() );
++            return BitSet.Of( elements.Keys.Cast<int>() );
+}
+
+-        public static BitSet of<TKey, TValue>( System.Collections.Generic.IDictionary<TKey, TValue> elements )
++        public static BitSet Of<TKey, TValue>( System.Collections.Generic.IDictionary<TKey, TValue> elements )
+{
+-            return BitSet.of( elements.Keys.Cast<int>() );
++            return BitSet.Of( elements.Keys.Cast<int>() );
+}
+
+-        public static BitSet range( int a, int b )
++        public static BitSet Range( int a, int b )
+{
+BitSet s = new BitSet( b + 1 );
+for ( int i = a; i <= b; i++ )
+{
+-                int n = wordNumber( i );
+-                s._bits[n] |= bitMask( i );
++                int n = WordNumber( i );
++                s._bits[n] |= BitMask( i );
+}
+return s;
+}
+
+/** return this | a in a new set */
+-        public virtual IIntSet or( IIntSet a )
++        public virtual IIntSet Or( IIntSet a )
+{
+if ( a == null )
+{
+return this;
+}
+BitSet s = (BitSet)this.Clone();
+-            s.orInPlace( (BitSet)a );
++            s.OrInPlace( (BitSet)a );
+return s;
+}
+
+-        public virtual void orInPlace( BitSet a )
++        public virtual void OrInPlace( BitSet a )
+{
+if ( a == null )
+{
+@@ -488,7 +488,7 @@ namespace Antlr3.Misc
+// If this is smaller than a, grow this first
+if ( a._bits.Length > _bits.Length )
+{
+-                setSize( a._bits.Length );
++                SetSize( a._bits.Length );
+}
+int min = Math.Min( _bits.Length, a._bits.Length );
+for ( int i = min - 1; i >= 0; i-- )
+@@ -498,21 +498,21 @@ namespace Antlr3.Misc
+}
+
+// remove this element from this set
+-        public virtual void remove( int el )
++        public virtual void Remove( int el )
+{
+-            int n = wordNumber( el );
++            int n = WordNumber( el );
+if ( n >= _bits.Length )
+{
+-                growToInclude( el );
++                GrowToInclude( el );
+}
+-            _bits[n] &= ~bitMask( el );
++            _bits[n] &= ~BitMask( el );
+}
+
+/**
+* Sets the size of a set.
+* @param nwords how many words the new set should be
+*/
+-        private void setSize( int nwords )
++        private void SetSize( int nwords )
+{
+ulong[] newbits = new ulong[nwords];
+int n = Math.Min( nwords, _bits.Length );
+@@ -520,31 +520,18 @@ namespace Antlr3.Misc
+_bits = newbits;
+}
+
+-        public virtual int numBits()
+-        {
+-            return _bits.Length << LogBits; // num words * bits per word
+-        }
+-
+-        /** return how much space is being used by the bits array not
+-         *  how many actually have member bits on.
+-         */
+-        public virtual int lengthInLongWords()
+-        {
+-            return _bits.Length;
+-        }
+-
+/**Is this contained within a? */
+-        public virtual bool subset( BitSet a )
++        public virtual bool Subset( BitSet a )
+{
+if ( a == null )
+return false;
+-            return this.and( a ).Equals( this );
++            return this.And( a ).Equals( this );
+}
+
+/**Subtract the elements of 'a' from 'this' in-place.
+* Basically, just turn off all bits of 'this' that are in 'a'.
+*/
+-        public virtual void subtractInPlace( BitSet a )
++        public virtual void SubtractInPlace( BitSet a )
+{
+if ( a == null )
+return;
+@@ -555,28 +542,28 @@ namespace Antlr3.Misc
+}
+}
+
+-        public virtual IIntSet subtract( IIntSet a )
++        public virtual IIntSet Subtract( IIntSet a )
+{
+if ( a == null || !( a is BitSet ) )
+return null;
+
+BitSet s = (BitSet)this.Clone();
+-            s.subtractInPlace( (BitSet)a );
++            s.SubtractInPlace( (BitSet)a );
+return s;
+}
+
+public virtual List<int> ToList()
+{
+-            throw new NotImplementedException( "BitSet.toList() unimplemented" );
++            return new List<int>( ToArray() );
+}
+
+-        public virtual int[] toArray()
++        public virtual int[] ToArray()
+{
+-            int[] elems = new int[size()];
++            int[] elems = new int[Count];
+int en = 0;
+for ( int i = 0; i < ( _bits.Length << LogBits ); i++ )
+{
+-                if ( member( i ) )
++                if ( Contains( i ) )
+{
+elems[en++] = i;
+}
+@@ -584,7 +571,7 @@ namespace Antlr3.Misc
+return elems;
+}
+
+-        public virtual ulong[] toPackedArray()
++        public virtual ulong[] ToPackedArray()
+{
+return _bits;
+}
+@@ -607,7 +594,7 @@ namespace Antlr3.Misc
+
+for ( int i = 0; i < ( _bits.Length << LogBits ); i++ )
+{
+-                if ( member( i ) )
++                if ( Contains( i ) )
+{
+if ( i > 0 && havePrintedAnElement )
+{
+@@ -643,7 +630,7 @@ namespace Antlr3.Misc
+string str = "";
+for ( int i = 0; i < ( _bits.Length << LogBits ); i++ )
+{
+-                if ( member( i ) )
++                if ( Contains( i ) )
+{
+if ( str.Length > 0 )
+{
+@@ -713,56 +700,40 @@ namespace Antlr3.Misc
+return ToString();
+}
+
+-        private static int wordNumber( int bit )
++        private static int WordNumber( int bit )
+{
+return bit >> LogBits; // bit / BITS
+}
+
+#region ICollection<int> Members
+
+-        void ICollection<int>.Clear()
+-        {
+-            throw new System.NotImplementedException();
+-        }
+-
+-        bool ICollection<int>.Contains( int item )
+-        {
+-            throw new System.NotImplementedException();
+-        }
+-
+void ICollection<int>.CopyTo( int[] array, int arrayIndex )
+{
+throw new System.NotImplementedException();
+}
+
+-        int ICollection<int>.Count
+-        {
+-            get
+-            {
+-                throw new System.NotImplementedException();
+-            }
+-        }
+-
+bool ICollection<int>.IsReadOnly
+{
+get
+{
+-                throw new System.NotImplementedException();
++                return false;
+}
+}
+
+bool ICollection<int>.Remove( int item )
+{
+-            throw new System.NotImplementedException();
++            bool removed = Contains( item );
++            Remove( item );
++            return removed;
+}
+
+#endregion
+
+#region IEnumerable<int> Members
+
+-        IEnumerator<int> IEnumerable<int>.GetEnumerator()
++        public IEnumerator<int> GetEnumerator()
+{
+-            throw new System.NotImplementedException();
++            return ToArray().Cast<int>().GetEnumerator();
+}
+
+#endregion
+@@ -771,7 +742,7 @@ namespace Antlr3.Misc
+
+System.Collections.IEnumerator IEnumerable.GetEnumerator()
+{
+-            throw new System.NotImplementedException();
++            return GetEnumerator();
+}
+
+#endregion
+diff --git a/Antlr3/Misc/IntArrayList.cs b/Antlr3/Misc/IntArrayList.cs
+deleted file mode 100644
+index 3901333..0000000
+--- a/Antlr3/Misc/IntArrayList.cs
++++ /dev/null
+@@ -1,201 +0,0 @@
+-﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
+- * All rights reserved.
+- *
+- * Conversion to C#:
+- * Copyright (c) 2008 Sam Harwell, Pixel Mine, Inc.
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. Redistributions in binary form must reproduce the above copyright
+- *    notice, this list of conditions and the following disclaimer in the
+- *    documentation and/or other materials provided with the distribution.
+- * 3. The name of the author may not be used to endorse or promote products
+- *    derived from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- */
+-
+-namespace Antlr3.Misc
+-{
+-    using System.Collections.Generic;
+-    using Antlr.Runtime.JavaExtensions;
+-
+-    using Array = System.Array;
+-    using ICloneable = System.ICloneable;
+-    using StringBuilder = System.Text.StringBuilder;
+-
+-    /** An ArrayList based upon int members.  Not quite a real implementation of a
+-     *  modifiable list as I don't do, for example, add(index,element).
+-     *  TODO: unused?
+-     */
+-    public class IntArrayList : List<object>, ICloneable
+-    {
+-        private const int DEFAULT_CAPACITY = 10;
+-        protected int n = 0;
+-        protected int[] elements = null;
+-
+-        public IntArrayList()
+-            : this( DEFAULT_CAPACITY )
+-        {
+-        }
+-
+-        public IntArrayList( int initialCapacity )
+-        {
+-            elements = new int[initialCapacity];
+-        }
+-
+-        IntArrayList( int[] elements, int n )
+-        {
+-            this.elements = elements;
+-            this.n = n;
+-        }
+-
+-        /** Set the ith element.  Like ArrayList, this does NOT affect size. */
+-        public virtual int set( int i, int newValue )
+-        {
+-            if ( i >= n )
+-            {
+-                setSize( i ); // unlike definition of set in ArrayList, set size
+-            }
+-            int v = elements[i];
+-            elements[i] = newValue;
+-            return v;
+-        }
+-
+-        public virtual bool add( int o )
+-        {
+-            if ( n >= elements.Length )
+-            {
+-                grow();
+-            }
+-            elements[n] = o;
+-            n++;
+-            return true;
+-        }
+-
+-        public virtual void setSize( int newSize )
+-        {
+-            if ( newSize >= elements.Length )
+-            {
+-                ensureCapacity( newSize );
+-            }
+-            n = newSize;
+-        }
+-
+-        protected virtual void grow()
+-        {
+-            ensureCapacity( ( elements.Length * 3 ) / 2 + 1 );
+-        }
+-
+-        public virtual bool contains( int v )
+-        {
+-            for ( int i = 0; i < n; i++ )
+-            {
+-                int element = elements[i];
+-                if ( element == v )
+-                {
+-                    return true;
+-                }
+-            }
+-            return false;
+-        }
+-
+-        public virtual void ensureCapacity( int newCapacity )
+-        {
+-            int oldCapacity = elements.Length;
+-            if ( n >= oldCapacity )
+-            {
+-                int[] oldData = elements;
+-                elements = new int[newCapacity];
+-                Array.Copy( oldData, elements, n );
+-            }
+-        }
+-
+-        public virtual object get( int i )
+-        {
+-            return element( i );
+-        }
+-
+-        public virtual int element( int i )
+-        {
+-            return elements[i];
+-        }
+-
+-        public virtual int[] getElements()
+-        {
+-            int[] a = new int[n];
+-            Array.Copy( elements, a, n );
+-            return a;
+-        }
+-
+-        public virtual int size()
+-        {
+-            return n;
+-        }
+-
+-        public virtual int capacity()
+-        {
+-            return elements.Length;
+-        }
+-
+-        public override bool Equals( object o )
+-        {
+-            if ( o == null )
+-            {
+-                return false;
+-            }
+-            IntArrayList other = (IntArrayList)o;
+-            if ( this.size() != other.size() )
+-            {
+-                return false;
+-            }
+-            for ( int i = 0; i < n; i++ )
+-            {
+-                if ( elements[i] != other.elements[i] )
+-                {
+-                    return false;
+-                }
+-            }
+-            return true;
+-        }
+-
+-        public override int GetHashCode()
+-        {
+-            return ObjectExtensions.ShiftPrimeXOR( elements.GetHashCode(), n );
+-        }
+-
+-        public virtual object Clone()
+-        {
+-            return new IntArrayList( (int[])elements.Clone(), n );
+-        }
+-
+-        public override string ToString()
+-        {
+-            StringBuilder buf = new StringBuilder();
+-            for ( int i = 0; i < n; i++ )
+-            {
+-                if ( i > 0 )
+-                {
+-                    buf.Append( ", " );
+-                }
+-                buf.Append( elements[i] );
+-            }
+-            return buf.ToString();
+-        }
+-    }
+-}
+diff --git a/Antlr3/Misc/IntSet.cs b/Antlr3/Misc/IntSet.cs
+index b4812ea..288ef64 100644
+--- a/Antlr3/Misc/IntSet.cs
++++ b/Antlr3/Misc/IntSet.cs
+@@ -50,23 +50,18 @@ namespace Antlr3.Misc
+/** Add all elements from incoming set to this set.  Can limit
+*  to set of its own type.
+*/
+-        void addAll( IIntSet set );
++        void AddAll( IIntSet set );
+
+/** Return the intersection of this set with the argument, creating
+*  a new set.
+*/
+-        IIntSet and( IIntSet a );
++        IIntSet And( IIntSet a );
+
+-        IIntSet complement( IIntSet elements );
++        IIntSet Complement( IIntSet elements );
+
+-        IIntSet or( IIntSet a );
++        IIntSet Or( IIntSet a );
+
+-        IIntSet subtract( IIntSet a );
+-
+-        /** Return the size of this set (not the underlying implementation's
+-         *  allocated memory size, for example).
+-         */
+-        int size();
++        IIntSet Subtract( IIntSet a );
+
+bool IsNil
+{
+@@ -75,12 +70,7 @@ namespace Antlr3.Misc
+
+bool Equals( object obj );
+
+-        int getSingleElement();
+-
+-        bool member( int el );
+-
+-        /** remove this element from this set */
+-        void remove( int el );
++        int GetSingleElement();
+
+List<int> ToList();
+
+diff --git a/Antlr3/Misc/Interval.cs b/Antlr3/Misc/Interval.cs
+index 0270062..979a033 100644
+--- a/Antlr3/Misc/Interval.cs
++++ b/Antlr3/Misc/Interval.cs
+@@ -61,7 +61,7 @@ namespace Antlr3.Misc
+*  Interval object with a..a in it.  On Java.g, 218623 IntervalSets
+*  have a..a (set with 1 element).
+*/
+-        public static Interval create( int a, int b )
++        public static Interval Create( int a, int b )
+{
+//return new Interval(a,b);
+// cache just a..a
+@@ -92,62 +92,62 @@ namespace Antlr3.Misc
+}
+
+/** Does this start completely before other? Disjoint */
+-        public virtual bool startsBeforeDisjoint( Interval other )
++        public virtual bool StartsBeforeDisjoint( Interval other )
+{
+return this.a < other.a && this.b < other.a;
+}
+
+/** Does this start at or before other? Nondisjoint */
+-        public virtual bool startsBeforeNonDisjoint( Interval other )
++        public virtual bool StartsBeforeNonDisjoint( Interval other )
+{
+return this.a <= other.a && this.b >= other.a;
+}
+
+/** Does this.a start after other.b? May or may not be disjoint */
+-        public virtual bool startsAfter( Interval other )
++        public virtual bool StartsAfter( Interval other )
+{
+return this.a > other.a;
+}
+
+/** Does this start completely after other? Disjoint */
+-        public virtual bool startsAfterDisjoint( Interval other )
++        public virtual bool StartsAfterDisjoint( Interval other )
+{
+return this.a > other.b;
+}
+
+/** Does this start after other? NonDisjoint */
+-        public virtual bool startsAfterNonDisjoint( Interval other )
++        public virtual bool StartsAfterNonDisjoint( Interval other )
+{
+return this.a > other.a && this.a <= other.b; // this.b>=other.b implied
+}
+
+/** Are both ranges disjoint? I.e., no overlap? */
+-        public virtual bool disjoint( Interval other )
++        public virtual bool Disjoint( Interval other )
+{
+-            return startsBeforeDisjoint( other ) || startsAfterDisjoint( other );
++            return StartsBeforeDisjoint( other ) || StartsAfterDisjoint( other );
+}
+
+/** Are two intervals adjacent such as 0..41 and 42..42? */
+-        public virtual bool adjacent( Interval other )
++        public virtual bool Adjacent( Interval other )
+{
+return this.a == other.b + 1 || this.b == other.a - 1;
+}
+
+-        public virtual bool properlyContains( Interval other )
++        public virtual bool ProperlyContains( Interval other )
+{
+return other.a >= this.a && other.b <= this.b;
+}
+
+/** Return the interval computed from combining this and other */
+-        public virtual Interval union( Interval other )
++        public virtual Interval Union( Interval other )
+{
+-            return Interval.create( Math.Min( a, other.a ), Math.Max( b, other.b ) );
++            return Interval.Create( Math.Min( a, other.a ), Math.Max( b, other.b ) );
+}
+
+/** Return the interval in common between this and o */
+-        public virtual Interval intersection( Interval other )
++        public virtual Interval Intersection( Interval other )
+{
+-            return Interval.create( Math.Max( a, other.a ), Math.Min( b, other.b ) );
++            return Interval.Create( Math.Max( a, other.a ), Math.Min( b, other.b ) );
+}
+
+/** Return the interval with elements from this not in other;
+@@ -155,20 +155,20 @@ namespace Antlr3.Misc
+*  within this, which would result in two disjoint intervals
+*  instead of the single one returned by this method.
+*/
+-        public virtual Interval differenceNotProperlyContained( Interval other )
++        public virtual Interval DifferenceNotProperlyContained( Interval other )
+{
+Interval diff = null;
+// other.a to left of this.a (or same)
+-            if ( other.startsBeforeNonDisjoint( this ) )
++            if ( other.StartsBeforeNonDisjoint( this ) )
+{
+-                diff = Interval.create( Math.Max( this.a, other.b + 1 ),
++                diff = Interval.Create( Math.Max( this.a, other.b + 1 ),
+this.b );
+}
+
+// other.a to right of this.a
+-            else if ( other.startsAfterNonDisjoint( this ) )
++            else if ( other.StartsAfterNonDisjoint( this ) )
+{
+-                diff = Interval.create( this.a, other.a - 1 );
++                diff = Interval.Create( this.a, other.a - 1 );
+}
+return diff;
+}
+diff --git a/Antlr3/Misc/IntervalSet.cs b/Antlr3/Misc/IntervalSet.cs
+index 67404bf..7697ad9 100644
+--- a/Antlr3/Misc/IntervalSet.cs
++++ b/Antlr3/Misc/IntervalSet.cs
+@@ -58,7 +58,7 @@ namespace Antlr3.Misc
+*/
+public class IntervalSet : IIntSet
+{
+-        public static readonly IntervalSet COMPLETE_SET = IntervalSet.of( 0, Label.MAX_CHAR_VALUE );
++        public static readonly IntervalSet COMPLETE_SET = IntervalSet.Of( 0, Label.MAX_CHAR_VALUE );
+
+/** The list of sorted, disjoint intervals. */
+//protected List<Interval> intervals;
+@@ -77,65 +77,65 @@ namespace Antlr3.Misc
+}
+
+#region Properties
+-        public ICollection<Interval> Intervals
++        public int Count
+{
+get
+{
+-                return getIntervals();
++                return intervals.Sum( interval => interval.b - interval.a + 1 );
+}
+}
+-        public int MaxElement
++        public ICollection<Interval> Intervals
+{
+get
+{
+-                return getMaxElement();
++                return GetIntervals();
+}
+}
+-        public int MinElement
++        public int MaxElement
+{
+get
+{
+-                return getMinElement();
++                return GetMaxElement();
+}
+}
+-        public int SingleElement
++        public int MinElement
+{
+get
+{
+-                return getSingleElement();
++                return GetMinElement();
+}
+}
+-        public int Size
++        public int SingleElement
+{
+get
+{
+-                return size();
++                return GetSingleElement();
+}
+}
+#endregion
+
+/** Create a set with a single element, el. */
+-        public static IntervalSet of( int a )
++        public static IntervalSet Of( int a )
+{
+IntervalSet s = new IntervalSet();
+-            s.add( a );
++            s.Add( a );
+return s;
+}
+
+/** Create a set with all ints within range [a..b] (inclusive) */
+-        public static IntervalSet of( int a, int b )
++        public static IntervalSet Of( int a, int b )
+{
+IntervalSet s = new IntervalSet();
+-            s.add( a, b );
++            s.Add( a, b );
+return s;
+}
+
+/** Add a single element to the set.  An isolated element is stored
+*  as a range el..el.
+*/
+-        public virtual void add( int el )
++        public virtual void Add( int el )
+{
+-            add( el, el );
++            Add( el, el );
+}
+
+/** Add interval; i.e., add all integers from a to b to set.
+@@ -145,13 +145,13 @@ namespace Antlr3.Misc
+*  If this is {1..5, 10..20}, adding 6..7 yields
+*  {1..5, 6..7, 10..20}.  Adding 4..8 yields {1..8, 10..20}.
+*/
+-        public virtual void add( int a, int b )
++        public virtual void Add( int a, int b )
+{
+-            add( Interval.create( a, b ) );
++            Add( Interval.Create( a, b ) );
+}
+
+// copy on write so we can cache a..a intervals and sets of that
+-        protected virtual void add( Interval addition )
++        protected virtual void Add( Interval addition )
+{
+//JSystem.@out.println("add "+addition+" to "+intervals.toString());
+if ( addition.b < addition.a )
+@@ -169,10 +169,10 @@ namespace Antlr3.Misc
+{
+return;
+}
+-                if ( addition.adjacent( r ) || !addition.disjoint( r ) )
++                if ( addition.Adjacent( r ) || !addition.Disjoint( r ) )
+{
+// next to each other, make a single larger interval
+-                    Interval bigger = addition.union( r );
++                    Interval bigger = addition.Union( r );
+intervals[i] = bigger;
+// make sure we didn't just create an interval that
+// should be merged with next interval in list
+@@ -181,7 +181,7 @@ namespace Antlr3.Misc
+i++;
+Interval next = intervals[i];
+//Interval next = (Interval)iter.next();
+-                        if ( bigger.adjacent( next ) || !bigger.disjoint( next ) )
++                        if ( bigger.Adjacent( next ) || !bigger.Disjoint( next ) )
+{
+// if we bump up against or overlap next, merge
+//iter.remove();   // remove this one
+@@ -189,12 +189,12 @@ namespace Antlr3.Misc
+//iter.previous(); // move backwards to what we just set
+i--;
+//iter.set( bigger.union( next ) ); // set to 3 merged ones
+-                            intervals[i] = bigger.union( next );
++                            intervals[i] = bigger.Union( next );
+}
+}
+return;
+}
+-                if ( addition.startsBeforeDisjoint( r ) )
++                if ( addition.StartsBeforeDisjoint( r ) )
+{
+// insert before r
+//iter.previous();
+@@ -210,7 +210,7 @@ namespace Antlr3.Misc
+}
+
+#if false
+-        protected virtual void add( Interval addition )
++        protected virtual void Add( Interval addition )
+{
+//JSystem.@out.println("add "+addition+" to "+intervals.toString());
+if ( addition.b < addition.a )
+@@ -262,7 +262,7 @@ namespace Antlr3.Misc
+}
+#endif
+
+-        public virtual void addAll( IIntSet set )
++        public virtual void AddAll( IIntSet set )
+{
+if ( set == null )
+{
+@@ -280,13 +280,13 @@ namespace Antlr3.Misc
+for ( int i = 0; i < n; i++ )
+{
+Interval I = (Interval)other.intervals[i];
+-                this.add( I.a, I.b );
++                this.Add( I.a, I.b );
+}
+}
+
+-        public virtual IIntSet complement( int minElement, int maxElement )
++        public virtual IIntSet Complement( int minElement, int maxElement )
+{
+-            return this.complement( IntervalSet.of( minElement, maxElement ) );
++            return this.Complement( IntervalSet.Of( minElement, maxElement ) );
+}
+
+/** Given the set of possible values (rather than, say UNICODE or MAXINT),
+@@ -295,7 +295,7 @@ namespace Antlr3.Misc
+*
+*  'this' is assumed to be either a subset or equal to vocabulary.
+*/
+-        public virtual IIntSet complement( IIntSet vocabulary )
++        public virtual IIntSet Complement( IIntSet vocabulary )
+{
+if ( vocabulary == null )
+{
+@@ -307,7 +307,7 @@ namespace Antlr3.Misc
+vocabulary.GetType().Name + ")" );
+}
+IntervalSet vocabularyIS = ( (IntervalSet)vocabulary );
+-            int maxElement = vocabularyIS.getMaxElement();
++            int maxElement = vocabularyIS.GetMaxElement();
+
+IntervalSet compl = new IntervalSet();
+int n = intervals.Count;
+@@ -319,25 +319,25 @@ namespace Antlr3.Misc
+// add a range from 0 to first.a constrained to vocab
+if ( first.a > 0 )
+{
+-                IntervalSet s = IntervalSet.of( 0, first.a - 1 );
+-                IntervalSet a = (IntervalSet)s.and( vocabularyIS );
+-                compl.addAll( a );
++                IntervalSet s = IntervalSet.Of( 0, first.a - 1 );
++                IntervalSet a = (IntervalSet)s.And( vocabularyIS );
++                compl.AddAll( a );
+}
+for ( int i = 1; i < n; i++ )
+{ // from 2nd interval .. nth
+Interval previous = (Interval)intervals[i - 1];
+Interval current = (Interval)intervals[i];
+-                IntervalSet s = IntervalSet.of( previous.b + 1, current.a - 1 );
+-                IntervalSet a = (IntervalSet)s.and( vocabularyIS );
+-                compl.addAll( a );
++                IntervalSet s = IntervalSet.Of( previous.b + 1, current.a - 1 );
++                IntervalSet a = (IntervalSet)s.And( vocabularyIS );
++                compl.AddAll( a );
+}
+Interval last = (Interval)intervals[n - 1];
+// add a range from last.b to maxElement constrained to vocab
+if ( last.b < maxElement )
+{
+-                IntervalSet s = IntervalSet.of( last.b + 1, maxElement );
+-                IntervalSet a = (IntervalSet)s.and( vocabularyIS );
+-                compl.addAll( a );
++                IntervalSet s = IntervalSet.Of( last.b + 1, maxElement );
++                IntervalSet a = (IntervalSet)s.And( vocabularyIS );
++                compl.AddAll( a );
+}
+return compl;
+}
+@@ -347,7 +347,7 @@ namespace Antlr3.Misc
+*  other is assumed to be a subset of this;
+*  anything that is in other but not in this will be ignored.
+*/
+-        public virtual IIntSet subtract( IIntSet other )
++        public virtual IIntSet Subtract( IIntSet other )
+{
+// assume the whole unicode range here for the complement
+// because it doesn't matter.  Anything beyond the max of this' set
+@@ -355,7 +355,7 @@ namespace Antlr3.Misc
+// will be empty.  The only problem would be when this' set max value
+// goes beyond MAX_CHAR_VALUE, but hopefully the constant MAX_CHAR_VALUE
+// will prevent this.
+-            return this.and( ( (IntervalSet)other ).complement( COMPLETE_SET ) );
++            return this.And( ( (IntervalSet)other ).Complement( COMPLETE_SET ) );
+}
+
+#if false
+@@ -367,7 +367,7 @@ namespace Antlr3.Misc
+*  Keep around, but 10-20-2005, I decided to make complement work w/o
+*  subtract and so then subtract can simply be a&~b
+*/
+-        public IIntSet subtract( IIntSet other )
++        public IIntSet Subtract( IIntSet other )
+{
+if ( other == null || !( other is IntervalSet ) )
+{
+@@ -501,11 +501,11 @@ namespace Antlr3.Misc
+#endif
+
+/** TODO: implement this! */
+-        public IIntSet or( IIntSet a )
++        public IIntSet Or( IIntSet a )
+{
+IntervalSet o = new IntervalSet();
+-            o.addAll( this );
+-            o.addAll( a );
++            o.AddAll( this );
++            o.AddAll( a );
+//throw new NoSuchMethodError();
+return o;
+}
+@@ -515,7 +515,7 @@ namespace Antlr3.Misc
+*  just walk them together.  This is roughly O(min(n,m)) for interval
+*  list lengths n and m.
+*/
+-        public IIntSet and( IIntSet other )
++        public IIntSet And( IIntSet other )
+{
+if ( other == null )
+{ //|| !(other instanceof IntervalSet) ) {
+@@ -535,44 +535,44 @@ namespace Antlr3.Misc
+Interval mine = (Interval)myIntervals[i];
+Interval theirs = (Interval)theirIntervals[j];
+//JSystem.@out.println("mine="+mine+" and theirs="+theirs);
+-                if ( mine.startsBeforeDisjoint( theirs ) )
++                if ( mine.StartsBeforeDisjoint( theirs ) )
+{
+// move this iterator looking for interval that might overlap
+i++;
+}
+-                else if ( theirs.startsBeforeDisjoint( mine ) )
++                else if ( theirs.StartsBeforeDisjoint( mine ) )
+{
+// move other iterator looking for interval that might overlap
+j++;
+}
+-                else if ( mine.properlyContains( theirs ) )
++                else if ( mine.ProperlyContains( theirs ) )
+{
+// overlap, add intersection, get next theirs
+if ( intersection == null )
+{
+intersection = new IntervalSet();
+}
+-                    intersection.add( mine.intersection( theirs ) );
++                    intersection.Add( mine.Intersection( theirs ) );
+j++;
+}
+-                else if ( theirs.properlyContains( mine ) )
++                else if ( theirs.ProperlyContains( mine ) )
+{
+// overlap, add intersection, get next mine
+if ( intersection == null )
+{
+intersection = new IntervalSet();
+}
+-                    intersection.add( mine.intersection( theirs ) );
++                    intersection.Add( mine.Intersection( theirs ) );
+i++;
+}
+-                else if ( !mine.disjoint( theirs ) )
++                else if ( !mine.Disjoint( theirs ) )
+{
+// overlap, add intersection
+if ( intersection == null )
+{
+intersection = new IntervalSet();
+}
+-                    intersection.add( mine.intersection( theirs ) );
++                    intersection.Add( mine.Intersection( theirs ) );
+// Move the iterator of lower range [a..b], but not
+// the upper range as it may contain elements that will collide
+// with the next iterator. So, if mine=[0..115] and
+@@ -580,11 +580,11 @@ namespace Antlr3.Misc
+// but not theirs as theirs may collide with the next range
+// in thisIter.
+// move both iterators to next ranges
+-                    if ( mine.startsAfterNonDisjoint( theirs ) )
++                    if ( mine.StartsAfterNonDisjoint( theirs ) )
+{
+j++;
+}
+-                    else if ( theirs.startsAfterNonDisjoint( mine ) )
++                    else if ( theirs.StartsAfterNonDisjoint( mine ) )
+{
+i++;
+}
+@@ -598,7 +598,7 @@ namespace Antlr3.Misc
+}
+
+/** Is el in any range of this set? */
+-        public virtual bool member( int el )
++        public virtual bool Contains( int el )
+{
+int n = intervals.Count;
+for ( int i = 0; i < n; i++ )
+@@ -640,7 +640,7 @@ namespace Antlr3.Misc
+}
+
+/** If this set is a single integer, return it otherwise Label.INVALID */
+-        public virtual int getSingleElement()
++        public virtual int GetSingleElement()
+{
+if ( intervals != null && intervals.Count == 1 )
+{
+@@ -653,7 +653,7 @@ namespace Antlr3.Misc
+return Label.INVALID;
+}
+
+-        public virtual int getMaxElement()
++        public virtual int GetMaxElement()
+{
+if ( IsNil )
+{
+@@ -664,7 +664,7 @@ namespace Antlr3.Misc
+}
+
+/** Return minimum element >= 0 */
+-        public virtual int getMinElement()
++        public virtual int GetMinElement()
+{
+if ( IsNil )
+{
+@@ -686,7 +686,7 @@ namespace Antlr3.Misc
+}
+
+/** Return a list of Interval objects. */
+-        public virtual IList<Interval> getIntervals()
++        public virtual IList<Interval> GetIntervals()
+{
+return intervals;
+}
+@@ -766,11 +766,6 @@ namespace Antlr3.Misc
+return buf.ToString();
+}
+
+-        public virtual int size()
+-        {
+-            return intervals.Sum( interval => interval.b - interval.a + 1 );
+-        }
+-
+public List<int> ToList()
+{
+int count = ( (IIntSet)this ).Count;
+@@ -789,7 +784,7 @@ namespace Antlr3.Misc
+*  don't bother to implement if you're not doing that for a new
+*  ANTLR code gen target.
+*/
+-        public virtual int get( int i )
++        public virtual int Get( int i )
+{
+int n = intervals.Count;
+int index = 0;
+@@ -810,9 +805,9 @@ namespace Antlr3.Misc
+return -1;
+}
+
+-        public int[] toArray()
++        public int[] ToArray()
+{
+-            int[] values = new int[size()];
++            int[] values = new int[Count];
+int n = intervals.Count;
+int j = 0;
+for ( int i = 0; i < n; i++ )
+@@ -829,10 +824,10 @@ namespace Antlr3.Misc
+return values;
+}
+
+-        public Antlr.Runtime.BitSet toRuntimeBitSet()
++        public Antlr.Runtime.BitSet ToRuntimeBitSet()
+{
+Antlr.Runtime.BitSet s =
+-                new Antlr.Runtime.BitSet( getMaxElement() + 1 );
++                new Antlr.Runtime.BitSet( GetMaxElement() + 1 );
+int n = intervals.Count;
+for ( int i = 0; i < n; i++ )
+{
+@@ -847,7 +842,7 @@ namespace Antlr3.Misc
+return s;
+}
+
+-        public virtual void remove( int el )
++        public virtual void Remove( int el )
+{
+throw new NotImplementedException();
+}
+@@ -864,7 +859,7 @@ namespace Antlr3.Misc
+
+void ICollection<int>.Add( int item )
+{
+-            add( item );
++            Add( item );
+}
+
+void ICollection<int>.Clear()
+@@ -874,7 +869,7 @@ namespace Antlr3.Misc
+
+bool ICollection<int>.Contains( int item )
+{
+-            return member( item );
++            return Contains( item );
+}
+
+void ICollection<int>.CopyTo( int[] array, int arrayIndex )
+@@ -882,14 +877,6 @@ namespace Antlr3.Misc
+throw new NotImplementedException();
+}
+
+-        int ICollection<int>.Count
+-        {
+-            get
+-            {
+-                return intervals.Sum( interval => interval.b - interval.a + 1 );
+-            }
+-        }
+-
+bool ICollection<int>.IsReadOnly
+{
+get
+@@ -900,7 +887,7 @@ namespace Antlr3.Misc
+
+bool ICollection<int>.Remove( int item )
+{
+-            remove( item );
++            Remove( item );
+return true;
+}
+
+diff --git a/Antlr3/Misc/MultiMap.cs b/Antlr3/Misc/MultiMap.cs
+index d873388..4fd7aca 100644
+--- a/Antlr3/Misc/MultiMap.cs
++++ b/Antlr3/Misc/MultiMap.cs
+@@ -45,11 +45,11 @@ namespace Antlr3.Misc
+{
+foreach ( var pair in collection )
+{
+-                map( pair.Key, pair.Value );
++                Map( pair.Key, pair.Value );
+}
+}
+
+-        public void map( K key, V value )
++        public void Map( K key, V value )
+{
+IList<V> elementsForKey = this.get( key );
+if ( elementsForKey == null )
+@@ -61,7 +61,7 @@ namespace Antlr3.Misc
+}
+public void Add( K key, V value )
+{
+-            map( key, value );
++            Map( key, value );
+}
+}
+}
+diff --git a/Antlr3/Misc/OrderedHashSet.cs b/Antlr3/Misc/OrderedHashSet.cs
+index afb231b..72ef92d 100644
+--- a/Antlr3/Misc/OrderedHashSet.cs
++++ b/Antlr3/Misc/OrderedHashSet.cs
+@@ -48,7 +48,7 @@ namespace Antlr3.Misc
+
+protected HashSet<T> _elementSet = new HashSet<T>();
+
+-        public T get( int i )
++        public T Get( int i )
+{
+return _elements[i];
+}
+@@ -56,7 +56,7 @@ namespace Antlr3.Misc
+/** Replace an existing value with a new value; updates the element
+*  list and the hash table, but not the key as that has not changed.
+*/
+-        public T set( int i, T value )
++        public T Set( int i, T value )
+{
+T oldElement = _elements[i];
+_elements[i] = value; // update list
+@@ -74,7 +74,7 @@ namespace Antlr3.Misc
+*  Key is object itself.  Good for say asking if a certain string is in
+*  a list of strings.
+*/
+-        public bool add( T value )
++        public bool Add( T value )
+{
+if ( _elementSet.Add( value ) )
+{
+@@ -92,7 +92,7 @@ namespace Antlr3.Misc
+//return result;
+}
+
+-        public bool remove( T o )
++        public bool Remove( T o )
+{
+throw new NotSupportedException();
+/*
+@@ -101,7 +101,7 @@ namespace Antlr3.Misc
+*/
+}
+
+-        public void clear()
++        public void Clear()
+{
+_elements.Clear();
+_elementSet.Clear();
+@@ -110,12 +110,12 @@ namespace Antlr3.Misc
+/** Return the List holding list of table elements.  Note that you are
+*  NOT getting a copy so don't write to the list.
+*/
+-        public IList<T> getElements()
++        public IList<T> GetElements()
+{
+return _elements;
+}
+
+-        public int size()
++        public int Size()
+{
+/*
+if ( elements.size()!=super.size() ) {
+@@ -133,14 +133,9 @@ namespace Antlr3.Misc
+
+#region ICollection<T> Members
+
+-        public void Add( T item )
+-        {
+-            this.add( item );
+-        }
+-
+-        public void Clear()
++        void ICollection<T>.Add( T item )
+{
+-            this.clear();
++            this.Add( item );
+}
+
+public bool Contains( T item )
+@@ -169,11 +164,6 @@ namespace Antlr3.Misc
+}
+}
+
+-        public bool Remove( T item )
+-        {
+-            throw new System.NotImplementedException();
+-        }
+-
+#endregion
+
+#region IEnumerable<T> Members
+diff --git a/Antlr3/Tool/BuildDependencyGenerator.cs b/Antlr3/Tool/BuildDependencyGenerator.cs
+index 8828ad9..191e1c2 100644
+--- a/Antlr3/Tool/BuildDependencyGenerator.cs
++++ b/Antlr3/Tool/BuildDependencyGenerator.cs
+@@ -93,7 +93,7 @@ namespace Antlr3.Tool
+{
+this.tool = tool;
+this.grammarFileName = grammarFileName;
+-            grammar = tool.getRootGrammar( grammarFileName );
++            grammar = tool.GetRootGrammar( grammarFileName );
+string language = (string)grammar.getOption( "language" );
+generator = new CodeGenerator( tool, grammar, language );
+generator.LoadTemplates( language );
+@@ -121,7 +121,7 @@ namespace Antlr3.Tool
+public virtual IList<string> getGeneratedFileList()
+{
+List<FileInfo> files = new List<FileInfo>();
+-            System.IO.DirectoryInfo outputDir = tool.getOutputDirectory( grammarFileName );
++            System.IO.DirectoryInfo outputDir = tool.GetOutputDirectory( grammarFileName );
+if ( outputDir.Name.Equals( "." ) )
+{
+outputDir = null;
+@@ -173,7 +173,7 @@ namespace Antlr3.Tool
+grammar.composite.getDelegates( grammar.composite.RootGrammar );
+foreach ( Grammar g in imports )
+{
+-                outputDir = tool.getOutputDirectory( g.FileName );
++                outputDir = tool.GetOutputDirectory( g.FileName );
+string fname = groomQualifiedFileName( outputDir.ToString(), g.getRecognizerName() + extST.ToString() );
+files.Add( new FileInfo( fname ) );
+}
+@@ -229,7 +229,7 @@ namespace Antlr3.Tool
+tokenVocab = (string)grammar.getOption( "tokenVocab" );
+if ( tokenVocab != null )
+{
+-                FileInfo vocabFile = tool.getImportedVocabFile( tokenVocab );
++                FileInfo vocabFile = tool.GetImportedVocabFile( tokenVocab );
+files.Add( vocabFile.FullName );
+}
+
+diff --git a/Antlr3/Tool/ErrorManager.cs b/Antlr3/Tool/ErrorManager.cs
+index 448f816..e8ed6a2 100644
+--- a/Antlr3/Tool/ErrorManager.cs
++++ b/Antlr3/Tool/ErrorManager.cs
+@@ -575,11 +575,11 @@ namespace Antlr3.Tool
+}
+public static String getMessageType( int msgID )
+{
+-            if ( getErrorState().warningMsgIDs.member( msgID ) )
++            if ( getErrorState().warningMsgIDs.Contains( msgID ) )
+{
+return messages.GetInstanceOf( "warning" ).ToString();
+}
+-            else if ( getErrorState().errorMsgIDs.member( msgID ) )
++            else if ( getErrorState().errorMsgIDs.Contains( msgID ) )
+{
+return messages.GetInstanceOf( "error" ).ToString();
+}
+@@ -868,13 +868,13 @@ namespace Antlr3.Tool
+
+public static bool doNotAttemptAnalysis()
+{
+-            return !getErrorState().errorMsgIDs.and( ERRORS_FORCING_NO_ANALYSIS ).IsNil;
++            return !getErrorState().errorMsgIDs.And( ERRORS_FORCING_NO_ANALYSIS ).IsNil;
+}
+
+public static bool doNotAttemptCodeGen()
+{
+return doNotAttemptAnalysis() ||
+-                   !getErrorState().errorMsgIDs.and( ERRORS_FORCING_NO_CODEGEN ).IsNil;
++                   !getErrorState().errorMsgIDs.And( ERRORS_FORCING_NO_CODEGEN ).IsNil;
+}
+
+/** Return first non ErrorManager code location for generating messages */
+@@ -1031,7 +1031,7 @@ namespace Antlr3.Tool
+}
+else
+{
+-                tool.panic();
++                tool.Panic();
+}
+}
+}
+diff --git a/Antlr3/Tool/Grammar.cs b/Antlr3/Tool/Grammar.cs
+index eb1bd19..b70a5f0 100644
+--- a/Antlr3/Tool/Grammar.cs
++++ b/Antlr3/Tool/Grammar.cs
+@@ -626,7 +626,7 @@ namespace Antlr3.Tool
+{
+return charVocabulary;
+}
+-                IIntSet allChar = IntervalSet.of( Label.MIN_CHAR_VALUE, MaxCharValue );
++                IIntSet allChar = IntervalSet.Of( Label.MIN_CHAR_VALUE, MaxCharValue );
+return allChar;
+}
+}
+@@ -874,7 +874,7 @@ namespace Antlr3.Tool
+{
+return AllCharValues;
+}
+-                return IntervalSet.of( Label.MIN_TOKEN_TYPE, MaxTokenType );
++                return IntervalSet.Of( Label.MIN_TOKEN_TYPE, MaxTokenType );
+}
+}
+public AntlrTool Tool
+@@ -1661,9 +1661,9 @@ namespace Antlr3.Tool
+for ( int alt = 1; alt < altLook.Length; alt++ )
+{
+LookaheadSet look = altLook[alt];
+-                    if ( !ds.and( look.tokenTypeSet ).IsNil )
++                    if ( !ds.And( look.tokenTypeSet ).IsNil )
+{
+-                        edgeMap.map( ds, alt );
++                        edgeMap.Map( ds, alt );
+}
+}
+}
+@@ -1704,12 +1704,12 @@ namespace Antlr3.Tool
+
+// compare t with set i for disjointness
+IntervalSet remainder = t; // remainder starts out as whole set to add
+-                int numDisjointElements = disjointSets.size();
++                int numDisjointElements = disjointSets.Size();
+for ( int i = 0; i < numDisjointElements; i++ )
+{
+-                    IntervalSet s_i = (IntervalSet)disjointSets.get( i );
++                    IntervalSet s_i = (IntervalSet)disjointSets.Get( i );
+
+-                    if ( t.and( s_i ).IsNil )
++                    if ( t.And( s_i ).IsNil )
+{ // nothing in common
+continue;
+}
+@@ -1720,21 +1720,21 @@ namespace Antlr3.Tool
+
+// Replace existing s_i with intersection since we
+// know that will always be a non nil character class
+-                    IntervalSet intersection = (IntervalSet)s_i.and( t );
+-                    disjointSets.set( i, intersection );
++                    IntervalSet intersection = (IntervalSet)s_i.And( t );
++                    disjointSets.Set( i, intersection );
+
+// Compute s_i-t to see what is in current set and not in incoming
+-                    IIntSet existingMinusNewElements = s_i.subtract( t );
++                    IIntSet existingMinusNewElements = s_i.Subtract( t );
+//JSystem.@out.println(s_i+"-"+t+"="+existingMinusNewElements);
+if ( !existingMinusNewElements.IsNil )
+{
+// found a new character class, add to the end (doesn't affect
+// outer loop duration due to n computation a priori.
+-                        disjointSets.add( existingMinusNewElements );
++                        disjointSets.Add( existingMinusNewElements );
+}
+
+// anything left to add to the reachableLabels?
+-                    remainder = (IntervalSet)t.subtract( s_i );
++                    remainder = (IntervalSet)t.Subtract( s_i );
+if ( remainder.IsNil )
+{
+break; // nothing left to add to set.  done!
+@@ -1744,10 +1744,10 @@ namespace Antlr3.Tool
+}
+if ( !remainder.IsNil )
+{
+-                    disjointSets.add( remainder );
++                    disjointSets.Add( remainder );
+}
+}
+-            return disjointSets.getElements();
++            return disjointSets.GetElements();
+}
+
+public virtual DFA createLookaheadDFA( int decision, bool wackTempStructures )
+@@ -2808,7 +2808,7 @@ namespace Antlr3.Tool
+TextReader br = null;
+try
+{
+-                string fullName = tool.getLibraryFile( gname );
++                string fullName = tool.GetLibraryFile( gname );
+//FileReader fr = new FileReader( fullName );
+//br = new BufferedReader( fr );
+br = new StringReader( System.IO.File.ReadAllText( fullName ) );
+@@ -2900,7 +2900,7 @@ namespace Antlr3.Tool
+return composite.maxTokenType;
+}
+
+-            System.IO.FileInfo fullFile = tool.getImportedVocabFile( vocabName );
++            System.IO.FileInfo fullFile = tool.GetImportedVocabFile( vocabName );
+try
+{
+FileReader fr = new FileReader( fullFile.FullName );
+@@ -3660,14 +3660,14 @@ namespace Antlr3.Tool
+{
+//JSystem.@out.println("complement "+set.toString(this));
+//JSystem.@out.println("vocabulary "+getTokenTypes().toString(this));
+-            IIntSet c = set.complement( TokenTypes );
++            IIntSet c = set.Complement( TokenTypes );
+//JSystem.@out.println("result="+c.toString(this));
+return c;
+}
+
+public virtual IIntSet complement( int atom )
+{
+-            return complement( IntervalSet.of( atom ) );
++            return complement( IntervalSet.Of( atom ) );
+}
+
+/** Given set tree like ( SET A B ), check that A and B
+diff --git a/Antlr3/Tool/GrammarReport.cs b/Antlr3/Tool/GrammarReport.cs
+index 785b732..2647f57 100644
+--- a/Antlr3/Tool/GrammarReport.cs
++++ b/Antlr3/Tool/GrammarReport.cs
+@@ -155,7 +155,7 @@ namespace Antlr3.Tool
+buf.Append( '\t' );
+buf.Append( cyclicDFAStates.Sum() );
+buf.Append( '\t' );
+-            buf.Append( grammar.TokenTypes.size() );
++            buf.Append( grammar.TokenTypes.Count );
+buf.Append( '\t' );
+buf.Append( grammar.DFACreationWallClockTimeInMS );
+buf.Append( '\t' );
+diff --git a/Antlr3/Tool/Interpreter.cs b/Antlr3/Tool/Interpreter.cs
+index 327a959..6571e3a 100644
+--- a/Antlr3/Tool/Interpreter.cs
++++ b/Antlr3/Tool/Interpreter.cs
+@@ -405,7 +405,7 @@ namespace Antlr3.Tool
+else if ( label.IsSet )
+{
+MismatchedSetException mse =
+-                            new MismatchedSetException( ( (IntervalSet)label.Set ).toRuntimeBitSet(),
++                            new MismatchedSetException( ( (IntervalSet)label.Set ).ToRuntimeBitSet(),
+input );
+if ( actions != null )
+{
+diff --git a/Antlr3/Tool/NFAFactory.cs b/Antlr3/Tool/NFAFactory.cs
+index 9bf7a1a..5c5e5b6 100644
+--- a/Antlr3/Tool/NFAFactory.cs
++++ b/Antlr3/Tool/NFAFactory.cs
+@@ -202,7 +202,7 @@ namespace Antlr3.Tool
+{
+NFAState left = newState();
+NFAState right = newState();
+-            Label label = new Label( IntervalSet.of( a, b ) );
++            Label label = new Label( IntervalSet.Of( a, b ) );
+Transition e = new Transition( label, right );
+left.AddTransition( e );
+StateCluster g = new StateCluster( left, right );
+

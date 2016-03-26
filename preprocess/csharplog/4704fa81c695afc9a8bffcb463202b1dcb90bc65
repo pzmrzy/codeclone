@@ -1,0 +1,11 @@
+commit 4704fa81c695afc9a8bffcb463202b1dcb90bc65
+Merge: 46b70a6 504e4fe
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Thu Dec 18 23:53:52 2014 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Thu Dec 18 23:53:52 2014 -0600
+
+Merge pull request #33 from sharwell/metadata
+
+Updated package metadata for Antlr3.Runtime.Debug
+

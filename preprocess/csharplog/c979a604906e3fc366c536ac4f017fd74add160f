@@ -1,0 +1,24 @@
+commit c979a604906e3fc366c536ac4f017fd74add160f
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Tue Feb 1 06:26:19 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Tue Feb 1 06:26:19 2011 -0800
+
+(C# 3) Fix region rule rewrite in TemplateParser.g3
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7594]
+
+diff --git a/Antlr4.StringTemplate/Compiler/TemplateParser.g3 b/Antlr4.StringTemplate/Compiler/TemplateParser.g3
+index 192c43e..c98829f 100644
+--- a/Antlr4.StringTemplate/Compiler/TemplateParser.g3
++++ b/Antlr4.StringTemplate/Compiler/TemplateParser.g3
+@@ -84,7 +84,7 @@ region
+:	LDELIM '@' ID RDELIM NEWLINE?
+template
+INDENT? LDELIM '@end' RDELIM NEWLINE?
+-		-> ^(REGION ID template)
++		-> ^(REGION ID template?)
+;
+
+subtemplate
+

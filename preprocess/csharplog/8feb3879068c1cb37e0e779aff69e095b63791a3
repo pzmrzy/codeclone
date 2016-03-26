@@ -1,0 +1,55 @@
+commit 8feb3879068c1cb37e0e779aff69e095b63791a3
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Mar 30 07:42:10 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Mar 30 07:42:10 2011 -0800
+
+(C# 3) Fix failure to add predicate fragment rules for imported grammars and grammars constructed directly from strings
+Fix token definitions with some imported grammars
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7979]
+
+diff --git a/Antlr3/Tool/Grammar.cs b/Antlr3/Tool/Grammar.cs
+index 30f6bc5..7ad46f4 100644
+--- a/Antlr3/Tool/Grammar.cs
++++ b/Antlr3/Tool/Grammar.cs
+@@ -623,7 +623,10 @@ namespace Antlr3.Tool
+StringReader r = new StringReader( grammarString );
+ParseAndBuildAST( r );
+composite.AssignTokenTypes();
+-            DefineGrammarSymbols();
++            //composite.TranslateLeftRecursiveRules();
++            AddRulesForSyntacticPredicates();
++            composite.DefineGrammarSymbols();
++            //composite.CreateNFAs();
+CheckNameSpaceAndActions();
+}
+
+@@ -1953,7 +1956,7 @@ namespace Antlr3.Tool
+public virtual void DefineToken( string text, int tokenType )
+{
+//JSystem.@out.println("defineToken("+text+", "+tokenType+")");
+-            if ( composite.tokenIDToTypeMap.ContainsKey( text ) && composite.tokenIDToTypeMap[text] < Antlr.Runtime.TokenTypes.Min )
++            if (composite.tokenIDToTypeMap.ContainsKey( text ))
+{
+// already defined?  Must be predefined one like EOF;
+// do nothing
+@@ -1972,7 +1975,8 @@ namespace Antlr3.Tool
+composite.typeToStringLiteralList[tokenType] = text;
+}
+else
+-            { // must be a label like ID
++            {
++                // must be a label like ID
+composite.tokenIDToTypeMap[text] = tokenType;
+}
+int index = Label.NUM_FAUX_LABELS + tokenType - 1;
+@@ -2909,6 +2913,7 @@ namespace Antlr3.Tool
+AddDelegateGrammar( delegateGrammar );
+
+delegateGrammar.ParseAndBuildAST( br );
++                delegateGrammar.AddRulesForSyntacticPredicates();
+if ( !ValidImport( delegateGrammar ) )
+{
+ErrorManager.GrammarError( ErrorManager.MSG_INVALID_IMPORT,
+

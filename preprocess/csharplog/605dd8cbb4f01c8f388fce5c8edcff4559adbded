@@ -1,0 +1,143 @@
+commit 605dd8cbb4f01c8f388fce5c8edcff4559adbded
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sun Apr 10 18:00:02 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sun Apr 10 18:00:02 2011 -0800
+
+(C# 3) Merge CL8143: Add AttributeNotFoundException
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8155]
+
+diff --git a/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj b/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj
+index 32fb27f..71bb1a1 100644
+--- a/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj
++++ b/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj
+@@ -50,6 +50,7 @@
+<Compile Include="IAttributeRenderer.cs" />
+<Compile Include="AutoIndentWriter.cs" />
+<Compile Include="Debug\DebugEvents.cs" />
++    <Compile Include="Misc\AttributeNotFoundException.cs" />
+<Compile Include="RenderOption.cs" />
+<Compile Include="TemplateFrame.cs" />
+<Compile Include="Misc\Aggregate.cs" />
+diff --git a/Antlr4.StringTemplate/Interpreter.cs b/Antlr4.StringTemplate/Interpreter.cs
+index 1aad017..4124afa 100644
+--- a/Antlr4.StringTemplate/Interpreter.cs
++++ b/Antlr4.StringTemplate/Interpreter.cs
+@@ -39,6 +39,7 @@ namespace Antlr4.StringTemplate
+using Antlr4.StringTemplate.Debug;
+using Antlr4.StringTemplate.Extensions;
+using Antlr4.StringTemplate.Misc;
++
+using ArgumentNullException = System.ArgumentNullException;
+using Array = System.Array;
+using BitConverter = System.BitConverter;
+@@ -159,7 +160,7 @@ namespace Antlr4.StringTemplate
+StringBuilder builder = new StringBuilder();
+builder.AppendLine(e.ToString());
+builder.AppendLine(e.StackTrace);
+-                _errorManager.RuntimeError(frame, current_ip, ErrorType.INTERNAL_ERROR, "internal error caused by: " + builder);
++                _errorManager.RuntimeError(frame, current_ip, ErrorType.INTERNAL_ERROR, "internal error: " + builder);
+return 0;
+}
+finally
+@@ -209,7 +210,7 @@ namespace Antlr4.StringTemplate
+if (o == Template.EmptyAttribute)
+o = null;
+}
+-                    catch (TemplateNoSuchPropertyException)
++                    catch (AttributeNotFoundException)
+{
+_errorManager.RuntimeError(frame, current_ip, ErrorType.NO_SUCH_ATTRIBUTE, name);
+o = null;
+@@ -1393,7 +1394,7 @@ namespace Antlr4.StringTemplate
+return self.impl.NativeGroup.RawGetDictionary(name);
+
+// not found, report unknown attr
+-            throw new TemplateNoSuchPropertyException(name);
++            throw new AttributeNotFoundException(frame, name);
+}
+
+/** Set any default argument values that were not set by the
+diff --git a/Antlr4.StringTemplate/Misc/ObjectModelAdaptor.cs b/Antlr4.StringTemplate/Misc/ObjectModelAdaptor.cs
+index 5635b52..f55c509 100644
+--- a/Antlr4.StringTemplate/Misc/ObjectModelAdaptor.cs
++++ b/Antlr4.StringTemplate/Misc/ObjectModelAdaptor.cs
+@@ -35,6 +35,7 @@ namespace Antlr4.StringTemplate.Misc
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
++
+using ArgumentNullException = System.ArgumentNullException;
+using FieldInfo = System.Reflection.FieldInfo;
+using MethodInfo = System.Reflection.MethodInfo;
+@@ -53,7 +54,7 @@ namespace Antlr4.StringTemplate.Misc
+
+Type c = o.GetType();
+if (property == null)
+-                throw new TemplateNoSuchPropertyException(string.Format("{0}.{1}", c.FullName, propertyName ?? "null"));
++                throw new TemplateNoSuchPropertyException(o, string.Format("{0}.{1}", c.FullName, propertyName ?? "null"));
+
+object value = null;
+var accessor = FindMember(c, propertyName);
+@@ -63,7 +64,7 @@ namespace Antlr4.StringTemplate.Misc
+}
+else
+{
+-                throw new TemplateNoSuchPropertyException(string.Format("{0}.{1}", c.FullName, propertyName));
++                throw new TemplateNoSuchPropertyException(o, string.Format("{0}.{1}", c.FullName, propertyName));
+}
+
+return value;
+diff --git a/Antlr4.StringTemplate/Misc/TemplateNoSuchPropertyException.cs b/Antlr4.StringTemplate/Misc/TemplateNoSuchPropertyException.cs
+index f26b4a2..ed139fa 100644
+--- a/Antlr4.StringTemplate/Misc/TemplateNoSuchPropertyException.cs
++++ b/Antlr4.StringTemplate/Misc/TemplateNoSuchPropertyException.cs
+@@ -33,32 +33,39 @@
+namespace Antlr4.StringTemplate.Misc
+{
+using Antlr4.StringTemplate.Compiler;
++
+using Exception = System.Exception;
+
++    /// <summary>
++    /// For the expression a.b, object a has no b property.
++    /// </summary>
+public class TemplateNoSuchPropertyException : TemplateException
+{
+-        private readonly string propertyName;
++        private readonly object _object;
++        private readonly string _propertyName;
+
+public TemplateNoSuchPropertyException()
+{
+}
+
+-        public TemplateNoSuchPropertyException(string propertyName)
++        public TemplateNoSuchPropertyException(object obj, string propertyName)
+{
+-            this.propertyName = propertyName;
++            this._object = obj;
++            this._propertyName = propertyName;
+}
+
+-        public TemplateNoSuchPropertyException(Exception e, string propertyName)
+-            : base(null, e)
++        public TemplateNoSuchPropertyException(object obj, string propertyName, Exception innerException)
++            : base(null, innerException)
+{
+-            this.propertyName = propertyName;
++            this._object = obj;
++            this._propertyName = propertyName;
+}
+
+public string PropertyName
+{
+get
+{
+-                return propertyName;
++                return _propertyName;
+}
+}
+}
+

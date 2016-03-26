@@ -1,0 +1,56 @@
+commit 9d526e9dc42acc2a9eb5f153e244d5f997c6b061
+Author:     acondit <acondit@parrt.spork>
+AuthorDate: Sat May 7 07:57:20 2011 -0800
+Commit:     acondit <acondit@parrt.spork>
+CommitDate: Sat May 7 07:57:20 2011 -0800
+
+Changes to match ANTLR3.4 revision.
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8407]
+
+diff --git a/runtime/ObjC/Framework/test/runtime/TestRewriteRuleTokenStream/TestRewriteRuleTokenStream.m b/runtime/ObjC/Framework/test/runtime/TestRewriteRuleTokenStream/TestRewriteRuleTokenStream.m
+index e995d0e..ef84361 100755
+--- a/runtime/ObjC/Framework/test/runtime/TestRewriteRuleTokenStream/TestRewriteRuleTokenStream.m
++++ b/runtime/ObjC/Framework/test/runtime/TestRewriteRuleTokenStream/TestRewriteRuleTokenStream.m
+@@ -36,10 +36,10 @@
+treeAdaptor = [ANTLRCommonTreeAdaptor newTreeAdaptor];
+stream = [ANTLRRewriteRuleTokenStream newANTLRRewriteRuleTokenStream:treeAdaptor
+description:@"rewrite rule token stream"];
+-    token1 = [ANTLRCommonToken newANTLRCommonToken:5];
+-    token2 = [ANTLRCommonToken newANTLRCommonToken:6];
+-    token3 = [ANTLRCommonToken newANTLRCommonToken:7];
+-    token4 = [ANTLRCommonToken newANTLRCommonToken:8];
++    token1 = [ANTLRCommonToken newToken:5];
++    token2 = [ANTLRCommonToken newToken:6];
++    token3 = [ANTLRCommonToken newToken:7];
++    token4 = [ANTLRCommonToken newToken:8];
+[token1 setText:@"token 1"];
+[token2 setText:@"token 2"];
+[token3 setText:@"token 3"];
+@@ -71,8 +71,8 @@
+treeAdaptor = [ANTLRCommonTreeAdaptor newTreeAdaptor];
+stream = [ANTLRRewriteRuleTokenStream newANTLRRewriteRuleTokenStream:treeAdaptor
+description:@"rewrite rule token stream"];
+-    token1 = [ANTLRCommonToken newANTLRCommonToken:5];
+-    token2 = [ANTLRCommonToken newANTLRCommonToken:6];
++    token1 = [ANTLRCommonToken newToken:5];
++    token2 = [ANTLRCommonToken newToken:6];
+[token1 setText:@"token 1"];
+[token2 setText:@"token 2"];
+STAssertTrue([stream size] == 0,
+@@ -91,10 +91,10 @@
+treeAdaptor = [ANTLRCommonTreeAdaptor newTreeAdaptor];
+stream = [ANTLRRewriteRuleTokenStream newANTLRRewriteRuleTokenStream:treeAdaptor
+description:@"rewrite rule token stream"];
+-    token1 = [ANTLRCommonToken newANTLRCommonToken:5];
+-    token2 = [ANTLRCommonToken newANTLRCommonToken:6];
+-    token3 = [ANTLRCommonToken newANTLRCommonToken:7];
+-    token4 = [ANTLRCommonToken newANTLRCommonToken:8];
++    token1 = [ANTLRCommonToken newToken:5];
++    token2 = [ANTLRCommonToken newToken:6];
++    token3 = [ANTLRCommonToken newToken:7];
++    token4 = [ANTLRCommonToken newToken:8];
+[token1 setText:@"token 1"];
+[token2 setText:@"token 2"];
+[token3 setText:@"token 3"];
+

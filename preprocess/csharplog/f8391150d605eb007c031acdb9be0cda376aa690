@@ -1,0 +1,42 @@
+commit f8391150d605eb007c031acdb9be0cda376aa690
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Jun 22 05:55:24 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Jun 22 05:55:24 2011 -0800
+
+(C# 3) Add unit test from CL8691 (support {} as a subtemplate, already passed in the C# version)
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8708]
+
+diff --git a/Antlr4.Test.StringTemplate/TestCoreBasics.cs b/Antlr4.Test.StringTemplate/TestCoreBasics.cs
+index 8f5d951..1f0c7d1 100644
+--- a/Antlr4.Test.StringTemplate/TestCoreBasics.cs
++++ b/Antlr4.Test.StringTemplate/TestCoreBasics.cs
+@@ -1,5 +1,5 @@
+/*
+- * [The "BSD licence"]
++ * [The "BSD license"]
+* Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+@@ -313,6 +313,19 @@ namespace Antlr4.Test.StringTemplate
+}
+
+[TestMethod]
++        public void TestIncludeWithEmptySubtemplateArg()
++        {
++            string template = "load <box({})>;";
++            Template st = new Template(template);
++            st.impl.NativeGroup.DefineTemplate("box", "kewl <x> daddy", new string[] { "x" });
++            st.impl.Dump();
++            st.Add("name", "Ter");
++            string expected = "load kewl  daddy;";
++            string result = st.Render();
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
+public void TestIncludeWithNestedArgs()
+{
+string template = "Load <box(foo(\"arg\"))>;";
+

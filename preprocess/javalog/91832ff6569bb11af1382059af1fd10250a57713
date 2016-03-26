@@ -1,0 +1,11 @@
+commit 91832ff6569bb11af1382059af1fd10250a57713
+Merge: 731c53e 0f69c6b
+Author:     Terence Parr <parrt@cs.usfca.edu>
+AuthorDate: Sat Sep 15 15:50:11 2012 -0700
+Commit:     Terence Parr <parrt@cs.usfca.edu>
+CommitDate: Sat Sep 15 15:50:11 2012 -0700
+
+Merge pull request #31 from vslavik/master
+
+Add compiled Python files to .gitignore. (no code changes; config)
+

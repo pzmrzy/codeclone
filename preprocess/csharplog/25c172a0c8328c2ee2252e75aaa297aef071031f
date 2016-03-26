@@ -1,0 +1,119 @@
+commit 25c172a0c8328c2ee2252e75aaa297aef071031f
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Sep 30 10:50:09 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Sep 30 10:50:09 2009 -0800
+
+C# Port: Updated bootstrap binaries
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6210]
+
+diff --git a/bin/Bootstrap/Antlr3.Runtime.Debug.dll b/bin/Bootstrap/Antlr3.Runtime.Debug.dll
+index e2fe9f2..8e51599 100644
+Binary files a/bin/Bootstrap/Antlr3.Runtime.Debug.dll and b/bin/Bootstrap/Antlr3.Runtime.Debug.dll differ
+diff --git a/bin/Bootstrap/Antlr3.Runtime.Debug.pdb b/bin/Bootstrap/Antlr3.Runtime.Debug.pdb
+index 5945afb..29b9997 100644
+Binary files a/bin/Bootstrap/Antlr3.Runtime.Debug.pdb and b/bin/Bootstrap/Antlr3.Runtime.Debug.pdb differ
+diff --git a/bin/Bootstrap/Antlr3.Runtime.dll b/bin/Bootstrap/Antlr3.Runtime.dll
+index 8988f68..44bb288 100644
+Binary files a/bin/Bootstrap/Antlr3.Runtime.dll and b/bin/Bootstrap/Antlr3.Runtime.dll differ
+diff --git a/bin/Bootstrap/Antlr3.Runtime.pdb b/bin/Bootstrap/Antlr3.Runtime.pdb
+index 64fe7fb..92096e8 100644
+Binary files a/bin/Bootstrap/Antlr3.Runtime.pdb and b/bin/Bootstrap/Antlr3.Runtime.pdb differ
+diff --git a/bin/Bootstrap/Antlr3.StringTemplate.dll b/bin/Bootstrap/Antlr3.StringTemplate.dll
+index 8125a9e..97f5ada 100644
+Binary files a/bin/Bootstrap/Antlr3.StringTemplate.dll and b/bin/Bootstrap/Antlr3.StringTemplate.dll differ
+diff --git a/bin/Bootstrap/Antlr3.StringTemplate.pdb b/bin/Bootstrap/Antlr3.StringTemplate.pdb
+index 3382ab6..842554f 100644
+Binary files a/bin/Bootstrap/Antlr3.StringTemplate.pdb and b/bin/Bootstrap/Antlr3.StringTemplate.pdb differ
+diff --git a/bin/Bootstrap/Antlr3.exe b/bin/Bootstrap/Antlr3.exe
+index 4849e19..745bb6d 100755
+Binary files a/bin/Bootstrap/Antlr3.exe and b/bin/Bootstrap/Antlr3.exe differ
+diff --git a/bin/Bootstrap/Antlr3.pdb b/bin/Bootstrap/Antlr3.pdb
+index cfe6d35..cac13e1 100644
+Binary files a/bin/Bootstrap/Antlr3.pdb and b/bin/Bootstrap/Antlr3.pdb differ
+diff --git a/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg b/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg
+index 04092a4..28da0d3 100644
+--- a/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg
++++ b/bin/Bootstrap/Codegen/Templates/CSharp3/CSharp3.stg
+@@ -89,8 +89,10 @@ namespace <actions.(actionScope).namespace>
+<endif>
+>>
+
+-lexer(grammar, name, tokens, scopes, rules, numRules, labelType="IToken",
++lexer(grammar, name, tokens, scopes, rules, numRules, labelType="CommonToken",
+filterMode, superClass="Lexer") ::= <<
++[System.CodeDom.Compiler.GeneratedCode("ANTLR", "<ANTLRVersion>")]
++[System.CLSCompliant(false)]
+public partial class <grammar.recognizerName> : <@superClassName><superClass><@end>
+{
+<tokens:{public const int <it.name>=<it.type>;}; separator="\n">
+@@ -222,6 +224,8 @@ genericParser(grammar, name, scopes, tokens, tokenNames, rules, numRules,
+bitsets, inputStreamType, superClass,
+ASTLabelType="object", labelType, members, rewriteElementType,
+filterMode) ::= <<
++[System.CodeDom.Compiler.GeneratedCode("ANTLR", "<ANTLRVersion>")]
++[System.CLSCompliant(false)]
+public partial class <grammar.recognizerName> : <@superClassName><superClass><@end>
+{
+<if(grammar.grammarIsRoot)>
+@@ -293,7 +297,7 @@ public <grammar.recognizerName>( <inputStreamType> input, RecognizerSharedState
+
+<if(bitsets)>
+#region Follow sets
+-	static class Follow
++	private static class Follow
+{
+<bitsets:bitset(name={_<it.name>_in_<it.inName><it.tokenIndex>},
+words64=it.bits)>
+@@ -840,7 +844,7 @@ lexerStringRef(string,label) ::= <<
+<if(label)>
+int <label>Start = CharIndex;
+Match(<string>); <checkRuleBacktrackFailure()>
+-<label> = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, <label>Start, CharIndex-1);
++<label> = new <labelType>(input, TokenTypes.Invalid, TokenChannels.Default, <label>Start, CharIndex-1);
+<else>
+Match(<string>); <checkRuleBacktrackFailure()><\n>
+<endif>
+@@ -900,7 +904,7 @@ lexerRuleRef(rule,label,args,elementIndex,scope) ::= <<
+<if(label)>
+int <label>Start<elementIndex> = CharIndex;
+<if(scope)><scope:delegateName()>.<endif>m<rule.name>(<args; separator=", ">); <checkRuleBacktrackFailure()>
+-<label> = new CommonToken(input, TokenTypes.Invalid, TokenChannels.Default, <label>Start<elementIndex>, CharIndex-1);
++<label> = new <labelType>(input, TokenTypes.Invalid, TokenChannels.Default, <label>Start<elementIndex>, CharIndex-1);
+<else>
+<if(scope)><scope:delegateName()>.<endif>m<rule.name>(<args; separator=", ">); <checkRuleBacktrackFailure()>
+<endif>
+@@ -916,10 +920,10 @@ lexerRuleRefAndListLabel(rule,label,args,elementIndex,scope) ::= <<
+lexerMatchEOF(label,elementIndex) ::= <<
+<if(label)>
+int <label>Start<elementIndex> = CharIndex;
+-Match(EndOfFile); <checkRuleBacktrackFailure()>
+-<labelType> <label> = new CommonToken(input, EndOfFile, TokenChannels.Default, <label>Start<elementIndex>, CharIndex-1);
++Match(EOF); <checkRuleBacktrackFailure()>
++<labelType> <label> = new <labelType>(input, EOF, TokenChannels.Default, <label>Start<elementIndex>, CharIndex-1);
+<else>
+-Match(EndOfFile); <checkRuleBacktrackFailure()>
++Match(EOF); <checkRuleBacktrackFailure()>
+<endif>
+>>
+
+diff --git a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll
+index 3407cb7..4d92265 100644
+Binary files a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll and b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.dll differ
+diff --git a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.pdb b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.pdb
+index c86b30d..f5c98d1 100644
+Binary files a/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.pdb and b/bin/Bootstrap/Targets/Antlr3.Targets.CSharp3.pdb differ
+diff --git a/bin/Bootstrap/Tool/Templates/messages/languages/en.stg b/bin/Bootstrap/Tool/Templates/messages/languages/en.stg
+index ced9a0c..b3ed9e5 100644
+--- a/bin/Bootstrap/Tool/Templates/messages/languages/en.stg
++++ b/bin/Bootstrap/Tool/Templates/messages/languages/en.stg
+@@ -48,6 +48,7 @@ problem reading token vocabulary file <arg>: <exception>
+DIR_NOT_FOUND(arg,exception,stackTrace) ::= "directory not found: <arg>"
+OUTPUT_DIR_IS_FILE(arg,exception,stackTrace) ::= "output directory is a file: <arg>"
+CANNOT_OPEN_FILE(arg,exception,stackTrace) ::= "cannot find or open file: <arg><if(exception)>; reason: <exception><endif>"
++CIRCULAR_DEPENDENCY() ::= "your grammars contain a circular dependency and cannot be sorted into a valid build order."
+
+INTERNAL_ERROR(arg,arg2,exception,stackTrace) ::= <<
+internal error: <arg> <arg2><if(exception)>: <exception><endif>
+

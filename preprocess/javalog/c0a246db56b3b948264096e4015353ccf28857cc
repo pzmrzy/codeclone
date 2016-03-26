@@ -1,0 +1,23 @@
+commit c0a246db56b3b948264096e4015353ccf28857cc
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Wed Feb 22 08:41:32 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Wed Feb 22 12:25:57 2012 -0600
+
+Pass initial data to ArrayList ctor
+
+diff --git a/tool/src/test/java/org/antlr/test/TestDFAConversion.java b/tool/src/test/java/org/antlr/test/TestDFAConversion.java
+index e91ef06..b1462fe 100644
+--- a/tool/src/test/java/org/antlr/test/TestDFAConversion.java
++++ b/tool/src/test/java/org/antlr/test/TestDFAConversion.java
+@@ -1543,8 +1543,7 @@ As a result, alternative(s) 2 were disabled for that input
+}
+NonRegularDecisionMessage msg = getNonRegularDecisionMessage(equeue.errors);
+assertTrue("expected fatal non-LL(*) msg", msg!=null);
+-		List<Integer> alts = new ArrayList<Integer>();
+-		alts.addAll(msg.altsWithRecursion);
++		List<Integer> alts = new ArrayList<Integer>(msg.altsWithRecursion);
+Collections.sort(alts);
+assertEquals(expectedBadAlts,alts);
+}
+

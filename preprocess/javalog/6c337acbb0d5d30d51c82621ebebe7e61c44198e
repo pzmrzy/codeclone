@@ -1,0 +1,95 @@
+commit 6c337acbb0d5d30d51c82621ebebe7e61c44198e
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Thu Aug 4 10:01:58 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Thu Aug 4 10:01:58 2011 -0800
+
+(C# 2, 3) Generate overrides for SetState and (for tree parsers) SetTreeNodeStream when using delegate grammars
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8993]
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/CSharp2.stg b/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/CSharp2.stg
+index a63c037..b4c7e54 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/CSharp2.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/CSharp2.stg
+@@ -165,6 +165,14 @@ lexer(grammar, name, tokens, scopes, rules, numRules, filterMode, labelType="Com
+}
+}
+
++<if(grammar.delegates)>
++	public override void SetState(RecognizerSharedState state)
++	{
++		base.SetState(state);
++		<grammar.delegates:{g|<g:delegateName()>.SetState(state);}; separator="\n">
++	}
++<endif>
++
+<endif>
+<if(filterMode)>
+<filteringNextToken()>
+@@ -296,6 +304,22 @@ genericParser(grammar, name, scopes, tokens, tokenNames, rules, numRules,
+<last(grammar.delegators):{g|private <g.recognizerName> gParent;}>
+<endif>
+
++<if(grammar.delegates)>
++	public override void SetState(RecognizerSharedState state)
++	{
++		base.SetState(state);
++		<grammar.delegates:{g|<g:delegateName()>.SetState(state);}; separator="\n">
++	}
++
++<if(TREE_PARSER)>
++	public override void SetTreeNodeStream(ITreeNodeStream input)
++	{
++		base.SetTreeNodeStream(input);
++		<grammar.delegates:{g|<g:delegateName()>.SetTreeNodeStream(input);}; separator="\n">
++	}
++<endif>
++<endif>
++
+<scopes:{it|<if(it.isDynamicGlobalScope)><globalAttributeScope(scope=it)><endif>}>
+<@members()>
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg
+index 64251c8..a789e8a 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg
+@@ -162,6 +162,14 @@ lexer(grammar, name, tokens, scopes, rules, numRules, filterMode, labelType="Com
+}
+}
+
++<if(grammar.delegates)>
++	public override void SetState(RecognizerSharedState state)
++	{
++		base.SetState(state);
++		<grammar.delegates:{g|<g:delegateName()>.SetState(state);}; separator="\n">
++	}
++<endif>
++
+<endif>
+<if(filterMode)>
+<filteringNextToken()>
+@@ -291,6 +299,22 @@ genericParser(grammar, name, scopes, tokens, tokenNames, rules, numRules,
+<last(grammar.delegators):{g|private <g.recognizerName> gParent;}>
+<endif>
+
++<if(grammar.delegates)>
++	public override void SetState(RecognizerSharedState state)
++	{
++		base.SetState(state);
++		<grammar.delegates:{g|<g:delegateName()>.SetState(state);}; separator="\n">
++	}
++
++<if(TREE_PARSER)>
++	public override void SetTreeNodeStream(ITreeNodeStream input)
++	{
++		base.SetTreeNodeStream(input);
++		<grammar.delegates:{g|<g:delegateName()>.SetTreeNodeStream(input);}; separator="\n">
++	}
++<endif>
++<endif>
++
+<scopes:{it|<if(it.isDynamicGlobalScope)><globalAttributeScope(scope=it)><endif>}>
+<@members()>
+
+

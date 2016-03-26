@@ -1,0 +1,35 @@
+commit 761052d1551db7dbd27d6301cd1967b082e398a5
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon May 2 14:23:53 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon May 2 14:23:53 2011 -0800
+
+(C# 3) Documentation update
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8369]
+
+diff --git a/Antlr4.StringTemplate/Template.cs b/Antlr4.StringTemplate/Template.cs
+index ed09441..e911f9a 100644
+--- a/Antlr4.StringTemplate/Template.cs
++++ b/Antlr4.StringTemplate/Template.cs
+@@ -63,8 +63,19 @@ namespace Antlr4.StringTemplate
+/** <@r()>, <@r>...<@end>, and @t.r() ::= "..." defined manually by coder */
+public enum RegionType
+{
++            /// <summary>
++            /// The region is defined by &lt;@r()&gt;
++            /// </summary>
+Implicit,
++
++            /// <summary>
++            /// The region is defined by &lt;@r&gt;...&lt;@end&gt;
++            /// </summary>
+Embedded,
++
++            /// <summary>
++            /// The region is defined by @t.r ::= "..."
++            /// </summary>
+Explicit
+}
+
+

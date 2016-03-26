@@ -1,0 +1,523 @@
+commit 10fe9e563b15195ad462c6db03cfd523c7578ceb
+Author:     Alan Condit <acondit@ipns.com>
+AuthorDate: Wed Apr 4 11:14:46 2012 -0700
+Commit:     Alan Condit <acondit@ipns.com>
+CommitDate: Wed Apr 4 11:14:46 2012 -0700
+
+Replaced usage of NSNumber with ACNumber.
+
+diff --git a/runtime/ObjC/Framework/ANTLRReaderStream.m b/runtime/ObjC/Framework/ANTLRReaderStream.m
+index e24cbd7..de86e13 100644
+--- a/runtime/ObjC/Framework/ANTLRReaderStream.m
++++ b/runtime/ObjC/Framework/ANTLRReaderStream.m
+@@ -7,7 +7,7 @@
+//
+
+#import "ANTLRReaderStream.h"
+-
++#import "ACNumber.h"
+
+@implementation ANTLRReaderStream
+
+@@ -122,7 +122,7 @@ static NSInteger INITIAL_BUFFER_SIZE = 1024;
+- (void)stream:(NSStream *)stream handleEvent:(NSStreamEvent)eventCode
+{
+NSMutableData *myData = nil;
+-    NSNumber *bytesRead = [NSNumber numberWithInteger:0];
++    ACNumber *bytesRead = [ACNumber numberWithInteger:0];
+uint8_t buf[1024];
+switch(eventCode) {
+case NSStreamEventHasBytesAvailable:
+@@ -134,8 +134,8 @@ static NSInteger INITIAL_BUFFER_SIZE = 1024;
+len = [(NSInputStream *)stream read:buf maxLength:1024];
+if(len) {
+[myData appendBytes:(const void *)buf length:len];
+-                // bytesRead is an instance variable of type NSNumber.
+-                bytesRead = [NSNumber numberWithInteger:[bytesRead intValue]+len];
++                // bytesRead is an instance variable of type ACNumber.
++                bytesRead = [ACNumber numberWithInteger:[bytesRead integerValue]+len];
+data = [[NSString alloc] initWithData:myData encoding:NSASCIIStringEncoding];
+} else {
+NSLog(@"no buffer!");
+diff --git a/runtime/ObjC/Framework/BaseMapElement.h b/runtime/ObjC/Framework/BaseMapElement.h
+index ce5a454..49279c5 100644
+--- a/runtime/ObjC/Framework/BaseMapElement.h
++++ b/runtime/ObjC/Framework/BaseMapElement.h
+@@ -31,17 +31,18 @@
+
+#import <Cocoa/Cocoa.h>
+#import "LinkBase.h"
++#import "ACNumber.h"
+
+@interface BaseMapElement : LinkBase {
+-    NSNumber *index;
++    ACNumber *index;
+}
+
+-@property (retain) NSNumber *index;
++@property (retain) ACNumber *index;
+
++ (id) newBaseMapElement;
+-+ (id) newBaseMapElementWithIndex:(NSNumber *)anIdx;
+++ (id) newBaseMapElementWithIndex:(ACNumber *)anIdx;
+- (id) init;
+-- (id) initWithAnIndex:(NSNumber *)anIdx;
++- (id) initWithAnIndex:(ACNumber *)anIdx;
+
+- (id) copyWithZone:(NSZone *)aZone;
+
+diff --git a/runtime/ObjC/Framework/BaseMapElement.m b/runtime/ObjC/Framework/BaseMapElement.m
+index 911b1af..2ff2172 100644
+--- a/runtime/ObjC/Framework/BaseMapElement.m
++++ b/runtime/ObjC/Framework/BaseMapElement.m
+@@ -41,9 +41,9 @@
+return [[BaseMapElement alloc] init];
+}
+
+-+ (BaseMapElement *)newBaseMapElementWithIndex:(NSNumber *)aNumber
+++ (BaseMapElement *)newBaseMapElementWithIndex:(ACNumber *)aNumber
+{
+-    return [[BaseMapElement alloc] initWithAnIndex:(NSNumber *)aNumber];
++    return [[BaseMapElement alloc] initWithAnIndex:(ACNumber *)aNumber];
+}
+
+- (id) init
+@@ -54,7 +54,7 @@
+return (self);
+}
+
+-- (id) initWithAnIndex:(NSNumber *)aNumber
++- (id) initWithAnIndex:(ACNumber *)aNumber
+{
+if ((self = [super init]) != nil ) {
+index = aNumber;
+diff --git a/runtime/ObjC/Framework/BaseRecognizer.m b/runtime/ObjC/Framework/BaseRecognizer.m
+index 6e7b738..6caf795 100644
+--- a/runtime/ObjC/Framework/BaseRecognizer.m
++++ b/runtime/ObjC/Framework/BaseRecognizer.m
+@@ -29,6 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
++#import "ACNumber.h"
+#import "BaseRecognizer.h"
+#import "HashRule.h"
+#import "RuleMemo.h"
+@@ -1000,7 +1001,7 @@ static NSString *NEXT_TOKEN_RULE_NAME;
+*/
+- (NSInteger)getRuleMemoization:(NSInteger)ruleIndex StartIndex:(NSInteger)ruleStartIndex
+{
+-    NSNumber *stopIndexI;
++    ACNumber *stopIndexI;
+HashRule *aHashRule;
+if ( (aHashRule = [state.ruleMemo objectAtIndex:ruleIndex]) == nil ) {
+aHashRule = [HashRule newHashRuleWithLen:17];
+diff --git a/runtime/ObjC/Framework/BaseTreeAdaptor.m b/runtime/ObjC/Framework/BaseTreeAdaptor.m
+index 6974e9a..1a2a3c3 100644
+--- a/runtime/ObjC/Framework/BaseTreeAdaptor.m
++++ b/runtime/ObjC/Framework/BaseTreeAdaptor.m
+@@ -338,13 +338,13 @@
+if ( treeToUniqueIDMap == nil ) {
+treeToUniqueIDMap = [UniqueIDMap newUniqueIDMap];
+}
+-    NSNumber *prevID = [treeToUniqueIDMap getNode:node];
++    ACNumber *prevID = [treeToUniqueIDMap getNode:node];
+if ( prevID != nil ) {
+return [prevID integerValue];
+}
+NSInteger anID = uniqueNodeID;
+-    // MapElement *aMapNode = [MapElement newMapElementWithObj1:[NSNumber numberWithInteger:anID] Obj2:node];
+-    [treeToUniqueIDMap putID:[NSNumber numberWithInteger:anID] Node:node];
++    // MapElement *aMapNode = [MapElement newMapElementWithObj1:[ACNumber numberWithInteger:anID] Obj2:node];
++    [treeToUniqueIDMap putID:[ACNumber numberWithInteger:anID] Node:node];
+uniqueNodeID++;
+return anID;
+// GCC makes these nonunique:
+diff --git a/runtime/ObjC/Framework/HashMap.m b/runtime/ObjC/Framework/HashMap.m
+index db178f1..2081814 100644
+--- a/runtime/ObjC/Framework/HashMap.m
++++ b/runtime/ObjC/Framework/HashMap.m
+@@ -401,7 +401,7 @@ static NSInteger itIndex;
+
+aTType = ttype % BuffSize;
+for( np = self->ptrBuffer[aTType]; np != nil; np = [np getfNext] ) {
+-        if ( [(NSNumber *)np.node integerValue] == ttype ) {
++        if ( [(ACNumber *)np.node integerValue] == ttype ) {
+return( np );        /*   found it       */
+}
+}
+diff --git a/runtime/ObjC/Framework/HashRule.h b/runtime/ObjC/Framework/HashRule.h
+index de45f65..10a8053 100644
+--- a/runtime/ObjC/Framework/HashRule.h
++++ b/runtime/ObjC/Framework/HashRule.h
+@@ -28,6 +28,7 @@
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+#import <Cocoa/Cocoa.h>
++#import "ACNumber.h"
+#import "RuleMemo.h"
+#import "PtrBuffer.h"
+
+@@ -58,7 +59,7 @@
+- (void)delete_chain:(RuleMemo *)np;
+- (RuleMemo **)getPtrBuffer;
+- (void)setPtrBuffer:(RuleMemo **)np;
+-- (NSNumber *)getRuleMemoStopIndex:(NSInteger)aStartIndex;
++- (ACNumber *)getRuleMemoStopIndex:(NSInteger)aStartIndex;
+- (void)putRuleMemoAtStartIndex:(NSInteger)aStartIndex StopIndex:(NSInteger)aStopIndex;
+- (NSInteger)getMode;
+- (void)setMode:(NSInteger)aMode;
+diff --git a/runtime/ObjC/Framework/HashRule.m b/runtime/ObjC/Framework/HashRule.m
+index 02aab8a..e453ba1 100644
+--- a/runtime/ObjC/Framework/HashRule.m
++++ b/runtime/ObjC/Framework/HashRule.m
+@@ -158,10 +158,10 @@
+ptrBuffer = np;
+}
+
+-- (NSNumber *)getRuleMemoStopIndex:(NSInteger)aStartIndex
++- (ACNumber *)getRuleMemoStopIndex:(NSInteger)aStartIndex
+{
+RuleMemo *aRule;
+-    NSNumber *stopIndex;
++    ACNumber *stopIndex;
+NSInteger anIndex;
+
+anIndex = ( aStartIndex >= BuffSize ) ? aStartIndex % BuffSize : aStartIndex;
+@@ -201,8 +201,8 @@
+anIndex = (aStartIndex >= BuffSize) ? aStartIndex % BuffSize : aStartIndex;
+aRule = ptrBuffer[anIndex];
+if ( aRule == nil ) {
+-        aRule = [RuleMemo newRuleMemoWithStartIndex:[NSNumber numberWithInteger:aStartIndex]
+-                                                    StopIndex:[NSNumber numberWithInteger:aStopIndex]];
++        aRule = [RuleMemo newRuleMemoWithStartIndex:[ACNumber numberWithInteger:aStartIndex]
++                                                    StopIndex:[ACNumber numberWithInteger:aStopIndex]];
+[aRule retain];
+ptrBuffer[anIndex] = aRule;
+}
+@@ -219,8 +219,8 @@
+while (aRule.fNext != nil) {
+aMatchIndex = [((RuleMemo *)aRule.fNext).startIndex integerValue];
+if ( aStartIndex > aMatchIndex ) {
+-                newRule = [RuleMemo newRuleMemoWithStartIndex:[NSNumber numberWithInteger:aStartIndex]
+-                                                              StopIndex:[NSNumber numberWithInteger:aStopIndex]];
++                newRule = [RuleMemo newRuleMemoWithStartIndex:[ACNumber numberWithInteger:aStartIndex]
++                                                              StopIndex:[ACNumber numberWithInteger:aStopIndex]];
+[newRule retain];
+newRule.fNext = aRule.fNext;
+aRule.fNext = newRule;
+diff --git a/runtime/ObjC/Framework/Map.m b/runtime/ObjC/Framework/Map.m
+index 9105e82..a9dc88f 100644
+--- a/runtime/ObjC/Framework/Map.m
++++ b/runtime/ObjC/Framework/Map.m
+@@ -296,7 +296,7 @@
+
+aTType = ttype % HASHSIZE;
+for( np = self->ptrBuffer[ttype]; np != nil; np = [np getfNext] ) {
+-        if ( [(NSNumber *)np.node integerValue] == ttype ) {
++        if ( [(ACNumber *)np.node integerValue] == ttype ) {
+return( np );        /*   found it       */
+}
+}
+@@ -311,7 +311,7 @@
+idx = [(id<BaseTree>)aNode type];
+idx %= HASHSIZE;
+np = ptrBuffer[idx];
+-    return( [(NSNumber *)np.node integerValue] );
++    return( [(ACNumber *)np.node integerValue] );
+}
+
+- (MapElement *)getTType:(NSString *)name
+diff --git a/runtime/ObjC/Framework/MapElement.h b/runtime/ObjC/Framework/MapElement.h
+index 09b7ada..d5abc77 100644
+--- a/runtime/ObjC/Framework/MapElement.h
++++ b/runtime/ObjC/Framework/MapElement.h
+@@ -30,6 +30,7 @@
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+#import <Cocoa/Cocoa.h>
++#import "ACNumber.h"
+#import "BaseMapElement.h"
+
+@interface MapElement : BaseMapElement {
+diff --git a/runtime/ObjC/Framework/MapElement.m b/runtime/ObjC/Framework/MapElement.m
+index 38392a4..15cb5f5 100644
+--- a/runtime/ObjC/Framework/MapElement.m
++++ b/runtime/ObjC/Framework/MapElement.m
+@@ -77,7 +77,7 @@
+{
+self = [super init];
+if ( self != nil ) {
+-        index = [[NSNumber numberWithInteger: aTType] retain];
++        index = [[ACNumber numberWithInteger: aTType] retain];
+name  = [[NSString stringWithString:aName] retain];
+}
+return self;
+@@ -85,7 +85,7 @@
+
+- (id) initWithNode:(NSInteger)aTType Node:(id)aNode
+{
+-    self = [super initWithAnIndex:[NSNumber numberWithInteger:aTType]];
++    self = [super initWithAnIndex:[ACNumber numberWithInteger:aTType]];
+if ( self != nil ) {
+node  = aNode;
+if ( node ) [node retain];
+diff --git a/runtime/ObjC/Framework/PtrStack.h b/runtime/ObjC/Framework/PtrStack.h
+index dfcb4fc..639ea42 100644
+--- a/runtime/ObjC/Framework/PtrStack.h
++++ b/runtime/ObjC/Framework/PtrStack.h
+@@ -7,6 +7,7 @@
+//ptrBuffer
+
+#import <Cocoa/Cocoa.h>
++#import "ACNumber.h"
+#import "BaseStack.h"
+#import "RuleMemo.h"
+
+diff --git a/runtime/ObjC/Framework/RuleMapElement.h b/runtime/ObjC/Framework/RuleMapElement.h
+index dfd752d..6a34f90 100644
+--- a/runtime/ObjC/Framework/RuleMapElement.h
++++ b/runtime/ObjC/Framework/RuleMapElement.h
+@@ -33,22 +33,22 @@
+#import "BaseMapElement.h"
+
+@interface RuleMapElement : BaseMapElement {
+-    NSNumber *ruleNum;
++    ACNumber *ruleNum;
+}
+
+-@property (retain, getter=getRuleNum, setter=setRuleNum:) NSNumber *ruleNum;
++@property (retain, getter=getRuleNum, setter=setRuleNum:) ACNumber *ruleNum;
+
++ (RuleMapElement *) newRuleMapElement;
+-+ (RuleMapElement *) newRuleMapElementWithIndex:(NSNumber *)anIdx;
+-+ (RuleMapElement *) newRuleMapElementWithIndex:(NSNumber *)anIdx RuleNum:(NSNumber *)aRuleNum;
+++ (RuleMapElement *) newRuleMapElementWithIndex:(ACNumber *)anIdx;
+++ (RuleMapElement *) newRuleMapElementWithIndex:(ACNumber *)anIdx RuleNum:(ACNumber *)aRuleNum;
+- (id) init;
+-- (id) initWithAnIndex:(NSNumber *)anIdx;
+-- (id) initWithAnIndex:(NSNumber *)anIdx RuleNum:(NSNumber *)aRuleNum;
++- (id) initWithAnIndex:(ACNumber *)anIdx;
++- (id) initWithAnIndex:(ACNumber *)anIdx RuleNum:(ACNumber *)aRuleNum;
+
+- (id) copyWithZone:(NSZone *)aZone;
+
+-- (NSNumber *)getRuleNum;
+-- (void)setRuleNum:(NSNumber *)aRuleNum;
++- (ACNumber *)getRuleNum;
++- (void)setRuleNum:(ACNumber *)aRuleNum;
+
+- (NSInteger)size;
+
+diff --git a/runtime/ObjC/Framework/RuleMapElement.m b/runtime/ObjC/Framework/RuleMapElement.m
+index 5cc5e32..aedb996 100644
+--- a/runtime/ObjC/Framework/RuleMapElement.m
++++ b/runtime/ObjC/Framework/RuleMapElement.m
+@@ -29,6 +29,7 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
++#import "ACNumber.h"
+#import "RuleMapElement.h"
+
+
+@@ -41,12 +42,12 @@
+return [[RuleMapElement alloc] init];
+}
+
+-+ (RuleMapElement *)newRuleMapElementWithIndex:(NSNumber *)aNumber
+++ (RuleMapElement *)newRuleMapElementWithIndex:(ACNumber *)aNumber
+{
+-    return [[RuleMapElement alloc] initWithAnIndex:(NSNumber *)aNumber];
++    return [[RuleMapElement alloc] initWithAnIndex:(ACNumber *)aNumber];
+}
+
+-+ (RuleMapElement *)newRuleMapElementWithIndex:(NSNumber *)aNumber RuleNum:(NSNumber *)aRuleNum
+++ (RuleMapElement *)newRuleMapElementWithIndex:(ACNumber *)aNumber RuleNum:(ACNumber *)aRuleNum
+{
+return [[RuleMapElement alloc] initWithAnIndex:aNumber RuleNum:aRuleNum];
+}
+@@ -60,7 +61,7 @@
+return (self);
+}
+
+-- (id) initWithAnIndex:(NSNumber *)aNumber
++- (id) initWithAnIndex:(ACNumber *)aNumber
+{
+if ((self = [super initWithAnIndex:aNumber]) != nil ) {
+ruleNum = nil;
+@@ -68,7 +69,7 @@
+return (self);
+}
+
+-- (id) initWithAnIndex:(NSNumber *)aNumber RuleNum:(NSNumber *)aRuleNum
++- (id) initWithAnIndex:(ACNumber *)aNumber RuleNum:(ACNumber *)aRuleNum
+{
+if ((self = [super initWithAnIndex:aNumber]) != nil ) {
+[aRuleNum retain];
+diff --git a/runtime/ObjC/Framework/RuleMemo.h b/runtime/ObjC/Framework/RuleMemo.h
+index 306a66f..17b6a37 100644
+--- a/runtime/ObjC/Framework/RuleMemo.h
++++ b/runtime/ObjC/Framework/RuleMemo.h
+@@ -30,31 +30,32 @@
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+#import <Cocoa/Cocoa.h>
++#import "ACNumber.h"
+#import "LinkBase.h"
+
+@interface RuleMemo : LinkBase {
+-    NSNumber *startIndex;
+-    NSNumber *stopIndex;
++    ACNumber *startIndex;
++    ACNumber *stopIndex;
+}
+
+-@property (retain, getter=getStartIndex, setter=setStartIndex:) NSNumber *startIndex;
+-@property (retain, getter=getStopIndex, setter=setStopIndex:) NSNumber *stopIndex;
++@property (retain, getter=getStartIndex, setter=setStartIndex:) ACNumber *startIndex;
++@property (retain, getter=getStopIndex, setter=setStopIndex:) ACNumber *stopIndex;
+
++ (RuleMemo *)newRuleMemo;
+-+ (RuleMemo *)newRuleMemoWithStartIndex:(NSNumber *)aStartIndex StopIndex:(NSNumber *)aStopIndex;
+++ (RuleMemo *)newRuleMemoWithStartIndex:(ACNumber *)aStartIndex StopIndex:(ACNumber *)aStopIndex;
+
+- (id) init;
+-- (id) initWithStartIndex:(NSNumber *)aStartIndex StopIndex:(NSNumber *)aStopIndex;
++- (id) initWithStartIndex:(ACNumber *)aStartIndex StopIndex:(ACNumber *)aStopIndex;
+
+- (NSInteger)count;
+- (NSInteger)size;
+
+- (RuleMemo *)getRuleWithStartIndex:(NSInteger)aStartIndex;
+-- (NSNumber *)getStartIndex:(NSInteger)aStartIndex;
+-- (NSNumber *)getStopIndex:(NSInteger)aStartIndex;
+-- (NSNumber *)getStartIndex;
+-- (void)setStartIndex:(NSNumber *)aStartIndex;
+-- (NSNumber *)getStopIndex;
+-- (void)setStopIndex:(NSNumber *)aStopIndex;
++- (ACNumber *)getStartIndex:(NSInteger)aStartIndex;
++- (ACNumber *)getStopIndex:(NSInteger)aStartIndex;
++- (ACNumber *)getStartIndex;
++- (void)setStartIndex:(ACNumber *)aStartIndex;
++- (ACNumber *)getStopIndex;
++- (void)setStopIndex:(ACNumber *)aStopIndex;
+
+@end
+diff --git a/runtime/ObjC/Framework/RuleMemo.m b/runtime/ObjC/Framework/RuleMemo.m
+index fcec5b3..7665158 100644
+--- a/runtime/ObjC/Framework/RuleMemo.m
++++ b/runtime/ObjC/Framework/RuleMemo.m
+@@ -42,7 +42,7 @@
+return [[RuleMemo alloc] init];
+}
+
+-+ (RuleMemo *)newRuleMemoWithStartIndex:(NSNumber *)anIndex StopIndex:(NSNumber *)aStopIndex
+++ (RuleMemo *)newRuleMemoWithStartIndex:(ACNumber *)anIndex StopIndex:(ACNumber *)aStopIndex
+{
+return [[RuleMemo alloc] initWithStartIndex:anIndex StopIndex:aStopIndex];
+}
+@@ -56,7 +56,7 @@
+return (self);
+}
+
+-- (id) initWithStartIndex:(NSNumber *)aStartIndex StopIndex:(NSNumber *)aStopIndex
++- (id) initWithStartIndex:(ACNumber *)aStartIndex StopIndex:(ACNumber *)aStopIndex
+{
+if ((self = [super init]) != nil ) {
+[aStartIndex retain];
+@@ -103,7 +103,7 @@
+return nil;
+}
+
+-- (NSNumber *)getStartIndex:(NSInteger)aStartIndex
++- (ACNumber *)getStartIndex:(NSInteger)aStartIndex
+{
+RuleMemo *aMatchMemo = self;
+do {
+@@ -115,7 +115,7 @@
+return nil;
+}
+
+-- (NSNumber *)getStopIndex:(NSInteger)aStartIndex
++- (ACNumber *)getStopIndex:(NSInteger)aStartIndex
+{
+RuleMemo *aMatchMemo = self;
+do {
+@@ -127,12 +127,12 @@
+return nil;
+}
+
+-- (NSNumber *)getStartIndex;
++- (ACNumber *)getStartIndex;
+{
+return startIndex;
+}
+
+-- (void)setStartIndex:(NSNumber *)aStartIndex
++- (void)setStartIndex:(ACNumber *)aStartIndex
+{
+if ( aStartIndex != startIndex ) {
+if ( startIndex ) [startIndex release];
+@@ -141,12 +141,12 @@
+startIndex = aStartIndex;
+}
+
+-- (NSNumber *)getStopIndex;
++- (ACNumber *)getStopIndex;
+{
+return stopIndex;
+}
+
+-- (void)setStopIndex:(NSNumber *)aStopIndex
++- (void)setStopIndex:(ACNumber *)aStopIndex
+{
+if ( aStopIndex != stopIndex ) {
+if ( stopIndex ) [stopIndex release];
+diff --git a/runtime/ObjC/Framework/RuleStack.m b/runtime/ObjC/Framework/RuleStack.m
+index 5f21f3b..52c3889 100644
+--- a/runtime/ObjC/Framework/RuleStack.m
++++ b/runtime/ObjC/Framework/RuleStack.m
+@@ -145,8 +145,8 @@ extern NSInteger debug;
+aRuleMemo = [[RuleMemo newRuleMemo] retain];
+[aHashRule insertObject:aRuleMemo atIndex:aStartIndex];
+}
+-    [aRuleMemo setStartIndex:[NSNumber numberWithInteger:aStartIndex]];
+-    [aRuleMemo setStopIndex:[NSNumber numberWithInteger:aStopIndex]];
++    [aRuleMemo setStartIndex:[ACNumber numberWithInteger:aStartIndex]];
++    [aRuleMemo setStopIndex:[ACNumber numberWithInteger:aStopIndex]];
+}
+
+@end
+diff --git a/runtime/ObjC/Framework/test/runtime/sets/ANTLRBitSetTest.m b/runtime/ObjC/Framework/test/runtime/sets/ANTLRBitSetTest.m
+index eb562fe..de3555a 100644
+--- a/runtime/ObjC/Framework/test/runtime/sets/ANTLRBitSetTest.m
++++ b/runtime/ObjC/Framework/test/runtime/sets/ANTLRBitSetTest.m
+@@ -8,6 +8,7 @@
+
+#import "ANTLRBitSetTest.h"
+#import "ANTLRBitSet.h"
++#import "ACNumber.h"
+#import <CoreFoundation/CoreFoundation.h>
+#import <CoreFoundation/CFBitVector.h>
+
+@@ -27,12 +28,12 @@
+-(void) testWithBitArray
+{
+AMutableArray *bits = [AMutableArray arrayWithCapacity:10];
+-	[bits addObject:[NSNumber numberWithBool:YES]];
+-	[bits addObject:[NSNumber numberWithBool:YES]];
+-	[bits addObject:[NSNumber numberWithBool:NO]];
+-	[bits addObject:[NSNumber numberWithBool:YES]];
+-	[bits addObject:[NSNumber numberWithBool:NO]];
+-	[bits addObject:[NSNumber numberWithBool:YES]];
++	[bits addObject:[ACNumber numberWithBool:YES]];
++	[bits addObject:[ACNumber numberWithBool:YES]];
++	[bits addObject:[ACNumber numberWithBool:NO]];
++	[bits addObject:[ACNumber numberWithBool:YES]];
++	[bits addObject:[ACNumber numberWithBool:NO]];
++	[bits addObject:[ACNumber numberWithBool:YES]];
+STAssertTrue([[bits objectAtIndex:0] boolValue], @"Value at index 0 was not true");
+STAssertTrue([[bits objectAtIndex:1] boolValue], @"Value at index 1 was not true");
+STAssertFalse([[bits objectAtIndex:2] boolValue], @"Value at index 2 was not false");
+

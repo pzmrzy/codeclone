@@ -1,0 +1,11 @@
+commit 484368a3de095297b7dee270acd1a7fa46a2daf4
+Merge: 8f4ab1e 423f739
+Author:     Terence Parr <parrt@cs.usfca.edu>
+AuthorDate: Sun Sep 16 08:53:20 2012 -0700
+Commit:     Terence Parr <parrt@cs.usfca.edu>
+CommitDate: Sun Sep 16 08:53:20 2012 -0700
+
+Merge pull request #32 from qmx/cleanup
+
+fixing TODO (rm unused EOF token)
+

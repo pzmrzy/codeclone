@@ -1,0 +1,47 @@
+commit 16b42bcf7a5b3bf5fd1df3ceb9498d596c5a66ca
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Wed Dec 19 08:07:44 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Wed Dec 19 08:10:32 2012 -0600
+
+Improved use of jUnit features
+
+diff --git a/tool/src/test/java/org/antlr/test/TestTreeWizard.java b/tool/src/test/java/org/antlr/test/TestTreeWizard.java
+index f8c9a7f..dc52f64 100644
+--- a/tool/src/test/java/org/antlr/test/TestTreeWizard.java
++++ b/tool/src/test/java/org/antlr/test/TestTreeWizard.java
+@@ -88,7 +88,7 @@ public class TestTreeWizard extends BaseTest {
+@Test public void testInvalidListTree() throws Exception {
+TreeWizard wiz = new TreeWizard(adaptor, tokens);
+CommonTree t = (CommonTree)wiz.create("A B C");
+-		assertTrue(t==null);
++		assertNull(t);
+}
+
+@Test public void testDoubleLevelTree() throws Exception {
+diff --git a/tool/src/test/java/org/antlr/test/TestTrees.java b/tool/src/test/java/org/antlr/test/TestTrees.java
+index c9b1d07..0dd54b4 100644
+--- a/tool/src/test/java/org/antlr/test/TestTrees.java
++++ b/tool/src/test/java/org/antlr/test/TestTrees.java
+@@ -238,17 +238,11 @@ public class TestTrees extends BaseTest {
+
+// Test replaceChildren
+
+-	@Test public void testReplaceWithNoChildren() throws Exception {
++	@Test(expected = IllegalArgumentException.class)
++	public void testReplaceWithNoChildren() throws Exception {
+CommonTree t = new CommonTree(new CommonToken(101));
+CommonTree newChild = new CommonTree(new CommonToken(5));
+-		boolean error = false;
+-		try {
+-			t.replaceChildren(0, 0, newChild);
+-		}
+-		catch (IllegalArgumentException iae) {
+-			error = true;
+-		}
+-		assertTrue(error);
++		t.replaceChildren(0, 0, newChild);
+}
+
+@Test public void testReplaceWithOneChildren() throws Exception {
+

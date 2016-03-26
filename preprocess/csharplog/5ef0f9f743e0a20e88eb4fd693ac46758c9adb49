@@ -1,0 +1,24 @@
+commit 5ef0f9f743e0a20e88eb4fd693ac46758c9adb49
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Sat Nov 7 16:34:35 2015 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Sat Nov 7 16:34:35 2015 -0600
+
+Include portable-net40 build in the Antlr.Runtime NuGet package
+
+diff --git a/build/prep/Antlr3.Runtime.nuspec b/build/prep/Antlr3.Runtime.nuspec
+index b5c32ce..c4ff6b2 100644
+--- a/build/prep/Antlr3.Runtime.nuspec
++++ b/build/prep/Antlr3.Runtime.nuspec
+@@ -28,6 +28,10 @@
+<file src="..\..\Runtime\Antlr3.Runtime\bin\net40-client\$Configuration$\Antlr3.Runtime.pdb" target="lib\net40-client"/>
+<file src="..\..\Runtime\Antlr3.Runtime\bin\net40-client\$Configuration$\Antlr3.Runtime.xml" target="lib\net40-client"/>
+
++    <file src="..\..\Runtime\Antlr3.Runtime\bin\portable-net40\$Configuration$\Antlr3.Runtime.dll" target="lib\portable-net4+sl5+netcore45+wpa81+wp8+MonoAndroid1+MonoTouch1"/>
++    <file src="..\..\Runtime\Antlr3.Runtime\bin\portable-net40\$Configuration$\Antlr3.Runtime.pdb" target="lib\portable-net4+sl5+netcore45+wpa81+wp8+MonoAndroid1+MonoTouch1"/>
++    <file src="..\..\Runtime\Antlr3.Runtime\bin\portable-net40\$Configuration$\Antlr3.Runtime.xml" target="lib\portable-net4+sl5+netcore45+wpa81+wp8+MonoAndroid1+MonoTouch1"/>
++
+<!-- Source Code -->
+
+<file exclude="..\..\Runtime\Antlr3.Runtime\obj\**\*.cs" src="..\..\Runtime\Antlr3.Runtime\**\*.cs" target="src"/>
+

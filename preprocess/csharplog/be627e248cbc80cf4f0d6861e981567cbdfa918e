@@ -1,0 +1,31 @@
+commit be627e248cbc80cf4f0d6861e981567cbdfa918e
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Dec 9 19:01:58 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Dec 9 19:01:58 2009 -0800
+
+C# Port:
+* Add a HasDelegates property to Grammar
+* Fix a bug in delegate grammar initialization
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6464]
+
+diff --git a/Antlr3/Tool/Grammar.cs b/Antlr3/Tool/Grammar.cs
+index 5b80c59..d7c9c58 100644
+--- a/Antlr3/Tool/Grammar.cs
++++ b/Antlr3/Tool/Grammar.cs
+@@ -734,6 +734,13 @@ namespace Antlr3.Tool
+return grammarTypeToString[(int)type];
+}
+}
++        public bool HasDelegates
++        {
++            get
++            {
++                return GetDelegates().Any();
++            }
++        }
+public string ImplicitlyGeneratedLexerFileName
+{
+get
+

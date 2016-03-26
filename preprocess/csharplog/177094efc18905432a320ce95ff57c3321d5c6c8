@@ -1,0 +1,49 @@
+commit 177094efc18905432a320ce95ff57c3321d5c6c8
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sun Apr 10 11:15:40 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sun Apr 10 11:15:40 2011 -0800
+
+(C# 3) Merge CL8090: better error messages for exceptions during interpretation
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8129]
+
+diff --git a/Antlr4.StringTemplate/Interpreter.cs b/Antlr4.StringTemplate/Interpreter.cs
+index 50c5890..3d17df5 100644
+--- a/Antlr4.StringTemplate/Interpreter.cs
++++ b/Antlr4.StringTemplate/Interpreter.cs
+@@ -36,6 +36,7 @@ namespace Antlr4.StringTemplate
+using System.Linq;
+using Antlr.Runtime.JavaExtensions;
+using Antlr4.StringTemplate.Compiler;
++    using Antlr4.StringTemplate.Extensions;
+using Antlr4.StringTemplate.Debug;
+using Antlr4.StringTemplate.Misc;
+using ArgumentNullException = System.ArgumentNullException;
+@@ -52,6 +53,7 @@ namespace Antlr4.StringTemplate
+using Math = System.Math;
+using StringBuilder = System.Text.StringBuilder;
+using StringWriter = System.IO.StringWriter;
++    using Exception = System.Exception;
+
+/** This class knows how to execute template bytecodes relative to a
+*  particular TemplateGroup. To execute the byte codes, we need an output stream
+@@ -148,6 +150,17 @@ namespace Antlr4.StringTemplate
+{
+return ExecuteImpl(@out, frame);
+}
++            catch (Exception e)
++            {
++                if (e.IsCritical())
++                    throw;
++
++                StringBuilder builder = new StringBuilder();
++                builder.AppendLine(e.ToString());
++                builder.AppendLine(e.StackTrace);
++                _errorManager.RuntimeError(frame, current_ip, ErrorType.INTERNAL_ERROR, "internal error caused by: " + builder);
++                return 0;
++            }
+finally
+{
+current_ip = save_ip;
+

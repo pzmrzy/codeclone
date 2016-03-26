@@ -1,0 +1,37 @@
+commit a790590fba84b506d615ab8b72b4be9d4deef6de
+Author:     Jim Idle <jimi@temporal-wave.com>
+AuthorDate: Thu Jun 23 11:57:14 2011 -0800
+Commit:     Jim Idle <jimi@temporal-wave.com>
+CommitDate: Thu Jun 23 11:57:14 2011 -0800
+
+More initialization verifications for 3.4 runtime
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8749]
+
+diff --git a/runtime/C/src/antlr3commontree.c b/runtime/C/src/antlr3commontree.c
+index 01339c7..65de38f 100644
+--- a/runtime/C/src/antlr3commontree.c
++++ b/runtime/C/src/antlr3commontree.c
+@@ -337,7 +337,7 @@ ANTLR3_API pANTLR3_COMMON_TREE
+antlr3CommonTreeNew()
+{
+pANTLR3_COMMON_TREE	tree;
+-	tree    = ANTLR3_MALLOC(sizeof(ANTLR3_COMMON_TREE));
++	tree    = ANTLR3_CALLOC(1, sizeof(ANTLR3_COMMON_TREE));
+
+if	(tree == NULL)
+{
+diff --git a/runtime/C/src/antlr3string.c b/runtime/C/src/antlr3string.c
+index 8a0dab9..ebe7b03 100644
+--- a/runtime/C/src/antlr3string.c
++++ b/runtime/C/src/antlr3string.c
+@@ -101,7 +101,7 @@ antlr3StringFactoryNew(ANTLR3_UINT32 encoding)
+
+/* Allocate memory
+*/
+-	factory	= (pANTLR3_STRING_FACTORY) ANTLR3_MALLOC(sizeof(ANTLR3_STRING_FACTORY));
++	factory	= (pANTLR3_STRING_FACTORY) ANTLR3_CALLOC(1, sizeof(ANTLR3_STRING_FACTORY));
+
+if	(factory == NULL)
+{
+

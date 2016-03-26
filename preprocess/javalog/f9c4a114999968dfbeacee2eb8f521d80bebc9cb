@@ -1,0 +1,290 @@
+commit f9c4a114999968dfbeacee2eb8f521d80bebc9cb
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Wed Feb 22 11:38:49 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Wed Feb 22 12:26:05 2012 -0600
+
+Replace iteration over keySet with iteration over entrySet when value is computed by lookup
+
+diff --git a/gunit/src/main/java/org/antlr/gunit/JUnitCodeGen.java b/gunit/src/main/java/org/antlr/gunit/JUnitCodeGen.java
+index 4713cf7..3e5e21c 100644
+--- a/gunit/src/main/java/org/antlr/gunit/JUnitCodeGen.java
++++ b/gunit/src/main/java/org/antlr/gunit/JUnitCodeGen.java
+@@ -189,13 +189,14 @@ public class JUnitCodeGen {
+private void genParserMethods(StringTemplateGroup group, StringBuffer buf) {
+for ( gUnitTestSuite ts: grammarInfo.getRuleTestSuites() ) {
+int i = 0;
+-            for ( gUnitTestInput input: ts.testSuites.keySet() ) {	// each rule may contain multiple tests
++            for ( Map.Entry<gUnitTestInput, AbstractTest> entry : ts.testSuites.entrySet() ) {	// each rule may contain multiple tests
++                gUnitTestInput input = entry.getKey();
+i++;
+StringTemplate testRuleMethodST;
+/** If rule has multiple return values or ast*/
+-                if ( ts.testSuites.get(input).getType()== gUnitParser.ACTION && ruleWithReturn.containsKey(ts.getRuleName()) ) {
++                if ( entry.getValue().getType()== gUnitParser.ACTION && ruleWithReturn.containsKey(ts.getRuleName()) ) {
+testRuleMethodST = group.getInstanceOf("testRuleMethod2");
+-                    String outputString = ts.testSuites.get(input).getText();
++                    String outputString = entry.getValue().getText();
+testRuleMethodST.setAttribute("methodName", "test"+changeFirstCapital(ts.getRuleName())+i);
+testRuleMethodST.setAttribute("testRuleName", '"'+ts.getRuleName()+'"');
+testRuleMethodST.setAttribute("test", input);
+@@ -208,21 +209,21 @@ public class JUnitCodeGen {
+if ( ts.isLexicalRule() ) testRuleName = ts.getLexicalRuleName();
+else testRuleName = ts.getRuleName();
+testRuleMethodST = group.getInstanceOf("testRuleMethod");
+-                    String outputString = ts.testSuites.get(input).getText();
++                    String outputString = entry.getValue().getText();
+testRuleMethodST.setAttribute("isLexicalRule", ts.isLexicalRule());
+testRuleMethodST.setAttribute("methodName", "test"+changeFirstCapital(testRuleName)+i);
+testRuleMethodST.setAttribute("testRuleName", '"'+testRuleName+'"');
+testRuleMethodST.setAttribute("test", input);
+-                    testRuleMethodST.setAttribute("tokenType", getTypeString(ts.testSuites.get(input).getType()));
++                    testRuleMethodST.setAttribute("tokenType", getTypeString(entry.getValue().getType()));
+
+// normalize whitespace
+outputString = normalizeTreeSpec(outputString);
+
+-                    if ( ts.testSuites.get(input).getType()==gUnitParser.ACTION ) {	// trim ';' at the end of ACTION if there is...
++                    if ( entry.getValue().getType()==gUnitParser.ACTION ) {	// trim ';' at the end of ACTION if there is...
+//testRuleMethodST.setAttribute("expecting", outputString.substring(0, outputString.length()-1));
+testRuleMethodST.setAttribute("expecting", outputString);
+}
+-                    else if ( ts.testSuites.get(input).getType()==gUnitParser.RETVAL ) {	// Expected: RETVAL
++                    else if ( entry.getValue().getType()==gUnitParser.RETVAL ) {	// Expected: RETVAL
+testRuleMethodST.setAttribute("expecting", outputString);
+}
+else {	// Attach "" to expected STRING or AST
+@@ -239,13 +240,14 @@ public class JUnitCodeGen {
+private void genTreeMethods(StringTemplateGroup group, StringBuffer buf) {
+for ( gUnitTestSuite ts: grammarInfo.getRuleTestSuites() ) {
+int i = 0;
+-            for ( gUnitTestInput input: ts.testSuites.keySet() ) {	// each rule may contain multiple tests
++            for ( Map.Entry<gUnitTestInput, AbstractTest> entry : ts.testSuites.entrySet() ) {	// each rule may contain multiple tests
++                gUnitTestInput input = entry.getKey();
+i++;
+StringTemplate testRuleMethodST;
+/** If rule has multiple return values or ast*/
+-                if ( ts.testSuites.get(input).getType()== gUnitParser.ACTION && ruleWithReturn.containsKey(ts.getTreeRuleName()) ) {
++                if ( entry.getValue().getType()== gUnitParser.ACTION && ruleWithReturn.containsKey(ts.getTreeRuleName()) ) {
+testRuleMethodST = group.getInstanceOf("testTreeRuleMethod2");
+-                    String outputString = ts.testSuites.get(input).getText();
++                    String outputString = entry.getValue().getText();
+testRuleMethodST.setAttribute("methodName", "test"+changeFirstCapital(ts.getTreeRuleName())+"_walks_"+
+changeFirstCapital(ts.getRuleName())+i);
+testRuleMethodST.setAttribute("testTreeRuleName", '"'+ts.getTreeRuleName()+'"');
+@@ -256,19 +258,19 @@ public class JUnitCodeGen {
+}
+else {
+testRuleMethodST = group.getInstanceOf("testTreeRuleMethod");
+-                    String outputString = ts.testSuites.get(input).getText();
++                    String outputString = entry.getValue().getText();
+testRuleMethodST.setAttribute("methodName", "test"+changeFirstCapital(ts.getTreeRuleName())+"_walks_"+
+changeFirstCapital(ts.getRuleName())+i);
+testRuleMethodST.setAttribute("testTreeRuleName", '"'+ts.getTreeRuleName()+'"');
+testRuleMethodST.setAttribute("testRuleName", '"'+ts.getRuleName()+'"');
+testRuleMethodST.setAttribute("test", input);
+-                    testRuleMethodST.setAttribute("tokenType", getTypeString(ts.testSuites.get(input).getType()));
++                    testRuleMethodST.setAttribute("tokenType", getTypeString(entry.getValue().getType()));
+
+-                    if ( ts.testSuites.get(input).getType()==gUnitParser.ACTION ) {	// trim ';' at the end of ACTION if there is...
++                    if ( entry.getValue().getType()==gUnitParser.ACTION ) {	// trim ';' at the end of ACTION if there is...
+//testRuleMethodST.setAttribute("expecting", outputString.substring(0, outputString.length()-1));
+testRuleMethodST.setAttribute("expecting", outputString);
+}
+-                    else if ( ts.testSuites.get(input).getType()==gUnitParser.RETVAL ) {	// Expected: RETVAL
++                    else if ( entry.getValue().getType()==gUnitParser.RETVAL ) {	// Expected: RETVAL
+testRuleMethodST.setAttribute("expecting", outputString);
+}
+else {	// Attach "" to expected STRING or AST
+diff --git a/gunit/src/main/java/org/antlr/gunit/gUnitExecutor.java b/gunit/src/main/java/org/antlr/gunit/gUnitExecutor.java
+index 8498c65..a69f731 100644
+--- a/gunit/src/main/java/org/antlr/gunit/gUnitExecutor.java
++++ b/gunit/src/main/java/org/antlr/gunit/gUnitExecutor.java
+@@ -47,6 +47,7 @@ import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
++import java.util.Map;
+
+public class gUnitExecutor implements ITestSuite {
+public GrammarInfo grammarInfo;
+@@ -173,11 +174,12 @@ public class gUnitExecutor implements ITestSuite {
+String rule = ts.getRuleName();
+String lexicalRule = ts.getLexicalRuleName();
+String treeRule = ts.getTreeRuleName();
+-			for ( gUnitTestInput input: ts.testSuites.keySet() ) {	// each rule may contain multiple tests
++			for ( Map.Entry<gUnitTestInput, AbstractTest> entry : ts.testSuites.entrySet() ) {	// each rule may contain multiple tests
++				gUnitTestInput input = entry.getKey();
+numOfTest++;
+// Run parser, and get the return value or stdout or stderr if there is
+gUnitTestResult result = null;
+-				AbstractTest test = ts.testSuites.get(input);
++				AbstractTest test = entry.getValue();
+try {
+// TODO: create a -debug option to turn on logging, which shows progress of running tests
+//System.out.print(numOfTest + ". Running rule: " + rule + "; input: '" + input.testInput + "'");
+diff --git a/tool/src/main/java/org/antlr/analysis/LL1DFA.java b/tool/src/main/java/org/antlr/analysis/LL1DFA.java
+index dc9ba9f..3120b2a 100644
+--- a/tool/src/main/java/org/antlr/analysis/LL1DFA.java
++++ b/tool/src/main/java/org/antlr/analysis/LL1DFA.java
+@@ -34,6 +34,7 @@ import org.antlr.misc.MultiMap;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
++import java.util.Map;
+
+/** A special DFA that is exactly LL(1) or LL(1) with backtracking mode
+*  predicates to resolve edge set collisions.
+@@ -85,8 +86,9 @@ public class LL1DFA extends DFA {
+this.decisionNFAStartState = decisionStartState;
+initAltRelatedInfo();
+unreachableAlts = null;
+-		for (IntervalSet edge : edgeMap.keySet()) {
+-			List<Integer> alts = edgeMap.get(edge);
++		for (Map.Entry<IntervalSet, List<Integer>> entry : edgeMap.entrySet()) {
++			IntervalSet edge = entry.getKey();
++			List<Integer> alts = entry.getValue();
+Collections.sort(alts); // make sure alts are attempted in order
+//System.out.println(edge+" -> "+alts);
+DFAState s = newState();
+diff --git a/tool/src/main/java/org/antlr/codegen/CodeGenerator.java b/tool/src/main/java/org/antlr/codegen/CodeGenerator.java
+index d51a989..4151b8b 100644
+--- a/tool/src/main/java/org/antlr/codegen/CodeGenerator.java
++++ b/tool/src/main/java/org/antlr/codegen/CodeGenerator.java
+@@ -487,11 +487,11 @@ public class CodeGenerator {
+*  target likes the scopes in action table.
+*/
+protected void verifyActionScopesOkForTarget(Map<String, Map<String, Object>> actions) {
+-		Set<String> actionScopeKeySet = actions.keySet();
+-		for (String scope : actionScopeKeySet) {
++		for (Map.Entry<String, Map<String, Object>> entry : actions.entrySet()) {
++			String scope = entry.getKey();
+if ( !target.isValidActionScope(grammar.type, scope) ) {
+// get any action from the scope to get error location
+-				Map<String, Object> scopeActions = actions.get(scope);
++				Map<String, Object> scopeActions = entry.getValue();
+GrammarAST actionAST =
+(GrammarAST)scopeActions.values().iterator().next();
+ErrorManager.grammarError(
+@@ -506,9 +506,8 @@ public class CodeGenerator {
+*  each action and replace that action in the Map.
+*/
+protected void translateActionAttributeReferences(Map<String, Map<String, Object>> actions) {
+-		Set<String> actionScopeKeySet = actions.keySet();
+-		for (String scope : actionScopeKeySet) {
+-			Map<String, Object> scopeActions = actions.get(scope);
++		for (Map.Entry<String, Map<String, Object>> entry : actions.entrySet()) {
++			Map<String, Object> scopeActions = entry.getValue();
+translateActionAttributeReferencesForSingleScope(null,scopeActions);
+}
+}
+@@ -522,9 +521,9 @@ public class CodeGenerator {
+if ( r!=null ) {
+ruleName = r.name;
+}
+-		Set<String> actionNameSet = scopeActions.keySet();
+-		for (String name : actionNameSet) {
+-			GrammarAST actionAST = (GrammarAST)scopeActions.get(name);
++		for (Map.Entry<String, Object> entry : scopeActions.entrySet()) {
++			String name = entry.getKey();
++			GrammarAST actionAST = (GrammarAST)entry.getValue();
+List<?> chunks = translateAction(ruleName,actionAST);
+scopeActions.put(name, chunks); // replace with translation
+}
+diff --git a/tool/src/main/java/org/antlr/tool/AssignTokenTypesBehavior.java b/tool/src/main/java/org/antlr/tool/AssignTokenTypesBehavior.java
+index 3d88e26..cc7c0f4 100644
+--- a/tool/src/main/java/org/antlr/tool/AssignTokenTypesBehavior.java
++++ b/tool/src/main/java/org/antlr/tool/AssignTokenTypesBehavior.java
+@@ -246,9 +246,9 @@ protected void defineStringLiteralsFromDelegates() {
+@Override
+protected void assignStringTypes(Grammar root) {
+// walk string literals assigning types to unassigned ones
+-		Set<String> s = stringLiterals.keySet();
+-		for (String lit : s) {
+-			Integer oldTypeI = stringLiterals.get(lit);
++		for (Map.Entry<String, Integer> entry : stringLiterals.entrySet()) {
++			String lit = entry.getKey();
++			Integer oldTypeI = entry.getValue();
+int oldType = oldTypeI;
+if ( oldType<Label.MIN_TOKEN_TYPE ) {
+Integer typeI = Utils.integer(root.getNewTokenType());
+@@ -267,9 +267,9 @@ protected void defineStringLiteralsFromDelegates() {
+}
+// walk aliases if any and assign types to aliased literals if literal
+// was referenced
+-		Set<String> s = aliases.keySet();
+-		for (String tokenID : s) {
+-			String literal = aliases.get(tokenID);
++		for (Map.Entry<String, String> entry : aliases.entrySet()) {
++			String tokenID = entry.getKey();
++			String literal = entry.getValue();
+if ( literal.charAt(0)=='\'' && stringLiterals.get(literal)!=null ) {
+stringLiterals.put(literal, tokens.get(tokenID));
+// an alias still means you need a lexer rule for it
+@@ -284,9 +284,9 @@ protected void defineStringLiteralsFromDelegates() {
+@Override
+protected void assignTokenIDTypes(Grammar root) {
+// walk token names, assigning values if unassigned
+-		Set<String> s = tokens.keySet();
+-		for (String tokenID : s) {
+-			if ( tokens.get(tokenID)==UNASSIGNED ) {
++		for (Map.Entry<String, Integer> entry : tokens.entrySet()) {
++			String tokenID = entry.getKey();
++			if ( entry.getValue()==UNASSIGNED ) {
+tokens.put(tokenID, Utils.integer(root.getNewTokenType()));
+}
+}
+@@ -294,14 +294,13 @@ protected void defineStringLiteralsFromDelegates() {
+
+@Override
+protected void defineTokenNamesAndLiteralsInGrammar(Grammar root) {
+-		Set<String> s = tokens.keySet();
+-		for (String tokenID : s) {
+-			int ttype = tokens.get(tokenID);
+-			root.defineToken(tokenID, ttype);
++		for (Map.Entry<String, Integer> entry : tokens.entrySet()) {
++			int ttype = entry.getValue();
++			root.defineToken(entry.getKey(), ttype);
+}
+-		s = stringLiterals.keySet();
+-		for (String lit : s) {
+-			int ttype = stringLiterals.get(lit);
++		for (Map.Entry<String, Integer> entry : stringLiterals.entrySet()) {
++			String lit = entry.getKey();
++			int ttype = entry.getValue();
+root.defineToken(lit, ttype);
+}
+}
+diff --git a/tool/src/main/java/org/antlr/tool/Grammar.java b/tool/src/main/java/org/antlr/tool/Grammar.java
+index d7b94e5..426fbf5 100644
+--- a/tool/src/main/java/org/antlr/tool/Grammar.java
++++ b/tool/src/main/java/org/antlr/tool/Grammar.java
+@@ -920,8 +920,9 @@ public class Grammar {
+return rules;
+}
+boolean isLexer = grammarTree.getType()==ANTLRParser.LEXER_GRAMMAR;
+-		for (String synpredName : nameToSynpredASTMap.keySet()) {
+-			GrammarAST fragmentAST = nameToSynpredASTMap.get(synpredName);
++		for (Map.Entry<String, GrammarAST> entry : nameToSynpredASTMap.entrySet()) {
++			String synpredName = entry.getKey();
++			GrammarAST fragmentAST = entry.getValue();
+GrammarAST ruleAST =
+ANTLRParser.createSimpleRuleAST(synpredName,
+fragmentAST,
+diff --git a/tool/src/main/java/org/antlr/tool/LeftRecursiveRuleAnalyzer.java b/tool/src/main/java/org/antlr/tool/LeftRecursiveRuleAnalyzer.java
+index fcbf7db..b4e579f 100644
+--- a/tool/src/main/java/org/antlr/tool/LeftRecursiveRuleAnalyzer.java
++++ b/tool/src/main/java/org/antlr/tool/LeftRecursiveRuleAnalyzer.java
+@@ -222,8 +222,9 @@ public class LeftRecursiveRuleAnalyzer extends LeftRecursiveRuleWalker {
+opPrecRuleAlts.putAll(binaryAlts);
+opPrecRuleAlts.putAll(ternaryAlts);
+opPrecRuleAlts.putAll(suffixAlts);
+-		for (int alt : opPrecRuleAlts.keySet()) {
+-			String altText = opPrecRuleAlts.get(alt);
++		for (Map.Entry<Integer, String> entry : opPrecRuleAlts.entrySet()) {
++			int alt = entry.getKey();
++			String altText = entry.getValue();
+ST altST = recRuleTemplates.getInstanceOf("recRuleAlt");
+ST predST =
+generator.getTemplates().getInstanceOf("recRuleAltPredicate");
+

@@ -1,0 +1,27 @@
+commit 38cb692ae06b1dc201f58dae86b0c4a4345ee3c4
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sun Apr 10 17:41:03 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sun Apr 10 17:41:03 2011 -0800
+
+(C# 3) Add Template() ctor
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8154]
+
+diff --git a/Antlr4.StringTemplate/Template.cs b/Antlr4.StringTemplate/Template.cs
+index 383fc2f..cc9e195 100644
+--- a/Antlr4.StringTemplate/Template.cs
++++ b/Antlr4.StringTemplate/Template.cs
+@@ -119,6 +119,11 @@ namespace Antlr4.StringTemplate
+}
+}
+
++        public Template()
++            : this(TemplateGroup.defaultGroup, string.Empty)
++        {
++        }
++
+/** Used by group creation routine, not by users */
+internal Template(TemplateGroup group)
+{
+

@@ -1,0 +1,44 @@
+commit bcfc5a4e7c8ad436dd610018997fd194abe02e72
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Jun 27 15:28:50 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Jun 27 15:28:50 2011 -0800
+
+(C# 3) Mark C# runtime assembly with [assembly: AllowPartiallyTrustedCallers]
+ANTLRFileStream demands unrestricted file IO permissions
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8773]
+
+diff --git a/Antlr3.Runtime/ANTLRFileStream.cs b/Antlr3.Runtime/ANTLRFileStream.cs
+index d0aa38f..b4725e3 100644
+--- a/Antlr3.Runtime/ANTLRFileStream.cs
++++ b/Antlr3.Runtime/ANTLRFileStream.cs
+@@ -44,6 +44,7 @@ namespace Antlr.Runtime
+*  </summary>
+*/
+[System.Serializable]
++    [System.Security.Permissions.FileIOPermission(System.Security.Permissions.SecurityAction.Demand, Unrestricted = true)]
+public class ANTLRFileStream : ANTLRStringStream
+{
+protected string fileName;
+diff --git a/Antlr3.Runtime/Properties/AssemblyInfo.cs b/Antlr3.Runtime/Properties/AssemblyInfo.cs
+index 2a01ea9..1489fde 100644
+--- a/Antlr3.Runtime/Properties/AssemblyInfo.cs
++++ b/Antlr3.Runtime/Properties/AssemblyInfo.cs
+@@ -33,6 +33,7 @@
+using System;
+using System.Reflection;
+using System.Runtime.InteropServices;
++using System.Security;
+
+// General Information about an assembly is controlled through the following
+// set of attributes. Change these attribute values to modify the information
+@@ -46,6 +47,7 @@ using System.Runtime.InteropServices;
+[assembly: AssemblyTrademark( "" )]
+[assembly: AssemblyCulture( "" )]
+[assembly: CLSCompliant( true )]
++[assembly: AllowPartiallyTrustedCallers]
+
+// Setting ComVisible to false makes the types in this assembly not visible
+// to COM components.  If you need to access a type in this assembly from
+

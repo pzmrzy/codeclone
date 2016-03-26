@@ -1,0 +1,25 @@
+commit 8d57f26b8425523d7000043e9d45a3856fbf2228
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Tue Jan 29 05:43:20 2013 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Tue Jan 29 05:45:45 2013 -0600
+
+Add reference antlr3 submodule, initialize to current sync point
+
+diff --git a/.gitmodules b/.gitmodules
+new file mode 100644
+index 0000000..b5d823f
+--- /dev/null
++++ b/.gitmodules
+@@ -0,0 +1,3 @@
++[submodule "Reference/antlr3"]
++	path = Reference/antlr3
++	url = git://github.com/antlr/antlr3.git
+diff --git a/Reference/antlr3 b/Reference/antlr3
+new file mode 160000
+index 0000000..747dc08
+--- /dev/null
++++ b/Reference/antlr3
+@@ -0,0 +1 @@
++Subproject commit 747dc08c4ef30f2430dbbdfca04375421367320e
+

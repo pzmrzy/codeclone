@@ -1,0 +1,11 @@
+commit 21f5c6cf6de751ec12b0da25e043ae7fc6676af7
+Merge: ede3381 5a529bb
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Fri Aug 9 22:00:42 2013 -0700
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Fri Aug 9 22:00:42 2013 -0700
+
+Merge pull request #18 from sharwell/fix-3
+
+Improve handling of TemplateGroupString.FileName (fixes #3)
+

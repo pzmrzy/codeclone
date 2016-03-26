@@ -1,0 +1,163 @@
+commit 98b65fb71dc82229eaa9cc77ef0b32b033176934
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Thu Oct 27 09:43:03 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Thu Oct 27 09:43:03 2011 -0800
+
+v3: Specify output language=Java
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 9215]
+
+diff --git a/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLR.g b/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLR.g
+index 6b4e60b..335a643 100644
+--- a/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLR.g
++++ b/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLR.g
+@@ -51,6 +51,7 @@ grammar ANTLR;
+
+options
+{
++	language=Java;
+output=AST;
+ASTLabelType=GrammarAST;
+}
+diff --git a/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLRTreePrinter.g b/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLRTreePrinter.g
+index 0fbbfa0..d4032fc 100644
+--- a/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLRTreePrinter.g
++++ b/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLRTreePrinter.g
+@@ -40,6 +40,7 @@ tree grammar ANTLRTreePrinter;
+
+options
+{
++	language=Java;
+tokenVocab = ANTLR;
+ASTLabelType = GrammarAST;
+}
+diff --git a/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLRv3.g b/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLRv3.g
+index ff6cfa0..76c92e4 100644
+--- a/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLRv3.g
++++ b/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLRv3.g
+@@ -29,6 +29,7 @@
+grammar ANTLRv3;
+
+options {
++	language=Java;
+output=AST;
+ASTLabelType=CommonTree;
+}
+diff --git a/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLRv3Tree.g b/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLRv3Tree.g
+index f6b03d3..a660205 100644
+--- a/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLRv3Tree.g
++++ b/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLRv3Tree.g
+@@ -30,6 +30,7 @@
+tree grammar ANTLRv3Tree;
+
+options {
++	language=Java;
+tokenVocab = ANTLRv3;
+ASTLabelType = CommonTree;
+}
+diff --git a/tool/src/main/antlr3/org/antlr/grammar/v3/ActionAnalysis.g b/tool/src/main/antlr3/org/antlr/grammar/v3/ActionAnalysis.g
+index ed8bb21..4edcc54 100644
+--- a/tool/src/main/antlr3/org/antlr/grammar/v3/ActionAnalysis.g
++++ b/tool/src/main/antlr3/org/antlr/grammar/v3/ActionAnalysis.g
+@@ -35,6 +35,7 @@
+*/
+lexer grammar ActionAnalysis;
+options {
++  language=Java;
+filter=true;  // try all non-fragment rules in order specified
+}
+
+diff --git a/tool/src/main/antlr3/org/antlr/grammar/v3/ActionTranslator.g b/tool/src/main/antlr3/org/antlr/grammar/v3/ActionTranslator.g
+index 0aca8b8..ec1b744 100644
+--- a/tool/src/main/antlr3/org/antlr/grammar/v3/ActionTranslator.g
++++ b/tool/src/main/antlr3/org/antlr/grammar/v3/ActionTranslator.g
+@@ -27,6 +27,7 @@
+*/
+lexer grammar ActionTranslator;
+options {
++  language=Java;
+filter=true;  // try all non-fragment rules in order specified
+// output=template;  TODO: can we make tokens return templates somehow?
+}
+diff --git a/tool/src/main/antlr3/org/antlr/grammar/v3/AssignTokenTypesWalker.g b/tool/src/main/antlr3/org/antlr/grammar/v3/AssignTokenTypesWalker.g
+index 4d35c64..276a163 100644
+--- a/tool/src/main/antlr3/org/antlr/grammar/v3/AssignTokenTypesWalker.g
++++ b/tool/src/main/antlr3/org/antlr/grammar/v3/AssignTokenTypesWalker.g
+@@ -83,6 +83,7 @@ tree grammar AssignTokenTypesWalker;
+
+options
+{
++	language=Java;
+tokenVocab = ANTLR;
+ASTLabelType = GrammarAST;
+}
+diff --git a/tool/src/main/antlr3/org/antlr/grammar/v3/CodeGenTreeWalker.g b/tool/src/main/antlr3/org/antlr/grammar/v3/CodeGenTreeWalker.g
+index 7615833..2f0c605 100644
+--- a/tool/src/main/antlr3/org/antlr/grammar/v3/CodeGenTreeWalker.g
++++ b/tool/src/main/antlr3/org/antlr/grammar/v3/CodeGenTreeWalker.g
+@@ -40,6 +40,7 @@
+tree grammar CodeGenTreeWalker;
+
+options {
++	language=Java;
+tokenVocab = ANTLR;
+ASTLabelType=GrammarAST;
+}
+@@ -697,7 +698,7 @@ alternative returns [ST code]
+(
+e=element[null,null]
+{
+-					if (e != null && e.code != null)
++					if ($e.code != null)
+{
+$code.addAggr("elements.{el,line,pos}",
+$e.code,
+@@ -724,8 +725,8 @@ options { k=1; }
+|	^(BANG e=element[label,$BANG])
+{ $code = $e.code; }
+
+-	|	^( n=NOT notElement[$n, $label, $astSuffix] )
+-		{ $code = $notElement.code; }
++	|	^( n=NOT ne=notElement[$n, $label, $astSuffix] )
++		{ $code = $ne.code; }
+
+|	^( ASSIGN alabel=ID e=element[$alabel,$astSuffix] )
+{ $code = $e.code; }
+diff --git a/tool/src/main/antlr3/org/antlr/grammar/v3/DefineGrammarItemsWalker.g b/tool/src/main/antlr3/org/antlr/grammar/v3/DefineGrammarItemsWalker.g
+index a47ba8b..36702c4 100644
+--- a/tool/src/main/antlr3/org/antlr/grammar/v3/DefineGrammarItemsWalker.g
++++ b/tool/src/main/antlr3/org/antlr/grammar/v3/DefineGrammarItemsWalker.g
+@@ -32,6 +32,7 @@
+tree grammar DefineGrammarItemsWalker;
+
+options {
++	language=Java;
+tokenVocab = ANTLR;
+ASTLabelType = GrammarAST;
+}
+diff --git a/tool/src/main/antlr3/org/antlr/grammar/v3/LeftRecursiveRuleWalker.g b/tool/src/main/antlr3/org/antlr/grammar/v3/LeftRecursiveRuleWalker.g
+index 537bd12..d19067f 100644
+--- a/tool/src/main/antlr3/org/antlr/grammar/v3/LeftRecursiveRuleWalker.g
++++ b/tool/src/main/antlr3/org/antlr/grammar/v3/LeftRecursiveRuleWalker.g
+@@ -34,6 +34,7 @@
+tree grammar LeftRecursiveRuleWalker;
+
+options {
++	language=Java;
+tokenVocab=ANTLR;
+ASTLabelType=GrammarAST;
+}
+diff --git a/tool/src/main/antlr3/org/antlr/grammar/v3/TreeToNFAConverter.g b/tool/src/main/antlr3/org/antlr/grammar/v3/TreeToNFAConverter.g
+index ab206ef..8568a79 100644
+--- a/tool/src/main/antlr3/org/antlr/grammar/v3/TreeToNFAConverter.g
++++ b/tool/src/main/antlr3/org/antlr/grammar/v3/TreeToNFAConverter.g
+@@ -34,6 +34,7 @@
+tree grammar TreeToNFAConverter;
+
+options {
++	language=Java;
+tokenVocab = ANTLR;
+ASTLabelType = GrammarAST;
+}
+

@@ -1,0 +1,49 @@
+commit dbd761bcc60cf593b39ca74762d46c92c0f1bfac
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Nov 16 08:09:14 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Nov 16 08:09:14 2009 -0800
+
+C# Port:
+* Updated bootstrap build of AntlrBuildTask and Antlr3.targets
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6360]
+
+diff --git a/bin/Bootstrap/Antlr3.targets b/bin/Bootstrap/Antlr3.targets
+index a9dedd7..211cf7f 100644
+--- a/bin/Bootstrap/Antlr3.targets
++++ b/bin/Bootstrap/Antlr3.targets
+@@ -80,6 +80,7 @@
+
+<ItemGroup Condition="'$(BuildingInsideVisualStudio)'=='true'">
+<AvailableItemName Include="Antlr3" />
++    <AvailableItemName Include="AntlrTokens" />
+</ItemGroup>
+
+<Target Name="AntlrCompileReadGeneratedFileList">
+@@ -92,7 +93,7 @@
+<Target Name="AntlrCompile"
+DependsOnTargets="$(AntlrCompileDependsOn)"
+Condition="'@(Antlr3)' != ''"
+-          Inputs="@(Antlr3)"
++          Inputs="@(Antlr3);@(AntlrTokens)"
+Outputs="@(AntlrOutputCodeFilesList);
+$(IntermediateOutputPath)$(AntlrGenCodeFileNames);">
+
+@@ -105,7 +106,8 @@
+BuildTaskPath="$(AntlrBuildTaskLocation)"
+OutputPath="$(IntermediateOutputPath)"
+Language="$(Language)"
+-      SourceCodeFiles="@(Antlr3)">
++      SourceCodeFiles="@(Antlr3)"
++      TokensFiles="@(AntlrTokens)">
+
+<Output ItemName="AntlrGeneratedCodeFiles" TaskParameter="GeneratedCodeFiles" />
+</AntlrClassGenerationTask>
+diff --git a/bin/Bootstrap/AntlrBuildTask.dll b/bin/Bootstrap/AntlrBuildTask.dll
+index a0a9c0c..611bc27 100644
+Binary files a/bin/Bootstrap/AntlrBuildTask.dll and b/bin/Bootstrap/AntlrBuildTask.dll differ
+diff --git a/bin/Bootstrap/AntlrBuildTask.pdb b/bin/Bootstrap/AntlrBuildTask.pdb
+index 1d5aed9..6a256a6 100644
+Binary files a/bin/Bootstrap/AntlrBuildTask.pdb and b/bin/Bootstrap/AntlrBuildTask.pdb differ
+

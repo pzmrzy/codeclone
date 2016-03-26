@@ -1,0 +1,811 @@
+commit 7861ed58a6d8f638af1353ebf17b8faa238871ec
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Jan 24 09:45:14 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Jan 24 09:45:14 2011 -0800
+
+(C# 3) C# naming conventions
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7516]
+
+diff --git a/Antlr4.StringTemplate.Visualizer/Extensions/ListExtensions.cs b/Antlr4.StringTemplate.Visualizer/Extensions/ListExtensions.cs
+index 0e81dd4..d635c40 100644
+--- a/Antlr4.StringTemplate.Visualizer/Extensions/ListExtensions.cs
++++ b/Antlr4.StringTemplate.Visualizer/Extensions/ListExtensions.cs
+@@ -50,7 +50,7 @@ namespace Antlr4.StringTemplate.Visualizer.Extensions
+
+private class CollectionRenderer : IAttributeRenderer
+{
+-            public string toString(object o, string formatString, CultureInfo culture)
++            public string ToString(object o, string formatString, CultureInfo culture)
+{
+return ((IList)o).ToListString();
+}
+diff --git a/Antlr4.StringTemplate.Visualizer/Extensions/TemplateExtensions.cs b/Antlr4.StringTemplate.Visualizer/Extensions/TemplateExtensions.cs
+index f17c6a0..f2a1f0c 100644
+--- a/Antlr4.StringTemplate.Visualizer/Extensions/TemplateExtensions.cs
++++ b/Antlr4.StringTemplate.Visualizer/Extensions/TemplateExtensions.cs
+@@ -51,7 +51,7 @@ namespace Antlr4.StringTemplate.Visualizer.Extensions
+
+public static void Inspect(this DebugST template, CultureInfo culture)
+{
+-            Inspect(template, template.impl.nativeGroup.errMgr, culture, AutoIndentWriter.NO_WRAP);
++            Inspect(template, template.impl.nativeGroup.errMgr, culture, AutoIndentWriter.NoWrap);
+}
+
+public static void Inspect(this DebugST template, ErrorManager errorManager, CultureInfo culture, int lineWidth)
+diff --git a/Antlr4.StringTemplate.Visualizer/TemplateCallHierarchyViewModel.cs b/Antlr4.StringTemplate.Visualizer/TemplateCallHierarchyViewModel.cs
+index be15eb8..d577708 100644
+--- a/Antlr4.StringTemplate.Visualizer/TemplateCallHierarchyViewModel.cs
++++ b/Antlr4.StringTemplate.Visualizer/TemplateCallHierarchyViewModel.cs
+@@ -37,14 +37,15 @@ namespace Antlr4.StringTemplate.Visualizer
+using System.Diagnostics;
+using Antlr4.StringTemplate.Debug;
+using Path = System.IO.Path;
++    using ArgumentNullException = System.ArgumentNullException;
+
+public class TemplateCallHierarchyViewModel : INotifyPropertyChanged
+{
+private static readonly PropertyChangedEventArgs IsExpandedPropertyChangedEventArgs = new PropertyChangedEventArgs("IsExpanded");
+private static readonly PropertyChangedEventArgs IsSelectedPropertyChangedEventArgs = new PropertyChangedEventArgs("IsSelected");
+
+-        private Interpreter _interpreter;
+-        private DebugST _template;
++        private readonly Interpreter _interpreter;
++        private readonly DebugST _template;
+private List<TemplateCallHierarchyViewModel> _children;
+
+private bool _isExpanded;
+@@ -52,6 +53,11 @@ namespace Antlr4.StringTemplate.Visualizer
+
+public TemplateCallHierarchyViewModel(Interpreter interpreter, DebugST template)
+{
++            if (interpreter == null)
++                throw new ArgumentNullException("interpreter");
++            if (template == null)
++                throw new ArgumentNullException("template");
++
+this._interpreter = interpreter;
+this._template = template;
+}
+diff --git a/Antlr4.StringTemplate.Visualizer/TemplateVisualizer.cs b/Antlr4.StringTemplate.Visualizer/TemplateVisualizer.cs
+index e1d3475..a497f88 100644
+--- a/Antlr4.StringTemplate.Visualizer/TemplateVisualizer.cs
++++ b/Antlr4.StringTemplate.Visualizer/TemplateVisualizer.cs
+@@ -36,18 +36,30 @@ namespace Antlr4.StringTemplate.Visualizer
+using System.Collections.ObjectModel;
+using Antlr4.StringTemplate.Debug;
+using Antlr4.StringTemplate.Misc;
++    using ArgumentNullException = System.ArgumentNullException;
+
+public class TemplateVisualizer
+{
+-        private ErrorManager _errorManager;
+-        private DebugST _root;
+-        private string _output;
+-        private Interpreter _interpreter;
+-        private List<string> _trace;
+-        private ReadOnlyCollection<STMessage> _errors;
++        private readonly ErrorManager _errorManager;
++        private readonly DebugST _root;
++        private readonly string _output;
++        private readonly Interpreter _interpreter;
++        private readonly List<string> _trace;
++        private readonly ReadOnlyCollection<STMessage> _errors;
+
+public TemplateVisualizer(ErrorManager errorManager, DebugST root, string output, Interpreter interpreter, List<string> trace, ReadOnlyCollection<STMessage> errors)
+{
++            if (errorManager == null)
++                throw new ArgumentNullException("errorManager");
++            if (root == null)
++                throw new ArgumentNullException("root");
++            if (interpreter == null)
++                throw new ArgumentNullException("interpreter");
++            if (trace == null)
++                throw new ArgumentNullException("trace");
++            if (errors == null)
++                throw new ArgumentNullException("errors");
++
+_errorManager = errorManager;
+_root = root;
+_output = output;
+diff --git a/Antlr4.StringTemplate.Visualizer/TemplateVisualizerFrame.xaml.cs b/Antlr4.StringTemplate.Visualizer/TemplateVisualizerFrame.xaml.cs
+index 0851279..d13e560 100644
+--- a/Antlr4.StringTemplate.Visualizer/TemplateVisualizerFrame.xaml.cs
++++ b/Antlr4.StringTemplate.Visualizer/TemplateVisualizerFrame.xaml.cs
+@@ -144,6 +144,9 @@ namespace Antlr4.StringTemplate.Visualizer
+
+private static InterpEvent FindEventAtOutputLocation(List<InterpEvent> events, int position)
+{
++            if (events == null)
++                throw new ArgumentNullException("events");
++
+foreach (var e in events)
+{
+if (position >= e.Start && position <= e.Stop)
+@@ -181,7 +184,7 @@ namespace Antlr4.StringTemplate.Visualizer
+
+private static void SetSelectionPath(TemplateCallHierarchyViewModel treeView, ICollection<ST> selectionPath)
+{
+-            if (treeView == null || selectionPath.Count == 0 || treeView.Template != selectionPath.First())
++            if (treeView == null || selectionPath == null || selectionPath.Count == 0 || treeView.Template != selectionPath.First())
+return;
+
+List<TemplateCallHierarchyViewModel> nodes = new List<TemplateCallHierarchyViewModel>();
+@@ -247,6 +250,12 @@ namespace Antlr4.StringTemplate.Visualizer
+
+private int GetIndexOfChild(DebugST parent, ST child)
+{
++            if (parent == null)
++                throw new ArgumentNullException("parent");
++            if (child == null)
++                throw new ArgumentNullException("child");
++
++
+TemplateCallHierarchyViewModel hierarchy = new TemplateCallHierarchyViewModel(ViewModel.Visualizer.Interpreter, parent);
+List<TemplateCallHierarchyViewModel> children = hierarchy.Children;
+return children.FindIndex(i => i.Template == child);
+@@ -256,7 +265,6 @@ namespace Antlr4.StringTemplate.Visualizer
+{
+List<ST> stack = currentTemplate.getEnclosingInstanceStack(true);
+ViewModel.Title = string.Format("STViz - [{0}]", string.Join(" ", stack.Select(i => i.ToString()).ToArray()));
+-            //throw new NotImplementedException();
+}
+
+private void UpdateAttributes()
+diff --git a/Antlr4.StringTemplate.Visualizer/TemplateVisualizerViewModel.cs b/Antlr4.StringTemplate.Visualizer/TemplateVisualizerViewModel.cs
+index cab26d8..f55a2fc 100644
+--- a/Antlr4.StringTemplate.Visualizer/TemplateVisualizerViewModel.cs
++++ b/Antlr4.StringTemplate.Visualizer/TemplateVisualizerViewModel.cs
+@@ -48,9 +48,9 @@ namespace Antlr4.StringTemplate.Visualizer
+private static readonly PropertyChangedEventArgs AttributesPropertyChangedEventArgs = new PropertyChangedEventArgs("Attributes");
+private static readonly PropertyChangedEventArgs TitlePropertyChangedEventArgs = new PropertyChangedEventArgs("Title");
+
+-        private TemplateVisualizer _visualizer;
+-        private List<TemplateCallHierarchyViewModel> _templateCallHierarchy;
+-        private List<InterpEvent> _allEvents;
++        private readonly TemplateVisualizer _visualizer;
++        private readonly List<TemplateCallHierarchyViewModel> _templateCallHierarchy;
++        private readonly List<InterpEvent> _allEvents;
+private CommonTree _ast;
+private string _title;
+private string _bytecode;
+@@ -96,6 +96,14 @@ namespace Antlr4.StringTemplate.Visualizer
+}
+}
+
++        public List<string> Trace
++        {
++            get
++            {
++                return _visualizer.Trace;
++            }
++        }
++
+public List<InterpEvent> AllEvents
+{
+get
+@@ -190,14 +198,6 @@ namespace Antlr4.StringTemplate.Visualizer
+}
+}
+
+-        public List<string> Trace
+-        {
+-            get
+-            {
+-                return _visualizer.Trace;
+-            }
+-        }
+-
+protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
+{
+var t = PropertyChanged;
+diff --git a/Antlr4.StringTemplate.Visualizer/TemplateVisualizerWindow.xaml.cs b/Antlr4.StringTemplate.Visualizer/TemplateVisualizerWindow.xaml.cs
+index 0747a2f..0f1084a 100644
+--- a/Antlr4.StringTemplate.Visualizer/TemplateVisualizerWindow.xaml.cs
++++ b/Antlr4.StringTemplate.Visualizer/TemplateVisualizerWindow.xaml.cs
+@@ -33,11 +33,15 @@
+namespace Antlr4.StringTemplate.Visualizer
+{
+using System.Windows;
++    using ArgumentNullException = System.ArgumentNullException;
+
+public partial class TemplateVisualizerWindow : Window
+{
+public TemplateVisualizerWindow(TemplateVisualizer visualizer)
+{
++            if (visualizer == null)
++                throw new ArgumentNullException("visualizer");
++
+InitializeComponent();
+DataContext = new TemplateVisualizerViewModel(visualizer);
+}
+diff --git a/Antlr4.StringTemplate/AutoIndentWriter.cs b/Antlr4.StringTemplate/AutoIndentWriter.cs
+index 3fa5554..508a076 100644
+--- a/Antlr4.StringTemplate/AutoIndentWriter.cs
++++ b/Antlr4.StringTemplate/AutoIndentWriter.cs
+@@ -57,7 +57,7 @@ namespace Antlr4.StringTemplate
+*/
+public class AutoIndentWriter : ITemplateWriter
+{
+-        public const int NO_WRAP = -1;
++        public const int NoWrap = -1;
+
+/** stack of indents; use List as it's much faster than Stack. Grows
+*  from 0..n-1.
+@@ -86,7 +86,7 @@ namespace Antlr4.StringTemplate
+/** The absolute char index into the output of the next char to be written. */
+protected int charIndex = 0;
+
+-        protected int lineWidth = NO_WRAP;
++        protected int lineWidth = NoWrap;
+
+public AutoIndentWriter(TextWriter @out, string newline)
+{
+@@ -192,7 +192,7 @@ namespace Antlr4.StringTemplate
+int n = 0;
+// if want wrap and not already at start of line (last char was \n)
+// and we have hit or exceeded the threshold
+-            if (lineWidth != NO_WRAP && wrap != null && !atStartOfLine &&
++            if (lineWidth != NoWrap && wrap != null && !atStartOfLine &&
+charPosition >= lineWidth)
+{
+// ok to wrap
+diff --git a/Antlr4.StringTemplate/Compiler/CompiledTemplate.cs b/Antlr4.StringTemplate/Compiler/CompiledTemplate.cs
+index 0f22010..571543a 100644
+--- a/Antlr4.StringTemplate/Compiler/CompiledTemplate.cs
++++ b/Antlr4.StringTemplate/Compiler/CompiledTemplate.cs
+@@ -71,7 +71,7 @@ namespace Antlr4.StringTemplate.Compiler
+public List<CompiledST> implicitlyDefinedTemplates;
+
+/** The group that physically defines this ST definition.  We use it to initiate
+-         *  interpretation via ST.toString().  From there, it becomes field 'group'
++         *  interpretation via ST.ToString().  From there, it becomes field 'group'
+*  in interpreter and is fixed until rendering completes.
+*/
+public STGroup nativeGroup = STGroup.defaultGroup;
+diff --git a/Antlr4.StringTemplate/Compiler/Group.g3 b/Antlr4.StringTemplate/Compiler/Group.g3
+index da519ae..f37c360 100644
+--- a/Antlr4.StringTemplate/Compiler/Group.g3
++++ b/Antlr4.StringTemplate/Compiler/Group.g3
+@@ -174,7 +174,7 @@ dictPairs[IDictionary<string,object> mapping]
+}
+
+defaultValuePair[IDictionary<string,object> mapping]
+-	:	'default' ':' keyValue {mapping[STGroup.DEFAULT_KEY] = $keyValue.value;}
++	:	'default' ':' keyValue {mapping[STGroup.DefaultKey] = $keyValue.value;}
+;
+
+keyValuePair[IDictionary<string,object> mapping]
+@@ -186,7 +186,7 @@ keyValue returns [object value]
+|	ANONYMOUS_TEMPLATE	{$value = _group.createSingleton($ANONYMOUS_TEMPLATE);}
+|	STRING				{$value = Utility.replaceEscapes(Utility.strip($STRING.text, 1));}
+|	{input.LT(1).Text.Equals("key")}?=> ID
+-							{$value = STGroup.DICT_KEY;}
++							{$value = STGroup.DictionaryKey;}
+;
+catch[RecognitionException re] {
+error("missing value for key at '"+input.LT(1).Text+"'");
+diff --git a/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs b/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs
+index 735f595..162da18 100644
+--- a/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs
++++ b/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs
+@@ -90,7 +90,7 @@ namespace Antlr4.StringTemplate.Compiler
+public ErrorManager errMgr;
+
+public Compiler()
+-            : this(STGroup.DEFAULT_ERR_MGR)
++            : this(STGroup.DefaultErrorManager)
+{
+}
+
+@@ -100,7 +100,7 @@ namespace Antlr4.StringTemplate.Compiler
+}
+
+public Compiler(char delimiterStartChar, char delimiterStopChar)
+-            : this(STGroup.DEFAULT_ERR_MGR, delimiterStartChar, delimiterStopChar)
++            : this(STGroup.DefaultErrorManager, delimiterStartChar, delimiterStopChar)
+{
+}
+
+diff --git a/Antlr4.StringTemplate/Compiler/TemplateLexer.cs b/Antlr4.StringTemplate/Compiler/TemplateLexer.cs
+index 87065b3..e7bc4e1 100644
+--- a/Antlr4.StringTemplate/Compiler/TemplateLexer.cs
++++ b/Antlr4.StringTemplate/Compiler/TemplateLexer.cs
+@@ -57,7 +57,7 @@ namespace Antlr4.StringTemplate.Compiler
+public const int EOF_TYPE = CharStreamConstants.EndOfFile;  // EOF token type
+
+/** We build STToken tokens instead of relying on CommonToken so we
+-         *  can override toString(). It just converts token types to
++         *  can override ToString(). It just converts token types to
+*  token names like 23 to LDELIM.
+*/
+public class STToken : CommonToken
+@@ -157,7 +157,7 @@ namespace Antlr4.StringTemplate.Compiler
+*/
+private readonly Queue<IToken> tokens = new Queue<IToken>();
+
+-        public STLexer(ICharStream input) : this(STGroup.DEFAULT_ERR_MGR, input, null, '<', '>')
++        public STLexer(ICharStream input) : this(STGroup.DefaultErrorManager, input, null, '<', '>')
+{
+}
+
+diff --git a/Antlr4.StringTemplate/Debug/DebugTemplate.cs b/Antlr4.StringTemplate/Debug/DebugTemplate.cs
+index 76e3644..d863ad0 100644
+--- a/Antlr4.StringTemplate/Debug/DebugTemplate.cs
++++ b/Antlr4.StringTemplate/Debug/DebugTemplate.cs
+@@ -86,7 +86,7 @@ namespace Antlr4.StringTemplate.Debug
+
+public virtual List<InterpEvent> getEvents(CultureInfo locale)
+{
+-            return getEvents(locale, AutoIndentWriter.NO_WRAP);
++            return getEvents(locale, AutoIndentWriter.NoWrap);
+}
+
+public virtual List<InterpEvent> getEvents(CultureInfo locale, int lineWidth)
+diff --git a/Antlr4.StringTemplate/IAttributeRenderer.cs b/Antlr4.StringTemplate/IAttributeRenderer.cs
+index 5037600..ac57e0a 100644
+--- a/Antlr4.StringTemplate/IAttributeRenderer.cs
++++ b/Antlr4.StringTemplate/IAttributeRenderer.cs
+@@ -39,12 +39,12 @@ namespace Antlr4.StringTemplate
+*  group for a given Java type.
+*
+*  If the format string passed to the renderer is not recognized then simply
+-     *  call toString().
++     *  call ToString().
+*
+*  formatString can be null but locale will at least be Locale.getDefault()
+*/
+public interface IAttributeRenderer
+{
+-        string toString(object o, string formatString, CultureInfo culture);
++        string ToString(object obj, string formatString, CultureInfo culture);
+}
+}
+diff --git a/Antlr4.StringTemplate/IModelAdaptor.cs b/Antlr4.StringTemplate/IModelAdaptor.cs
+index 7b18b7e..aaff737 100644
+--- a/Antlr4.StringTemplate/IModelAdaptor.cs
++++ b/Antlr4.StringTemplate/IModelAdaptor.cs
+@@ -53,6 +53,6 @@ namespace Antlr4.StringTemplate
+*  if o is Map, property could be any key type.  If we need to convert
+*  to string, then it's done by ST and passed in here.
+*/
+-        object getProperty(ST self, object o, object property, string propertyName);
++        object GetProperty(ST self, object obj, object property, string propertyName);
+}
+}
+diff --git a/Antlr4.StringTemplate/Interpreter.cs b/Antlr4.StringTemplate/Interpreter.cs
+index d974116..412d2e2 100644
+--- a/Antlr4.StringTemplate/Interpreter.cs
++++ b/Antlr4.StringTemplate/Interpreter.cs
+@@ -87,7 +87,7 @@ namespace Antlr4.StringTemplate
+/** Dump bytecode instructions as we execute them? */
+public static bool trace = false;
+
+-        /** Exec st with respect to this group. Once set in ST.toString(),
++        /** Exec st with respect to this group. Once set in ST.ToString(),
+*  it should be fixed. ST has group also.
+*/
+private readonly STGroup group;
+@@ -204,7 +204,7 @@ namespace Antlr4.StringTemplate
+int valueIndex = getShort(code, ip);
+ip += Instruction.OperandSizeInBytes;
+o = self.locals[valueIndex];
+-                    if (o == ST.EMPTY_ATTR)
++                    if (o == ST.EmptyAttribute)
+o = null;
+operands[++sp] = o;
+break;
+@@ -777,7 +777,7 @@ namespace Antlr4.StringTemplate
+IAttributeRenderer r = group.getAttributeRenderer(o.GetType());
+string v;
+if (r != null)
+-                v = r.toString(o, formatString, culture);
++                v = r.ToString(o, formatString, culture);
+else
+v = o.ToString();
+int n;
+@@ -1260,7 +1260,7 @@ namespace Antlr4.StringTemplate
+try
+{
+IModelAdaptor adap = self.groupThatCreatedThisInstance.getModelAdaptor(o.GetType());
+-                return adap.getProperty(self, o, property, toString(self, property));
++                return adap.GetProperty(self, o, property, toString(self, property));
+}
+catch (STNoSuchPropertyException e)
+{
+@@ -1283,7 +1283,7 @@ namespace Antlr4.StringTemplate
+foreach (FormalArgument arg in invokedST.impl.formalArguments)
+{
+// if no value for attribute and default arg, inject default arg into self
+-                if (invokedST.locals[arg.Index] == ST.EMPTY_ATTR && arg.CompiledDefaultValue != null)
++                if (invokedST.locals[arg.Index] == ST.EmptyAttribute && arg.CompiledDefaultValue != null)
+{
+ST defaultArgST = group.createStringTemplate();
+defaultArgST.enclosingInstance = invokedST.enclosingInstance;
+@@ -1314,7 +1314,7 @@ namespace Antlr4.StringTemplate
+StringBuilder buf = new StringBuilder();
+dis.disassembleInstruction(buf, ip);
+string name = self.impl.name + ":";
+-            if (self.impl.name == ST.UNKNOWN_NAME)
++            if (self.impl.name == ST.UnknownName)
+name = "";
+
+tr.Append(string.Format("{0,-40}", name + buf));
+diff --git a/Antlr4.StringTemplate/Misc/MapModelAdaptor.cs b/Antlr4.StringTemplate/Misc/MapModelAdaptor.cs
+index 43d5c2f..c3289d1 100644
+--- a/Antlr4.StringTemplate/Misc/MapModelAdaptor.cs
++++ b/Antlr4.StringTemplate/Misc/MapModelAdaptor.cs
+@@ -36,13 +36,13 @@ namespace Antlr4.StringTemplate.Misc
+
+public class MapModelAdaptor : IModelAdaptor
+{
+-        public virtual object getProperty(ST self, object o, object property, string propertyName)
++        public virtual object GetProperty(ST self, object o, object property, string propertyName)
+{
+object value;
+IDictionary map = (IDictionary)o;
+
+if (property == null)
+-                value = map[STGroup.DEFAULT_KEY];
++                value = map[STGroup.DefaultKey];
+else if (property.Equals("keys"))
+value = map.Keys;
+else if (property.Equals("values"))
+@@ -50,12 +50,12 @@ namespace Antlr4.StringTemplate.Misc
+else if (map.Contains(property))
+value = map[property];
+else if (map.Contains(propertyName))
+-                value = map[propertyName]; // if can't find the key, try toString version
++                value = map[propertyName]; // if can't find the key, try ToString version
+else
+-                value = map[STGroup.DEFAULT_KEY]; // not found, use default
++                value = map[STGroup.DefaultKey]; // not found, use default
+
+string valueString = value as string;
+-            if (valueString == STGroup.DICT_KEY)
++            if (valueString == STGroup.DictionaryKey)
+{
+value = property;
+}
+diff --git a/Antlr4.StringTemplate/Misc/ObjectModelAdaptor.cs b/Antlr4.StringTemplate/Misc/ObjectModelAdaptor.cs
+index 24d5677..b3d5bc6 100644
+--- a/Antlr4.StringTemplate/Misc/ObjectModelAdaptor.cs
++++ b/Antlr4.StringTemplate/Misc/ObjectModelAdaptor.cs
+@@ -46,7 +46,7 @@ namespace Antlr4.StringTemplate.Misc
+private static readonly Dictionary<Type, Dictionary<string, System.Func<object, object>>> _memberAccessors =
+new Dictionary<Type, Dictionary<string, System.Func<object, object>>>();
+
+-        public virtual object getProperty(ST self, object o, object property, string propertyName)
++        public virtual object GetProperty(ST self, object o, object property, string propertyName)
+{
+if (o == null)
+throw new ArgumentNullException("o");
+diff --git a/Antlr4.StringTemplate/Misc/TemplateDump.cs b/Antlr4.StringTemplate/Misc/TemplateDump.cs
+index e6556dd..a183e81 100644
+--- a/Antlr4.StringTemplate/Misc/TemplateDump.cs
++++ b/Antlr4.StringTemplate/Misc/TemplateDump.cs
+@@ -44,7 +44,7 @@ namespace Antlr4.StringTemplate.Misc
+*
+*     ST st = ...;
+*     STDump d = new STDump(st);
+-     *     System.out.println(d.toString());
++     *     System.out.println(d.ToString());
+*/
+public class STDump
+{
+diff --git a/Antlr4.StringTemplate/Misc/TemplateModelAdaptor.cs b/Antlr4.StringTemplate/Misc/TemplateModelAdaptor.cs
+index 5cdb235..dc91538 100644
+--- a/Antlr4.StringTemplate/Misc/TemplateModelAdaptor.cs
++++ b/Antlr4.StringTemplate/Misc/TemplateModelAdaptor.cs
+@@ -34,7 +34,7 @@ namespace Antlr4.StringTemplate.Misc
+{
+public class STModelAdaptor : IModelAdaptor
+{
+-        public virtual object getProperty(ST self, object o, object property, string propertyName)
++        public virtual object GetProperty(ST self, object o, object property, string propertyName)
+{
+ST st = (ST)o;
+return st.getAttribute(propertyName);
+diff --git a/Antlr4.StringTemplate/NumberRenderer.cs b/Antlr4.StringTemplate/NumberRenderer.cs
+index 0b438c1..2edd226 100644
+--- a/Antlr4.StringTemplate/NumberRenderer.cs
++++ b/Antlr4.StringTemplate/NumberRenderer.cs
+@@ -45,7 +45,7 @@ namespace Antlr4.StringTemplate
+*/
+public class NumberRenderer : IAttributeRenderer
+{
+-        public virtual string toString(object o, string formatString, CultureInfo locale)
++        public virtual string ToString(object o, string formatString, CultureInfo locale)
+{
+// o will be instanceof Number
+if (formatString == null)
+diff --git a/Antlr4.StringTemplate/StringRenderer.cs b/Antlr4.StringTemplate/StringRenderer.cs
+index f352afc..9100378 100644
+--- a/Antlr4.StringTemplate/StringRenderer.cs
++++ b/Antlr4.StringTemplate/StringRenderer.cs
+@@ -42,7 +42,7 @@ namespace Antlr4.StringTemplate
+public class StringRenderer : IAttributeRenderer
+{
+// trim(s) and strlen(s) built-in funcs; these are format options
+-        public virtual string toString(object o, string formatString, CultureInfo locale)
++        public virtual string ToString(object o, string formatString, CultureInfo locale)
+{
+string s = (string)o;
+if (formatString == null)
+diff --git a/Antlr4.StringTemplate/Template.cs b/Antlr4.StringTemplate/Template.cs
+index 28e0a1a..58cff7e 100644
+--- a/Antlr4.StringTemplate/Template.cs
++++ b/Antlr4.StringTemplate/Template.cs
+@@ -66,15 +66,15 @@ namespace Antlr4.StringTemplate
+Explicit
+}
+
+-        public static readonly string UNKNOWN_NAME = "anonymous";
+-        public static readonly object EMPTY_ATTR = new object();
++        public static readonly string UnknownName = "anonymous";
++        public static readonly object EmptyAttribute = new object();
+
+/** The implementation for this template among all instances of same tmpelate . */
+public CompiledST impl;
+
+/** Safe to simultaneously write via add, which is synchronized.  Reading
+*  during exec is, however, NOT synchronized.  So, not thread safe to
+-         *  add attributes while it is being evaluated.  Initialized to EMPTY_ATTR
++         *  add attributes while it is being evaluated.  Initialized to EmptyAttribute
+*  to distinguish null from empty.
+*/
+protected internal object[] locals;
+@@ -146,7 +146,7 @@ namespace Antlr4.StringTemplate
+impl = groupThatCreatedThisInstance.compile(group.getFileName(), null,
+null, template, null);
+impl.hasFormalArgs = false;
+-            impl.name = UNKNOWN_NAME;
++            impl.name = UnknownName;
+impl.defineImplicitlyDefinedTemplates(groupThatCreatedThisInstance);
+}
+
+@@ -200,7 +200,7 @@ namespace Antlr4.StringTemplate
+else
+Array.Resize(ref locals, impl.formalArguments.Count);
+
+-                    locals[arg.Index] = EMPTY_ATTR;
++                    locals[arg.Index] = EmptyAttribute;
+}
+}
+
+@@ -208,7 +208,7 @@ namespace Antlr4.StringTemplate
+((ST)value).enclosingInstance = this;
+
+object curvalue = locals[arg.Index];
+-            if (curvalue == EMPTY_ATTR)
++            if (curvalue == EmptyAttribute)
+{
+// new attribute
+locals[arg.Index] = value;
+@@ -252,7 +252,7 @@ namespace Antlr4.StringTemplate
+if (arg == null)
+throw new ArgumentException("no such attribute: " + name);
+
+-            locals[arg.Index] = EMPTY_ATTR; // reset value
++            locals[arg.Index] = EmptyAttribute; // reset value
+}
+
+/** Set this.locals attr value when you only know the name, not the index.
+@@ -284,7 +284,7 @@ namespace Antlr4.StringTemplate
+if (localArg != null)
+{
+object o = p.locals[localArg.Index];
+-                    if (o == ST.EMPTY_ATTR)
++                    if (o == ST.EmptyAttribute)
+o = null;
+return o;
+}
+@@ -309,7 +309,7 @@ namespace Antlr4.StringTemplate
+foreach (FormalArgument a in impl.formalArguments)
+{
+object o = locals[a.Index];
+-                if (o == ST.EMPTY_ATTR)
++                if (o == ST.EmptyAttribute)
+o = null;
+
+attributes[a.Name] = o;
+@@ -442,7 +442,7 @@ namespace Antlr4.StringTemplate
+
+public virtual string render(CultureInfo locale)
+{
+-            return render(locale, AutoIndentWriter.NO_WRAP);
++            return render(locale, AutoIndentWriter.NoWrap);
+}
+
+public virtual string render(CultureInfo locale, int lineWidth)
+@@ -467,7 +467,7 @@ namespace Antlr4.StringTemplate
+// ST.format("<name>:<phone>", "name", x, "phone", y);
+public static string format(string template, params object[] attributes)
+{
+-            return format(AutoIndentWriter.NO_WRAP, template, attributes);
++            return format(AutoIndentWriter.NoWrap, template, attributes);
+}
+
+public static string format(int lineWidth, string template, params object[] attributes)
+diff --git a/Antlr4.StringTemplate/TemplateGroup.cs b/Antlr4.StringTemplate/TemplateGroup.cs
+index c374b67..338f61c 100644
+--- a/Antlr4.StringTemplate/TemplateGroup.cs
++++ b/Antlr4.StringTemplate/TemplateGroup.cs
+@@ -58,8 +58,8 @@ namespace Antlr4.StringTemplate
+public class STGroup
+{
+/** When we use key as a value in a dictionary, this is how we signify. */
+-        public static readonly string DICT_KEY = "key";
+-        public static readonly string DEFAULT_KEY = "default";
++        public static readonly string DictionaryKey = "key";
++        public static readonly string DefaultKey = "default";
+
+/** Load files using what encoding? */
+public Encoding encoding;
+@@ -84,7 +84,7 @@ namespace Antlr4.StringTemplate
+*  a particular kind of object for any template evaluated relative to this
+*  group.  For example, a date should be formatted differently depending
+*  on the culture.  You can set Date.class to an object whose
+-         *  toString(Object) method properly formats a Date attribute
++         *  ToString(Object) method properly formats a Date attribute
+*  according to culture.  Or you can have a different renderer object
+*  for each culture.
+*
+@@ -121,16 +121,16 @@ namespace Antlr4.StringTemplate
+/** Used to indicate that the template doesn't exist.
+*  Prevents duplicate group file loads and unnecessary file checks.
+*/
+-        protected static readonly CompiledST NOT_FOUND_ST = new CompiledST();
++        protected static readonly CompiledST NotFoundTemplate = new CompiledST();
+
+-        public static readonly ErrorManager DEFAULT_ERR_MGR = new ErrorManager();
++        public static readonly ErrorManager DefaultErrorManager = new ErrorManager();
+
+public static bool debug = false;
+
+/** The errMgr for entire group; all compilations and executions.
+*  This gets copied to parsers, walkers, and interpreters.
+*/
+-        public ErrorManager errMgr = STGroup.DEFAULT_ERR_MGR;
++        public ErrorManager errMgr = STGroup.DefaultErrorManager;
+
+public STGroup()
+{
+@@ -160,7 +160,7 @@ namespace Antlr4.StringTemplate
+{
+instanceST.locals = new object[instanceST.impl.formalArguments.Count];
+for (int i = 0; i < instanceST.locals.Length; i++)
+-                        instanceST.locals[i] = ST.EMPTY_ATTR;
++                        instanceST.locals[i] = ST.EmptyAttribute;
+}
+return instanceST;
+}
+@@ -197,7 +197,7 @@ namespace Antlr4.StringTemplate
+st.groupThatCreatedThisInstance = this;
+st.impl = compile(getFileName(), null, null, template, templateToken);
+st.impl.hasFormalArgs = false;
+-            st.impl.name = ST.UNKNOWN_NAME;
++            st.impl.name = ST.UnknownName;
+st.impl.defineImplicitlyDefinedTemplates(this);
+return st;
+}
+@@ -215,7 +215,7 @@ namespace Antlr4.StringTemplate
+{
+CompiledST code;
+templates.TryGetValue(name, out code);
+-            if (code == NOT_FOUND_ST)
++            if (code == NotFoundTemplate)
+return null;
+
+// try to load from disk and look up again
+@@ -226,7 +226,7 @@ namespace Antlr4.StringTemplate
+code = lookupImportedTemplate(name);
+
+if (code == null)
+-                templates[name] = NOT_FOUND_ST;
++                templates[name] = NotFoundTemplate;
+
+return code;
+}
+@@ -622,7 +622,7 @@ namespace Antlr4.StringTemplate
+{
+string name = n;
+CompiledST c = templates[name];
+-                if (c.isAnonSubtemplate || c == NOT_FOUND_ST)
++                if (c.isAnonSubtemplate || c == NotFoundTemplate)
+continue;
+
+int slash = name.LastIndexOf('/');
+diff --git a/Antlr4.StringTemplate/TemplateGroupDirectory.cs b/Antlr4.StringTemplate/TemplateGroupDirectory.cs
+index 2159d05..0dc684d 100644
+--- a/Antlr4.StringTemplate/TemplateGroupDirectory.cs
++++ b/Antlr4.StringTemplate/TemplateGroupDirectory.cs
+@@ -55,8 +55,8 @@ namespace Antlr4.StringTemplate
+*/
+public class STGroupDir : STGroup
+{
+-        public string groupDirName;
+-        public Uri root;
++        public readonly string groupDirName;
++        public readonly Uri root;
+
+public STGroupDir(string dirName)
+: this(dirName, '<', '>')
+diff --git a/Antlr4.StringTemplate/TemplateGroupFile.cs b/Antlr4.StringTemplate/TemplateGroupFile.cs
+index a4f1297..93bca68 100644
+--- a/Antlr4.StringTemplate/TemplateGroupFile.cs
++++ b/Antlr4.StringTemplate/TemplateGroupFile.cs
+@@ -48,8 +48,8 @@ namespace Antlr4.StringTemplate
+*/
+public class STGroupFile : STGroup
+{
+-        public string fileName;
+-        public Uri url;
++        public readonly string fileName;
++        public readonly Uri url;
+
+protected bool alreadyLoaded = false;
+
+diff --git a/Antlr4.Test.StringTemplate/BaseTest.cs b/Antlr4.Test.StringTemplate/BaseTest.cs
+index 2f6cc99..a029e21 100644
+--- a/Antlr4.Test.StringTemplate/BaseTest.cs
++++ b/Antlr4.Test.StringTemplate/BaseTest.cs
+@@ -113,7 +113,7 @@ namespace Antlr4.Test.StringTemplate
+public void checkTokens(string template, string expected, char delimiterStartChar, char delimiterStopChar)
+{
+STLexer lexer =
+-                new STLexer(STGroup.DEFAULT_ERR_MGR,
++                new STLexer(STGroup.DefaultErrorManager,
+new ANTLRStringStream(template),
+null,
+delimiterStartChar,
+diff --git a/Antlr4.Test.StringTemplate/Extensions/ListExtensions.cs b/Antlr4.Test.StringTemplate/Extensions/ListExtensions.cs
+index 7e2d3f2..0b29ddb 100644
+--- a/Antlr4.Test.StringTemplate/Extensions/ListExtensions.cs
++++ b/Antlr4.Test.StringTemplate/Extensions/ListExtensions.cs
+@@ -54,7 +54,7 @@ namespace Antlr4.Test.StringTemplate.Extensions
+
+private class CollectionRenderer : IAttributeRenderer
+{
+-            public string toString(object o, string formatString, CultureInfo culture)
++            public string ToString(object o, string formatString, CultureInfo culture)
+{
+return ((IList)o).ToListString();
+}
+diff --git a/Antlr4.Test.StringTemplate/TestModelAdaptors.cs b/Antlr4.Test.StringTemplate/TestModelAdaptors.cs
+index fc82414..af380ce 100644
+--- a/Antlr4.Test.StringTemplate/TestModelAdaptors.cs
++++ b/Antlr4.Test.StringTemplate/TestModelAdaptors.cs
+@@ -41,7 +41,7 @@ namespace Antlr4.Test.StringTemplate
+{
+private class UserAdaptor : IModelAdaptor
+{
+-            public object getProperty(ST self, object o, object property, string propertyName)
++            public object GetProperty(ST self, object o, object property, string propertyName)
+{
+if (propertyName.Equals("id"))
+return ((User)o).id;
+@@ -53,7 +53,7 @@ namespace Antlr4.Test.StringTemplate
+
+private class UserAdaptorConst : IModelAdaptor
+{
+-            public object getProperty(ST self, object o, object property, string propertyName)
++            public object GetProperty(ST self, object o, object property, string propertyName)
+{
+if (propertyName.Equals("id"))
+return "const id value";
+diff --git a/Antlr4.Test.StringTemplate/TestVisualizer.cs b/Antlr4.Test.StringTemplate/TestVisualizer.cs
+index d76ab9f..c60219b 100644
+--- a/Antlr4.Test.StringTemplate/TestVisualizer.cs
++++ b/Antlr4.Test.StringTemplate/TestVisualizer.cs
+@@ -96,7 +96,7 @@ namespace Antlr4.Test.StringTemplate
+
+private void Inspect(DebugST template, CultureInfo culture)
+{
+-            Inspect(template, template.impl.nativeGroup.errMgr, culture, AutoIndentWriter.NO_WRAP);
++            Inspect(template, template.impl.nativeGroup.errMgr, culture, AutoIndentWriter.NoWrap);
+}
+
+private void Inspect(DebugST template, ErrorManager errorManager, CultureInfo culture, int lineWidth)
+

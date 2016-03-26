@@ -1,0 +1,254 @@
+commit 6e1d5941d0323f1466b538e480ecf6a2572ddc53
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Tue Jun 21 14:44:36 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Tue Jun 21 14:44:36 2011 -0800
+
+(C# 3) Provide both TextWriterErrorListener (TextWriter.WriteLine) and DebugErrorListener (Debug.WriteLine)
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8706]
+
+diff --git a/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj b/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj
+index 40d32a9..111f1cd 100644
+--- a/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj
++++ b/Antlr4.StringTemplate/Antlr4.StringTemplate.csproj
+@@ -47,6 +47,8 @@
+<Compile Include="AutoIndentWriter.cs" />
+<Compile Include="Debug\DebugEvents.cs" />
+<Compile Include="Misc\AttributeNotFoundException.cs" />
++    <Compile Include="Misc\TextWriterErrorListener.cs" />
++    <Compile Include="Misc\DebugErrorListener.cs" />
+<Compile Include="Misc\HttpUtility.cs" />
+<Compile Include="RenderOption.cs" />
+<Compile Include="TemplateFrame.cs" />
+diff --git a/Antlr4.StringTemplate/Misc/DebugErrorListener.cs b/Antlr4.StringTemplate/Misc/DebugErrorListener.cs
+new file mode 100644
+index 0000000..f0b0e7d
+--- /dev/null
++++ b/Antlr4.StringTemplate/Misc/DebugErrorListener.cs
+@@ -0,0 +1,72 @@
++﻿/*
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2011 Sam Harwell, Tunnel Vision Laboratories, LLC
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace Antlr4.StringTemplate.Misc
++{
++    using Exception = System.Exception;
++
++    public class DebugErrorListener : ITemplateErrorListener
++    {
++        public virtual void CompiletimeError(TemplateMessage msg)
++        {
++            System.Diagnostics.Debug.WriteLine(msg);
++        }
++
++        public virtual void RuntimeError(TemplateMessage msg)
++        {
++            if (msg.Error != ErrorType.NO_SUCH_PROPERTY)
++                System.Diagnostics.Debug.WriteLine(msg);
++        }
++
++        public virtual void IOError(TemplateMessage msg)
++        {
++            System.Diagnostics.Debug.WriteLine(msg);
++        }
++
++        public virtual void InternalError(TemplateMessage msg)
++        {
++            System.Diagnostics.Debug.WriteLine(msg);
++        }
++
++        public virtual void Error(string s)
++        {
++            Error(s, null);
++        }
++
++        public virtual void Error(string s, Exception e)
++        {
++            System.Diagnostics.Debug.WriteLine(s);
++            if (e != null)
++                System.Diagnostics.Debug.WriteLine(e.StackTrace);
++        }
++    }
++}
+diff --git a/Antlr4.StringTemplate/Misc/ErrorManager.cs b/Antlr4.StringTemplate/Misc/ErrorManager.cs
+index 349dd82..bb7978b 100644
+--- a/Antlr4.StringTemplate/Misc/ErrorManager.cs
++++ b/Antlr4.StringTemplate/Misc/ErrorManager.cs
+@@ -40,7 +40,7 @@ namespace Antlr4.StringTemplate.Misc
+
+public class ErrorManager
+{
+-        private static ITemplateErrorListener _defaultErrorListener = new ConsoleErrorListener();
++        private static ITemplateErrorListener _defaultErrorListener = new TextWriterErrorListener(Console.Error);
+
+private readonly ITemplateErrorListener _listener;
+
+@@ -171,44 +171,5 @@ namespace Antlr4.StringTemplate.Misc
+{
+Listener.InternalError(new TemplateMessage(ErrorType.INTERNAL_ERROR, self, e, msg));
+}
+-
+-        private class ConsoleErrorListener : ITemplateErrorListener
+-        {
+-            public virtual void CompiletimeError(TemplateMessage msg)
+-            {
+-                Console.Error.WriteLine(msg);
+-            }
+-
+-            public virtual void RuntimeError(TemplateMessage msg)
+-            {
+-                if (msg.Error != ErrorType.NO_SUCH_PROPERTY)
+-                { // ignore these
+-                    Console.Error.WriteLine(msg);
+-                }
+-            }
+-
+-            public virtual void IOError(TemplateMessage msg)
+-            {
+-                Console.Error.WriteLine(msg);
+-            }
+-
+-            public virtual void InternalError(TemplateMessage msg)
+-            {
+-                Console.Error.WriteLine(msg);
+-                // throw new Error("internal error", msg.cause);
+-            }
+-
+-            public virtual void Error(string s)
+-            {
+-                Error(s, null);
+-            }
+-
+-            public virtual void Error(string s, Exception e)
+-            {
+-                Console.Error.WriteLine(s);
+-                if (e != null)
+-                    Console.Error.WriteLine(e.StackTrace);
+-            }
+-        }
+}
+}
+diff --git a/Antlr4.StringTemplate/Misc/TextWriterErrorListener.cs b/Antlr4.StringTemplate/Misc/TextWriterErrorListener.cs
+new file mode 100644
+index 0000000..ff4028b
+--- /dev/null
++++ b/Antlr4.StringTemplate/Misc/TextWriterErrorListener.cs
+@@ -0,0 +1,88 @@
++﻿/*
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2011 Sam Harwell, Tunnel Vision Laboratories, LLC
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace Antlr4.StringTemplate.Misc
++{
++    using ArgumentNullException = System.ArgumentNullException;
++    using Exception = System.Exception;
++    using TextWriter = System.IO.TextWriter;
++
++    public class TextWriterErrorListener : ITemplateErrorListener
++    {
++        private readonly TextWriter _writer;
++
++        public TextWriterErrorListener(TextWriter writer)
++        {
++            if (writer == null)
++                throw new ArgumentNullException("writer");
++
++            _writer = writer;
++        }
++
++        public virtual void CompiletimeError(TemplateMessage msg)
++        {
++            _writer.WriteLine(msg);
++        }
++
++        public virtual void RuntimeError(TemplateMessage msg)
++        {
++            if (msg.Error != ErrorType.NO_SUCH_PROPERTY)
++            {
++                // ignore these
++                _writer.WriteLine(msg);
++            }
++        }
++
++        public virtual void IOError(TemplateMessage msg)
++        {
++            _writer.WriteLine(msg);
++        }
++
++        public virtual void InternalError(TemplateMessage msg)
++        {
++            _writer.WriteLine(msg);
++            // throw new Error("internal error", msg.cause);
++        }
++
++        public virtual void Error(string s)
++        {
++            Error(s, null);
++        }
++
++        public virtual void Error(string s, Exception e)
++        {
++            _writer.WriteLine(s);
++            if (e != null)
++                _writer.WriteLine(e.StackTrace);
++        }
++    }
++}
+

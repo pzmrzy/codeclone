@@ -1,0 +1,47 @@
+commit a09082f75cdfb348a79c89d04b228f0496408bef
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sun May 15 13:37:19 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sun May 15 13:37:19 2011 -0800
+
+(C# 3) Updated assembly info for a 3.3.4/4.0.3 snapshot release
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8518]
+
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime.Debug/Properties/AssemblyInfo.cs b/runtime/CSharp3/Sources/Antlr3.Runtime.Debug/Properties/AssemblyInfo.cs
+index 389c6a2..b8c988f 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime.Debug/Properties/AssemblyInfo.cs
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime.Debug/Properties/AssemblyInfo.cs
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.3.3.8388")]
+-[assembly: AssemblyFileVersion("3.3.3.8388")]
++[assembly: AssemblyVersion("3.3.4.8517")]
++[assembly: AssemblyFileVersion("3.3.4.8517")]
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime.JavaExtensions/Properties/AssemblyInfo.cs b/runtime/CSharp3/Sources/Antlr3.Runtime.JavaExtensions/Properties/AssemblyInfo.cs
+index bce0499..8aa2671 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime.JavaExtensions/Properties/AssemblyInfo.cs
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime.JavaExtensions/Properties/AssemblyInfo.cs
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.3.0.7239")]
+-[assembly: AssemblyFileVersion("3.3.0.7239")]
++[assembly: AssemblyVersion("3.3.4.8517")]
++[assembly: AssemblyFileVersion("3.3.4.8517")]
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime/Properties/AssemblyInfo.cs b/runtime/CSharp3/Sources/Antlr3.Runtime/Properties/AssemblyInfo.cs
+index 97118b4..2a01ea9 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime/Properties/AssemblyInfo.cs
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime/Properties/AssemblyInfo.cs
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.3.3.8388")]
+-[assembly: AssemblyFileVersion("3.3.3.8388")]
++[assembly: AssemblyVersion("3.3.4.8517")]
++[assembly: AssemblyFileVersion("3.3.4.8517")]
+

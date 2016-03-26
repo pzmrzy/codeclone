@@ -1,0 +1,47 @@
+commit 8fc7130e932aa6f46d94c5634deb4230c13f23fa
+Author:     Alan Condit <acondit@ipns.com>
+AuthorDate: Tue Apr 24 11:32:04 2012 -0700
+Commit:     Alan Condit <acondit@ipns.com>
+CommitDate: Tue Apr 24 11:32:04 2012 -0700
+
+Changed description and toString so that description is implemented and toString just calls it.
+Plus a small formatting change for my old tired eyes.
+
+diff --git a/runtime/ObjC/Framework/CommonTree.m b/runtime/ObjC/Framework/CommonTree.m
+index 1824c60..062fa20 100644
+--- a/runtime/ObjC/Framework/CommonTree.m
++++ b/runtime/ObjC/Framework/CommonTree.m
+@@ -279,7 +279,7 @@
+- (void) setUnknownTokenBoundaries
+{
+if ( children == nil ) {
+-        if ( startIndex<0 || stopIndex<0 ) {
++        if ( startIndex < 0 || stopIndex < 0 ) {
+startIndex = stopIndex = [token getTokenIndex];
+}
+return;
+@@ -319,11 +319,6 @@
+
+- (NSString *) description
+{
+-    return [self toString];
+-}
+-
+-- (NSString *) toString
+-{
+if ( [self isNil] ) {
+return @"nil";
+}
+@@ -336,6 +331,11 @@
+return token.text;
+}
+
++- (NSString *) toString
++{
++    return [self description];
++}
++
+@synthesize token;
+@synthesize startIndex;
+@synthesize stopIndex;
+

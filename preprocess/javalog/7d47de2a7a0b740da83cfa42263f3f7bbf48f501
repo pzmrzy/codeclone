@@ -1,0 +1,52 @@
+commit 7d47de2a7a0b740da83cfa42263f3f7bbf48f501
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Wed Feb 22 08:31:24 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Wed Feb 22 12:25:49 2012 -0600
+
+Escape '<' character in doc comments by &lt;
+
+diff --git a/tool/src/main/java/org/antlr/analysis/DFA.java b/tool/src/main/java/org/antlr/analysis/DFA.java
+index 833a742..69c194b 100644
+--- a/tool/src/main/java/org/antlr/analysis/DFA.java
++++ b/tool/src/main/java/org/antlr/analysis/DFA.java
+@@ -272,7 +272,7 @@ public class DFA {
+*  will result in states[i] == states[j].  We don't want to waste a state
+*  number on this.  Useful mostly for code generation in tables.
+*
+-	 *  At the start of this routine, states[i].stateNumber <= i by definition.
++	 *  At the start of this routine, states[i].stateNumber &lt;= i by definition.
+*  If states[50].stateNumber is 50 then a cycle during conversion may
+*  try to add state 103, but we find that an identical DFA state, named
+*  50, already exists, hence, states[103]==states[50] and both have
+diff --git a/tool/src/main/java/org/antlr/analysis/NFAToDFAConverter.java b/tool/src/main/java/org/antlr/analysis/NFAToDFAConverter.java
+index 63cdf5d..01965c4 100644
+--- a/tool/src/main/java/org/antlr/analysis/NFAToDFAConverter.java
++++ b/tool/src/main/java/org/antlr/analysis/NFAToDFAConverter.java
+@@ -356,14 +356,14 @@ public class NFAToDFAConverter {
+*
+*  The normal decision to predict alts 1, 2, 3 is:
+*
+-	 *  if ( (input.LA(1)>='1' && input.LA(1)<='9') ) {
++	 *  if ( (input.LA(1)>='1' && input.LA(1)&lt;='9') ) {
+*       alt7=1;
+*  }
+*  else if ( input.LA(1)=='0' ) {
+*      if ( input.LA(2)=='X'||input.LA(2)=='x' ) {
+*          alt7=2;
+*      }
+-     *      else if ( (input.LA(2)>='0' && input.LA(2)<='7') ) {
++     *      else if ( (input.LA(2)>='0' && input.LA(2)&lt;='7') ) {
+*           alt7=3;
+*      }
+*      else if ( input.LA(2)=='L'||input.LA(2)=='l' ) {
+@@ -381,7 +381,7 @@ public class NFAToDFAConverter {
+*
+*  A better decision is as follows:
+*
+-	 *  if ( (input.LA(1)>='1' && input.LA(1)<='9') ) {
++	 *  if ( (input.LA(1)>='1' && input.LA(1)&lt;='9') ) {
+*      alt7=1;
+*  }
+*  else if ( input.LA(1)=='0' ) {
+

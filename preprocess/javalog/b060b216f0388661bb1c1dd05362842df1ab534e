@@ -1,0 +1,18 @@
+commit b060b216f0388661bb1c1dd05362842df1ab534e
+Author:     Martin Traverso <martint@fb.com>
+AuthorDate: Sat Sep 15 15:48:15 2012 -0700
+Commit:     Martin Traverso <martint@fb.com>
+CommitDate: Sat Sep 15 15:49:18 2012 -0700
+
+Add sig to contributor's certificate of origin doc
+
+diff --git a/contributors.txt b/contributors.txt
+index fe20687..473bec3 100644
+--- a/contributors.txt
++++ b/contributors.txt
+@@ -49,3 +49,4 @@ CONTRIBUTORS:
+
+YYYY/MM/DD, github id, Full name, email
+2012/07/12, parrt, Terence Parr, parrt@antlr.org
++2012/09/15, martint, Martin Traverso, mtraverso@gmail.com
+

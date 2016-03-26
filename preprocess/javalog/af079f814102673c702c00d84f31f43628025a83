@@ -1,0 +1,21 @@
+commit af079f814102673c702c00d84f31f43628025a83
+Author:     Ivan Brezina <ibre5041@ibrezina.net>
+AuthorDate: Fri May 17 13:17:22 2013 +0200
+Commit:     Ivan Brezina <ibre5041@ibrezina.net>
+CommitDate: Wed Jun 26 15:50:24 2013 +0200
+
+Do not generate return structs twice when using scope variables
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Cpp/Cpp.stg b/tool/src/main/resources/org/antlr/codegen/templates/Cpp/Cpp.stg
+index a40d8c0..58d8fa1 100755
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Cpp/Cpp.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Cpp/Cpp.stg
+@@ -339,7 +339,6 @@ headerFile( LEXER,
+typedef <name>Traits <name>ImplTraits;
+
+<rules:{r | <if(r.ruleDescriptor.isSynPred)> struct <r.ruleDescriptor.name> {\}; <endif>}; separator="\n">
+-<rules:{r | <if(r.ruleDescriptor.ruleScope)><headerReturnScope(ruleDescriptor=r.ruleDescriptor,...)><endif>}>
+
+class <name>Tokens
+{
+

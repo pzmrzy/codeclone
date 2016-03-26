@@ -1,0 +1,35 @@
+commit a3627a1c2f8ba3530463f8d11f502e2defc1f49c
+Author:     Jim Idle <jimi@temporal-wave.com>
+AuthorDate: Sun Apr 3 12:02:57 2011 -0800
+Commit:     Jim Idle <jimi@temporal-wave.com>
+CommitDate: Sun Apr 3 12:02:57 2011 -0800
+
+Update the make file generation to cater for the new input stream stuff
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8038]
+
+diff --git a/runtime/C/Makefile.am b/runtime/C/Makefile.am
+index 604af0a..9867f7e 100644
+--- a/runtime/C/Makefile.am
++++ b/runtime/C/Makefile.am
+@@ -25,10 +25,8 @@ LIBSOURCES		=	src/antlr3baserecognizer.c			\
+src/antlr3parser.c					\
+src/antlr3rewritestreams.c			\
+src/antlr3string.c					\
+-					src/antlr3stringstream.c			\
+src/antlr3tokenstream.c				\
+-					src/antlr3treeparser.c				\
+-					src/antlr3ucs2inputstream.c
++					src/antlr3treeparser.c
+
+libantlr3c_la_SOURCES = $(LIBSOURCES)
+
+@@ -60,7 +58,6 @@ include_HEADERS =	include/antlr3.h						\
+include/antlr3recognizersharedstate.h	\
+include/antlr3rewritestreams.h			\
+include/antlr3string.h					\
+-					include/antlr3stringstream.h			\
+include/antlr3tokenstream.h				\
+include/antlr3treeparser.h				\
+antlr3config.h
+

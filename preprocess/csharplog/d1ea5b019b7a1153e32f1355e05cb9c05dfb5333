@@ -1,0 +1,588 @@
+commit d1ea5b019b7a1153e32f1355e05cb9c05dfb5333
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Dec 14 12:04:47 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Dec 14 12:04:47 2009 -0800
+
+C# Port:
+* Merge CL6407
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6517]
+
+diff --git a/Antlr3.Test/ST4/TestRegions.cs b/Antlr3.Test/ST4/TestRegions.cs
+index 32f78b7..5962840 100644
+--- a/Antlr3.Test/ST4/TestRegions.cs
++++ b/Antlr3.Test/ST4/TestRegions.cs
+@@ -149,7 +149,7 @@ namespace AntlrUnitTests.ST4
+
+TemplateGroup group = new TemplateGroupFile(dir + "/g.stg");
+ErrorBuffer errors = new ErrorBuffer();
+-            group.SetErrorListener(errors);
++            ErrorManager.ErrorListener = errors;
+group.Load();
+string expected = "redefinition of /region__a__r";
+string result = errors.ToString();
+diff --git a/Antlr3.Test/ST4/TestSyntaxErrors.cs b/Antlr3.Test/ST4/TestSyntaxErrors.cs
+index 9014966..619ef26 100644
+--- a/Antlr3.Test/ST4/TestSyntaxErrors.cs
++++ b/Antlr3.Test/ST4/TestSyntaxErrors.cs
+@@ -90,7 +90,7 @@ namespace AntlrUnitTests.ST4
+
+ITemplateErrorListener errors = new ErrorBuffer();
+TemplateGroup group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
+-            group.listener = errors;
++            ErrorManager.ErrorListener = errors;
+group.Load(); // force load
+string expected = "2:15: mismatched input '<' expecting EOF";
+string result = errors.ToString();
+@@ -108,7 +108,7 @@ namespace AntlrUnitTests.ST4
+
+ITemplateErrorListener errors = new ErrorBuffer();
+TemplateGroup group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
+-            group.listener = errors;
++            ErrorManager.ErrorListener = errors;
+group.Load(); // force load
+string expected = "2:14: mismatched input '<' expecting EOF"; // TODO: terrible err message
+string result = errors.ToString();
+@@ -126,7 +126,7 @@ namespace AntlrUnitTests.ST4
+TemplateGroup group = null;
+ITemplateErrorListener errors = new ErrorBuffer();
+group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
+-            group.listener = errors;
++            ErrorManager.ErrorListener = errors;
+group.Load(); // force load
+string expected = "2:29: no viable alternative at input '!'";
+string result = errors.ToString();
+diff --git a/StringTemplate4/Compiler/Group.g3 b/StringTemplate4/Compiler/Group.g3
+index 3e9ba9b..6b025a3 100644
+--- a/StringTemplate4/Compiler/Group.g3
++++ b/StringTemplate4/Compiler/Group.g3
+@@ -101,7 +101,7 @@ templateDef[string prefix]
+RecognitionException re = (RecognitionException)e.InnerException;
+int charPosition =
+re.charPositionInLine+templateToken.CharPositionInLine+n;
+-	        this._group.listener.Error(templateToken.Line+":"+
++	        ErrorManager.Error(templateToken.Line+":"+
+charPosition+
+": "+e.Message, null);
+}
+@@ -135,10 +135,10 @@ dictDef
+:	ID '::=' dict
+{
+if ( this._group.dictionaries.ContainsKey($ID.text) ) {
+-            Console.Error.WriteLine("redefinition of map: "+$ID.text);
++            ErrorManager.Error("redefinition of map: "+$ID.text);
+}
+else if ( this._group.templates.ContainsKey($ID.text) ) {
+-            Console.Error.WriteLine("redefinition of template as map: "+$ID.text);
++            ErrorManager.Error("redefinition of template as map: "+$ID.text);
+}
+else {
+this._group.DefineDictionary($ID.text, $dict.mapping);
+diff --git a/StringTemplate4/Compiler/TemplateCompiler.cs b/StringTemplate4/Compiler/TemplateCompiler.cs
+index f6268d5..e9d389a 100644
+--- a/StringTemplate4/Compiler/TemplateCompiler.cs
++++ b/StringTemplate4/Compiler/TemplateCompiler.cs
+@@ -237,7 +237,7 @@ namespace StringTemplate.Compiler
+{
+stop = lexer.input.Index;
+//sub.template = lexer.input.Substring(start, stop - start - 1);
+-                Console.WriteLine(start + ".." + stop);
++                //Console.WriteLine(start + ".." + stop);
+sub.embeddedStart = start;
+sub.embeddedStop = stop - 1;
+sub.template = lexer.input.Substring(0, lexer.input.Count - 1);
+diff --git a/StringTemplate4/Compiler/TemplateLexer.cs b/StringTemplate4/Compiler/TemplateLexer.cs
+index 3cfa463..fb45518 100644
+--- a/StringTemplate4/Compiler/TemplateLexer.cs
++++ b/StringTemplate4/Compiler/TemplateLexer.cs
+@@ -408,7 +408,7 @@ namespace StringTemplate.Compiler
+t = UNICODE();
+break;
+default:
+-                Console.Error.WriteLine("bad \\ char");
++                ErrorManager.Error("bad \\ char");
+break;
+}
+Consume();
+@@ -421,19 +421,19 @@ namespace StringTemplate.Compiler
+Consume();
+char[] chars = new char[4];
+if (!IsUnicodeLetter(c))
+-                Console.Error.WriteLine("bad unicode char: " + c);
++                ErrorManager.Error("bad unicode char: " + c);
+chars[0] = c;
+Consume();
+if (!IsUnicodeLetter(c))
+-                Console.Error.WriteLine("bad unicode char: " + c);
++                ErrorManager.Error("bad unicode char: " + c);
+chars[1] = c;
+Consume();
+if (!IsUnicodeLetter(c))
+-                Console.Error.WriteLine("bad unicode char: " + c);
++                ErrorManager.Error("bad unicode char: " + c);
+chars[2] = c;
+Consume();
+if (!IsUnicodeLetter(c))
+-                Console.Error.WriteLine("bad unicode char: " + c);
++                ErrorManager.Error("bad unicode char: " + c);
+chars[3] = c;
+// ESCAPE kills final char and >
+char uc = (char)int.Parse(new string(chars), NumberStyles.HexNumber);
+diff --git a/StringTemplate4/Compiler/TemplateParserHelper.cs b/StringTemplate4/Compiler/TemplateParserHelper.cs
+index 0ae6052..550c66f 100644
+--- a/StringTemplate4/Compiler/TemplateParserHelper.cs
++++ b/StringTemplate4/Compiler/TemplateParserHelper.cs
+@@ -92,7 +92,7 @@ namespace StringTemplate.Compiler
+int i;
+if (!TemplateCompiler.supportedOptions.TryGetValue(id.Text, out i))
+{
+-                Console.Error.WriteLine("no such option: " + id.Text);
++                ErrorManager.Error("no such option: " + id.Text);
+return;
+}
+
+@@ -104,7 +104,7 @@ namespace StringTemplate.Compiler
+string v;
+if (!TemplateCompiler.defaultOptionValues.TryGetValue(id.Text, out v))
+{
+-                Console.Error.WriteLine("no def value for " + id.Text);
++                ErrorManager.Error("no def value for " + id.Text);
+return;
+}
+
+@@ -116,7 +116,7 @@ namespace StringTemplate.Compiler
+short funcBytecode;
+if (!TemplateCompiler.funcs.TryGetValue(id.Text, out funcBytecode))
+{
+-                Console.Error.WriteLine("no such fun: " + id);
++                ErrorManager.Error("no such fun: " + id);
+gen.Emit(Bytecode.INSTR_NOOP);
+return;
+}
+diff --git a/StringTemplate4/ErrorManager.cs b/StringTemplate4/ErrorManager.cs
+new file mode 100644
+index 0000000..e4d3033
+--- /dev/null
++++ b/StringTemplate4/ErrorManager.cs
+@@ -0,0 +1,93 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace StringTemplate
++{
++    using Console = System.Console;
++    using Exception = System.Exception;
++    using ThreadStatic = System.ThreadStaticAttribute;
++
++    public static class ErrorManager
++    {
++        public static readonly ITemplateErrorListener DefaultErrorListener = new DefaultErrorListenerImpl();
++
++        [ThreadStatic]
++        private static ITemplateErrorListener listener = DefaultErrorListener;
++
++        public static ITemplateErrorListener ErrorListener
++        {
++            get
++            {
++                return listener;
++            }
++            set
++            {
++                listener = value;
++            }
++        }
++
++        public static void Error(string s)
++        {
++            ErrorListener.Error(s, null);
++        }
++
++        public static void Error(string s, Exception e)
++        {
++            ErrorListener.Error(s, e);
++        }
++
++        public static void Warning(string s)
++        {
++            ErrorListener.Warning(s);
++        }
++
++        private class DefaultErrorListenerImpl : ITemplateErrorListener
++        {
++            public void Error(string message, Exception e)
++            {
++                Console.Error.WriteLine(message);
++                if (e != null)
++                    Console.Error.WriteLine(e.StackTrace);
++            }
++
++            public void Error(string message)
++            {
++                Error(message, null);
++            }
++
++            public void Warning(string message)
++            {
++                Console.WriteLine(message);
++            }
++        }
++    }
++}
+diff --git a/StringTemplate4/Interpreter.cs b/StringTemplate4/Interpreter.cs
+index 3786cc1..c10b312 100644
+--- a/StringTemplate4/Interpreter.cs
++++ b/StringTemplate4/Interpreter.cs
+@@ -173,14 +173,20 @@ namespace StringTemplate
+name = self.code.strings[nameIndex];
+st = group.GetEmbeddedInstanceOf(self, name);
+if (st == null)
+-                        Console.Error.WriteLine("no such template " + name);
++                    {
++                        ErrorManager.Error("no such template " + name);
++                        st = Template.Blank;
++                    }
+operands[++sp] = st;
+break;
+case Bytecode.INSTR_NEW_IND:
+name = (string)operands[sp--];
+st = group.GetEmbeddedInstanceOf(self, name);
+if (st == null)
+-                        Console.Error.WriteLine("no such template " + name);
++                    {
++                        ErrorManager.Error("no such template " + name);
++                        st = Template.Blank;
++                    }
+operands[++sp] = st;
+break;
+case Bytecode.INSTR_SUPER_NEW:
+@@ -190,8 +196,8 @@ namespace StringTemplate
+CompiledTemplate imported = group.LookupImportedTemplate(name);
+if (imported == null)
+{
+-                        group.listener.Error("no imported template for " + name);
+-                        operands[++sp] = new BlankTemplate();
++                        ErrorManager.Error("no imported template for " + name);
++                        operands[++sp] = Template.Blank;
+break;
+}
+// TODO: factor into STGroup
+@@ -219,7 +225,7 @@ namespace StringTemplate
+}
+if (nargs != 1)
+{
+-                        Console.Error.WriteLine("arg mismatch; expecting 1, found " + nargs);
++                        ErrorManager.Error("arg mismatch; expecting 1, found " + nargs);
+}
+else
+{
+@@ -321,7 +327,7 @@ namespace StringTemplate
+operands[sp] = Trunc(operands[sp]);
+break;
+case Bytecode.INSTR_STRIP:
+-                    operands[sp] = Strip(operands[sp]);
++                    operands[sp] = Strip(operands[sp]); // TODO: should strip work on strings?
+break;
+case Bytecode.INSTR_TRIM:
+o = operands[sp--];
+@@ -330,7 +336,10 @@ namespace StringTemplate
+operands[++sp] = ((string)o).Trim();
+}
+else
+-                        Console.Error.WriteLine("strlen(non string)");
++                    {
++                        ErrorManager.Error("trim(non string): " + o);
++                        operands[++sp] = o;
++                    }
+break;
+case Bytecode.INSTR_LENGTH:
+operands[sp] = Length(operands[sp]);
+@@ -342,7 +351,10 @@ namespace StringTemplate
+operands[++sp] = ((string)o).Length;
+}
+else
+-                        Console.Error.WriteLine("strlen(non string)");
++                    {
++                        ErrorManager.Error("strlen(non string): " + o);
++                        operands[++sp] = 0;
++                    }
+break;
+case Bytecode.INSTR_REVERSE:
+operands[sp] = Reverse(operands[sp]);
+@@ -381,11 +393,11 @@ namespace StringTemplate
+}
+catch (IOException)
+{
+-                        Console.Error.WriteLine("can't write newline");
++                        ErrorManager.Error("[internal]: can't write newline");
+}
+break;
+default:
+-                    Console.Error.WriteLine("Invalid bytecode: " + opcode + " @ ip=" + (ip - 1));
++                    ErrorManager.Error("[internal]: Invalid bytecode: " + opcode + " @ ip=" + (ip - 1));
+self.code.Dump();
+break;
+}
+@@ -396,7 +408,7 @@ namespace StringTemplate
+{
+int stop = @out.Index - 1;
+EvalTemplateEvent e = new EvalTemplateEvent((DebugTemplate)self, start, stop);
+-                Console.WriteLine(e);
++                //Console.WriteLine(e);
+events.Add(e);
+if (self.enclosingInstance != null)
+{
+@@ -477,7 +489,7 @@ namespace StringTemplate
+}
+catch (IOException)
+{
+-                        group.listener.Error("Can't write wrap string");
++                        ErrorManager.Error("Can't write wrap string");
+}
+}
+n = Exec(@out, (Template)o);
+@@ -494,7 +506,7 @@ namespace StringTemplate
+}
+catch (IOException)
+{
+-                    Console.Error.WriteLine("can't write " + o);
++                    ErrorManager.Error("can't write " + o);
+}
+}
+
+@@ -626,7 +638,7 @@ namespace StringTemplate
+var formalArguments = code.formalArguments;
+if (formalArguments == null || formalArguments.Count == 0)
+{
+-                group.listener.Error("missing formal arguments in anonymous" +
++                ErrorManager.Error("missing formal arguments in anonymous" +
+" template in context " + self.GetEnclosingInstanceStackString(), null);
+return null;
+}
+@@ -634,7 +646,7 @@ namespace StringTemplate
+object[] formalArgumentNames = formalArguments.Keys.ToArray();
+if (formalArgumentNames.Length != numAttributes)
+{
+-                group.listener.Error("number of arguments " + formalArguments.Keys +
++                ErrorManager.Error("number of arguments " + formalArguments.Keys +
+" mismatch between attribute list and anonymous" +
+" template in context " + self.GetEnclosingInstanceStackString(), null);
+// truncate arg list to match smaller size
+@@ -1040,7 +1052,7 @@ namespace StringTemplate
+}
+catch
+{
+-                    Console.Error.WriteLine("Can't get property " + propertyName + " using method get/is" + methodSuffix +
++                    ErrorManager.Error("Can't get property " + propertyName + " using method get/is" + methodSuffix +
+" from " + c.Name + " instance");
+}
+}
+@@ -1057,13 +1069,13 @@ namespace StringTemplate
+}
+catch
+{
+-                        Console.Error.WriteLine("Can't access property " + propertyName + " using method get/is" + methodSuffix +
++                        ErrorManager.Error("Can't access property " + propertyName + " using method get/is" + methodSuffix +
+" or direct field access from " + c.Name + " instance");
+}
+}
+catch
+{
+-                    Console.Error.WriteLine("Class " + c.Name + " has no such attribute: " + propertyName +
++                    ErrorManager.Error("Class " + c.Name + " has no such attribute: " + propertyName +
+" in template context " + "PUT CALLSTACK HERE");
+}
+}
+diff --git a/StringTemplate4/StringTemplate4.csproj b/StringTemplate4/StringTemplate4.csproj
+index 7137b32..9022c29 100644
+--- a/StringTemplate4/StringTemplate4.csproj
++++ b/StringTemplate4/StringTemplate4.csproj
+@@ -64,6 +64,7 @@
+<Compile Include="Debug\EvalExprEvent.cs" />
+<Compile Include="Debug\EvalTemplateEvent.cs" />
+<Compile Include="Debug\InterpEvent.cs" />
++    <Compile Include="ErrorManager.cs" />
+<Compile Include="ErrorTolerance.cs" />
+<Compile Include="Compiler\GroupLexerHelper.cs">
+<DependentUpon>Group.g3</DependentUpon>
+diff --git a/StringTemplate4/TemplateGroup.cs b/StringTemplate4/TemplateGroup.cs
+index 763e858..bc7ae58 100644
+--- a/StringTemplate4/TemplateGroup.cs
++++ b/StringTemplate4/TemplateGroup.cs
+@@ -57,27 +57,27 @@ namespace StringTemplate
+public static readonly string DICT_KEY = "key";
+public static readonly string DEFAULT_KEY = "default";
+
+-        private class DefaultErrorListenerImpl : ITemplateErrorListener
+-        {
+-            public void Error(string message, Exception e)
+-            {
+-                Console.Error.WriteLine(message);
+-                if (e != null)
+-                    Console.Error.WriteLine(e.StackTrace);
+-            }
+-
+-            public void Error(string message)
+-            {
+-                Error(message, null);
+-            }
+-
+-            public void Warning(string message)
+-            {
+-                Console.WriteLine(message);
+-            }
+-        }
+-
+-        public static readonly ITemplateErrorListener DefaultErrorListener = new DefaultErrorListenerImpl();
++        //private class DefaultErrorListenerImpl : ITemplateErrorListener
++        //{
++        //    public void Error(string message, Exception e)
++        //    {
++        //        Console.Error.WriteLine(message);
++        //        if (e != null)
++        //            Console.Error.WriteLine(e.StackTrace);
++        //    }
++
++        //    public void Error(string message)
++        //    {
++        //        Error(message, null);
++        //    }
++
++        //    public void Warning(string message)
++        //    {
++        //        Console.WriteLine(message);
++        //    }
++        //}
++
++        //public static readonly ITemplateErrorListener DefaultErrorListener = new DefaultErrorListenerImpl();
+
+public string fullyQualifiedRootDirName;
+
+@@ -119,7 +119,7 @@ namespace StringTemplate
+/** Where to report errors.  All string templates in this group
+*  use this error handler by default.
+*/
+-        public ITemplateErrorListener listener = DefaultErrorListener;
++        //public ITemplateErrorListener listener = DefaultErrorListener;
+
+public static ErrorTolerance DEFAULT_ERROR_TOLERANCE = new ErrorTolerance();
+public ErrorTolerance tolerance = DEFAULT_ERROR_TOLERANCE;
+@@ -136,6 +136,18 @@ namespace StringTemplate
+set;
+}
+
++        public ErrorTolerance ErrorTolerance
++        {
++            get
++            {
++                return this.tolerance;
++            }
++            set
++            {
++                this.tolerance = value;
++            }
++        }
++
+public virtual string Name
+{
+get
+@@ -177,7 +189,7 @@ namespace StringTemplate
+Template st = GetInstanceOf(name);
+if (st == null)
+{
+-                Console.Error.WriteLine("no such template: " + name);
++                ErrorManager.Error("no such template: " + name);
+return Template.Blank;
+}
+st.enclosingInstance = enclosingInstance;
+@@ -324,17 +336,17 @@ namespace StringTemplate
+{
+if (!prev.isRegion)
+{
+-                    listener.Error("redefinition of " + name);
++                    ErrorManager.Error("redefinition of " + name);
+return;
+}
+if (prev.isRegion && prev.regionDefType == Template.RegionType.Embedded)
+{
+-                    listener.Error("can't redefine embedded region " + name);
++                    ErrorManager.Error("can't redefine embedded region " + name);
+return;
+}
+else if (prev.isRegion && prev.regionDefType == Template.RegionType.Explicit)
+{
+-                    listener.Error("can't redefine region in same group: " + name);
++                    ErrorManager.Error("can't redefine region in same group: " + name);
+return;
+}
+}
+@@ -406,7 +418,7 @@ namespace StringTemplate
+}
+catch (Exception e)
+{
+-                listener.Error("can't load group file: " + absoluteFileName, e);
++                ErrorManager.Error("can't load group file: " + absoluteFileName, e);
+}
+}
+
+@@ -480,16 +492,6 @@ namespace StringTemplate
+return buf.ToString();
+}
+
+-        public virtual void SetErrorListener(ITemplateErrorListener listener)
+-        {
+-            this.listener = listener;
+-        }
+-
+-        public virtual void SetErrorTolerance(ErrorTolerance errors)
+-        {
+-            this.tolerance = errors;
+-        }
+-
+public virtual bool Detects(int x)
+{
+return tolerance.Detects(x);
+diff --git a/StringTemplate4/TemplateGroupDirectory.cs b/StringTemplate4/TemplateGroupDirectory.cs
+index a181645..096b026 100644
+--- a/StringTemplate4/TemplateGroupDirectory.cs
++++ b/StringTemplate4/TemplateGroupDirectory.cs
+@@ -125,7 +125,7 @@ namespace StringTemplate
+}
+catch (Exception e)
+{
+-                Console.Error.WriteLine("can't load template file: " + absoluteFileName);
++                ErrorManager.Error("can't load template file: " + absoluteFileName);
+Console.Error.WriteLine(e.StackTrace);
+}
+return null;
+

@@ -1,0 +1,40 @@
+commit f59a8eb18ac1ca5898ef2e936ff1cab159917226
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Thu Apr 7 11:52:49 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Thu Apr 7 11:52:49 2011 -0800
+
+(C# 3) Always generate delegate grammars in the same namespace as the root grammar
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8095]
+
+diff --git a/Antlr3.Targets/Antlr3.Targets.CSharp3/CSharp3Target.cs b/Antlr3.Targets/Antlr3.Targets.CSharp3/CSharp3Target.cs
+index a5de03f..7a664ef 100644
+--- a/Antlr3.Targets/Antlr3.Targets.CSharp3/CSharp3Target.cs
++++ b/Antlr3.Targets/Antlr3.Targets.CSharp3/CSharp3Target.cs
+@@ -82,6 +82,24 @@ namespace Antlr3.Targets
+
+protected override void GenRecognizerFile(AntlrTool tool, CodeGenerator generator, Grammar grammar, StringTemplate outputFileST)
+{
++            if (!grammar.IsRoot)
++            {
++                Grammar rootGrammar = grammar.composite.RootGrammar;
++                string actionScope = grammar.GetDefaultActionScope(grammar.type);
++                IDictionary<string, object> actions;
++                object rootNamespace;
++                if (rootGrammar.Actions.TryGetValue(actionScope, out actions) && actions.TryGetValue("namespace", out rootNamespace))
++                {
++                    if (!grammar.Actions.TryGetValue(actionScope, out actions))
++                    {
++                        actions = new Dictionary<string, object>();
++                        grammar.Actions[actionScope] = actions;
++                    }
++
++                    actions["namespace"] = rootNamespace;
++                }
++            }
++
+generator.Templates.RegisterRenderer(typeof(string), new StringRenderer(generator, this));
+base.GenRecognizerFile(tool, generator, grammar, outputFileST);
+}
+

@@ -1,0 +1,34 @@
+commit 3470725366c57ab79fafb3637a5eea91cf3d8982
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Thu Aug 4 10:02:25 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Thu Aug 4 10:02:25 2011 -0800
+
+(C# 3) Set custom tool to MSBuild:Compile
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8994]
+
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/Antlr3.Runtime.Test.csproj b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/Antlr3.Runtime.Test.csproj
+index 27ab6bb..c446346 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/Antlr3.Runtime.Test.csproj
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/Antlr3.Runtime.Test.csproj
+@@ -88,9 +88,15 @@
+<Antlr3 Include="SemanticPredicateReduction.g3">
+<Generator>MSBuild:Compile</Generator>
+</Antlr3>
+-    <Antlr3 Include="Composition\Reduce.g3" />
+-    <Antlr3 Include="Composition\Simplify.g3" />
+-    <Antlr3 Include="Composition\VecMath.g3" />
++    <Antlr3 Include="Composition\Reduce.g3">
++      <Generator>MSBuild:Compile</Generator>
++    </Antlr3>
++    <Antlr3 Include="Composition\Simplify.g3">
++      <Generator>MSBuild:Compile</Generator>
++    </Antlr3>
++    <Antlr3 Include="Composition\VecMath.g3">
++      <Generator>MSBuild:Compile</Generator>
++    </Antlr3>
+<AntlrAbstractGrammar Include="Composition\VecMath_Lexer.g3">
+<Generator>MSBuild:Compile</Generator>
+</AntlrAbstractGrammar>
+

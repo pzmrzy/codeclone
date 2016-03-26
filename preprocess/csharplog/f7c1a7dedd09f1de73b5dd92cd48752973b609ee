@@ -1,0 +1,24 @@
+commit f7c1a7dedd09f1de73b5dd92cd48752973b609ee
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sun Apr 10 11:01:56 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sun Apr 10 11:01:56 2011 -0800
+
+(C# 3) Keep track of the source name in the input for TemplateCompiler
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8123]
+
+diff --git a/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs b/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs
+index 7ef4836..ac4b333 100644
+--- a/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs
++++ b/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs
+@@ -141,7 +141,7 @@ namespace Antlr4.StringTemplate.Compiler
+/** Compile full template with respect to a list of formal args. */
+public virtual CompiledTemplate Compile(string srcName, string name, List<FormalArgument> args, string template, IToken templateToken)
+{
+-            ANTLRStringStream @is = new ANTLRStringStream(template);
++            ANTLRStringStream @is = new ANTLRStringStream(template, srcName);
+@is.name = srcName != null ? srcName : name;
+TemplateLexer lexer = null;
+if (templateToken != null && templateToken.Type == GroupParser.BIGSTRING_NO_NL)
+

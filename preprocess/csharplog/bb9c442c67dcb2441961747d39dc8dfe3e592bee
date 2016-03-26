@@ -1,0 +1,99 @@
+commit bb9c442c67dcb2441961747d39dc8dfe3e592bee
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Mar 30 07:33:57 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Mar 30 07:33:57 2011 -0800
+
+Use Path.Combine instead of "\\"
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7973]
+
+diff --git a/Antlr3/AntlrTool.cs b/Antlr3/AntlrTool.cs
+index 3de776b..c5a1f0d 100644
+--- a/Antlr3/AntlrTool.cs
++++ b/Antlr3/AntlrTool.cs
+@@ -124,7 +124,7 @@ namespace Antlr3
+ToolPathRoot = toolPathRoot;
+
+TargetsDirectory = Path.Combine(ToolPathRoot, @"Targets");
+-            TemplatesDirectory = Path.Combine(ToolPathRoot, @"Codegen\Templates");
++            TemplatesDirectory = Path.Combine(Path.Combine(ToolPathRoot, @"Codegen"), "Templates");
+}
+
+public AntlrTool( string[] args )
+@@ -194,8 +194,9 @@ namespace Antlr3
+ForceAllFilesToOutputDir = true;
+i++;
+outputDirectory = args[i];
+-                        if ( outputDirectory.EndsWith( "/" ) || outputDirectory.EndsWith( "\\" ) )
+-                            outputDirectory = outputDirectory.Substring( 0, OutputDirectory.Length - 1 );
++                        if (outputDirectory.LastIndexOfAny(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }) == outputDirectory.Length - 1)
++                            outputDirectory = outputDirectory.Substring(0, OutputDirectory.Length - 1);
++
+haveOutputDir = true;
+if ( System.IO.File.Exists( outputDirectory ) )
+{
+@@ -214,12 +215,11 @@ namespace Antlr3
+{
+i++;
+LibraryDirectory = args[i];
+-                        if ( LibraryDirectory.EndsWith( "/" ) ||
+-                             LibraryDirectory.EndsWith( "\\" ) )
++                        if (LibraryDirectory.LastIndexOfAny(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }) == LibraryDirectory.Length - 1)
+{
+-                            LibraryDirectory =
+-                                LibraryDirectory.Substring( 0, LibraryDirectory.Length - 1 );
++                            LibraryDirectory = LibraryDirectory.Substring(0, LibraryDirectory.Length - 1);
+}
++
+if ( !System.IO.Directory.Exists( libDirectory ) )
+{
+ErrorManager.Error( ErrorManager.MSG_DIR_NOT_FOUND, LibraryDirectory );
+diff --git a/Antlr3/Tool/DOTGenerator.cs b/Antlr3/Tool/DOTGenerator.cs
+index 6c1413e..a3638fb 100644
+--- a/Antlr3/Tool/DOTGenerator.cs
++++ b/Antlr3/Tool/DOTGenerator.cs
+@@ -71,7 +71,7 @@ namespace Antlr3.Tool
+public DOTGenerator( Grammar grammar )
+{
+this.grammar = grammar;
+-            this.dfaTemplateDirectoryName = Path.Combine(AntlrTool.ToolPathRoot, @"Tool\Templates\dot");
++            this.dfaTemplateDirectoryName = Path.Combine(Path.Combine(Path.Combine(AntlrTool.ToolPathRoot, "Tool"), "Templates"), "dot");
+}
+
+#region Properties
+diff --git a/Antlr3/Tool/ErrorManager.cs b/Antlr3/Tool/ErrorManager.cs
+index 7904a06..127a08f 100644
+--- a/Antlr3/Tool/ErrorManager.cs
++++ b/Antlr3/Tool/ErrorManager.cs
+@@ -49,6 +49,7 @@ namespace Antlr3.Tool
+using IStringTemplateErrorListener = Antlr3.ST.IStringTemplateErrorListener;
+using IToken = Antlr.Runtime.IToken;
+using NFAState = Antlr3.Analysis.NFAState;
++    using Path = System.IO.Path;
+using RecognitionException = Antlr.Runtime.RecognitionException;
+using StackFrame = System.Diagnostics.StackFrame;
+using StreamReader = System.IO.StreamReader;
+@@ -411,8 +412,8 @@ namespace Antlr3.Tool
+ErrorManager.locale = locale;
+String language = locale.TwoLetterISOLanguageName;
+//String fileName = "org/antlr/tool/templates/messages/languages/"+language+".stg";
+-            string fileName = @"Tool\Templates\messages\languages\" + language + ".stg";
+-            string streamName = "Antlr3." + fileName.Replace( '\\', '.' );
++            string fileName = Path.Combine(Path.Combine(Path.Combine(Path.Combine("Tool", "Templates"), "messages"), "languages"), language + ".stg");
++            string streamName = "Antlr3." + fileName.Replace(Path.DirectorySeparatorChar, '.').Replace(Path.AltDirectorySeparatorChar, '.');
+fileName = System.IO.Path.Combine(AntlrTool.ToolPathRoot, fileName);
+//ClassLoader cl = Thread.currentThread().getContextClassLoader();
+//InputStream @is = cl.getResourceAsStream(fileName);
+@@ -474,8 +475,8 @@ namespace Antlr3.Tool
+{
+ErrorManager.formatName = formatName;
+//String fileName = "org/antlr/tool/templates/messages/formats/"+formatName+".stg";
+-            string fileName = @"Tool\Templates\messages\formats\" + formatName + ".stg";
+-            string streamName = "Antlr3." + fileName.Replace( '\\', '.' );
++            string fileName = Path.Combine(Path.Combine(Path.Combine(Path.Combine("Tool", "Templates"), "messages"), "formats"), formatName + ".stg");
++            string streamName = "Antlr3." + fileName.Replace(Path.DirectorySeparatorChar, '.').Replace(Path.AltDirectorySeparatorChar, '.');
+fileName = System.IO.Path.Combine(AntlrTool.ToolPathRoot, fileName);
+//ClassLoader cl = Thread.currentThread().getContextClassLoader();
+//InputStream is = cl.getResourceAsStream(fileName);
+

@@ -1,0 +1,238 @@
+commit b57ee4c9a7722436454611fcd855f2b16edbef7e
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Fri Jul 29 17:24:56 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Fri Jul 29 17:24:56 2011 -0800
+
+(C# 3) Add the 'delimiters' notation for group files
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8935]
+
+diff --git a/Antlr4.StringTemplate/Compiler/Group.g3 b/Antlr4.StringTemplate/Compiler/Group.g3
+index 3fffde7..b07afbc 100644
+--- a/Antlr4.StringTemplate/Compiler/Group.g3
++++ b/Antlr4.StringTemplate/Compiler/Group.g3
+@@ -37,6 +37,7 @@ options {
+}
+
+tokens {
++	COMMA=',';
+TRUE='true';
+FALSE='false';
+}
+@@ -60,6 +61,7 @@ GroupLexer lexer = (GroupLexer)input.TokenSource;
+this._group = lexer.group = $group;
+}
+:	oldStyleHeader?
++		delimiters?
+(	'import' STRING {_group.ImportTemplates($STRING);}
+|	'import' // common error: name not in string
+{
+@@ -82,6 +84,10 @@ groupName returns [string name]
+:	a=ID {buf.Append($a.text);} ('.' a=ID {buf.Append($a.text);})*
+;
+
++delimiters
++	:	{string.Equals("delimiters", input.LT(1).Text)}? => ID open=STRING ',' close=STRING {_group.SetDelimiters($open, $close);}
++	;
++
+/** Match template and dictionary defs outside of (...)+ loop in group.
+*  The key is catching while still in the loop; must keep prediction of
+*  elements separate from "stay in loop" prediction.
+@@ -242,7 +248,7 @@ ANONYMOUS_TEMPLATE
+:	'{'
+{
+IToken templateToken = new CommonToken(input, ANONYMOUS_TEMPLATE, 0, CharIndex, CharIndex);
+-		TemplateLexer lexer = new TemplateLexer(group.ErrorManager, input, templateToken, group.delimiterStartChar, group.delimiterStopChar);
++		TemplateLexer lexer = new TemplateLexer(group.ErrorManager, input, templateToken, group.DelimiterStartChar, group.DelimiterStopChar);
+lexer.subtemplateDepth = 1;
+IToken t = lexer.NextToken();
+while ( lexer.subtemplateDepth>=1 || t.Type!=TemplateLexer.RCURLY )
+diff --git a/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs b/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs
+index e28e8b8..536a04f 100644
+--- a/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs
++++ b/Antlr4.StringTemplate/Compiler/TemplateCompiler.cs
+@@ -111,7 +111,7 @@ namespace Antlr4.StringTemplate.Compiler
+{
+get
+{
+-                return _group.delimiterStartChar;
++                return _group.DelimiterStartChar;
+}
+}
+
+@@ -119,7 +119,7 @@ namespace Antlr4.StringTemplate.Compiler
+{
+get
+{
+-                return _group.delimiterStopChar;
++                return _group.DelimiterStopChar;
+}
+}
+
+diff --git a/Antlr4.StringTemplate/Interpreter.cs b/Antlr4.StringTemplate/Interpreter.cs
+index cda6fac..f8414a1 100644
+--- a/Antlr4.StringTemplate/Interpreter.cs
++++ b/Antlr4.StringTemplate/Interpreter.cs
+@@ -1464,8 +1464,8 @@ namespace Antlr4.StringTemplate
+// rather than setting x to the template for later
+// eval.
+string defArgTemplate = arg.DefaultValueToken.Text;
+-                    if (defArgTemplate.StartsWith("{" + group.delimiterStartChar + "(")
+-                        && defArgTemplate.EndsWith(")" + group.delimiterStopChar + "}"))
++                    if (defArgTemplate.StartsWith("{" + group.DelimiterStartChar + "(")
++                        && defArgTemplate.EndsWith(")" + group.DelimiterStopChar + "}"))
+{
+invokedST.RawSetAttribute(arg.Name, ToString(new TemplateFrame(defaultArgST, frame), defaultArgST));
+}
+diff --git a/Antlr4.StringTemplate/Misc/ErrorType.cs b/Antlr4.StringTemplate/Misc/ErrorType.cs
+index 4d9aa35..4c2be31 100644
+--- a/Antlr4.StringTemplate/Misc/ErrorType.cs
++++ b/Antlr4.StringTemplate/Misc/ErrorType.cs
+@@ -67,6 +67,7 @@ namespace Antlr4.StringTemplate.Misc
+public static readonly ErrorType INVALID_TEMPLATE_NAME = new ErrorType("invalid template name or path: {0}");
+public static readonly ErrorType ANON_ARGUMENT_MISMATCH = new ErrorType("anonymous template has {0} arg(s) but mapped across {1} value(s)");
+public static readonly ErrorType REQUIRED_PARAMETER_AFTER_OPTIONAL = new ErrorType("Optional parameters must appear after all required parameters");
++        public static readonly ErrorType INVALID_DELIMITER = new ErrorType("Invalid template delimiter: \"{0}\"");
+
+// INTERNAL ERRORS
+public static readonly ErrorType INTERNAL_ERROR = new ErrorType("{0}");
+diff --git a/Antlr4.StringTemplate/TemplateGroup.cs b/Antlr4.StringTemplate/TemplateGroup.cs
+index 93ecfce..2946250 100644
+--- a/Antlr4.StringTemplate/TemplateGroup.cs
++++ b/Antlr4.StringTemplate/TemplateGroup.cs
+@@ -80,8 +80,8 @@ namespace Antlr4.StringTemplate
+
+private readonly List<TemplateGroup> _importsToClearOnUnload = new List<TemplateGroup>();
+
+-        public readonly char delimiterStartChar = '<'; // Use <expr> by default
+-        public readonly char delimiterStopChar = '>';
++        private char delimiterStartChar = '<'; // Use <expr> by default
++        private char delimiterStopChar = '>';
+
+/** Maps template name to StringTemplate object. synchronized. */
+private readonly Dictionary<string, CompiledTemplate> templates = new Dictionary<string, CompiledTemplate>();
+@@ -192,6 +192,22 @@ namespace Antlr4.StringTemplate
+}
+}
+
++        public char DelimiterStartChar
++        {
++            get
++            {
++                return delimiterStartChar;
++            }
++        }
++
++        public char DelimiterStopChar
++        {
++            get
++            {
++                return delimiterStopChar;
++            }
++        }
++
+public ICollection<CompiledTemplate> CompiledTemplates
+{
+get
+@@ -286,6 +302,10 @@ namespace Antlr4.StringTemplate
+{
+if (name == null)
+return null;
++
++            if (!name.StartsWith("/"))
++                name = "/" + name;
++
+if (Verbose)
+Console.WriteLine(string.Format("{0}.GetInstanceOf({1})", Name, name));
+
+@@ -299,7 +319,7 @@ namespace Antlr4.StringTemplate
+protected internal virtual Template GetEmbeddedInstanceOf(TemplateFrame frame, string name)
+{
+string fullyQualifiedName = name;
+-            if (name[0] != '/')
++            if (!name.StartsWith("/"))
+fullyQualifiedName = frame.Template.impl.Prefix + name;
+
+if (Verbose)
+@@ -718,6 +738,36 @@ namespace Antlr4.StringTemplate
+dictionaries[name] = mapping;
+}
+
++        public virtual void SetDelimiters(IToken openDelimiter, IToken closeDelimiter)
++        {
++            if (openDelimiter == null)
++                throw new ArgumentNullException("openDelimiter");
++            if (closeDelimiter == null)
++                throw new ArgumentNullException("closeDelimiter");
++
++            string openDelimiterText = openDelimiter.Text.Trim('"');
++            if (openDelimiterText.Length != 1)
++            {
++                ErrorManager.CompiletimeError(ErrorType.INVALID_DELIMITER, null, openDelimiter, openDelimiterText);
++                return;
++            }
++
++            string closeDelimiterText = closeDelimiter.Text.Trim('"');
++            if (closeDelimiterText.Length != 1)
++            {
++                ErrorManager.CompiletimeError(ErrorType.INVALID_DELIMITER, null, openDelimiter, closeDelimiterText);
++                return;
++            }
++
++            SetDelimiters(openDelimiterText[0], closeDelimiterText[0]);
++        }
++
++        public virtual void SetDelimiters(char delimiterStartChar, char delimiterStopChar)
++        {
++            this.delimiterStartChar = delimiterStartChar;
++            this.delimiterStopChar = delimiterStopChar;
++        }
++
+/** Make this group import templates/dictionaries from g. */
+public virtual void ImportTemplates(TemplateGroup g)
+{
+diff --git a/Antlr4.Test.StringTemplate/TestGroupSyntax.cs b/Antlr4.Test.StringTemplate/TestGroupSyntax.cs
+index 3307f3b..87df635 100644
+--- a/Antlr4.Test.StringTemplate/TestGroupSyntax.cs
++++ b/Antlr4.Test.StringTemplate/TestGroupSyntax.cs
+@@ -101,6 +101,38 @@ namespace Antlr4.Test.StringTemplate
+}
+
+[TestMethod]
++        public void TestSetDefaultDelimiters()
++        {
++            string templates =
++                "delimiters \"<\", \">\"" + Environment.NewLine +
++                "ta(x) ::= \"[<x>]\"" + Environment.NewLine;
++
++            writeFile(tmpdir, "t.stg", templates);
++            TemplateGroup group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
++            Template st = group.GetInstanceOf("ta");
++            st.Add("x", "hi");
++            string expected = "[hi]";
++            string result = st.Render();
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
++        public void TestSetNonDefaultDelimiters()
++        {
++            string templates =
++                "delimiters \"%\", \"%\"" + Environment.NewLine +
++                "ta(x) ::= \"[%x%]\"" + Environment.NewLine;
++
++            writeFile(tmpdir, "t.stg", templates);
++            TemplateGroup group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
++            Template st = group.GetInstanceOf("ta");
++            st.Add("x", "hi");
++            string expected = "[hi]";
++            string result = st.Render();
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
+public void TestSingleTemplateWithArgs()
+{
+string templates =
+

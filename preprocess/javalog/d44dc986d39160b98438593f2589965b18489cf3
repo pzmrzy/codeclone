@@ -1,0 +1,44 @@
+commit d44dc986d39160b98438593f2589965b18489cf3
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Mon Dec 3 11:55:39 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Mon Dec 3 11:55:50 2012 -0600
+
+Remove unnecessary casts in generated code
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg b/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
+index 5bdb1df..854571d 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
+@@ -1276,24 +1276,24 @@ parameterSetAttributeRef(attr,expr) ::= "<attr.name> =<expr>;"
+
+scopeAttributeRef(scope,attr,index,negIndex) ::= <%
+<if(negIndex)>
+-((<scope>_scope)<scope>_stack.elementAt(<scope>_stack.size()-<negIndex>-1)).<attr.name>
++<scope>_stack.elementAt(<scope>_stack.size()-<negIndex>-1).<attr.name>
+<else>
+<if(index)>
+-((<scope>_scope)<scope>_stack.elementAt(<index>)).<attr.name>
++<scope>_stack.elementAt(<index>).<attr.name>
+<else>
+-((<scope>_scope)<scope>_stack.peek()).<attr.name>
++<scope>_stack.peek().<attr.name>
+<endif>
+<endif>
+%>
+
+scopeSetAttributeRef(scope,attr,expr,index,negIndex) ::= <%
+<if(negIndex)>
+-((<scope>_scope)<scope>_stack.elementAt(<scope>_stack.size()-<negIndex>-1)).<attr.name> =<expr>;
++<scope>_stack.elementAt(<scope>_stack.size()-<negIndex>-1).<attr.name> =<expr>;
+<else>
+<if(index)>
+-((<scope>_scope)<scope>_stack.elementAt(<index>)).<attr.name> =<expr>;
++<scope>_stack.elementAt(<index>).<attr.name> =<expr>;
+<else>
+-((<scope>_scope)<scope>_stack.peek()).<attr.name> =<expr>;
++<scope>_stack.peek().<attr.name> =<expr>;
+<endif>
+<endif>
+%>
+

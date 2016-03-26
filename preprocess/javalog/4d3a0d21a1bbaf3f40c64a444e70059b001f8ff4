@@ -1,0 +1,673 @@
+commit 4d3a0d21a1bbaf3f40c64a444e70059b001f8ff4
+Author:     acondit <acondit@parrt.spork>
+AuthorDate: Fri Mar 11 11:33:09 2011 -0800
+Commit:     acondit <acondit@parrt.spork>
+CommitDate: Fri Mar 11 11:33:09 2011 -0800
+
+Changes to sync work progress on ST4 implementation
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 7856]
+
+diff --git a/runtime/ObjC/Framework/ANTLRBaseRecognizer.h b/runtime/ObjC/Framework/ANTLRBaseRecognizer.h
+index 1a922bd..669bec8 100644
+--- a/runtime/ObjC/Framework/ANTLRBaseRecognizer.h
++++ b/runtime/ObjC/Framework/ANTLRBaseRecognizer.h
+@@ -54,26 +54,17 @@
+@interface ANTLRBaseRecognizer : NSObject {
+ANTLRRecognizerSharedState *state;	// the state of this recognizer. Might be shared with other recognizers, e.g. in grammar import scenarios.
+NSString *grammarFileName;			// where did the grammar come from. filled in by codegeneration
+-//    BOOL failed;
+NSString *sourceName;
+-//    NSInteger numberOfSyntaxErrors;
+-    NSArray *tokenNames;
++    NSMutableArray *tokenNames;
+}
+
+-@property (retain, getter=getState, setter=setState) ANTLRRecognizerSharedState *state;
+-@property (retain, getter=getGrammarFileName, setter=setGrammarFileName) NSString *grammarFileName;
+-//@property (assign, getter=getFailed, setter=setFailed) BOOL failed;
+-@property (retain, getter=getTokenNames, setter=setTokenNames) NSArray *tokenNames;
+-@property (retain, getter=getSourceName, setter=setSourceName) NSString *sourceName;
+-//@property (assign, getter=getNumberOfSyntaxErrors, setter=setNumberOfSyntaxErrors) NSInteger numberOfSyntaxErrors;
+-
++ (void) initialize;
+
++ (ANTLRBaseRecognizer *) newANTLRBaseRecognizer;
++ (ANTLRBaseRecognizer *) newANTLRBaseRecognizerWithRuleLen:(NSInteger)aLen;
++ (ANTLRBaseRecognizer *) newANTLRBaseRecognizer:(ANTLRRecognizerSharedState *)aState;
+
+-+ (NSArray *)getTokenNames;
+++ (NSMutableArray *)getTokenNames;
++ (void)setTokenNames:(NSArray *)aTokNamArray;
++ (void)setGrammarFileName:(NSString *)aFileName;
+
+@@ -117,8 +108,8 @@
+
+// error reporting and recovery
+- (void) reportError:(ANTLRRecognitionException *)e;
+-- (void) displayRecognitionError:(NSArray *)theTokNams Exception:(ANTLRRecognitionException *)e;
+-- (NSString *)getErrorMessage:(ANTLRRecognitionException *)e TokenNames:(NSArray *)theTokNams;
++- (void) displayRecognitionError:(NSMutableArray *)theTokNams Exception:(ANTLRRecognitionException *)e;
++- (NSString *)getErrorMessage:(ANTLRRecognitionException *)e TokenNames:(NSMutableArray *)theTokNams;
+- (NSInteger) getNumberOfSyntaxErrors;
+- (NSString *)getErrorHeader:(ANTLRRecognitionException *)e;
+- (NSString *)getTokenErrorDisplay:(id<ANTLRToken>)t;
+@@ -160,7 +151,7 @@
+- (NSMutableArray *) getRuleInvocationStack:(ANTLRRecognitionException *)exception
+Recognizer:(NSString *)recognizerClassName;
+
+-- (NSArray *) getTokenNames;
++- (NSMutableArray *) getTokenNames;
+- (NSString *)getGrammarFileName;
+- (NSString *)getSourceName;
+- (NSMutableArray *) toStrings:(NSArray *)tokens;
+@@ -180,4 +171,9 @@
+- (BOOL) evaluateSyntacticPredicate:(SEL)synpredFragment;
+// stream:(id<ANTLRIntStream>)anInput;
+
++@property (retain) ANTLRRecognizerSharedState *state;
++@property (retain) NSString *grammarFileName;
++@property (retain) NSString *sourceName;
++@property (retain) NSMutableArray *tokenNames;
++
+@end
+diff --git a/runtime/ObjC/Framework/ANTLRBaseRecognizer.m b/runtime/ObjC/Framework/ANTLRBaseRecognizer.m
+index bc55a48..4f61054 100644
+--- a/runtime/ObjC/Framework/ANTLRBaseRecognizer.m
++++ b/runtime/ObjC/Framework/ANTLRBaseRecognizer.m
+@@ -39,16 +39,16 @@ extern NSInteger debug;
+
+@implementation ANTLRBaseRecognizer
+
+-static NSArray *_tokenNames;
++static NSMutableArray *_tokenNames;
+static NSString *_grammarFileName;
+static NSString *NEXT_TOKEN_RULE_NAME;
+
+@synthesize state;
+@synthesize grammarFileName;
+//@synthesize failed;
+-@synthesize tokenNames;
+@synthesize sourceName;
+//@synthesize numberOfSyntaxErrors;
++@synthesize tokenNames;
+
++ (void) initialize
+{
+@@ -71,12 +71,12 @@ static NSString *NEXT_TOKEN_RULE_NAME;
+return [[ANTLRBaseRecognizer alloc] initWithState:aState];
+}
+
+-+ (NSArray *)getTokenNames
+++ (NSMutableArray *)getTokenNames
+{
+return _tokenNames;
+}
+
+-+ (void)setTokenNames:(NSArray *)theTokNams
+++ (void)setTokenNames:(NSMutableArray *)theTokNams
+{
+_tokenNames = theTokNams;
+[_tokenNames retain];
+@@ -296,7 +296,7 @@ static NSString *NEXT_TOKEN_RULE_NAME;
+[self displayRecognitionError:[self getTokenNames] Exception:e];
+}
+
+--(void) displayRecognitionError:(NSArray *)theTokNams Exception:(ANTLRRecognitionException *)e
++-(void) displayRecognitionError:(NSMutableArray *)theTokNams Exception:(ANTLRRecognitionException *)e
+{
+NSString *hdr = [self getErrorHeader:e];
+NSString *msg = [self getErrorMessage:e TokenNames:theTokNams];
+@@ -325,7 +325,7 @@ static NSString *NEXT_TOKEN_RULE_NAME;
+*  Override this to change the message generated for one or more
+*  exception types.
+*/
+-- (NSString *)getErrorMessage:(ANTLRRecognitionException *)e TokenNames:(NSArray *)theTokNams
++- (NSString *)getErrorMessage:(ANTLRRecognitionException *)e TokenNames:(NSMutableArray *)theTokNams
+{
+NSString *msg = [e getMessage];
+if ( [e isKindOfClass:[ANTLRUnwantedTokenException class]] ) {
+@@ -436,9 +436,9 @@ static NSString *NEXT_TOKEN_RULE_NAME;
+*/
+- (NSString *)getTokenErrorDisplay:(id<ANTLRToken>)t
+{
+-    NSString *s = [t getText];
++    NSString *s = t.text;
+if ( s == nil ) {
+-        if ( [t getType] == ANTLRTokenTypeEOF ) {
++        if ( t.type == ANTLRTokenTypeEOF ) {
+s = @"<EOF>";
+}
+else {
+diff --git a/runtime/ObjC/Framework/ANTLRCommonTokenStream.m b/runtime/ObjC/Framework/ANTLRCommonTokenStream.m
+index b329422..75daa26 100644
+--- a/runtime/ObjC/Framework/ANTLRCommonTokenStream.m
++++ b/runtime/ObjC/Framework/ANTLRCommonTokenStream.m
+@@ -55,34 +55,25 @@
+- (id) init
+{
+if ((self = [super init]) != nil) {
+-		p = -1;
+-		tokens = [[NSMutableArray arrayWithCapacity:1000] retain];
+channelOverride = [[NSMutableDictionary dictionaryWithCapacity:100] retain];
+channel = ANTLRTokenChannelDefault;
+-        tokenSource = nil;
+}
+return self;
+}
+
+- (id) initWithTokenSource:(id<ANTLRTokenSource>)theTokenSource
+{
+-	if ((self = [super init]) != nil) {
+-		p = -1;
+-		tokens = [[NSMutableArray arrayWithCapacity:1000] retain];
++	if ((self = [super initWithSource:theTokenSource]) != nil) {
+channelOverride = [[NSMutableDictionary dictionaryWithCapacity:100] retain];
+channel = ANTLRTokenChannelDefault;
+-		tokenSource = theTokenSource;
+}
+return self;
+}
+
+- (id) initWithTokenSource:(id<ANTLRTokenSource>)theTokenSource Channel:(NSInteger)aChannel
+{
+-	if ((self = [super init]) != nil) {
+-		p = -1;
+-		tokens = [[NSMutableArray arrayWithCapacity:1000] retain];
++	if ((self = [super initWithSource:theTokenSource]) != nil) {
+channelOverride = [[NSMutableDictionary dictionaryWithCapacity:100] retain];
+-		tokenSource = theTokenSource;
+channel = aChannel;
+}
+return self;
+diff --git a/runtime/ObjC/Framework/ANTLRCommonTree.m b/runtime/ObjC/Framework/ANTLRCommonTree.m
+index ba70bad..37b5c98 100644
+--- a/runtime/ObjC/Framework/ANTLRCommonTree.m
++++ b/runtime/ObjC/Framework/ANTLRCommonTree.m
+@@ -108,7 +108,7 @@
+- (id)initWithTokenType:(NSInteger)aTokenType
+{
+if ((self = [super init]) != nil ) {
+-		token = [ANTLRCommonToken newANTLRCommonToken:aTokenType];
++		token = [ANTLRCommonToken newToken:aTokenType];
+//		startIndex = token.startIndex;
+startIndex = -1;
+//		stopIndex = token.stopIndex;
+@@ -122,7 +122,7 @@
+- (id) initWithTokenType:(NSInteger)aTokenType Text:(NSString *)theText
+{
+if ((self = [super init]) != nil ) {
+-		token = [ANTLRCommonToken newANTLRCommonToken:aTokenType Text:theText];
++		token = [ANTLRCommonToken newToken:aTokenType Text:theText];
+//		startIndex = token.startIndex;
+startIndex = -1;
+//		stopIndex = token.stopIndex;
+diff --git a/runtime/ObjC/Framework/ANTLRDFA.m b/runtime/ObjC/Framework/ANTLRDFA.m
+index 10c81d7..efe4f94 100644
+--- a/runtime/ObjC/Framework/ANTLRDFA.m
++++ b/runtime/ObjC/Framework/ANTLRDFA.m
+@@ -190,7 +190,7 @@ NSInteger debug = 0;
+size += [encodedString characterAtIndex:i];
+}
+NSMutableData *dp = [NSMutableData dataWithLength:size];
+-    short *data = (short *)[[dp mutableBytes] retain];
++    short *data = (short *)[dp mutableBytes];
+int di = 0;
+for (int i=0; i < [encodedString length]; i+=2) {
+char n = [encodedString characterAtIndex:i];
+@@ -212,7 +212,7 @@ NSInteger debug = 0;
+size += [encodedString characterAtIndex:i];
+}
+NSMutableData *dp = [NSMutableData dataWithLength:size];
+-    char *data = [[dp mutableBytes] retain];
++    char *data = (short *)[dp mutableBytes];
+int di = 0;
+for (int i=0; i < [encodedString length]; i+=2) {
+char n = [encodedString characterAtIndex:i];
+diff --git a/runtime/ObjC/Framework/ANTLRDebugTreeAdaptor.m b/runtime/ObjC/Framework/ANTLRDebugTreeAdaptor.m
+index 4a0c07b..9431080 100644
+--- a/runtime/ObjC/Framework/ANTLRDebugTreeAdaptor.m
++++ b/runtime/ObjC/Framework/ANTLRDebugTreeAdaptor.m
+@@ -161,7 +161,7 @@
+- (id<ANTLRTree>) newANTLRTreeWithToken:(id<ANTLRToken>)fromToken tokenType:(NSInteger)tokenType
+{
+id<ANTLRTree> newTree = [treeAdaptor newANTLRTreeWithToken:fromToken tokenType:tokenType];
+-	[debugListener createNode:[treeAdaptor uniqueIdForTree:newTree] text:[fromToken getText] type:tokenType];
++	[debugListener createNode:[treeAdaptor uniqueIdForTree:newTree] text:fromToken.text type:tokenType];
+return newTree;
+}
+
+diff --git a/runtime/ObjC/Framework/ANTLRInputStream.m b/runtime/ObjC/Framework/ANTLRInputStream.m
+index 864644c..245c5b6 100644
+--- a/runtime/ObjC/Framework/ANTLRInputStream.m
++++ b/runtime/ObjC/Framework/ANTLRInputStream.m
+@@ -55,7 +55,7 @@
+encoding:(NSStringEncoding)theEncoding
+{
+if ( self = [super initWithReader:anInput size:theSize readBufferSize:theRBSize] ) {
+-        [self load:theSize readBufferSize:theRBSize];
++        //[self load:theSize readBufferSize:theRBSize];
+}
+return self;
+}
+diff --git a/runtime/ObjC/Framework/ANTLRMissingTokenException.m b/runtime/ObjC/Framework/ANTLRMissingTokenException.m
+index 91ab5a7..47a40a4 100644
+--- a/runtime/ObjC/Framework/ANTLRMissingTokenException.m
++++ b/runtime/ObjC/Framework/ANTLRMissingTokenException.m
+@@ -71,10 +71,10 @@
+- (NSString *)toString
+{
+if ( inserted != nil && token != nil ) {
+-        return [NSString stringWithFormat:@"MissingTokenException(inserted %@ at %@)", inserted, [token getText]];
++        return [NSString stringWithFormat:@"MissingTokenException(inserted %@ at %@)", inserted, token.text];
+}
+if ( token!=nil ) {
+-        return [NSString stringWithFormat:@"MissingTokenException(at %@)", [token getText] ];
++        return [NSString stringWithFormat:@"MissingTokenException(at %@)", token.text ];
+}
+return @"MissingTokenException";
+}
+diff --git a/runtime/ObjC/Framework/ANTLRReaderStream.m b/runtime/ObjC/Framework/ANTLRReaderStream.m
+index 52a9aa8..c394bfe 100644
+--- a/runtime/ObjC/Framework/ANTLRReaderStream.m
++++ b/runtime/ObjC/Framework/ANTLRReaderStream.m
+@@ -72,7 +72,7 @@ static NSInteger INITIAL_BUFFER_SIZE = 1024;
+
+- (void) load:(NSInteger)aSize readBufferSize:(NSInteger)aReadChunkSize
+{
+-    NSData *retData;
++    NSData *retData = nil;
+if ( fh==nil ) {
+return;
+}
+@@ -85,12 +85,12 @@ static NSInteger INITIAL_BUFFER_SIZE = 1024;
+#pragma mark fix these NSLog calls
+@try {
+int numRead=0;
+-        p = 0;
++        int p1 = 0;
+retData = [fh readDataToEndOfFile];
+numRead = [retData length];
+-        NSLog( @"read %d chars; p was %d is now %d", n, p, (p+numRead) );
+-        p += numRead;
+-        n = p+1;
++        NSLog( @"read %d chars; p was %d is now %d", n, p1, (p1+numRead) );
++        p1 += numRead;
++        n = p1+1;
+data = [[NSString alloc] initWithData:retData encoding:NSASCIIStringEncoding];
+NSLog( @"n=%d", n );
+}
+diff --git a/runtime/ObjC/Framework/ANTLRRewriteRuleElementStream.h b/runtime/ObjC/Framework/ANTLRRewriteRuleElementStream.h
+index 132a0cc..309651d 100644
+--- a/runtime/ObjC/Framework/ANTLRRewriteRuleElementStream.h
++++ b/runtime/ObjC/Framework/ANTLRRewriteRuleElementStream.h
+@@ -27,28 +27,25 @@
+#import <Cocoa/Cocoa.h>
+#import "ANTLRTreeAdaptor.h"
+
+-typedef union {
+-    id single;
+-    NSMutableArray *multiple;
+-} Elements;
+-
+// TODO: this should be separated into stream and enumerator classes
+@interface ANTLRRewriteRuleElementStream : NSObject {
+NSInteger cursor;
+BOOL dirty;        ///< indicates whether the stream should return copies of its elements, set to true after a call to -reset
+BOOL isSingleElement;
+-    Elements elements;
++    id singleElement;
++    NSMutableArray *elements;
+
+NSString *elementDescription;
+id<ANTLRTreeAdaptor> treeAdaptor;
+}
+
+-@property (assign, getter=GetCursor, setter=SetCursor:) NSInteger cursor;
+-@property (assign, getter=Getdirty, setter=Setdirty:) BOOL dirty;
+-@property (assign, getter=GetIsSingleElement, setter=SetIsSingleElement:) BOOL isSingleElement;
+-@property (assign, getter=GetElement, setter=SetElement:) Elements elements;
+-@property (assign, getter=GetElementDescription, setter=SetElementDescription:) NSString *elementDescription;
+-@property (retain, getter=GetTreeAdaptor, setter=SetTreeAdaptor:) id<ANTLRTreeAdaptor> treeAdaptor;
++@property (assign) NSInteger cursor;
++@property (assign) BOOL dirty;
++@property (assign) BOOL isSingleElement;
++@property (assign) id singleElement;
++@property (assign) NSMutableArray *elements;
++@property (assign) NSString *elementDescription;
++@property (retain) id<ANTLRTreeAdaptor> treeAdaptor;
+
++ (ANTLRRewriteRuleElementStream*) newANTLRRewriteRuleElementStream:(id<ANTLRTreeAdaptor>)aTreeAdaptor
+description:(NSString *)anElementDescription;
+diff --git a/runtime/ObjC/Framework/ANTLRRewriteRuleElementStream.m b/runtime/ObjC/Framework/ANTLRRewriteRuleElementStream.m
+index 09206fc..c8e816b 100644
+--- a/runtime/ObjC/Framework/ANTLRRewriteRuleElementStream.m
++++ b/runtime/ObjC/Framework/ANTLRRewriteRuleElementStream.m
+@@ -31,6 +31,7 @@
+@synthesize cursor;
+@synthesize dirty;
+@synthesize isSingleElement;
++@synthesize singleElement;
+@synthesize elements;
+@synthesize elementDescription;
+@synthesize treeAdaptor;
+@@ -69,6 +70,8 @@
+[self setTreeAdaptor:aTreeAdaptor];
+dirty = NO;
+isSingleElement = YES;
++        singleElement = nil;
++        elements = nil;
+}
+return self;
+}
+@@ -82,6 +85,8 @@
+[self setTreeAdaptor:aTreeAdaptor];
+dirty = NO;
+isSingleElement = YES;
++        singleElement = nil;
++        elements = nil;
+[self addElement:anElement];
+}
+return self;
+@@ -96,8 +101,9 @@
+[self setDescription:anElementDescription];
+[self setTreeAdaptor:aTreeAdaptor];
+dirty = NO;
++        singleElement = nil;
+isSingleElement = NO;
+-        elements.multiple = [[NSMutableArray alloc] initWithArray:theElements];
++        elements = [[NSMutableArray alloc] initWithArray:theElements];
+}
+return self;
+}
+@@ -105,9 +111,9 @@
+- (void) dealloc
+{
+if (isSingleElement)
+-        [elements.single release];
++        [singleElement release];
+else
+-        [elements.multiple release];
++        [elements release];
+[self setDescription:nil];
+[self setTreeAdaptor:nil];
+[super dealloc];
+@@ -137,58 +143,40 @@
+{
+if (anElement == nil)
+return;
+-    if (isSingleElement) {
+-
+-        if (elements.single == nil) {
+-            elements.single = [anElement retain];
+-            elements.single = anElement;
+-            return;
++    if (elements != nil) {
++        [elements addObject:anElement];
++        return;
+}
+-        isSingleElement = NO;
+-        NSMutableArray *newArray = [[NSMutableArray arrayWithCapacity:5] retain];
+-        [newArray addObject:elements.single];
+-        // [elements.single release];  // balance previous retain in initializer/addElement
+-        [newArray addObject:anElement];
+-        elements.multiple = newArray;
+-    } else {
+-        [elements.multiple addObject:anElement];
++    if (singleElement == nil) {
++        singleElement = anElement;
++        singleElement = [anElement retain];
++        return;
+}
++    isSingleElement = NO;
++    elements = [[NSMutableArray arrayWithCapacity:5] retain];
++    [elements addObject:singleElement];
++    singleElement = nil;  // balance previous retain in initializer/addElement
++    [elements addObject:anElement];
+}
+
+- (void) setElement: (id)anElement
+{
+if (anElement == nil)
+return;
+-    if (isSingleElement) {
+-        if (elements.single == nil) {
+-            elements.single = [anElement retain];
+-            elements.single = anElement;
+-            return;
++    if (elements != nil) {
++        [elements addObject:anElement];
++        return;
+}
+-        isSingleElement = NO;
+-        NSMutableArray *newArray = [[NSMutableArray arrayWithCapacity:5] retain];
+-        [newArray addObject:elements.single];
+-        // [elements.single release];  // balance previous retain in initializer/addElement
+-        [newArray addObject:anElement];
+-        elements.multiple = newArray;
+-    } else {
+-        [elements.multiple addObject:anElement];
++    if (singleElement == nil) {
++        singleElement = anElement;
++        singleElement = [anElement retain];
++        return;
+}
+-}
+-
+-- (NSInteger) size
+-{
+-    if (isSingleElement && elements.single != nil)
+-        return 1;
+-    if (isSingleElement == NO && elements.multiple != nil)
+-        return [elements.multiple count];
+-    return 0;
+-}
+-
+-- (BOOL) hasNext
+-{
+-    return (isSingleElement && elements.single != nil && cursor < 1) ||
+-            (isSingleElement == NO && elements.multiple != nil && cursor < [elements.multiple count]);
++    isSingleElement = NO;
++    elements = [[NSMutableArray arrayWithCapacity:5] retain];
++    [elements addObject:singleElement];
++    singleElement = nil;  // balance previous retain in initializer/addElement
++    [elements addObject:anElement];
+}
+
+- (id<ANTLRTree>) nextTree
+@@ -212,19 +200,35 @@
+}
+if ( cursor >= n ) {
+if ( n == 1 ) {
+-            return [self toTree:elements.single]; // will be dup'ed in -next
++            return [self toTree:singleElement]; // will be dup'ed in -next
+}
+@throw [NSException exceptionWithName:@"RewriteCardinalityException" reason:nil userInfo:nil];// TODO: fill in real exception
+}
+-    if (isSingleElement && elements.single != nil) {
++    if (singleElement != nil) {
+cursor++;
+-        return [self toTree:elements.single];
++        return [self toTree:singleElement];
+}
+-    id el = [elements.multiple objectAtIndex:cursor];
++    id el = [elements objectAtIndex:cursor];
+cursor++;
+return [self toTree:el];
+}
+
++- (BOOL) hasNext
++{
++    return (singleElement != nil && cursor < 1) ||
++            (elements != nil && cursor < [elements count]);
++}
++
++- (NSInteger) size
++{
++    NSInteger n = 0;
++    if (singleElement != nil)
++        n = 1;
++    if (elements != nil)
++        return [elements count];
++    return n;
++}
++
+- (id) copyElement:(id)element
+{
+[self doesNotRecognizeSelector:_cmd];   // subclass responsibility
+diff --git a/runtime/ObjC/Framework/ANTLRRuntimeException.h b/runtime/ObjC/Framework/ANTLRRuntimeException.h
+index 08b3c76..96e31a8 100644
+--- a/runtime/ObjC/Framework/ANTLRRuntimeException.h
++++ b/runtime/ObjC/Framework/ANTLRRuntimeException.h
+@@ -48,7 +48,7 @@
+- (id)initWithName:(NSString *)aName reason:(NSString *)aReason userInfo:(NSDictionary *)aUserInfo;
+
+- (NSString *) Description;
+-
++- (id) stackTrace:(NSException *)e;
+//    - (void)setDecisionNumber:(NSInteger)decisionNumber;
+//    - (void)setStateNumber:(NSInteger)stateNumber;
+@end
+diff --git a/runtime/ObjC/Framework/ANTLRRuntimeException.m b/runtime/ObjC/Framework/ANTLRRuntimeException.m
+index e6260ce..92d4567 100644
+--- a/runtime/ObjC/Framework/ANTLRRuntimeException.m
++++ b/runtime/ObjC/Framework/ANTLRRuntimeException.m
+@@ -103,4 +103,20 @@
+return [super reason];
+}
+
++- (id) stackTrace:(NSException *)e
++{
++    NSArray *addrs = [e callStackReturnAddresses];
++    NSArray *trace = [e callStackSymbols];
++
++    for (NSString *traceStr in trace) {
++        NSLog( @"%@", traceStr);
++        // TODO: remove special after testing
++        if ([traceStr hasPrefix:@"main("] > 0)
++            return traceStr;
++        if (![traceStr hasPrefix:@"org.stringtemplate"])
++            return traceStr;
++    }
++    return trace;
++}
++
+@end
+diff --git a/runtime/ObjC/Framework/ANTLRStringStream.h b/runtime/ObjC/Framework/ANTLRStringStream.h
+index 2b13c7d..d2342ef 100644
+--- a/runtime/ObjC/Framework/ANTLRStringStream.h
++++ b/runtime/ObjC/Framework/ANTLRStringStream.h
+@@ -43,17 +43,6 @@
+ANTLRCharStreamState *charState;
+}
+
+-@property (retain, getter=getData,setter=setData:) NSString *data;
+-@property (getter=getP,setter=setP:) NSInteger p;
+-@property (getter=getN,setter=setN:) NSInteger n;
+-@property (getter=getLine,setter=setLine:) NSInteger line;
+-@property (getter=getCharPositionInLine,setter=setCharPositionInLine:) NSInteger charPositionInLine;
+-@property (getter=getMarkDepth,setter=setMarkDepth:) NSInteger markDepth;
+-@property (retain, getter=getMarkers, setter=setMarkers:) ANTLRPtrBuffer *markers;
+-@property (getter=getLastMarker,setter=setLastMarker:) NSInteger lastMarker;
+-@property (retain, getter=getSourceName, setter=setSourceName:) NSString *name;
+-@property (retain, getter=getCharState, setter=setCharState:) ANTLRCharStreamState *charState;
+-
++ newANTLRStringStream;
+
++ newANTLRStringStream:(NSString *)aString;
+@@ -119,8 +108,16 @@
+- (NSString *)toString;
+
+// accessors to the raw data of this stream
+-- (NSString *) getData;
+-- (void) setData: (NSString *) aData;
+
++@property (retain) NSString *data;
++@property (assign) NSInteger p;
++@property (assign) NSInteger n;
++@property (assign) NSInteger line;
++@property (assign) NSInteger charPositionInLine;
++@property (assign) NSInteger markDepth;
++@property (retain) ANTLRPtrBuffer *markers;
++@property (assign) NSInteger lastMarker;
++@property (retain) NSString *name;
++@property (retain) ANTLRCharStreamState *charState;
+
+@end
+diff --git a/runtime/ObjC/Framework/ANTLRStringStream.m b/runtime/ObjC/Framework/ANTLRStringStream.m
+index f5ebf84..687fcc3 100644
+--- a/runtime/ObjC/Framework/ANTLRStringStream.m
++++ b/runtime/ObjC/Framework/ANTLRStringStream.m
+@@ -37,8 +37,8 @@ extern NSInteger debug;
+@synthesize line;
+@synthesize charPositionInLine;
+@synthesize markDepth;
+-@synthesize lastMarker;
+@synthesize markers;
++@synthesize lastMarker;
+@synthesize name;
+@synthesize charState;
+
+@@ -406,7 +406,7 @@ extern NSInteger debug;
+//----------------------------------------------------------
+//  data
+//----------------------------------------------------------
+-- (NSString *) data
++- (NSString *) getData
+{
+return data;
+}
+diff --git a/runtime/ObjC/Framework/ANTLRToken+DebuggerSupport.m b/runtime/ObjC/Framework/ANTLRToken+DebuggerSupport.m
+index faaf775..2158771 100644
+--- a/runtime/ObjC/Framework/ANTLRToken+DebuggerSupport.m
++++ b/runtime/ObjC/Framework/ANTLRToken+DebuggerSupport.m
+@@ -36,7 +36,7 @@
+
+- (NSString *)debuggerDescription
+{
+-	NSString *_text = [self getText];
++	NSString *_text = self.text;
+NSMutableString *escapedText;
+if (_text) {
+escapedText = [_text copyWithZone:nil];
+diff --git a/runtime/ObjC/Framework/ANTLRToken.h b/runtime/ObjC/Framework/ANTLRToken.h
+index 67179f3..045519c 100644
+--- a/runtime/ObjC/Framework/ANTLRToken.h
++++ b/runtime/ObjC/Framework/ANTLRToken.h
+@@ -45,6 +45,9 @@ typedef enum {
+
+@protocol ANTLRToken < NSObject, NSCopying >
+
++@property (retain) NSString *text;
++@property (assign) NSInteger type;
++
+// The singleton eofToken instance.
++ (id<ANTLRToken>) eofToken;
+// The default channel for this class of Tokens
+diff --git a/runtime/ObjC/Framework/ANTLRTreeParser.h b/runtime/ObjC/Framework/ANTLRTreeParser.h
+index e2f01ee..981bc3c 100644
+--- a/runtime/ObjC/Framework/ANTLRTreeParser.h
++++ b/runtime/ObjC/Framework/ANTLRTreeParser.h
+@@ -79,7 +79,7 @@
+*/
+- (NSString *)getErrorHeader:(ANTLRRecognitionException *)e;
+
+-- (NSString *)getErrorMessage:(ANTLRRecognitionException *)e TokenNames:(NSArray *) tokenNames;
++- (NSString *)getErrorMessage:(ANTLRRecognitionException *)e TokenNames:(NSMutableArray *) tokenNames;
+
+- (void) traceIn:(NSString *)ruleName Index:(NSInteger)ruleIndex;
+- (void) traceOut:(NSString *)ruleName Index:(NSInteger)ruleIndex;
+diff --git a/runtime/ObjC/Framework/ANTLRUnwantedTokenException.m b/runtime/ObjC/Framework/ANTLRUnwantedTokenException.m
+index 28d7323..3eac72b 100644
+--- a/runtime/ObjC/Framework/ANTLRUnwantedTokenException.m
++++ b/runtime/ObjC/Framework/ANTLRUnwantedTokenException.m
+@@ -74,7 +74,7 @@
+if ( token==nil ) {
+return [NSString stringWithFormat:@"UnwantedTokenException(found=%@)", exp];
+}
+-    return [NSString stringWithFormat:@"UnwantedTokenException(found=%@ %@", [token getText], exp];
++    return [NSString stringWithFormat:@"UnwantedTokenException(found=%@ %@", token.text, exp];
+}
+
+@end
+

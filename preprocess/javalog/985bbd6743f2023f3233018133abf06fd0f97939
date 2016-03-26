@@ -1,0 +1,24 @@
+commit 985bbd6743f2023f3233018133abf06fd0f97939
+Author:     acondit <acondit@parrt.spork>
+AuthorDate: Wed Jun 8 20:31:16 2011 -0800
+Commit:     acondit <acondit@parrt.spork>
+CommitDate: Wed Jun 8 20:31:16 2011 -0800
+
+Fixed parsing error in template -- ANTLR doesn't like <\n>>> prefers <\n> >>
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8609]
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/ObjC/ObjC.stg b/tool/src/main/resources/org/antlr/codegen/templates/ObjC/ObjC.stg
+index f208d54..dbba0ff 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/ObjC/ObjC.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/ObjC/ObjC.stg
+@@ -1160,7 +1160,7 @@ noRewrite(rewriteBlockLevel, treeLevel) ::= ""
+// E L E M E N T S
+
+/** Dump the elements one per line */
+-element(e) ::= <<<@prematch()><\n><e.el><\n>>>
++element(e) ::= << <@prematch()><\n><e.el><\n> >>
+
+/** match a token optionally with a label in front */
+tokenRef(token,label,elementIndex,terminalOptions) ::= <<
+

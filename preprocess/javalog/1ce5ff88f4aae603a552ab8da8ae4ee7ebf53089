@@ -1,0 +1,27 @@
+commit 1ce5ff88f4aae603a552ab8da8ae4ee7ebf53089
+Author:     Terence Parr <parrt@antlr.org>
+AuthorDate: Thu Jul 5 11:36:18 2012 -0700
+Commit:     Terence Parr <parrt@antlr.org>
+CommitDate: Thu Jul 5 11:36:18 2012 -0700
+
+Allow grammar files in the root directory in Antlr3Mojo. hint from josephw
+
+diff --git a/antlr3-maven-plugin/src/main/java/org/antlr/mojo/antlr3/Antlr3Mojo.java b/antlr3-maven-plugin/src/main/java/org/antlr/mojo/antlr3/Antlr3Mojo.java
+index 4dd2b28..4d3fed4 100644
+--- a/antlr3-maven-plugin/src/main/java/org/antlr/mojo/antlr3/Antlr3Mojo.java
++++ b/antlr3-maven-plugin/src/main/java/org/antlr/mojo/antlr3/Antlr3Mojo.java
+@@ -488,7 +488,11 @@ public class Antlr3Mojo
+}
+
+File unprefixedGrammarFileName = new File(grammarFileName.substring(srcPath.length()));
+-
+-        return unprefixedGrammarFileName.getParent() + File.separator;
++	if ( unprefixedGrammarFileName.getParent()!=null ) {
++	    return unprefixedGrammarFileName.getParent() + File.separator;
++        }
++	else {
++            return "";
++	}
+}
+}
+

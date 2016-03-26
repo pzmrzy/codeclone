@@ -1,0 +1,135 @@
+commit a25110d837e25d99b22d36c5d1ff10d6090964b0
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Thu Feb 10 16:40:59 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Thu Feb 10 16:40:59 2011 -0800
+
+(C# 3) Back out changelist 7657, add tests from CL 7669
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7676]
+
+diff --git a/Antlr4.StringTemplate/Interpreter.cs b/Antlr4.StringTemplate/Interpreter.cs
+index cf11604..fef1370 100644
+--- a/Antlr4.StringTemplate/Interpreter.cs
++++ b/Antlr4.StringTemplate/Interpreter.cs
+@@ -112,8 +112,6 @@ namespace Antlr4.StringTemplate
+
+private IDictionary<Template, List<InterpEvent>> debugInfo;
+
+-        private int _writeCount;
+-
+public Interpreter(TemplateGroup group)
+: this(group, CultureInfo.CurrentCulture, group.ErrorManager)
+{
+@@ -758,20 +756,20 @@ namespace Antlr4.StringTemplate
+string separator = null;
+if (options != null)
+separator = options[(int)Option.Separator];
+-            bool sawValue = false;
++            bool seenAValue = false;
+while (it.hasNext())
+{
+object iterValue = it.next();
+-                if (iterValue == null && options != null && options[(int)Option.Null] == null)
+-                    continue;
+-
+// Emit separator if we're beyond first value
+-                if (sawValue && separator != null)
++                bool needSeparator = seenAValue &&
++                    separator != null &&            // we have a separator and
++                    (iterValue != null ||           // either we have a value
++                        options[(int)Option.Null] != null); // or no value but null option
++                if (needSeparator)
+n += @out.WriteSeparator(separator);
+-
+-                int emptyWriteCount = _writeCount;
+int nw = WriteObject(@out, self, iterValue, options);
+-                sawValue = _writeCount > emptyWriteCount;
++                if (nw > 0)
++                    seenAValue = true;
+n += nw;
+}
+return n;
+@@ -779,8 +777,6 @@ namespace Antlr4.StringTemplate
+
+protected virtual int WritePlainObject(ITemplateWriter @out, object o, string[] options)
+{
+-            _writeCount++;
+-
+string formatString = null;
+if (options != null)
+formatString = options[(int)Option.Format];
+diff --git a/Antlr4.Test.StringTemplate/TestNullAndEmptyValues.cs b/Antlr4.Test.StringTemplate/TestNullAndEmptyValues.cs
+index 6935cbb..b2e0fd0 100644
+--- a/Antlr4.Test.StringTemplate/TestNullAndEmptyValues.cs
++++ b/Antlr4.Test.StringTemplate/TestNullAndEmptyValues.cs
+@@ -35,6 +35,7 @@ namespace Antlr4.Test.StringTemplate
+using Antlr4.StringTemplate;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Collections.Generic;
++    using StringWriter = System.IO.StringWriter;
+
+[TestClass]
+public class TestNullAndEmptyValues : BaseTest
+@@ -229,5 +230,33 @@ namespace Antlr4.Test.StringTemplate
+string result = t.Render();
+Assert.AreEqual(expecting, result);
+}
++
++        [TestMethod]
++        public void TestSeparatorEmittedForEmptyIteratorValue()
++        {
++            Template st = new Template(
++                "<values:{v|<if(v)>x<endif>}; separator=\" \">"
++            );
++            st.Add("values", new bool[] { true, false, true });
++            StringWriter sw = new StringWriter();
++            st.Write(new AutoIndentWriter(sw));
++            string result = sw.ToString();
++            string expecting = "x  x";
++            Assert.AreEqual(expecting, result);
++        }
++
++        [TestMethod]
++        public void TestSeparatorEmittedForEmptyIteratorValue2()
++        {
++            Template st = new Template(
++                "<values; separator=\" \">"
++            );
++            st.Add("values", new string[] { "x", string.Empty, "y" });
++            StringWriter sw = new StringWriter();
++            st.Write(new AutoIndentWriter(sw));
++            string result = sw.ToString();
++            string expecting = "x  y";
++            Assert.AreEqual(expecting, result);
++        }
+}
+}
+diff --git a/Antlr4.Test.StringTemplate/TestWhitespace.cs b/Antlr4.Test.StringTemplate/TestWhitespace.cs
+index 3a5d2f8..7485b91 100644
+--- a/Antlr4.Test.StringTemplate/TestWhitespace.cs
++++ b/Antlr4.Test.StringTemplate/TestWhitespace.cs
+@@ -380,22 +380,6 @@ namespace Antlr4.Test.StringTemplate
+}
+
+[TestMethod]
+-        public void TestNoSeparatorEmittedForSkippedIteratorValue()
+-        {
+-            Template st = new Template(
+-                "<names:{name|<if(name.key)><name.Value><endif>}; separator=\" \">"
+-                );
+-            st.Add("names", new KeyValuePair<bool, string>(true, "Foo"));
+-            st.Add("names", new KeyValuePair<bool, string>(false, "Bar"));
+-            st.Add("names", new KeyValuePair<bool, string>(true, "Foo"));
+-            StringWriter sw = new StringWriter();
+-            st.Write(new AutoIndentWriter(sw));
+-            string result = sw.ToString();
+-            string expecting = "Foo Foo";
+-            Assert.AreEqual(expecting, result);
+-        }
+-
+-        [TestMethod]
+public void TestCommentOnlyLineGivesNoOutput()
+{
+Template t = new Template(
+

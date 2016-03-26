@@ -1,0 +1,501 @@
+commit 6f0fcfd72b2a1c1f38eb68f1d8a54f58efb2133e
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sat Mar 19 16:13:24 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sat Mar 19 16:13:24 2011 -0800
+
+(C# 3) Merge CL7621, 7814, 7815, 7820
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7880]
+
+diff --git a/Antlr4.StringTemplate/Compiler/CodeGenerator.g3 b/Antlr4.StringTemplate/Compiler/CodeGenerator.g3
+index 4c5050a..23bc0ee 100644
+--- a/Antlr4.StringTemplate/Compiler/CodeGenerator.g3
++++ b/Antlr4.StringTemplate/Compiler/CodeGenerator.g3
+@@ -74,8 +74,9 @@ chunk
+;
+
+element
+-	:	^(INDENT {Indent($INDENT.text);} element {Dedent();})
+-	|	compoundElement
++	:	^(INDENT compoundElement[$INDENT.text])
++	|	compoundElement[null]
++	|	^(INDENT {Indent($INDENT.text);} singleElement {Dedent();})
+|	singleElement
+;
+
+@@ -89,13 +90,9 @@ singleElement
+|	NEWLINE {emit(Bytecode.INSTR_NEWLINE);}
+;
+
+-compoundElement
+-	:	ifstat
+-	|	region
+-		{
+-		emit2($region.start, Bytecode.INSTR_NEW, $region.name, 0);
+-		emit($region.start, Bytecode.INSTR_WRITE);
+-		}
++compoundElement[string indent]
++	:	ifstat[$indent]
++	|	region[$indent]
+;
+
+exprElement
+@@ -104,7 +101,9 @@ exprElement
+{emit($EXPR, op);}
+;
+
+-region returns [string name]
++region[string indent] returns [string name]
++@init {if (!string.IsNullOrEmpty($indent)) Indent($indent);}
++@after {if (!string.IsNullOrEmpty($indent)) Dedent();}
+:	^(	REGION ID
+{$name = TemplateGroup.GetMangledRegionName(outermostTemplateName, $ID.text);}
+template[$name,null]
+@@ -114,6 +113,8 @@ region returns [string name]
+sub.regionDefType = Template.RegionType.Embedded;
+sub.templateDefStartToken = $ID.Token;
+outermostImpl.AddImplicitlyDefinedTemplate(sub);
++			emit2($start, Bytecode.INSTR_NEW, $region.name, 0);
++			emit($start, Bytecode.INSTR_WRITE);
+}
+)
+;
+@@ -141,7 +142,7 @@ subtemplate returns [string name, int nargs]
+)
+;
+
+-ifstat
++ifstat[string indent]
+@init {
+///** Tracks address of branch operand (in code block).  It's how
+//	*  we backpatch forward references when generating code for IFs.
+@@ -151,6 +152,10 @@ ifstat
+//	*  We need to update them once we see the endif.
+//	*/
+List<int> endRefs = new List<int>();
++	if (!string.IsNullOrEmpty($indent)) Indent($indent);
++}
++@after {
++	if (!string.IsNullOrEmpty($indent)) Dedent();
+}
+:	^(	i='if' conditional
+{
+diff --git a/Antlr4.StringTemplate/Compiler/CodeGenerator.g3.cs b/Antlr4.StringTemplate/Compiler/CodeGenerator.g3.cs
+index ca8e8e0..a8b4c97 100644
+--- a/Antlr4.StringTemplate/Compiler/CodeGenerator.g3.cs
++++ b/Antlr4.StringTemplate/Compiler/CodeGenerator.g3.cs
+@@ -32,7 +32,6 @@
+
+namespace Antlr4.StringTemplate.Compiler
+{
+-    using System.Collections.Generic;
+using Antlr.Runtime;
+using Antlr.Runtime.Tree;
+using Antlr4.StringTemplate.Misc;
+@@ -73,90 +72,93 @@ namespace Antlr4.StringTemplate.Compiler
+}
+}
+
++        public CompilationState CompilationState
++        {
++            get
++            {
++                if (template_stack == null || template_stack.Count == 0)
++                    return null;
++
++                return template_stack.Peek().state;
++            }
++        }
++
+// convience funcs to hide offensive sending of emit messages to
+// CompilationState temp data object.
+
+public void emit1(CommonTree opAST, Bytecode opcode, int arg)
+{
+-            template_stack.Peek().state.Emit1(opAST, opcode, arg);
++            CompilationState.Emit1(opAST, opcode, arg);
+}
+
+public void emit1(CommonTree opAST, Bytecode opcode, string arg)
+{
+-            template_stack.Peek().state.Emit1(opAST, opcode, arg);
++            CompilationState.Emit1(opAST, opcode, arg);
+}
+
+public void emit2(CommonTree opAST, Bytecode opcode, int arg, int arg2)
+{
+-            template_stack.Peek().state.Emit2(opAST, opcode, arg, arg2);
++            CompilationState.Emit2(opAST, opcode, arg, arg2);
+}
+
+public void emit2(CommonTree opAST, Bytecode opcode, string s, int arg2)
+{
+-            template_stack.Peek().state.Emit2(opAST, opcode, s, arg2);
++            CompilationState.Emit2(opAST, opcode, s, arg2);
+}
+
+public void emit(Bytecode opcode)
+{
+-            template_stack.Peek().state.Emit(opcode);
++            CompilationState.Emit(opcode);
+}
+
+public void emit(CommonTree opAST, Bytecode opcode)
+{
+-            template_stack.Peek().state.Emit(opAST, opcode);
++            CompilationState.Emit(opAST, opcode);
+}
+
+-        private readonly Stack<string> _elementIndent = new Stack<string>(new string[] { string.Empty });
+-
+private void Indent(string text)
+{
+-            string strip = _elementIndent.Peek();
+-            if (!string.IsNullOrEmpty(strip) && text.StartsWith(strip))
+-                text = text.Substring(strip.Length);
+-
+-            template_stack.Peek().state.Indent(text);
+-            _elementIndent.Push(_elementIndent.Peek() + text);
++            CompilationState.Indent(text);
+}
+
+private void Dedent()
+{
+-            template_stack.Peek().state.Emit(Bytecode.INSTR_DEDENT);
+-            _elementIndent.Pop();
++            CompilationState.Emit(Bytecode.INSTR_DEDENT);
+}
+
+public void insert(int addr, Bytecode opcode, string s)
+{
+-            template_stack.Peek().state.Insert(addr, opcode, s);
++            CompilationState.Insert(addr, opcode, s);
+}
+
+public void setOption(CommonTree id)
+{
+-            template_stack.Peek().state.SetOption(id);
++            CompilationState.SetOption(id);
+}
+
+public void write(int addr, short value)
+{
+-            template_stack.Peek().state.Write(addr, value);
++            CompilationState.Write(addr, value);
+}
+
+public int address()
+{
+-            return template_stack.Peek().state.ip;
++            return CompilationState.ip;
+}
+
+public void func(CommonTree id)
+{
+-            template_stack.Peek().state.Function(templateToken, id);
++            CompilationState.Function(templateToken, id);
+}
+
+public void refAttr(CommonTree id)
+{
+-            template_stack.Peek().state.ReferenceAttribute(templateToken, id);
++            CompilationState.ReferenceAttribute(templateToken, id);
+}
+
+public int defineString(string s)
+{
+-            return template_stack.Peek().state.DefineString(s);
++            return CompilationState.DefineString(s);
+}
+}
+}
+diff --git a/Antlr4.StringTemplate/Compiler/TemplateParser.g3 b/Antlr4.StringTemplate/Compiler/TemplateParser.g3
+index 3d62f26..b74dd43 100644
+--- a/Antlr4.StringTemplate/Compiler/TemplateParser.g3
++++ b/Antlr4.StringTemplate/Compiler/TemplateParser.g3
+@@ -66,13 +66,21 @@ template : element* ;
+
+element
+:	{input.LT(1).CharPositionInLine == 0 && (input.LA(1) == INDENT ? input.LA(2) == COMMENT && input.LA(3) == NEWLINE : input.LA(1) == COMMENT && input.LA(2) == NEWLINE)}? INDENT!? COMMENT! NEWLINE!
+-	|	INDENT^ element
+-	|	ifstat
+-	|	region
+-	|	exprTag
++	|	INDENT^ singleElement
++	|	singleElement
++	|	compoundElement
++	|	COMMENT!
++	;
++
++singleElement
++	:	exprTag
+|	TEXT
+|	NEWLINE
+-	|	COMMENT!
++	;
++
++compoundElement
++	:	ifstat
++	|	region
+;
+
+exprTag
+@@ -80,9 +88,15 @@ exprTag
+;
+
+region
+-	:	LDELIM! '@'<REGION>^ ID RDELIM! NEWLINE!?
++@init {IToken indent=null;}
++	:	i=INDENT? x=LDELIM '@' ID RDELIM {if (input.LA(1) != NEWLINE) indent = $i;}
+template
+-		INDENT!? LDELIM! '@end'! RDELIM! NEWLINE!?
++		INDENT? LDELIM '@end' RDELIM
++		// kill \n for <@end> on line by itself if multi-line embedded region
++		({$region.start.Line != input.LT(1).Line}? => NEWLINE)?
++		-> {indent!=null}?
++		   ^({indent} ^(REGION[$x] ID template?))
++		->            ^(REGION[$x] ID template?)
+;
+
+subtemplate
+@@ -91,8 +105,9 @@ subtemplate
+-> ^(SUBTEMPLATE[$lc,"SUBTEMPLATE"] ^(ARGS $ids)* template?)
+;
+
+-ifstat // ignore INDENTs in front of elseif ...
+-	:	LDELIM 'if' '(' c1=conditional ')' RDELIM
++ifstat
++@init {IToken indent=null;}
++	:	i=INDENT? LDELIM 'if' '(' c1=conditional ')' RDELIM {if (input.LA(1) != NEWLINE) indent = $i;}
+t1=template
+( INDENT? LDELIM 'elseif' '(' c2+=conditional ')' RDELIM t2+=template )*
+( INDENT? LDELIM 'else' RDELIM t3=template )?
+@@ -100,6 +115,8 @@ ifstat // ignore INDENTs in front of elseif ...
+RDELIM
+// kill \n for <endif> on line by itself if multi-line IF
+({$ifstat.start.Line!=input.LT(1).Line}?=> NEWLINE)?
++		-> {indent!=null}?
++		   ^({indent} ^('if' $c1 $t1? ^('elseif' $c2 $t2)* ^('else' $t3?)?))
+-> ^('if' $c1 $t1? ^('elseif' $c2 $t2)* ^('else' $t3?)?)
+;
+
+diff --git a/Antlr4.Test.StringTemplate/TestIndentation.cs b/Antlr4.Test.StringTemplate/TestIndentation.cs
+index 2586796..726bc2e 100644
+--- a/Antlr4.Test.StringTemplate/TestIndentation.cs
++++ b/Antlr4.Test.StringTemplate/TestIndentation.cs
+@@ -209,6 +209,67 @@ namespace Antlr4.Test.StringTemplate
+}
+
+[TestMethod]
++        public void TestIndentedIFWithElse()
++        {
++            Template t = new Template(
++                "begin" + newline +
++                "    <if(x)>foo<else>bar<endif>" + newline +
++                "end" + newline);
++            t.Add("x", "x");
++            string expecting = "begin" + newline + "    foo" + newline + "end" + newline;
++            string result = t.Render();
++            Assert.AreEqual(expecting, result);
++        }
++
++        [TestMethod]
++        public void TestIndentedIFWithElse2()
++        {
++            Template t = new Template(
++                "begin" + newline +
++                "    <if(x)>foo<else>bar<endif>" + newline +
++                "end" + newline);
++            t.Add("x", false);
++            string expecting = "begin" + newline + "    bar" + newline + "end" + newline;
++            string result = t.Render();
++            Assert.AreEqual(expecting, result);
++        }
++
++        [TestMethod]
++        public void TestIndentedIFWithNewlineBeforeText()
++        {
++            TemplateGroup group = new TemplateGroup();
++            group.DefineTemplate("t",
++                "begin" + newline +
++                "    <if(x)>\n" +
++                "foo\n" +  // no indent; ignore IF indent
++                "    <endif>" + newline +	  // ignore indent on if-tags on line by themselves
++                "end" + newline,
++                new string[] { "x" });
++            Template t = group.GetInstanceOf("t");
++            t.Add("x", "x");
++            string expecting = "begin" + newline + "foo" + newline + "end";
++            string result = t.Render();
++            Assert.AreEqual(expecting, result);
++        }
++
++        [TestMethod]
++        public void TestIndentedIFWithEndifNextLine()
++        {
++            TemplateGroup group = new TemplateGroup();
++            group.DefineTemplate("t",
++                "begin" + newline +
++                "    <if(x)>foo\n" +      // use indent and keep newline
++                "    <endif>" + newline +	  // ignore indent on if-tags on line by themselves
++                "end" + newline,
++                new string[] { "x" });
++            Template t = group.GetInstanceOf("t");
++            t.Add("x", "x");
++            string expecting = "begin" + newline + "    foo" + newline + "end";
++            string result = t.Render();
++            Assert.AreEqual(expecting, result);
++        }
++
++        [TestMethod]
+public void TestIFWithIndentOnMultipleLines()
+{
+Template t = new Template(
+diff --git a/Antlr4.Test.StringTemplate/TestRegions.cs b/Antlr4.Test.StringTemplate/TestRegions.cs
+index 2939e62..955f7c3 100644
+--- a/Antlr4.Test.StringTemplate/TestRegions.cs
++++ b/Antlr4.Test.StringTemplate/TestRegions.cs
+@@ -385,5 +385,44 @@ namespace Antlr4.Test.StringTemplate
+string expecting = "XABY";
+Assert.AreEqual(expecting, result);
+}
++
++        [TestMethod]
++        public void TestEmbeddedRegionOnOneLine()
++        {
++            string dir = tmpdir;
++            string groupFile =
++                "a() ::= <<\n" +
++                "[\n" +
++                "  <@r>bar<@end>\n" +
++                "]\n" +
++                ">>\n";
++            writeFile(dir, "group.stg", groupFile);
++            TemplateGroup group = new TemplateGroupFile(Path.Combine(dir, "group.stg"));
++            Template st = group.GetInstanceOf("a");
++            st.impl.Dump();
++            string expected = "[" + newline + "  bar" + newline + "]";
++            string result = st.Render();
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
++        public void TestEmbeddedRegionTagsOnSeparateLines()
++        {
++            string dir = tmpdir;
++            string groupFile =
++                "a() ::= <<\n" +
++                "[\n" +
++                "  <@r>\n" +
++                "  bar\n" +
++                "  <@end>\n" +
++                "]\n" +
++                ">>\n";
++            writeFile(dir, "group.stg", groupFile);
++            TemplateGroup group = new TemplateGroupFile(Path.Combine(dir, "group.stg"));
++            Template st = group.GetInstanceOf("a");
++            string expected = "[" + newline + "  bar" + newline + "]";
++            string result = st.Render();
++            Assert.AreEqual(expected, result);
++        }
+}
+}
+diff --git a/Antlr4.Test.StringTemplate/TestWhitespace.cs b/Antlr4.Test.StringTemplate/TestWhitespace.cs
+index b3fc5fa..30e2d15 100644
+--- a/Antlr4.Test.StringTemplate/TestWhitespace.cs
++++ b/Antlr4.Test.StringTemplate/TestWhitespace.cs
+@@ -32,10 +32,10 @@
+
+namespace Antlr4.Test.StringTemplate
+{
++    using System.Collections.Generic;
+using Antlr4.StringTemplate;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using StringWriter = System.IO.StringWriter;
+-    using System.Collections.Generic;
+
+[TestClass]
+public class TestWhitespace : BaseTest
+@@ -248,7 +248,7 @@ namespace Antlr4.Test.StringTemplate
+}
+
+[TestMethod]
+-        public void TestIFElseExpr()
++        public void TestIFElseExprOnSingleLine()
+{
+Template t = new Template(
+"begin\n" +
+@@ -276,6 +276,71 @@ namespace Antlr4.Test.StringTemplate
+}
+
+[TestMethod]
++        public void TestElseifOnMultipleLines()
++        {
++            Template t = new Template(
++                "begin\n" +
++                "<if(a)>\n" +
++                "foo\n" +
++                "<elseif(b)>\n" +
++                "bar\n" +
++                "<endif>\n" +
++                "end\n");
++            string expecting = "begin" + newline + "end" + newline;
++            string result = t.Render();
++            Assert.AreEqual(expecting, result);
++        }
++
++        [TestMethod]
++        public void TestElseifOnMultipleLines2()
++        {
++            Template t = new Template(
++                "begin\n" +
++                "<if(a)>\n" +
++                "foo\n" +
++                "<elseif(b)>\n" +
++                "bar\n" +
++                "<endif>\n" +
++                "end\n");
++            t.Add("b", true);
++            string expecting = "begin" + newline + "bar" + newline + "end" + newline;
++            string result = t.Render();
++            Assert.AreEqual(expecting, result);
++        }
++
++        [TestMethod]
++        public void TestElseifOnMultipleLines3()
++        {
++            Template t = new Template(
++                "begin\n" +
++                "  <if(a)>\n" +
++                "  foo\n" +
++                "  <elseif(b)>\n" +
++                "  bar\n" +
++                "  <endif>\n" +
++                "end\n");
++            t.Add("a", true);
++            string expecting = "begin" + newline + "  foo" + newline + "end" + newline;
++            string result = t.Render();
++            Assert.AreEqual(expecting, result);
++        }
++
++        [TestMethod]
++        public void TestEndifNotOnLineAlone()
++        {
++            Template t = new Template(
++                "begin\n" +
++                "  <if(users)>\n" +
++                "  foo\n" +
++                "  <else>\n" +
++                "  bar\n" +
++                "  <endif>end\n");
++            string expecting = "begin" + newline + "  bar" + newline + "end" + newline;
++            string result = t.Render();
++            Assert.AreEqual(expecting, result);
++        }
++
++        [TestMethod]
+public void TestNestedIFOnMultipleLines()
+{
+Template t = new Template(
+

@@ -1,0 +1,49 @@
+commit 52161dbb414b17aa2bc563971102035797e6080b
+Author:     Ivan Brezina <ibre5041@ibrezina.net>
+AuthorDate: Thu Jun 27 16:54:23 2013 +0200
+Commit:     Ivan Brezina <ibre5041@ibrezina.net>
+CommitDate: Mon Sep 9 11:36:05 2013 +0200
+
+Fix for -trace option
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Cpp/Cpp.stg b/tool/src/main/resources/org/antlr/codegen/templates/Cpp/Cpp.stg
+index 39bd926..1ef92a9 100755
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Cpp/Cpp.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Cpp/Cpp.stg
+@@ -143,6 +143,9 @@ outputFile( LEXER,
+* Include the ANTLR3 generated header file.
+*/
+#include    "<name>.hpp"
++<if(trace)>
++#include \<iostream>
++<endif>
+<if(recognizer.grammar.delegators)>
+// Include delegator definition header files
+//
+@@ -1370,7 +1373,11 @@ void <name>::m<ruleName>(<ruleDescriptor.parameterScope:parameterScope()>)
+<ruleDeclarations()>
+<ruleDescriptor.actions.declarations>
+<lexerRuleLabelDefs()>
+-    <if(trace)>System.out.println("enter <ruleName> '"+(char)this->LA(1)+"' line="+ this->getLine()+":"+  this->getCharPositionInLine()+" failed="+failed+" backtracking="+this->get_backtracking());<endif>
++    <if(trace)>
++    std::cout \<\< "enter <ruleName> '" \<\< (char)this->LA(1)
++              \<\< "' line=" \<\< this->getLine() \<\< ":" \<\< this->getCharPositionInLine()
++              \<\< " failed=" \<\< this->get_failedflag() \<\< " backtracking=" \<\< this->get_backtracking() \<\< std::endl;
++    <endif>
+
+<if(nakedBlock)>
+<ruleMemoization(rname=ruleName)>
+@@ -1388,7 +1395,11 @@ void <name>::m<ruleName>(<ruleDescriptor.parameterScope:parameterScope()>)
+<block>
+this->get_lexstate()->set_type(_type);
+<endif>
+-    <if(trace)> ANTLR_FPRINTF(stderr, "exit <ruleName> '%c' line=%d:%d failed = %d, backtracking =%d\n",this->LA(1),this->getLine(),this->getCharPositionInLine(),failed,this->get_backtracking());<endif>
++    <if(trace)>
++    std::cout \<\< "exit <ruleName> '" \<\< (char)this->LA(1)
++              \<\< "' line=" \<\< this->getLine() \<\< ":" \<\< this->getCharPositionInLine()
++              \<\< " failed=" \<\< this->get_failedflag() \<\< " backtracking=" \<\< this->get_backtracking() \<\< std::endl;
++    <endif>
+<ruleCleanUp()>
+<lexerRuleLabelFree()>
+<(ruleDescriptor.actions.after):execAfter()>
+

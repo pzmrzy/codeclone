@@ -1,0 +1,39 @@
+commit 42298faf9caa3c24b8f0938b9b53291f5d8fd5c1
+Author:     acondit <acondit@parrt.spork>
+AuthorDate: Thu Apr 14 10:24:00 2011 -0800
+Commit:     acondit <acondit@parrt.spork>
+CommitDate: Thu Apr 14 10:24:00 2011 -0800
+
+Reverted startNode to start
+since you can't test type in stringTemplates, can't differentiate between startNode and startToken.
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8229]
+
+diff --git a/runtime/ObjC/Framework/ANTLRLexerRuleReturnScope.m b/runtime/ObjC/Framework/ANTLRLexerRuleReturnScope.m
+index 298dde7..ac69380 100644
+--- a/runtime/ObjC/Framework/ANTLRLexerRuleReturnScope.m
++++ b/runtime/ObjC/Framework/ANTLRLexerRuleReturnScope.m
+@@ -29,19 +29,19 @@
+
+@implementation ANTLRLexerRuleReturnScope
+
+-@synthesize startToken;
++@synthesize start;
+
+//----------------------------------------------------------
+//  start
+//----------------------------------------------------------
+- (NSInteger) getStart
+{
+-    return startToken;
++    return start;
+}
+
+- (void) setStart: (NSInteger) aStart
+{
+-    startToken = aStart;
++    start = aStart;
+}
+
+//----------------------------------------------------------
+

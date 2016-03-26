@@ -1,0 +1,22 @@
+commit 036df7820759c4a9ee7ffd0c82440391d627ba5c
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Wed Feb 22 09:29:12 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Wed Feb 22 12:26:00 2012 -0600
+
+Suppress "cast" warnings in generated code
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg b/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
+index d37b82d..9437349 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
+@@ -77,7 +77,7 @@ import java.util.HashMap;
+<@end>
+
+<docComment>
+-@SuppressWarnings({"all", "warnings", "unchecked"})
++@SuppressWarnings({"all", "warnings", "unchecked", "cast"})
+<recognizer>
+>>
+
+

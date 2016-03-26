@@ -1,0 +1,34 @@
+commit d354ccee8187633720d8a6f9902b10fbb01baf40
+Author:     Alan Condit <acondit@ipns.com>
+AuthorDate: Wed Mar 14 15:14:37 2012 -0700
+Commit:     Alan Condit <acondit@ipns.com>
+CommitDate: Wed Mar 14 15:14:37 2012 -0700
+
+Fixed error in Lexer when error char was either a null character or an EOF char.
+
+diff --git a/runtime/ObjC/Framework/Lexer.m b/runtime/ObjC/Framework/Lexer.m
+index aa06b8c..2399124 100644
+--- a/runtime/ObjC/Framework/Lexer.m
++++ b/runtime/ObjC/Framework/Lexer.m
+@@ -345,7 +345,7 @@
+if ( [e isKindOfClass:[MismatchedTokenException class]] ) {
+MismatchedTokenException *mte = (MismatchedTokenException *)e;
+msg = [NSString stringWithFormat:@"mismatched character \"%@\" expecting \"%@\"",
+-               [self getCharErrorDisplay:mte.c], [self getCharErrorDisplay:mte.expecting]];
++            [self getCharErrorDisplay:mte.c], [self getCharErrorDisplay:mte.expectingChar]];
+}
+else if ( [e isKindOfClass:[NoViableAltException class]] ) {
+NoViableAltException *nvae = (NoViableAltException *)e;
+@@ -387,7 +387,11 @@
+{
+NSString *s;
+switch ( c ) {
++        case 0:
++            s = @"char=<nil>";
++            break;
+case TokenTypeEOF :
++        case 65535:
+s = @"<EOF>";
+break;
+case '\n' :
+

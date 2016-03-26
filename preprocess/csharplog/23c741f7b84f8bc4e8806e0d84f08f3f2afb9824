@@ -1,0 +1,365 @@
+commit 23c741f7b84f8bc4e8806e0d84f08f3f2afb9824
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sat Jan 22 13:41:48 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sat Jan 22 13:41:48 2011 -0800
+
+(C# 3) Remove and sort usings
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7503]
+
+diff --git a/Antlr4.StringTemplate/AutoIndentWriter.cs b/Antlr4.StringTemplate/AutoIndentWriter.cs
+index 2b68b38..7f8a9dc 100644
+--- a/Antlr4.StringTemplate/AutoIndentWriter.cs
++++ b/Antlr4.StringTemplate/AutoIndentWriter.cs
+@@ -32,9 +32,9 @@
+
+namespace Antlr4.StringTemplate
+{
+-    using Environment = System.Environment;
+-    using Array = System.Array;
+using System.Collections.Generic;
++    using Array = System.Array;
++    using Environment = System.Environment;
+using TextWriter = System.IO.TextWriter;
+
+/** Essentially a char filter that knows how to auto-indent output
+diff --git a/Antlr4.StringTemplate/Debug/ConstructionEvent.cs b/Antlr4.StringTemplate/Debug/ConstructionEvent.cs
+index 3301415..551b200 100644
+--- a/Antlr4.StringTemplate/Debug/ConstructionEvent.cs
++++ b/Antlr4.StringTemplate/Debug/ConstructionEvent.cs
+@@ -33,7 +33,6 @@
+namespace Antlr4.StringTemplate.Debug
+{
+using System.Diagnostics;
+-    using Environment = System.Environment;
+
+/** An event that happens when building ST trees, adding attributes etc... */
+public class ConstructionEvent
+diff --git a/Antlr4.StringTemplate/Interpreter.cs b/Antlr4.StringTemplate/Interpreter.cs
+index ed5ac8e..df3fc49 100644
+--- a/Antlr4.StringTemplate/Interpreter.cs
++++ b/Antlr4.StringTemplate/Interpreter.cs
+@@ -32,24 +32,24 @@
+
+namespace Antlr4.StringTemplate
+{
+-    using CultureInfo = System.Globalization.CultureInfo;
+using System.Collections.Generic;
++    using System.Linq;
++    using Antlr.Runtime.JavaExtensions;
++    using Antlr4.StringTemplate.Compiler;
+using Antlr4.StringTemplate.Debug;
+using Antlr4.StringTemplate.Misc;
+-    using Antlr4.StringTemplate.Compiler;
++    using Array = System.Array;
++    using Console = System.Console;
++    using CultureInfo = System.Globalization.CultureInfo;
+using Environment = System.Environment;
++    using ICollection = System.Collections.ICollection;
++    using IDictionary = System.Collections.IDictionary;
++    using IEnumerable = System.Collections.IEnumerable;
++    using IList = System.Collections.IList;
+using IOException = System.IO.IOException;
+-    using Console = System.Console;
+-    using StringBuilder = System.Text.StringBuilder;
+using Math = System.Math;
++    using StringBuilder = System.Text.StringBuilder;
+using StringWriter = System.IO.StringWriter;
+-    using Array = System.Array;
+-    using System.Linq;
+-    using IList = System.Collections.IList;
+-    using IDictionary = System.Collections.IDictionary;
+-    using ICollection = System.Collections.ICollection;
+-    using IEnumerable = System.Collections.IEnumerable;
+-    using Antlr.Runtime.JavaExtensions;
+
+/** This class knows how to execute template bytecodes relative to a
+*  particular STGroup. To execute the byte codes, we need an output stream
+diff --git a/Antlr4.StringTemplate/Misc/ErrorBuffer.cs b/Antlr4.StringTemplate/Misc/ErrorBuffer.cs
+index 6f2a64f..d3f2f6f 100644
+--- a/Antlr4.StringTemplate/Misc/ErrorBuffer.cs
++++ b/Antlr4.StringTemplate/Misc/ErrorBuffer.cs
+@@ -33,9 +33,8 @@
+namespace Antlr4.StringTemplate.Misc
+{
+using System.Collections.Generic;
+-    using Environment = System.Environment;
+-    using StringBuilder = System.Text.StringBuilder;
+using System.Collections.ObjectModel;
++    using StringBuilder = System.Text.StringBuilder;
+
+/** Used during tests to track all errors */
+public class ErrorBuffer : STErrorListener
+diff --git a/Antlr4.StringTemplate/Misc/ErrorManager.cs b/Antlr4.StringTemplate/Misc/ErrorManager.cs
+index b05c1f5..9273cc7 100644
+--- a/Antlr4.StringTemplate/Misc/ErrorManager.cs
++++ b/Antlr4.StringTemplate/Misc/ErrorManager.cs
+@@ -33,9 +33,9 @@
+namespace Antlr4.StringTemplate.Misc
+{
+using Antlr.Runtime;
++    using Console = System.Console;
+using Exception = System.Exception;
+using Path = System.IO.Path;
+-    using Console = System.Console;
+
+/** Track errors per thread; e.g., one server transaction's errors
+*  will go in one grouping since each has it's own thread.
+diff --git a/Antlr4.StringTemplate/Misc/MapModelAdaptor.cs b/Antlr4.StringTemplate/Misc/MapModelAdaptor.cs
+index c1b7b11..0d20938 100644
+--- a/Antlr4.StringTemplate/Misc/MapModelAdaptor.cs
++++ b/Antlr4.StringTemplate/Misc/MapModelAdaptor.cs
+@@ -33,7 +33,6 @@
+namespace Antlr4.StringTemplate.Misc
+{
+using IDictionary = System.Collections.IDictionary;
+-    using Antlr.Runtime.JavaExtensions;
+
+public class MapModelAdaptor : ModelAdaptor
+{
+diff --git a/Antlr4.StringTemplate/Misc/ObjectModelAdaptor.cs b/Antlr4.StringTemplate/Misc/ObjectModelAdaptor.cs
+index 404e2c8..3c4af4f 100644
+--- a/Antlr4.StringTemplate/Misc/ObjectModelAdaptor.cs
++++ b/Antlr4.StringTemplate/Misc/ObjectModelAdaptor.cs
+@@ -32,16 +32,14 @@
+
+namespace Antlr4.StringTemplate.Misc
+{
+-    using Type = System.Type;
+-    using MemberInfo = System.Reflection.MemberInfo;
+-    using MethodInfo = System.Reflection.MethodInfo;
+-    using FieldInfo = System.Reflection.FieldInfo;
+-    using Exception = System.Exception;
+-    using ArgumentNullException = System.ArgumentNullException;
+using System.Collections.Generic;
+using System.Linq;
+-    using PropertyInfo = System.Reflection.PropertyInfo;
+using System.Linq.Expressions;
++    using ArgumentNullException = System.ArgumentNullException;
++    using FieldInfo = System.Reflection.FieldInfo;
++    using MethodInfo = System.Reflection.MethodInfo;
++    using PropertyInfo = System.Reflection.PropertyInfo;
++    using Type = System.Type;
+
+public class ObjectModelAdaptor : ModelAdaptor
+{
+diff --git a/Antlr4.StringTemplate/Misc/TemplateCompileTimeMessage.cs b/Antlr4.StringTemplate/Misc/TemplateCompileTimeMessage.cs
+index b259ceb..5a434e8 100644
+--- a/Antlr4.StringTemplate/Misc/TemplateCompileTimeMessage.cs
++++ b/Antlr4.StringTemplate/Misc/TemplateCompileTimeMessage.cs
+@@ -32,10 +32,10 @@
+
+namespace Antlr4.StringTemplate.Misc
+{
+-    using IToken = Antlr.Runtime.IToken;
++    using Antlr4.StringTemplate.Compiler;
+using Exception = System.Exception;
++    using IToken = Antlr.Runtime.IToken;
+using RecognitionException = Antlr.Runtime.RecognitionException;
+-    using Antlr4.StringTemplate.Compiler;
+
+/** Used for semantic errors that occur at compile time not during
+*  interpretation. For ST parsing ONLY not group parsing.
+diff --git a/Antlr4.StringTemplate/Misc/TemplateDump.cs b/Antlr4.StringTemplate/Misc/TemplateDump.cs
+index 5397fb4..e6556dd 100644
+--- a/Antlr4.StringTemplate/Misc/TemplateDump.cs
++++ b/Antlr4.StringTemplate/Misc/TemplateDump.cs
+@@ -33,11 +33,11 @@
+namespace Antlr4.StringTemplate.Misc
+{
+using System.Collections.Generic;
+-    using StringBuilder = System.Text.StringBuilder;
+using System.Linq;
+-    using StringComparer = System.StringComparer;
+-    using Environment = System.Environment;
+using Antlr.Runtime.JavaExtensions;
++    using Environment = System.Environment;
++    using StringBuilder = System.Text.StringBuilder;
++    using StringComparer = System.StringComparer;
+
+/** This class dumps out a hierarchy of templates in text form, indented
+*  to show the nested relationship.  Usage:
+diff --git a/Antlr4.StringTemplate/Misc/TemplateGroupCompiletimeMessage.cs b/Antlr4.StringTemplate/Misc/TemplateGroupCompiletimeMessage.cs
+index 60211f6..06fc13c 100644
+--- a/Antlr4.StringTemplate/Misc/TemplateGroupCompiletimeMessage.cs
++++ b/Antlr4.StringTemplate/Misc/TemplateGroupCompiletimeMessage.cs
+@@ -33,8 +33,8 @@
+namespace Antlr4.StringTemplate.Misc
+{
+using Exception = System.Exception;
+-    using RecognitionException = Antlr.Runtime.RecognitionException;
+using IToken = Antlr.Runtime.IToken;
++    using RecognitionException = Antlr.Runtime.RecognitionException;
+
+public class STGroupCompiletimeMessage : STMessage
+{
+diff --git a/Antlr4.StringTemplate/Misc/TemplateLexerMessage.cs b/Antlr4.StringTemplate/Misc/TemplateLexerMessage.cs
+index 5a70ab7..f6f7f79 100644
+--- a/Antlr4.StringTemplate/Misc/TemplateLexerMessage.cs
++++ b/Antlr4.StringTemplate/Misc/TemplateLexerMessage.cs
+@@ -32,10 +32,10 @@
+
+namespace Antlr4.StringTemplate.Misc
+{
++    using Antlr4.StringTemplate.Compiler;
+using Exception = System.Exception;
+using IToken = Antlr.Runtime.IToken;
+using RecognitionException = Antlr.Runtime.RecognitionException;
+-    using Antlr4.StringTemplate.Compiler;
+
+/** */
+public class STLexerMessage : STMessage
+diff --git a/Antlr4.StringTemplate/Misc/TemplateNoSuchPropertyException.cs b/Antlr4.StringTemplate/Misc/TemplateNoSuchPropertyException.cs
+index d437da3..26ebfb5 100644
+--- a/Antlr4.StringTemplate/Misc/TemplateNoSuchPropertyException.cs
++++ b/Antlr4.StringTemplate/Misc/TemplateNoSuchPropertyException.cs
+@@ -32,8 +32,8 @@
+
+namespace Antlr4.StringTemplate.Misc
+{
+-    using Exception = System.Exception;
+using Antlr4.StringTemplate.Compiler;
++    using Exception = System.Exception;
+
+public class STNoSuchPropertyException : STException
+{
+diff --git a/Antlr4.StringTemplate/Misc/Utility.cs b/Antlr4.StringTemplate/Misc/Utility.cs
+index 237bf88..f4f7cc5 100644
+--- a/Antlr4.StringTemplate/Misc/Utility.cs
++++ b/Antlr4.StringTemplate/Misc/Utility.cs
+@@ -32,8 +32,8 @@
+
+namespace Antlr4.StringTemplate.Misc
+{
+-    using MethodInfo = System.Reflection.MethodInfo;
+using FieldInfo = System.Reflection.FieldInfo;
++    using MethodInfo = System.Reflection.MethodInfo;
+using Type = System.Type;
+
+public static class Utility
+diff --git a/Antlr4.StringTemplate/Template.cs b/Antlr4.StringTemplate/Template.cs
+index cb7edab..b3686db 100644
+--- a/Antlr4.StringTemplate/Template.cs
++++ b/Antlr4.StringTemplate/Template.cs
+@@ -32,19 +32,19 @@
+
+namespace Antlr4.StringTemplate
+{
+-    using System.Linq;
+using System.Collections.Generic;
++    using System.Linq;
+using System.Runtime.CompilerServices;
+-    using Antlr4.StringTemplate.Misc;
++    using System.Text.RegularExpressions;
+using Antlr4.StringTemplate.Compiler;
++    using Antlr4.StringTemplate.Misc;
+using ArgumentException = System.ArgumentException;
+-    using StringBuilder = System.Text.StringBuilder;
+-    using CultureInfo = System.Globalization.CultureInfo;
+-    using StringWriter = System.IO.StringWriter;
++    using Array = System.Array;
+using Console = System.Console;
++    using CultureInfo = System.Globalization.CultureInfo;
+using IList = System.Collections.IList;
+-    using System.Text.RegularExpressions;
+-    using Array = System.Array;
++    using StringBuilder = System.Text.StringBuilder;
++    using StringWriter = System.IO.StringWriter;
+
+/** An instance of the StringTemplate. It consists primarily of
+*  a reference to its implementation (shared among all instances)
+diff --git a/Antlr4.StringTemplate/TemplateGroup.cs b/Antlr4.StringTemplate/TemplateGroup.cs
+index 86462e6..307d871 100644
+--- a/Antlr4.StringTemplate/TemplateGroup.cs
++++ b/Antlr4.StringTemplate/TemplateGroup.cs
+@@ -33,22 +33,21 @@
+namespace Antlr4.StringTemplate
+{
+using System.Collections.Generic;
++    using System.Linq;
++    using System.Runtime.CompilerServices;
++    using System.Text;
++    using Antlr.Runtime;
+using Antlr4.StringTemplate.Compiler;
+-    using Type = System.Type;
++    using Antlr4.StringTemplate.Debug;
+using Antlr4.StringTemplate.Misc;
+-    using Antlr.Runtime;
+-    using System.Runtime.CompilerServices;
+using ArgumentException = System.ArgumentException;
+using Console = System.Console;
+using Environment = System.Environment;
+-    using System.Linq;
+-    using Antlr4.StringTemplate.Debug;
+-    using Uri = System.Uri;
++    using Exception = System.Exception;
+using IDictionary = System.Collections.IDictionary;
+using StringBuilder = System.Text.StringBuilder;
+-    using File=System.IO.File;
+-    using Exception = System.Exception;
+-    using System.Text;
++    using Type = System.Type;
++    using Uri = System.Uri;
+
+/** A directory or directory tree of .st template files and/or group files.
+*  Individual template files contain formal template definitions. In a sense,
+diff --git a/Antlr4.StringTemplate/TemplateGroupDirectory.cs b/Antlr4.StringTemplate/TemplateGroupDirectory.cs
+index 6fa9046..2159d05 100644
+--- a/Antlr4.StringTemplate/TemplateGroupDirectory.cs
++++ b/Antlr4.StringTemplate/TemplateGroupDirectory.cs
+@@ -32,22 +32,20 @@
+
+namespace Antlr4.StringTemplate
+{
++    using Antlr.Runtime;
+using Antlr4.StringTemplate.Compiler;
+-    using IOException = System.IO.IOException;
++    using Antlr4.StringTemplate.Misc;
+using ArgumentException = System.ArgumentException;
+-    using Exception = System.Exception;
+-    using Thread = System.Threading.Thread;
+using Directory = System.IO.Directory;
+-    using Uri = System.Uri;
+-    using Path = System.IO.Path;
+-    using FileNotFoundException = System.IO.FileNotFoundException;
+-    using Antlr4.StringTemplate.Misc;
+-    using UriFormatException = System.UriFormatException;
+-    using Antlr.Runtime;
+using Encoding = System.Text.Encoding;
++    using Exception = System.Exception;
++    using File = System.IO.File;
++    using IOException = System.IO.IOException;
+using NotImplementedException = System.NotImplementedException;
++    using Path = System.IO.Path;
+using StreamReader = System.IO.StreamReader;
+-    using File = System.IO.File;
++    using Uri = System.Uri;
++    using UriFormatException = System.UriFormatException;
+
+// TODO: caching?
+
+diff --git a/Antlr4.StringTemplate/TemplateGroupFile.cs b/Antlr4.StringTemplate/TemplateGroupFile.cs
+index d68a873..a4f1297 100644
+--- a/Antlr4.StringTemplate/TemplateGroupFile.cs
++++ b/Antlr4.StringTemplate/TemplateGroupFile.cs
+@@ -33,15 +33,14 @@
+namespace Antlr4.StringTemplate
+{
+using System.Runtime.CompilerServices;
++    using Antlr4.StringTemplate.Compiler;
+using ArgumentException = System.ArgumentException;
++    using Encoding = System.Text.Encoding;
+using Exception = System.Exception;
+-    using Antlr4.StringTemplate.Compiler;
+-    using Antlr4.StringTemplate.Misc;
+-    using Path = System.IO.Path;
+using File = System.IO.File;
+using NotImplementedException = System.NotImplementedException;
++    using Path = System.IO.Path;
+using Uri = System.Uri;
+-    using Encoding = System.Text.Encoding;
+
+/** The internal representation of a single group file (which must end in
+*  ".stg").  If we fail to find a group file, look for it via the
+

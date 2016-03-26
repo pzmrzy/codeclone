@@ -1,0 +1,24 @@
+commit 079e077cfc4a007b6aeb60a60b3bbf88b13f4b3d
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Tue Feb 15 14:25:40 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Tue Feb 15 14:25:40 2011 -0800
+
+(C# 3) Define COMPILE_EXPRESSIONS and CACHE_FUNCTORS in debug builds
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7700]
+
+diff --git a/Antlr3.StringTemplate/Antlr3.StringTemplate.csproj b/Antlr3.StringTemplate/Antlr3.StringTemplate.csproj
+index a181320..25df6d6 100644
+--- a/Antlr3.StringTemplate/Antlr3.StringTemplate.csproj
++++ b/Antlr3.StringTemplate/Antlr3.StringTemplate.csproj
+@@ -28,7 +28,7 @@
+<DebugType>full</DebugType>
+<Optimize>false</Optimize>
+<OutputPath>bin\Debug\</OutputPath>
+-    <DefineConstants>TRACE;DEBUG</DefineConstants>
++    <DefineConstants>TRACE;DEBUG;COMPILE_EXPRESSIONS; CACHE_FUNCTORS</DefineConstants>
+<ErrorReport>prompt</ErrorReport>
+<WarningLevel>4</WarningLevel>
+</PropertyGroup>
+

@@ -1,0 +1,150 @@
+commit f082b776ae6479fa1d8f1657b21f5cb82efc9ff3
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Mar 23 21:34:02 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Mar 23 21:34:02 2009 -0800
+
+C# Port:
+* StringTemplate code cleanup
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 5972]
+
+diff --git a/Antlr3.StringTemplate/Language/Action.g3 b/Antlr3.StringTemplate/Language/Action.g3
+index cba93fd..c877d94 100644
+--- a/Antlr3.StringTemplate/Language/Action.g3
++++ b/Antlr3.StringTemplate/Language/Action.g3
+@@ -269,7 +269,7 @@ anonymousTemplate
+if ( $t is StringTemplateToken )
+anonymous.DefineFormalArguments(((StringTemplateToken)$t).args);
+else
+-				anonymous.DefineFormalArguments(new ArrayList());
++				anonymous.DefineFormalArguments(new string[0]);
+}
+;
+
+@@ -360,7 +360,7 @@ ANONYMOUS_TEMPLATE
+{
+StringTemplateToken t = null;
+System.Text.StringBuilder builder = new System.Text.StringBuilder();
+-	List args = new ArrayList();
++	List<string> args = new List<string>();
+string subtext = string.Empty;
+char uc = '\0';
+}
+@@ -389,7 +389,7 @@ ANONYMOUS_TEMPLATE
+;
+
+fragment
+-TEMPLATE_ARGS[out string _text, List args]
++TEMPLATE_ARGS[out string _text, List<string> args]
+@init
+{
+$_text = string.Empty; // this template is empty text
+diff --git a/Antlr3.StringTemplate/Language/ActionLexer.cs b/Antlr3.StringTemplate/Language/ActionLexer.cs
+index 8670b84..2540faa 100644
+--- a/Antlr3.StringTemplate/Language/ActionLexer.cs
++++ b/Antlr3.StringTemplate/Language/ActionLexer.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Language\\Action.g3 2009-03-23 17:53:11
++// $ANTLR 3.1.2 Language\\Action.g3 2009-03-23 20:30:08
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -550,7 +550,7 @@ public partial class ActionLexer : Lexer
+
+StringTemplateToken t = null;
+System.Text.StringBuilder builder = new System.Text.StringBuilder();
+-				List args = new ArrayList();
++				List<string> args = new List<string>();
+string subtext = string.Empty;
+char uc = '\0';
+
+@@ -722,7 +722,7 @@ public partial class ActionLexer : Lexer
+// $ANTLR end "ANONYMOUS_TEMPLATE"
+
+// $ANTLR start "TEMPLATE_ARGS"
+-	private void mTEMPLATE_ARGS(out string _text, List args)
++	private void mTEMPLATE_ARGS(out string _text, List<string> args)
+{
+try
+{
+diff --git a/Antlr3.StringTemplate/Language/ActionParser.cs b/Antlr3.StringTemplate/Language/ActionParser.cs
+index 5736df8..c646077 100644
+--- a/Antlr3.StringTemplate/Language/ActionParser.cs
++++ b/Antlr3.StringTemplate/Language/ActionParser.cs
+@@ -1,4 +1,4 @@
+-// $ANTLR 3.1.2 Language\\Action.g3 2009-03-20 14:32:38
++// $ANTLR 3.1.2 Language\\Action.g3 2009-03-23 20:30:07
+
+// The variable 'variable' is assigned but its value is never used.
+#pragma warning disable 219
+@@ -2410,7 +2410,7 @@ public partial class ActionParser : Parser
+if ( t is StringTemplateToken )
+anonymous.DefineFormalArguments(((StringTemplateToken)t).args);
+else
+-								anonymous.DefineFormalArguments(new ArrayList());
++								anonymous.DefineFormalArguments(new string[0]);
+
+}
+
+diff --git a/Antlr3.StringTemplate/Language/FormalArgument.cs b/Antlr3.StringTemplate/Language/FormalArgument.cs
+index de2023b..d29d554 100644
+--- a/Antlr3.StringTemplate/Language/FormalArgument.cs
++++ b/Antlr3.StringTemplate/Language/FormalArgument.cs
+@@ -91,8 +91,8 @@ namespace Antlr3.ST.Language
+public StringTemplate defaultValueST;
+
+public FormalArgument( string name )
++            : this( name, null )
+{
+-            this.name = name;
+}
+
+public FormalArgument( string name, StringTemplate defaultValueST )
+@@ -120,11 +120,10 @@ namespace Antlr3.ST.Language
+
+public override bool Equals( object o )
+{
+-            if ( o == null || !( o is FormalArgument ) )
+-            {
++            FormalArgument other = o as FormalArgument;
++            if ( other == null )
+return false;
+-            }
+-            FormalArgument other = (FormalArgument)o;
++
+if ( !this.name.Equals( other.name ) )
+{
+return false;
+diff --git a/Antlr3.StringTemplate/Language/StringTemplateToken.cs b/Antlr3.StringTemplate/Language/StringTemplateToken.cs
+index 94eebc7..28edb22 100644
+--- a/Antlr3.StringTemplate/Language/StringTemplateToken.cs
++++ b/Antlr3.StringTemplate/Language/StringTemplateToken.cs
+@@ -32,8 +32,8 @@
+
+namespace Antlr3.ST.Language
+{
++    using System.Collections.Generic;
+using CommonToken = Antlr.Runtime.CommonToken;
+-    using IList = System.Collections.IList;
+
+public class StringTemplateToken : CommonToken
+{
+@@ -45,14 +45,14 @@ namespace Antlr3.ST.Language
+*  available for when I build the anonymous template.
+*  </summary>
+*/
+-        public IList args;
++        public IList<string> args;
+
+public StringTemplateToken( int type, string text )
+: base( type, text )
+{
+}
+
+-        public StringTemplateToken( int type, string text, IList args )
++        public StringTemplateToken( int type, string text, IList<string> args )
+: base( type, text )
+{
+this.args = args;
+

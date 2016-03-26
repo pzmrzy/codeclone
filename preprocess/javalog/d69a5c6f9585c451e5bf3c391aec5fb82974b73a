@@ -1,0 +1,2516 @@
+commit d69a5c6f9585c451e5bf3c391aec5fb82974b73a
+Author:     Alan Condit <acondit@ipns.com>
+AuthorDate: Wed Mar 28 06:55:57 2012 -0700
+Commit:     Alan Condit <acondit@ipns.com>
+CommitDate: Wed Mar 28 06:55:57 2012 -0700
+
+Replaced an old copy of ANTLR.framework with one in which several headers had been renamed to remove the "ANTLR" prefix.
+
+diff --git a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRBaseMapElement.h b/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRBaseMapElement.h
+deleted file mode 100644
+index b9100ac..0000000
+--- a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRBaseMapElement.h
++++ /dev/null
+@@ -1,54 +0,0 @@
+-//
+-//  ANTLRBaseMapElement.h
+-//  ANTLR
+-//
+-//  Created by Alan Condit on 6/16/10.
+-// [The "BSD licence"]
+-// Copyright (c) 2010 Alan Condit
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions
+-// are met:
+-// 1. Redistributions of source code must retain the above copyright
+-//    notice, this list of conditions and the following disclaimer.
+-// 2. Redistributions in binary form must reproduce the above copyright
+-//    notice, this list of conditions and the following disclaimer in the
+-//    documentation and/or other materials provided with the distribution.
+-// 3. The name of the author may not be used to endorse or promote products
+-//    derived from this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-#import <Cocoa/Cocoa.h>
+-#import "ANTLRLinkBase.h"
+-
+-@interface ANTLRBaseMapElement : ANTLRLinkBase {
+-    NSNumber *index;
+-}
+-
+-@property (retain, getter=getIndex, setter=setIndex:) NSNumber *index;
+-
+-+ (id) newANTLRBaseMapElement;
+-+ (id) newANTLRBaseMapElementWithIndex:(NSNumber *)anIdx;
+-- (id) init;
+-- (id) initWithAnIndex:(NSNumber *)anIdx;
+-
+-- (id) copyWithZone:(NSZone *)aZone;
+-
+-- (NSNumber *)getIndex;
+-- (void)setIndex:(NSNumber *)anIdx;
+-
+-- (NSInteger)count;
+-- (NSInteger)size;
+-
+-@end
+diff --git a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRBaseRecognizer.h b/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRBaseRecognizer.h
+deleted file mode 100755
+index 1a922bd..0000000
+--- a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRBaseRecognizer.h
++++ /dev/null
+@@ -1,183 +0,0 @@
+-// [The "BSD licence"]
+-// Copyright (c) 2006-2007 Kay Roepke 2010 Alan Condit
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions
+-// are met:
+-// 1. Redistributions of source code must retain the above copyright
+-//    notice, this list of conditions and the following disclaimer.
+-// 2. Redistributions in binary form must reproduce the above copyright
+-//    notice, this list of conditions and the following disclaimer in the
+-//    documentation and/or other materials provided with the distribution.
+-// 3. The name of the author may not be used to endorse or promote products
+-//    derived from this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-
+-#import <Cocoa/Cocoa.h>
+-#import <Foundation/Foundation.h>
+-
+-#import "ANTLRIntStream.h"
+-
+-// This is an abstract superclass for lexers and parsers.
+-
+-#define ANTLR_MEMO_RULE_FAILED -2
+-#define ANTLR_MEMO_RULE_UNKNOWN -1
+-#define ANTLR_INITIAL_FOLLOW_STACK_SIZE 100
+-
+-#import "ANTLRMapElement.h"
+-#import "ANTLRBitSet.h"
+-#import "ANTLRToken.h"
+-#import "ANTLRRecognizerSharedState.h"
+-#import "ANTLRRecognitionException.h"
+-#import "ANTLRMissingTokenException.h"
+-#import "ANTLRMismatchedTokenException.h"
+-#import "ANTLRMismatchedTreeNodeException.h"
+-#import "ANTLRUnwantedTokenException.h"
+-#import "ANTLRNoViableAltException.h"
+-#import "ANTLREarlyExitException.h"
+-#import "ANTLRMismatchedSetException.h"
+-#import "ANTLRMismatchedNotSetException.h"
+-#import "ANTLRFailedPredicateException.h"
+-
+-@interface ANTLRBaseRecognizer : NSObject {
+-	ANTLRRecognizerSharedState *state;	// the state of this recognizer. Might be shared with other recognizers, e.g. in grammar import scenarios.
+-	NSString *grammarFileName;			// where did the grammar come from. filled in by codegeneration
+-//    BOOL failed;
+-    NSString *sourceName;
+-//    NSInteger numberOfSyntaxErrors;
+-    NSArray *tokenNames;
+-}
+-
+-@property (retain, getter=getState, setter=setState) ANTLRRecognizerSharedState *state;
+-@property (retain, getter=getGrammarFileName, setter=setGrammarFileName) NSString *grammarFileName;
+-//@property (assign, getter=getFailed, setter=setFailed) BOOL failed;
+-@property (retain, getter=getTokenNames, setter=setTokenNames) NSArray *tokenNames;
+-@property (retain, getter=getSourceName, setter=setSourceName) NSString *sourceName;
+-//@property (assign, getter=getNumberOfSyntaxErrors, setter=setNumberOfSyntaxErrors) NSInteger numberOfSyntaxErrors;
+-
+-+ (void) initialize;
+-
+-+ (ANTLRBaseRecognizer *) newANTLRBaseRecognizer;
+-+ (ANTLRBaseRecognizer *) newANTLRBaseRecognizerWithRuleLen:(NSInteger)aLen;
+-+ (ANTLRBaseRecognizer *) newANTLRBaseRecognizer:(ANTLRRecognizerSharedState *)aState;
+-
+-+ (NSArray *)getTokenNames;
+-+ (void)setTokenNames:(NSArray *)aTokNamArray;
+-+ (void)setGrammarFileName:(NSString *)aFileName;
+-
+-- (id) init;
+-- (id) initWithLen:(NSInteger)aLen;
+-- (id) initWithState:(ANTLRRecognizerSharedState *)aState;
+-
+-- (void) dealloc;
+-
+-// simple accessors
+-- (NSInteger) getBacktrackingLevel;
+-- (void) setBacktrackingLevel:(NSInteger) level;
+-
+-- (BOOL) getFailed;
+-- (void) setFailed: (BOOL) flag;
+-
+-- (ANTLRRecognizerSharedState *) getState;
+-- (void) setState:(ANTLRRecognizerSharedState *) theState;
+-
+-// reset this recognizer - might be extended by codegeneration/grammar
+-- (void) reset;
+-
+-/** Match needs to return the current input symbol, which gets put
+- *  into the label for the associated token ref; e.g., x=ID.  Token
+- *  and tree parsers need to return different objects. Rather than test
+- *  for input stream type or change the IntStream interface, I use
+- *  a simple method to ask the recognizer to tell me what the current
+- *  input symbol is.
+- *
+- *  This is ignored for lexers.
+- */
+-- (id) getInput;
+-
+-- (void)skip;
+-
+-// do actual matching of tokens/characters
+-- (id) match:(id<ANTLRIntStream>)anInput TokenType:(NSInteger)ttype Follow:(ANTLRBitSet *)follow;
+-- (void) matchAny:(id<ANTLRIntStream>)anInput;
+-- (BOOL) mismatchIsUnwantedToken:(id<ANTLRIntStream>)anInput TokenType:(NSInteger) ttype;
+-- (BOOL) mismatchIsMissingToken:(id<ANTLRIntStream>)anInput Follow:(ANTLRBitSet *)follow;
+-
+-// error reporting and recovery
+-- (void) reportError:(ANTLRRecognitionException *)e;
+-- (void) displayRecognitionError:(NSArray *)theTokNams Exception:(ANTLRRecognitionException *)e;
+-- (NSString *)getErrorMessage:(ANTLRRecognitionException *)e TokenNames:(NSArray *)theTokNams;
+-- (NSInteger) getNumberOfSyntaxErrors;
+-- (NSString *)getErrorHeader:(ANTLRRecognitionException *)e;
+-- (NSString *)getTokenErrorDisplay:(id<ANTLRToken>)t;
+-- (void) emitErrorMessage:(NSString *)msg;
+-- (void) recover:(id<ANTLRIntStream>)anInput Exception:(ANTLRRecognitionException *)e;
+-
+-// begin hooks for debugger
+-- (void) beginResync;
+-- (void) endResync;
+-// end hooks for debugger
+-
+-// compute the bitsets necessary to do matching and recovery
+-- (ANTLRBitSet *)computeErrorRecoverySet;
+-- (ANTLRBitSet *)computeContextSensitiveRuleFOLLOW;
+-- (ANTLRBitSet *)combineFollows:(BOOL) exact;
+-
+-- (id<ANTLRToken>) recoverFromMismatchedToken:(id<ANTLRIntStream>)anInput
+-                                    TokenType:(NSInteger)ttype
+-                                       Follow:(ANTLRBitSet *)follow;
+-
+-- (id<ANTLRToken>)recoverFromMismatchedSet:(id<ANTLRIntStream>)anInput
+-                                    Exception:(ANTLRRecognitionException *)e
+-                                    Follow:(ANTLRBitSet *)follow;
+-
+-- (id) getCurrentInputSymbol:(id<ANTLRIntStream>)anInput;
+-- (id) getMissingSymbol:(id<ANTLRIntStream>)anInput
+-              Exception:(ANTLRRecognitionException *)e
+-              TokenType:(NSInteger) expectedTokenType
+-                Follow:(ANTLRBitSet *)follow;
+-
+-// helper methods for recovery. try to resync somewhere
+-- (void) consumeUntilTType:(id<ANTLRIntStream>)anInput TokenType:(NSInteger)ttype;
+-- (void) consumeUntilFollow:(id<ANTLRIntStream>)anInput Follow:(ANTLRBitSet *)bitSet;
+-- (void) pushFollow:(ANTLRBitSet *)fset;
+-- (ANTLRBitSet *)popFollow;
+-
+-// to be used by the debugger to do reporting. maybe hook in incremental stuff here, too.
+-- (NSMutableArray *) getRuleInvocationStack;
+-- (NSMutableArray *) getRuleInvocationStack:(ANTLRRecognitionException *)exception
+-					             Recognizer:(NSString *)recognizerClassName;
+-
+-- (NSArray *) getTokenNames;
+-- (NSString *)getGrammarFileName;
+-- (NSString *)getSourceName;
+-- (NSMutableArray *) toStrings:(NSArray *)tokens;
+-// support for memoization
+-- (NSInteger) getRuleMemoization:(NSInteger)ruleIndex StartIndex:(NSInteger)ruleStartIndex;
+-- (BOOL) alreadyParsedRule:(id<ANTLRIntStream>)anInput RuleIndex:(NSInteger)ruleIndex;
+-- (void) memoize:(id<ANTLRIntStream>)anInput
+-	     RuleIndex:(NSInteger)ruleIndex
+-	    StartIndex:(NSInteger)ruleStartIndex;
+-- (NSInteger) getRuleMemoizationCacheSize;
+-- (void)traceIn:(NSString *)ruleName Index:(NSInteger)ruleIndex Object:(id)inputSymbol;
+-- (void)traceOut:(NSString *)ruleName Index:(NSInteger)ruleIndex Object:(id)inputSymbol;
+-
+-
+-// support for syntactic predicates. these are called indirectly to support funky stuff in grammars,
+-// like supplying selectors instead of writing code directly into the actions of the grammar.
+-- (BOOL) evaluateSyntacticPredicate:(SEL)synpredFragment;
+-// stream:(id<ANTLRIntStream>)anInput;
+-
+-@end
+diff --git a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRBaseStack.h b/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRBaseStack.h
+deleted file mode 100644
+index 5069031..0000000
+--- a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRBaseStack.h
++++ /dev/null
+@@ -1,66 +0,0 @@
+-//
+-//  ANTLRBaseRecognizer.m
+-//  ANTLR
+-//
+-//  Created by Alan Condit on 6/16/10.
+-// [The "BSD licence"]
+-// Copyright (c) 2010 Alan Condit
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions
+-// are met:
+-// 1. Redistributions of source code must retain the above copyright
+-//    notice, this list of conditions and the following disclaimer.
+-// 2. Redistributions in binary form must reproduce the above copyright
+-//    notice, this list of conditions and the following disclaimer in the
+-//    documentation and/or other materials provided with the distribution.
+-// 3. The name of the author may not be used to endorse or promote products
+-//    derived from this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-#import <Cocoa/Cocoa.h>
+-#import "ANTLRPtrBuffer.h"
+-
+-//#define GLOBAL_SCOPE       0
+-//#define LOCAL_SCOPE        1
+-#define HASHSIZE         101
+-#define HBUFSIZE      0x2000
+-
+-@interface ANTLRBaseStack : ANTLRPtrBuffer {
+-	//ANTLRRuleStack *fNext;
+-    // TStringPool *fPool;
+-    NSInteger LastHash;
+-}
+-
+-//@property (copy) ANTLRRuleStack *fNext;
+-@property (getter=getLastHash, setter=setLastHash) NSInteger LastHash;
+-
+-// Contruction/Destruction
+-+ (ANTLRBaseStack *)newANTLRBaseStack;
+-+ (ANTLRBaseStack *)newANTLRBaseStackWithLen:(NSInteger)cnt;
+-- (id)init;
+-- (id)initWithLen:(NSInteger)cnt;
+-- (void)dealloc;
+-
+-// Instance Methods
+-- (id) copyWithZone:(NSZone *)aZone;
+-
+-- (NSInteger)count;
+-- (NSInteger)size;
+-/* clear -- reinitialize the maplist array */
+-
+-- (NSInteger)getLastHash;
+-- (void)setLastHash:(NSInteger)aVal;
+-
+-@end
+diff --git a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRBaseTree.h b/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRBaseTree.h
+deleted file mode 100755
+index 96513f8..0000000
+--- a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRBaseTree.h
++++ /dev/null
+@@ -1,199 +0,0 @@
+-// [The "BSD licence"]
+-// Copyright (c) 2006-2007 Kay Roepke 2010 Alan Condit
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions
+-// are met:
+-// 1. Redistributions of source code must retain the above copyright
+-//    notice, this list of conditions and the following disclaimer.
+-// 2. Redistributions in binary form must reproduce the above copyright
+-//    notice, this list of conditions and the following disclaimer in the
+-//    documentation and/or other materials provided with the distribution.
+-// 3. The name of the author may not be used to endorse or promote products
+-//    derived from this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-#import "ANTLRTree.h"
+-
+-@protocol ANTLRBaseTree <ANTLRTree>
+-
+-@property (retain, getter=getChildren, setter=setChildren) NSMutableArray *children;
+-
+-+ (id<ANTLRBaseTree>) newANTLRBaseTree;
+-+ (id<ANTLRBaseTree>) newANTLRBaseTree:(id<ANTLRBaseTree>)node;
+-
+-- (id<ANTLRBaseTree>) init;
+-- (id<ANTLRBaseTree>) initWith:(id<ANTLRTree>)node;
+-
+-- (id<ANTLRBaseTree>) getChild:(NSUInteger)i;
+-- (NSMutableArray *)getChildren;
+-- (void) setChildren:(NSMutableArray *)anArray;
+-- (id<ANTLRBaseTree>)getFirstChildWithType:(NSInteger)type;
+-- (NSUInteger) getChildCount;
+-
+-// Add t as a child to this node.  If t is null, do nothing.  If t
+-//  is nil, add all children of t to this' children.
+-
+-- (void) addChild:(id<ANTLRTree>) tree;
+-- (void) addChildren:(NSArray *) theChildren;
+-//- (void) removeAllChildren;
+-
+-- (void) setChild:(NSInteger) i With:(id<ANTLRTree>)t;
+-- (id) deleteChild:(NSInteger) i;
+-- (NSMutableArray *) createChildrenList;
+-- (void) replaceChildrenFrom:(NSInteger)startChildIndex To:(NSInteger)stopChildIndex With:(id) t;
+-// Indicates the node is a nil node but may still have children, meaning
+-// the tree is a flat list.
+-
+-- (BOOL) isNil;
+-- (NSInteger) getTokenStartIndex;
+-- (void) setTokenStartIndex:(NSInteger) index;
+-- (NSInteger) getTokenStopIndex;
+-- (void) setTokenStopIndex:(NSInteger) index;
+-
+-- (void) freshenParentAndChildIndexes;
+-- (void) freshenParentAndChildIndexes:(NSInteger) offset;
+-- (void) sanityCheckParentAndChildIndexes;
+-- (void) sanityCheckParentAndChildIndexes:(id<ANTLRTree>) parent At:(NSInteger) i;
+-
+-- (NSInteger) getChildIndex;
+-- (void) setChildIndex:(NSInteger)i;
+-
+-- (id<ANTLRTree>)getAncestor:(NSInteger)ttype;
+-- (NSMutableArray *)getAncestors;
+-
+-#pragma mark Copying
+-- (id) copyWithZone:(NSZone *)aZone;	// the children themselves are not copied here!
+-- (id) deepCopy;					// performs a deepCopyWithZone: with the default zone
+-- (id) deepCopyWithZone:(NSZone *)aZone;
+-
+-#pragma mark Tree Parser support
+-- (NSInteger) getType;
+-- (NSString *) getText;
+-// In case we don't have a token payload, what is the line for errors?
+-- (NSInteger) getLine;
+-- (NSInteger) getCharPositionInLine;
+-
+-
+-#pragma mark Informational
+-- (NSString *) treeDescription;
+-- (NSString *) description;
+-
+-- (NSString *) toString;
+-- (NSString *) toStringTree;
+-
+-@end
+-
+-@interface ANTLRBaseTree : NSObject <ANTLRTree>
+-{
+-	NSMutableArray *children;
+-    NSException *anException;
+-}
+-
+-@property (retain, getter=getChildren, setter=setChildren) NSMutableArray *children;
+-
+-+ (id<ANTLRBaseTree>) newANTLRBaseTree;
+-+ (id<ANTLRBaseTree>) newANTLRBaseTree:(id<ANTLRBaseTree>)node;
+-
+-- (id<ANTLRTree>) init;
+-- (id<ANTLRBaseTree>) initWith:(id<ANTLRTree>)node;
+-
+-- (id<ANTLRBaseTree>) getChild:(NSUInteger)i;
+-- (NSMutableArray *)getChildren;
+-- (void) setChildren:(NSMutableArray *)anArray;
+-- (id<ANTLRBaseTree>)getFirstChildWithType:(NSInteger)type;
+-- (NSUInteger) getChildCount;
+-
+-//- (void) removeAllChildren;
+-
+-// Add t as a child to this node.  If t is null, do nothing.  If t
+-//  is nil, add all children of t to this' children.
+-
+-- (void) addChild:(id<ANTLRTree>) tree;
+-- (void) addChildren:(NSArray *) theChildren;
+-
+-- (void) setChild:(NSInteger) i With:(id<ANTLRTree>)t;
+-- (id) deleteChild:(NSInteger) i;
+-- (NSMutableArray *) createChildrenList;
+-- (void) replaceChildrenFrom:(NSInteger)startChildIndex To:(NSInteger)stopChildIndex With:(id) t;
+-// Indicates the node is a nil node but may still have children, meaning
+-	// the tree is a flat list.
+-
+-- (BOOL) isNil;
+-- (NSInteger) getTokenStartIndex;
+-- (void) setTokenStartIndex:(NSInteger) index;
+-- (NSInteger) getTokenStopIndex;
+-- (void) setTokenStopIndex:(NSInteger) index;
+-
+-- (void) freshenParentAndChildIndexes;
+-- (void) freshenParentAndChildIndexes:(NSInteger) offset;
+-- (void) sanityCheckParentAndChildIndexes;
+-- (void) sanityCheckParentAndChildIndexes:(id<ANTLRTree>) parent At:(NSInteger) i;
+-
+-- (NSInteger) getChildIndex;
+-- (void) setChildIndex:(NSInteger)i;
+-
+-- (BOOL) hasAncestor:(NSInteger) ttype;
+-- (id<ANTLRTree>)getAncestor:(NSInteger)ttype;
+-- (NSMutableArray *)getAncestors;
+-
+-- (id) copyWithZone:(NSZone *)aZone;
+-- (id) deepCopy;					// performs a deepCopyWithZone: with the default zone
+-- (id) deepCopyWithZone:(NSZone *)aZone;
+-
+-	// Return a token type; needed for tree parsing
+-- (NSInteger) getType;
+-- (NSString *) getText;
+-
+-	// In case we don't have a token payload, what is the line for errors?
+-- (NSInteger) getLine;
+-- (NSInteger) getCharPositionInLine;
+-- (void) setCharPositionInLine:(NSInteger)pos;
+-
+-- (NSString *) treeDescription;
+-- (NSString *) description;
+-- (NSString *) toString;
+-- (NSString *) toStringTree;
+-
+-@end
+-
+-@interface ANTLRTreeNavigationNode : ANTLRBaseTree {
+-}
+-- (id) copyWithZone:(NSZone *)aZone;
+-@end
+-
+-@interface ANTLRTreeNavigationNodeDown : ANTLRTreeNavigationNode {
+-}
+-+ (ANTLRTreeNavigationNodeDown *) getNavigationNodeDown;
+-- (NSInteger) tokenType;
+-- (NSString *) description;
+-@end
+-
+-@interface ANTLRTreeNavigationNodeUp : ANTLRTreeNavigationNode {
+-}
+-+ (ANTLRTreeNavigationNodeUp *) getNavigationNodeUp;
+-- (NSInteger) tokenType;
+-- (NSString *) description;
+-@end
+-
+-@interface ANTLRTreeNavigationNodeEOF : ANTLRTreeNavigationNode {
+-}
+-+ (ANTLRTreeNavigationNodeEOF *) getNavigationNodeEOF;
+-- (NSInteger) tokenType;
+-- (NSString *) description;
+-@end
+-
+-extern ANTLRTreeNavigationNodeDown *navigationNodeDown;
+-extern ANTLRTreeNavigationNodeUp *navigationNodeUp;
+-extern ANTLRTreeNavigationNodeEOF *navigationNodeEOF;
+diff --git a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRBaseTreeAdaptor.h b/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRBaseTreeAdaptor.h
+deleted file mode 100644
+index b4f8dad..0000000
+--- a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRBaseTreeAdaptor.h
++++ /dev/null
+@@ -1,163 +0,0 @@
+-// [The "BSD licence"]
+-// Copyright (c) 2010 Alan Condit
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions
+-// are met:
+-// 1. Redistributions of source code must retain the above copyright
+-//    notice, this list of conditions and the following disclaimer.
+-// 2. Redistributions in binary form must reproduce the above copyright
+-//    notice, this list of conditions and the following disclaimer in the
+-//    documentation and/or other materials provided with the distribution.
+-// 3. The name of the author may not be used to endorse or promote products
+-//    derived from this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-#import <Cocoa/Cocoa.h>
+-#import "ANTLRTreeAdaptor.h"
+-#import "ANTLRCommonErrorNode.h"
+-#import "ANTLRUniqueIDMap.h"
+-
+-@interface ANTLRBaseTreeAdaptor : NSObject <ANTLRTreeAdaptor, NSCopying> {
+-    ANTLRUniqueIDMap *treeToUniqueIDMap;
+-	NSInteger uniqueNodeID;
+-}
+-
+-@property (retain, getter=getTreeToUniqueIDMap, setter=setTreeToUniqueIDMap:) ANTLRUniqueIDMap *treeToUniqueIDMap;
+-@property (getter=getUniqueNodeID, setter=setUniqueNodeID:) NSInteger uniqueNodeID;
+-
+-+ (id<ANTLRTreeAdaptor>) newEmptyTree;
+-
+-- (id) init;
+-
+-- (id) copyWithZone:(NSZone *)aZone;
+-
+-- (id) emptyNode;
+-
+-- (ANTLRUniqueIDMap *)getTreeToUniqueIDMap;
+-- (void) setTreeToUniqueIDMap:(ANTLRUniqueIDMap *)aMapNode;
+-
+-- (NSInteger)getUniqueID;
+-- (void) setUniqueNodeID:(NSInteger)aUniqueNodeID;
+-
+-/** create tree node that holds the start and stop tokens associated
+- *  with an error.
+- *
+- *  If you specify your own kind of tree nodes, you will likely have to
+- *  override this method. CommonTree returns Token.INVALID_TOKEN_TYPE
+- *  if no token payload but you might have to set token type for diff
+- *  node type.
+- *
+- *  You don't have to subclass CommonErrorNode; you will likely need to
+- *  subclass your own tree node class to avoid class cast exception.
+- */
+-- (id) errorNode:(id<ANTLRTokenStream>)anInput
+-            From:(id<ANTLRToken>)startToken
+-              To:(id<ANTLRToken>)stopToken
+-       Exception:(NSException *) e;
+-
+-- (BOOL) isNil:(id<ANTLRTree>) aTree;
+-
+-- (id<ANTLRTree>)dupTree:(id<ANTLRTree>)aTree;
+-/** This is generic in the sense that it will work with any kind of
+- *  tree (not just Tree interface).  It invokes the adaptor routines
+- *  not the tree node routines to do the construction.
+- */
+-- (id<ANTLRTree>)dupTree:(id<ANTLRTree>)aTree Parent:(id<ANTLRTree>)parent;
+-- (id<ANTLRTree>)dupNode:(id<ANTLRTree>)aNode;
+-/** Add a child to the tree t.  If child is a flat tree (a list), make all
+- *  in list children of t.  Warning: if t has no children, but child does
+- *  and child isNil then you can decide it is ok to move children to t via
+- *  t.children = child.children; i.e., without copying the array.  Just
+- *  make sure that this is consistent with have the user will build
+- *  ASTs.
+- */
+-- (void) addChild:(id<ANTLRTree>)aChild toTree:(id<ANTLRTree>)aTree;
+-
+-/** If oldRoot is a nil root, just copy or move the children to newRoot.
+- *  If not a nil root, make oldRoot a child of newRoot.
+- *
+- *    old=^(nil a b c), new=r yields ^(r a b c)
+- *    old=^(a b c), new=r yields ^(r ^(a b c))
+- *
+- *  If newRoot is a nil-rooted single child tree, use the single
+- *  child as the new root node.
+- *
+- *    old=^(nil a b c), new=^(nil r) yields ^(r a b c)
+- *    old=^(a b c), new=^(nil r) yields ^(r ^(a b c))
+- *
+- *  If oldRoot was null, it's ok, just return newRoot (even if isNil).
+- *
+- *    old=null, new=r yields r
+- *    old=null, new=^(nil r) yields ^(nil r)
+- *
+- *  Return newRoot.  Throw an exception if newRoot is not a
+- *  simple node or nil root with a single child node--it must be a root
+- *  node.  If newRoot is ^(nil x) return x as newRoot.
+- *
+- *  Be advised that it's ok for newRoot to point at oldRoot's
+- *  children; i.e., you don't have to copy the list.  We are
+- *  constructing these nodes so we should have this control for
+- *  efficiency.
+- */
+-- (id<ANTLRTree>)becomeRoot:(id<ANTLRTree>)aNewRoot old:(id<ANTLRTree>)oldRoot;
+-
+-/** Transform ^(nil x) to x and nil to null */
+-- (id<ANTLRTree>)rulePostProcessing:(id<ANTLRTree>)aRoot;
+-
+-- (id<ANTLRTree>)becomeRootfromToken:(id<ANTLRToken>)aNewRoot old:(id<ANTLRTree>)oldRoot;
+-
+-- (id<ANTLRTree>)createTree:(NSInteger)aTType With:(id<ANTLRToken>)aFromToken;
+-
+-- (id<ANTLRTree>)createTree:(NSInteger)aTType FromToken:(id<ANTLRToken>)aFromToken Text:(NSString *)theText;
+-
+-- (id<ANTLRTree>)createTree:(NSInteger)aTType Text:(NSString *)theText;
+-
+-- (NSInteger) getType:(id<ANTLRTree>)aTree;
+-
+-- (void) setType:(id<ANTLRTree>)aTree Type:(NSInteger)type;
+-
+-- (NSString *)getText:(id<ANTLRTree>)aTree;
+-
+-- (void) setText:(id<ANTLRTree>)aTree Text:(NSString *)theText;
+-
+-- (id<ANTLRTree>) getChild:(id<ANTLRTree>)aTree At:(NSInteger)i;
+-
+-- (void) setChild:(id<ANTLRTree>)aTree At:(NSInteger)index Child:(id<ANTLRTree>)aChild;
+-
+-- (id<ANTLRTree>) deleteChild:(id<ANTLRTree>)aTree Index:(NSInteger)index;
+-
+-- (NSInteger) getChildCount:(id<ANTLRTree>)aTree;
+-
+-- (NSInteger) getUniqueID:(id<ANTLRTree>)node;
+-
+-/** Tell me how to create a token for use with imaginary token nodes.
+- *  For example, there is probably no input symbol associated with imaginary
+- *  token DECL, but you need to create it as a payload or whatever for
+- *  the DECL node as in ^(DECL type ID).
+- *
+- *  This is a variant of createToken where the new token is derived from
+- *  an actual real input token.  Typically this is for converting '{'
+- *  tokens to BLOCK etc...  You'll see
+- *
+- *    r : lc='{' ID+ '}' -> ^(BLOCK[$lc] ID+) ;
+- *
+- *  If you care what the token payload objects' type is, you should
+- *  override this method and any other createToken variant.
+- */
+-- (id<ANTLRToken>)createToken:(NSInteger)aTType Text:(NSString *)theText;
+-
+-- (id<ANTLRToken>)createToken:(id<ANTLRToken>)aFromToken;
+-
+-@end
+diff --git a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRBufferedTokenStream.h b/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRBufferedTokenStream.h
+deleted file mode 100644
+index 198a6f7..0000000
+--- a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRBufferedTokenStream.h
++++ /dev/null
+@@ -1,98 +0,0 @@
+-// [The "BSD licence"]
+-// Copyright (c) 2006-2007 Kay Roepke 2010 Alan Condit
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions
+-// are met:
+-// 1. Redistributions of source code must retain the above copyright
+-//    notice, this list of conditions and the following disclaimer.
+-// 2. Redistributions in binary form must reproduce the above copyright
+-//    notice, this list of conditions and the following disclaimer in the
+-//    documentation and/or other materials provided with the distribution.
+-// 3. The name of the author may not be used to endorse or promote products
+-//    derived from this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-#import <Cocoa/Cocoa.h>
+-#import "ANTLRTokenStream.h"
+-#import "ANTLRTokenSource.h"
+-#import "ANTLRBitSet.h"
+-
+-@interface ANTLRBufferedTokenStream : NSObject <ANTLRTokenStream>
+-{
+-id<ANTLRTokenSource> tokenSource;
+-
+-    /** Record every single token pulled from the source so we can reproduce
+-     *  chunks of it later.  The buffer in LookaheadStream overlaps sometimes
+-     *  as its moving window moves through the input.  This list captures
+-     *  everything so we can access complete input text.
+-     */
+-NSMutableArray *tokens;
+-
+-    /** Track the last mark() call result value for use in rewind(). */
+-NSInteger lastMarker;
+-
+-    /** The index into the tokens list of the current token (next token
+-     *  to consume).  tokens[p] should be LT(1).  p=-1 indicates need
+-     *  to initialize with first token.  The ctor doesn't get a token.
+-     *  First call to LT(1) or whatever gets the first token and sets p=0;
+-     */
+-NSInteger p;
+-
+-NSInteger range; // how deep have we gone?
+-
+-}
+-@property (retain, getter=getTokenSource,setter=setTokenSource) id<ANTLRTokenSource> tokenSource;
+-@property (retain, getter=getTokens,setter=setTokens) NSMutableArray *tokens;
+-@property (assign, getter=getLastMarker,setter=setLastMarker) NSInteger lastMarker;
+-@property (assign, getter=getIndex,setter=setIndex) NSInteger p;
+-@property (assign, getter=getRange,setter=setRange) NSInteger range;
+-
+-+ (ANTLRBufferedTokenStream *) newANTLRBufferedTokenStream;
+-+ (ANTLRBufferedTokenStream *) newANTLRBufferedTokenStreamWith:(id<ANTLRTokenSource>)aSource;
+-- (id) initWithSource:(id<ANTLRTokenSource>)aSource;
+-- (id) copyWithZone:(NSZone *)aZone;
+-- (NSInteger) getIndex;
+-- (void) setIndex:(NSInteger)index;
+-- (NSInteger) getRange;
+-- (void) setRange:(NSInteger)anInt;
+-- (NSInteger) mark;
+-- (void) release:(NSInteger) marker;
+-- (void) rewind:(NSInteger) marker;
+-- (void) rewind;
+-- (void) reset;
+-- (void) seek:(NSInteger) index;
+-- (NSInteger) size;
+-- (void) consume;
+-- (void) sync:(NSInteger) i;
+-- (void) fetch:(NSInteger) n;
+-- (id<ANTLRToken>) getToken:(NSInteger) i;
+-- (NSMutableArray *)getFrom:(NSInteger)startIndex To:(NSInteger) stopIndex;
+-- (NSInteger) LA:(NSInteger)k;
+-- (id<ANTLRToken>) LT:(NSInteger) k;
+-- (id<ANTLRToken>) LB:(NSInteger) k;
+-- (void) setup;
+-- (id<ANTLRTokenSource>) getTokenSource;
+-- (void) setTokenSource:(id<ANTLRTokenSource>) aTokenSource;
+-- (NSMutableArray *)getTokens;
+-- (NSString *) getSourceName;
+-- (NSMutableArray *)getTokensFrom:(NSInteger)startIndex To:(NSInteger)stopIndex;
+-- (NSMutableArray *)getTokensFrom:(NSInteger)startIndex To:(NSInteger)stopIndex With:(ANTLRBitSet *)types;
+-- (NSMutableArray *)getTokensFrom:(NSInteger)startIndex To:(NSInteger)stopIndex WithList:(NSMutableArray *)types;
+-- (NSMutableArray *)getTokensFrom:(NSInteger)startIndex To:(NSInteger)stopIndex WithType:(NSInteger)ttype;
+-- (NSString *) toStringFromStart:(NSInteger)startIndex ToEnd:(NSInteger)stopIndex;
+-- (NSString *) toStringFromToken:(id<ANTLRToken>)startIndex ToToken:(id<ANTLRToken>)stopIndex;
+-- (void) fill;
+-
+-@end
+diff --git a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRBufferedTreeNodeStream.h b/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRBufferedTreeNodeStream.h
+deleted file mode 100644
+index 8618ea2..0000000
+--- a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRBufferedTreeNodeStream.h
++++ /dev/null
+@@ -1,156 +0,0 @@
+-//
+-//  ANTLRBufferedTreeNodeStream.h
+-//  ANTLR
+-//
+-// [The "BSD licence"]
+-// Copyright (c) 2010 Ian Michell 2010 Alan Condit
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions
+-// are met:
+-// 1. Redistributions of source code must retain the above copyright
+-//    notice, this list of conditions and the following disclaimer.
+-// 2. Redistributions in binary form must reproduce the above copyright
+-//    notice, this list of conditions and the following disclaimer in the
+-//    documentation and/or other materials provided with the distribution.
+-// 3. The name of the author may not be used to endorse or promote products
+-//    derived from this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-#import <Cocoa/Cocoa.h>
+-#import "ANTLRTree.h"
+-#import "ANTLRCommonTreeAdaptor.h"
+-#import "ANTLRTokenStream.h"
+-#import "ANTLRCommonTreeNodeStream.h"
+-#import "ANTLRLookaheadStream.h"
+-#import "ANTLRTreeIterator.h"
+-#import "ANTLRIntArray.h"
+-
+-#define DEFAULT_INITIAL_BUFFER_SIZE 100
+-#define INITIAL_CALL_STACK_SIZE 10
+-
+-#ifdef DONTUSENOMO
+-@interface ANTLRStreamIterator : ANTLRTreeIterator
+-{
+-    NSInteger idx;
+-    ANTLRBufferedTreeNodeStream input;
+-    NSMutableArray *nodes;
+-}
+-
+-+ (id) newANTLRStreamIterator:(ANTLRBufferedTreeNodeStream *) theStream;
+-
+-- (id) initWithStream:(ANTLRBufferedTreeNodeStream *) theStream;
+-
+-- (BOOL) hasNext;
+-- (id) next;
+-- (void) remove;
+-@end
+-#endif
+-
+-@interface ANTLRBufferedTreeNodeStream : NSObject <ANTLRTreeNodeStream>
+-{
+-	id<ANTLRTree> up;
+-	id<ANTLRTree> down;
+-	id<ANTLRTree> eof;
+-
+-	NSMutableArray *nodes;
+-
+-	id<ANTLRTree> root; // root
+-
+-	id<ANTLRTokenStream> tokens;
+-	ANTLRCommonTreeAdaptor *adaptor;
+-
+-	BOOL uniqueNavigationNodes;
+-	NSInteger p;
+-	NSInteger lastMarker;
+-	ANTLRIntArray *calls;
+-
+-	NSEnumerator *e;
+-    id currentSymbol;
+-
+-}
+-
+-@property (retain, getter=getUp, setter=setUp:) id<ANTLRTree> up;
+-@property (retain, getter=getDown, setter=setDown:) id<ANTLRTree> down;
+-@property (retain, getter=getEof, setter=setEof:) id<ANTLRTree> eof;
+-@property (retain, getter=getNodes, setter=setNodes:) NSMutableArray *nodes;
+-@property (retain, getter=getTreeSource, setter=setTreeSource:) id<ANTLRTree> root;
+-@property (retain, getter=getTokenStream, setter=setTokenStream:) id<ANTLRTokenStream> tokens;
+-@property (retain, getter=getAdaptor, setter=setAdaptor:) ANTLRCommonTreeAdaptor *adaptor;
+-@property (assign, getter=getUniqueNavigationNodes, setter=setUniqueNavigationNodes:) BOOL uniqueNavigationNodes;
+-@property (assign, getter=getIndex, setter=setIndex:) NSInteger p;
+-@property (assign, getter=getLastMarker, setter=setLastMarker:) NSInteger lastMarker;
+-@property (retain, getter=getCalls, setter=setCalls:) ANTLRIntArray *calls;
+-@property (retain, getter=getEnum, setter=setEnum:) NSEnumerator *e;
+-@property (retain, getter=getCurrentSymbol, setter=setCurrentSymbol:) id currentSymbol;
+-
+-+ (ANTLRBufferedTreeNodeStream *) newANTLRBufferedTreeNodeStream:(id<ANTLRTree>)tree;
+-+ (ANTLRBufferedTreeNodeStream *) newANTLRBufferedTreeNodeStream:(id<ANTLRTreeAdaptor>)adaptor Tree:(id<ANTLRTree>)tree;
+-+ (ANTLRBufferedTreeNodeStream *) newANTLRBufferedTreeNodeStream:(id<ANTLRTreeAdaptor>)adaptor Tree:(id<ANTLRTree>)tree withBufferSize:(NSInteger)initialBufferSize;
+-
+-#pragma mark Constructor
+-- (id) initWithTree:(id<ANTLRTree>)tree;
+-- (id) initWithTreeAdaptor:(ANTLRCommonTreeAdaptor *)anAdaptor Tree:(id<ANTLRTree>)tree;
+-- (id) initWithTreeAdaptor:(ANTLRCommonTreeAdaptor *)anAdaptor Tree:(id<ANTLRTree>)tree WithBufferSize:(NSInteger)bufferSize;
+-
+-- (id) copyWithZone:(NSZone *)aZone;
+-
+-// protected methods. DO NOT USE
+-#pragma mark Protected Methods
+-- (void) fillBuffer;
+-- (void) fillBufferWithTree:(id<ANTLRTree>) tree;
+-- (NSInteger) getNodeIndex:(id<ANTLRTree>) node;
+-- (void) addNavigationNode:(NSInteger) type;
+-- (id) getNode:(NSInteger) i;
+-- (id) LT:(NSInteger) k;
+-- (id) getCurrentSymbol;
+-- (id) LB:(NSInteger) i;
+-#pragma mark General Methods
+-- (NSString *) getSourceName;
+-
+-- (id<ANTLRTokenStream>) getTokenStream;
+-- (void) setTokenStream:(id<ANTLRTokenStream>) tokens;
+-- (id<ANTLRTreeAdaptor>) getTreeAdaptor;
+-- (void) setTreeAdaptor:(id<ANTLRTreeAdaptor>) anAdaptor;
+-
+-- (BOOL)getUniqueNavigationNodes;
+-- (void) setUniqueNavigationNodes:(BOOL)aVal;
+-
+-- (void) consume;
+-- (NSInteger) LA:(NSInteger) i;
+-- (NSInteger) mark;
+-- (void) release:(NSInteger) marker;
+-- (NSInteger) getIndex;
+-- (void) setIndex:(NSInteger) idx;
+-- (void) rewind:(NSInteger) marker;
+-- (void) rewind;
+-- (void) seek:(NSInteger) idx;
+-
+-- (void) push:(NSInteger) i;
+-- (NSInteger) pop;
+-
+-- (void) reset;
+-- (NSUInteger) count;
+-- (NSEnumerator *) objectEnumerator;
+-- (void) replaceChildren:(id)parent From:(NSInteger)startChildIndex To:(NSInteger)stopChildIndex With:(id) t;
+-
+-- (NSString *) toTokenTypeString;
+-- (NSString *) toTokenString:(NSInteger)aStart ToEnd:(NSInteger)aStop;
+-- (NSString *) toStringFromNode:(id)aStart ToNode:(id)aStop;
+-
+-// getters and setters
+-- (NSMutableArray *) getNodes;
+-- (id<ANTLRTree>) getEof;
+-
+-@end
+diff --git a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRCharStream.h b/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRCharStream.h
+deleted file mode 100755
+index 379734b..0000000
+--- a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRCharStream.h
++++ /dev/null
+@@ -1,55 +0,0 @@
+-// [The "BSD licence"]
+-// Copyright (c) 2006-2007 Kay Roepke 2010 Alan Condit
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions
+-// are met:
+-// 1. Redistributions of source code must retain the above copyright
+-//    notice, this list of conditions and the following disclaimer.
+-// 2. Redistributions in binary form must reproduce the above copyright
+-//    notice, this list of conditions and the following disclaimer in the
+-//    documentation and/or other materials provided with the distribution.
+-// 3. The name of the author may not be used to endorse or promote products
+-//    derived from this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-#import "ANTLRIntStream.h"
+-
+-#define	ANTLRCharStreamEOF -1
+-
+-
+-@protocol ANTLRCharStream < ANTLRIntStream >
+-
+-- (NSString *) substringWithRange:(NSRange) theRange;
+-
+-/** Get the ith character of lookahead.  This is the same usually as
+- *  LA(i).  This will be used for labels in the generated
+- *  lexer code.  I'd prefer to return a char here type-wise, but it's
+- *  probably better to be 32-bit clean and be consistent with LA.
+- */
+-- (NSInteger)LT:(NSInteger) i;
+-
+-// ANTLR tracks the line information automatically
+-- (NSInteger) getLine;
+-
+-// Because this stream can rewind, we need to be able to reset the line
+-- (void) setLine:(NSInteger) theLine;
+-
+-// The index of the character relative to the beginning of the line 0..n-1
+-- (NSInteger) getCharPositionInLine;
+-
+-- (void) setCharPositionInLine:(NSInteger) thePos;
+-
+-
+-@end
+diff --git a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRCharStreamState.h b/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRCharStreamState.h
+deleted file mode 100644
+index 2787c76..0000000
+--- a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRCharStreamState.h
++++ /dev/null
+@@ -1,58 +0,0 @@
+-//
+-//  ANTLRCharStreamState.h
+-//  ANTLR
+-//
+-// [The "BSD licence"]
+-// Copyright (c)  2010 Alan Condit
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions
+-// are met:
+-// 1. Redistributions of source code must retain the above copyright
+-//    notice, this list of conditions and the following disclaimer.
+-// 2. Redistributions in binary form must reproduce the above copyright
+-//    notice, this list of conditions and the following disclaimer in the
+-//    documentation and/or other materials provided with the distribution.
+-// 3. The name of the author may not be used to endorse or promote products
+-//    derived from this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-#import <Cocoa/Cocoa.h>
+-
+-
+-@interface ANTLRCharStreamState : NSObject
+-{
+-NSInteger p;
+-NSInteger line;
+-NSInteger charPositionInLine;
+-}
+-
+-@property (getter=getP,setter=setP:) NSInteger p;
+-@property (getter=getLine,setter=setLine:) NSInteger line;
+-@property (getter=getCharPositionInLine,setter=setCharPositionInLine:) NSInteger charPositionInLine;
+-
+-+ newANTLRCharStreamState;
+-
+-- (id) init;
+-
+-- (NSInteger) getP;
+-- (void) setP: (NSInteger) anIndex;
+-
+-- (NSInteger) getLine;
+-- (void) setLine: (NSInteger) aLine;
+-
+-- (NSInteger) getCharPositionInLine;
+-- (void) setCharPositionInLine:(NSInteger)aCharPositionInLine;
+-
+-@end
+diff --git a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRCommonErrorNode.h b/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRCommonErrorNode.h
+deleted file mode 100644
+index 79badc1..0000000
+--- a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRCommonErrorNode.h
++++ /dev/null
+@@ -1,63 +0,0 @@
+-//
+-//  ANTLRCommonErrorNode.h
+-//  ANTLR
+-//
+-// [The "BSD licence"]
+-// Copyright (c) 2010 Alan Condit
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions
+-// are met:
+-// 1. Redistributions of source code must retain the above copyright
+-//    notice, this list of conditions and the following disclaimer.
+-// 2. Redistributions in binary form must reproduce the above copyright
+-//    notice, this list of conditions and the following disclaimer in the
+-//    documentation and/or other materials provided with the distribution.
+-// 3. The name of the author may not be used to endorse or promote products
+-//    derived from this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-#import <Cocoa/Cocoa.h>
+-#import "ANTLRCommonTree.h"
+-#import "ANTLRTokenStream.h"
+-//#import "ANTLRIntStream.h"
+-//#import "ANTLRToken.h"
+-#import "ANTLRUnWantedTokenException.h"
+-
+-@interface ANTLRCommonErrorNode : ANTLRCommonTree
+-{
+-id<ANTLRIntStream> input;
+-id<ANTLRToken> startToken;
+-id<ANTLRToken> stopToken;
+-ANTLRRecognitionException *trappedException;
+-}
+-
+-+ (id) newANTLRCommonErrorNode:(id<ANTLRTokenStream>)anInput
+-                  From:(id<ANTLRToken>)startToken
+-                    To:(id<ANTLRToken>)stopToken
+-                     Exception:(ANTLRRecognitionException *) e;
+-
+-- (id) initWithInput:(id<ANTLRTokenStream>)anInput
+-                From:(id<ANTLRToken>)startToken
+-                  To:(id<ANTLRToken>)stopToken
+-           Exception:(ANTLRRecognitionException *) e;
+-- (BOOL) isNil;
+-
+-- (NSInteger) getType;
+-
+-- (NSString *) getText;
+-
+-- (NSString *) toString;
+-
+-@end
+diff --git a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRCommonToken.h b/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRCommonToken.h
+deleted file mode 100755
+index 8662378..0000000
+--- a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRCommonToken.h
++++ /dev/null
+@@ -1,105 +0,0 @@
+-// [The "BSD licence"]
+-// Copyright (c) 2006-2007 Kay Roepke 2010 Alan Condit
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions
+-// are met:
+-// 1. Redistributions of source code must retain the above copyright
+-//    notice, this list of conditions and the following disclaimer.
+-// 2. Redistributions in binary form must reproduce the above copyright
+-//    notice, this list of conditions and the following disclaimer in the
+-//    documentation and/or other materials provided with the distribution.
+-// 3. The name of the author may not be used to endorse or promote products
+-//    derived from this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-
+-#import <Cocoa/Cocoa.h>
+-#import "ANTLRToken.h"
+-#import "ANTLRCharStream.h"
+-
+-@interface ANTLRCommonToken : NSObject < ANTLRToken > {
+-	NSString *text;
+-	NSInteger type;
+-	// information about the Token's position in the input stream
+-	NSUInteger line;
+-	NSUInteger charPositionInLine;
+-	NSUInteger channel;
+-	// this token's position in the TokenStream
+-	NSUInteger index;
+-
+-	// indices into the CharStream to avoid copying the text
+-	// can manually override the text by using -setText:
+-	NSUInteger startIndex;
+-	NSUInteger stopIndex;
+-	// the actual input stream this token was found in
+-	id<ANTLRCharStream> input;
+-}
+-
+-@property (retain, getter=getText, setter=setText:) NSString *text;
+-@property (assign, getter=getType, setter=setType:) NSInteger type;
+-@property (assign, getter=getLine, setter=setLine:) NSUInteger line;
+-@property (assign, getter=getCharPositionInLine, setter=setCharPositionInLine:) NSUInteger charPositionInLine;
+-@property (assign, getter=getChannel, setter=setChannel:) NSUInteger channel;
+-@property (assign, getter=getTokenIndex, setter=setTokenIndex:) NSUInteger index;
+-@property (assign, getter=getStart, setter=setStart:) NSUInteger startIndex;
+-@property (assign, getter=getStop, setter=setStop:) NSUInteger stopIndex;
+-@property (retain, getter=getInput, setter=setInput:) id<ANTLRCharStream> input;
+-
+-+ (void) initialize;
+-+ (ANTLRCommonToken *) newANTLRCommonToken;
+-+ (ANTLRCommonToken *) newANTLRCommonToken:(id<ANTLRCharStream>)anInput
+-                                      Type:(NSInteger)aTType
+-                                   Channel:(NSInteger)aChannel
+-                                     Start:(NSInteger)aStart
+-                                      Stop:(NSInteger)aStop;
+-+ (ANTLRCommonToken *) newANTLRCommonToken:(ANTLRTokenType)aType;
+-+ (id<ANTLRToken>) newANTLRCommonToken:(NSInteger)tokenType Text:(NSString *)tokenText;
+-+ (id<ANTLRToken>) newANTLRCommonTokenWithToken:(id<ANTLRToken>)fromToken;
+-+ (id<ANTLRToken>) eofToken;
+-+ (id<ANTLRToken>) skipToken;
+-+ (id<ANTLRToken>) invalidToken;
+-+ (ANTLRTokenChannel) defaultChannel;
+-
+-// designated initializer. This is used as the default way to initialize a Token in the generated code.
+-- (ANTLRCommonToken *) init;
+-- (ANTLRCommonToken *) initWithInput:(id<ANTLRCharStream>)anInput
+-                                Type:(NSInteger)aTType
+-                             Channel:(NSInteger)aChannel
+-                               Start:(NSInteger)theStart
+-                                Stop:(NSInteger)theStop;
+-- (ANTLRCommonToken *) initWithToken:(ANTLRCommonToken *)aToken;
+-- (ANTLRCommonToken *) initWithType:(ANTLRTokenType)aType;
+-- (ANTLRCommonToken *) initWithType:(ANTLRTokenType)aTType Text:(NSString *)tokenText;
+-
+-- (id<ANTLRCharStream>) getInput;
+-- (void) setInput: (id<ANTLRCharStream>) anInput;
+-
+-- (NSUInteger) getStart;
+-- (void) setStart: (NSUInteger) aStart;
+-
+-- (NSUInteger) getStop;
+-- (void) setStop: (NSUInteger) aStop;
+-
+-// the index of this Token into the TokenStream
+-- (NSUInteger) getTokenIndex;
+-- (void) setTokenIndex: (NSUInteger) aTokenIndex;
+-
+-// conform to NSCopying
+-- (id) copyWithZone:(NSZone *)theZone;
+-
+-- (NSString *) description;
+-- (NSString *) toString;
+-
+-@end
+diff --git a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRCommonTokenStream.h b/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRCommonTokenStream.h
+deleted file mode 100755
+index 59f9d5e..0000000
+--- a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRCommonTokenStream.h
++++ /dev/null
+@@ -1,90 +0,0 @@
+-// [The "BSD licence"]
+-// Copyright (c) 2006-2007 Kay Roepke 2010 Alan Condit
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions
+-// are met:
+-// 1. Redistributions of source code must retain the above copyright
+-//    notice, this list of conditions and the following disclaimer.
+-// 2. Redistributions in binary form must reproduce the above copyright
+-//    notice, this list of conditions and the following disclaimer in the
+-//    documentation and/or other materials provided with the distribution.
+-// 3. The name of the author may not be used to endorse or promote products
+-//    derived from this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-#import <Cocoa/Cocoa.h>
+-#import "ANTLRTokenStream.h"
+-#import "ANTLRToken.h"
+-#import "ANTLRCommonToken.h"
+-#import "ANTLRTokenSource.h"
+-#import "ANTLRBitSet.h"
+-#import "ANTLRBufferedTokenStream.h"
+-
+-@interface ANTLRCommonTokenStream : ANTLRBufferedTokenStream < ANTLRTokenStream >
+-{
+-	NSMutableDictionary *channelOverride;
+-	NSInteger channel;
+-}
+-
+-@property (retain, getter=getChannelOverride,setter=setChannelOverride) NSMutableDictionary *channelOverride;
+-@property (assign, getter=getChannel,setter=setChannel) NSInteger channel;
+-
+-+ (ANTLRCommonTokenStream *)newANTLRCommonTokenStream;
+-+ (ANTLRCommonTokenStream *)newANTLRCommonTokenStreamWithTokenSource:(id<ANTLRTokenSource>)theTokenSource;
+-+ (ANTLRCommonTokenStream *)newANTLRCommonTokenStreamWithTokenSource:(id<ANTLRTokenSource>)theTokenSource
+-                                                               Channel:(NSInteger)aChannel;
+-
+-- (id) init;
+-- (id) initWithTokenSource:(id<ANTLRTokenSource>)theTokenSource;
+-- (id) initWithTokenSource:(id<ANTLRTokenSource>)theTokenSource Channel:(NSInteger)aChannel;
+-
+-- (id<ANTLRTokenSource>) getTokenSource;
+-- (void) setTokenSource: (id<ANTLRTokenSource>) aTokenSource;
+-
+-- (void) consume;
+-- (id<ANTLRToken>) LT:(NSInteger)k;
+-- (id<ANTLRToken>) LB:(NSInteger)k;
+-
+-- (NSInteger) skipOffChannelTokens:(NSInteger) i;
+-- (NSInteger) skipOffChannelTokensReverse:(NSInteger) i;
+-
+-- (void)setup;
+-
+-- (NSArray *) tokensInRange:(NSRange)aRange;
+-- (NSArray *) tokensInRange:(NSRange)aRange inBitSet:(ANTLRBitSet *)aBitSet;
+-- (NSArray *) tokensInRange:(NSRange)aRange withTypes:(NSArray *)tokenTypes;
+-- (NSArray *) tokensInRange:(NSRange)aRange withType:(NSInteger)tokenType;
+-
+-- (id<ANTLRToken>) getToken:(NSInteger)i;
+-
+-- (NSInteger) size;
+-- (NSInteger) getIndex;
+-- (void) rewind;
+-- (void) rewind:(NSInteger)marker;
+-- (void) seek:(NSInteger)index;
+-
+-- (NSString *) toString;
+-- (NSString *) toStringFromStart:(NSInteger)startIndex ToEnd:(NSInteger)stopIndex;
+-- (NSString *) toStringFromToken:(id<ANTLRToken>)startToken ToToken:(id<ANTLRToken>)stopToken;
+-
+-- (id) copyWithZone:(NSZone *)aZone;
+-
+-- (NSInteger)getChannel;
+-- (void)setChannel:(NSInteger)aChannel;
+-
+-- (NSMutableDictionary *)getChannelOverride;
+-- (void)setChannelOverride:(NSMutableDictionary *)anOverride;
+-
+-@end
+diff --git a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRCommonTree.h b/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRCommonTree.h
+deleted file mode 100755
+index 0966051..0000000
+--- a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRCommonTree.h
++++ /dev/null
+@@ -1,88 +0,0 @@
+-// [The "BSD licence"]
+-// Copyright (c) 2006-2007 Kay Roepke 2010 Alan Condit
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions
+-// are met:
+-// 1. Redistributions of source code must retain the above copyright
+-//    notice, this list of conditions and the following disclaimer.
+-// 2. Redistributions in binary form must reproduce the above copyright
+-//    notice, this list of conditions and the following disclaimer in the
+-//    documentation and/or other materials provided with the distribution.
+-// 3. The name of the author may not be used to endorse or promote products
+-//    derived from this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-#import <Cocoa/Cocoa.h>
+-#import "ANTLRCommonToken.h"
+-#import "ANTLRBaseTree.h"
+-
+-@interface ANTLRCommonTree : ANTLRBaseTree <ANTLRTree> {
+-	ANTLRCommonToken *token;
+-	NSInteger startIndex;
+-	NSInteger stopIndex;
+-    ANTLRCommonTree *parent;
+-    NSInteger childIndex;
+-}
+-
+-@property (retain, getter=getANTLRCommonToken, setter=setANTLRCommonToken) ANTLRCommonToken *token;
+-@property (assign, getter=getTokenStartIndex, setter=setTokenStartIndex) NSInteger startIndex;
+-@property (assign, getter=getTokenStopIndex, setter=setTokenStopIndex) NSInteger stopIndex;
+-@property (retain, getter=getParent, setter=setParent:) ANTLRCommonTree *parent;
+-@property (assign, getter=getChildIndex, setter=setChildIndex) NSInteger childIndex;
+-
+-+ (ANTLRCommonTree *) invalidNode;
+-+ (ANTLRCommonTree *) newANTLRCommonTree;
+-+ (ANTLRCommonTree *) newANTLRCommonTreeWithTree:(ANTLRCommonTree *)aTree;
+-+ (ANTLRCommonTree *) newANTLRCommonTreeWithToken:(ANTLRCommonToken *)aToken;
+-+ (ANTLRCommonTree *) newANTLRCommonTreeWithTokenType:(NSInteger)tokenType;
+-+ (ANTLRCommonTree *) newANTLRCommonTreeWithTokenType:(NSInteger)aTType Text:(NSString *)theText;
+-#ifdef DONTUSEYET
+-+ (id<ANTLRTree>) newANTLRCommonTreeWithTokenType:(NSInteger)tokenType;
+-+ (id<ANTLRTree>) newANTLRCommonTreeWithToken:(id<ANTLRToken>)fromToken TokenType:(NSInteger)tokenType;
+-+ (id<ANTLRTree>) newANTLRCommonTreeWithToken:(id<ANTLRToken>)fromToken TokenType:(NSInteger)tokenType Text:(NSString *)tokenText;
+-+ (id<ANTLRTree>) newANTLRCommonTreeWithToken:(id<ANTLRToken>)fromToken Text:(NSString *)tokenText;
+-#endif
+-
+-- (id) init;
+-- (id) initWithTreeNode:(ANTLRCommonTree *)aNode;
+-- (id) initWithToken:(ANTLRCommonToken *)aToken;
+-- (id) initWithTokenType:(NSInteger)aTokenType;
+-- (id) initWithTokenType:(NSInteger)aTokenType Text:(NSString *)theText;
+-
+-- (id<ANTLRTree>) copyWithZone:(NSZone *)aZone;
+-
+-- (BOOL) isNil;
+-
+-- (ANTLRCommonToken *) getToken;
+-- (void) setToken:(ANTLRCommonToken *)aToken;
+-- (id<ANTLRTree>) dupNode;
+-- (NSInteger) getType;
+-- (NSString *) getText;
+-- (NSUInteger) getLine;
+-- (NSUInteger) getCharPositionInLine;
+-- (ANTLRCommonTree *) getParent;
+-- (void) setParent:(ANTLRCommonTree *) t;
+-
+-#ifdef DONTUSENOMO
+-- (NSString *) treeDescription;
+-#endif
+-- (NSString *) description;
+-- (void) setUnknownTokenBoundaries;
+-- (NSInteger) getTokenStartIndex;
+-- (void) setTokenStartIndex: (NSInteger) aStartIndex;
+-- (NSInteger) getTokenStopIndex;
+-- (void) setTokenStopIndex: (NSInteger) aStopIndex;
+-
+-@end
+diff --git a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRCommonTreeAdaptor.h b/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRCommonTreeAdaptor.h
+deleted file mode 100755
+index 53287e6..0000000
+--- a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRCommonTreeAdaptor.h
++++ /dev/null
+@@ -1,62 +0,0 @@
+-// [The "BSD licence"]
+-// Copyright (c) 2006-2007 Kay Roepke 2010 Alan Condit
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions
+-// are met:
+-// 1. Redistributions of source code must retain the above copyright
+-//    notice, this list of conditions and the following disclaimer.
+-// 2. Redistributions in binary form must reproduce the above copyright
+-//    notice, this list of conditions and the following disclaimer in the
+-//    documentation and/or other materials provided with the distribution.
+-// 3. The name of the author may not be used to endorse or promote products
+-//    derived from this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-
+-#import <Cocoa/Cocoa.h>
+-#import "ANTLRTree.h"
+-#import "ANTLRCommonToken.h"
+-#import "ANTLRCommonTree.h"
+-#import "ANTLRBaseTreeAdaptor.h"
+-
+-@interface ANTLRCommonTreeAdaptor : ANTLRBaseTreeAdaptor {
+-}
+-
+-+ (id<ANTLRTree>) newEmptyTree;
+-+ (ANTLRCommonTreeAdaptor *)newANTLRCommonTreeAdaptor;
+-- (id) init;
+-- (id<ANTLRTree>)dupNode:(id<ANTLRTree>)t;
+-- (ANTLRCommonTree *)createTree:(ANTLRCommonToken *)aToken;
+-- (ANTLRCommonTree *)createTree:(NSInteger)tokenType Text:(NSString *)text;
+-- (id<ANTLRToken>)createToken:(NSInteger)tokenType Text:(NSString *)text;
+-- (void) setTokenBoundaries:(id<ANTLRTree>)t From:(id<ANTLRToken>)startToken To:(id<ANTLRToken>)stopToken;
+-- (NSInteger)getTokenStartIndex:(id<ANTLRTree>)t;
+-- (NSInteger)getTokenStopIndex:(id<ANTLRTree>)t;
+-- (NSString *)getText:(id<ANTLRTree>)t;
+-- (void)setText:(id<ANTLRTree>)t Text:(NSString *)text;
+-- (NSInteger)getType:(id<ANTLRTree>)t;
+-- (void) setType:(id<ANTLRTree>)t Type:(NSInteger)tokenType;
+-- (id<ANTLRToken>)getToken:(id<ANTLRTree>)t;
+-- (id<ANTLRTree>)getChild:(id<ANTLRTree>)t At:(NSInteger)i;
+-- (void) setChild:(id<ANTLRTree>)t At:(NSInteger)i Child:(id<ANTLRTree>)child;
+-- (NSInteger)getChildCount:(id<ANTLRTree>)t;
+-- (id<ANTLRTree>)getParent:(id<ANTLRTree>)t;
+-- (void)setParent:(id<ANTLRTree>)t With:(id<ANTLRTree>)parent;
+-- (NSInteger)getChildIndex:(id<ANTLRTree>)t;
+-- (void)setChildIndex:(id<ANTLRTree>)t With:(NSInteger)index;
+-- (void)replaceChildren:(id<ANTLRTree>)parent From:(NSInteger)startChildIndex To:(NSInteger)stopChildIndex With:(id<ANTLRTree>)t;
+-- (id)copyWithZone:(NSZone *)zone;
+-
+-@end
+diff --git a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRCommonTreeNodeStream.h b/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRCommonTreeNodeStream.h
+deleted file mode 100755
+index 4c68f2e..0000000
+--- a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRCommonTreeNodeStream.h
++++ /dev/null
+@@ -1,116 +0,0 @@
+-// [The "BSD licence"]
+-// Copyright (c) 2006-2007 Kay Roepke 2010 Alan Condit
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions
+-// are met:
+-// 1. Redistributions of source code must retain the above copyright
+-//    notice, this list of conditions and the following disclaimer.
+-// 2. Redistributions in binary form must reproduce the above copyright
+-//    notice, this list of conditions and the following disclaimer in the
+-//    documentation and/or other materials provided with the distribution.
+-// 3. The name of the author may not be used to endorse or promote products
+-//    derived from this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-#import <Cocoa/Cocoa.h>
+-#import "ANTLRCommonTree.h"
+-#import "ANTLRCommonTreeNodeStream.h"
+-#import "ANTLRLookaheadStream.h"
+-#import "ANTLRTreeNodeStream.h"
+-#import "ANTLRTreeIterator.h"
+-#import "ANTLRIntArray.h"
+-
+-@interface ANTLRCommonTreeNodeStream : ANTLRLookaheadStream <ANTLRTreeNodeStream> {
+-#define DEFAULT_INITIAL_BUFFER_SIZE 100
+-#define INITIAL_CALL_STACK_SIZE 10
+-
+-/** Pull nodes from which tree? */
+-id root;
+-
+-/** If this tree (root) was created from a token stream, track it. */
+-id <ANTLRTokenStream> tokens;
+-
+-	/** What tree adaptor was used to build these trees */
+-ANTLRCommonTreeAdaptor *adaptor;
+-
+-/** The tree iterator we using */
+-ANTLRTreeIterator *it;
+-
+-/** Stack of indexes used for push/pop calls */
+-ANTLRIntArray *calls;
+-
+-/** Tree (nil A B C) trees like flat A B C streams */
+-BOOL hasNilRoot;
+-
+-/** Tracks tree depth.  Level=0 means we're at root node level. */
+-NSInteger level;
+-}
+-@property (retain, getter=getRoot, setter=setRoot:) ANTLRCommonTree *root;
+-@property (retain, getter=getTokens,setter=setTokens:) id<ANTLRTokenStream> tokens;
+-@property (retain, getter=getTreeAdaptor, setter=setTreeAdaptor:) ANTLRCommonTreeAdaptor *adaptor;
+-
+-+ (ANTLRCommonTreeNodeStream *) newANTLRCommonTreeNodeStream:(ANTLRCommonTree *)theTree;
+-+ (ANTLRCommonTreeNodeStream *) newANTLRCommonTreeNodeStream:(id<ANTLRTreeAdaptor>)anAdaptor Tree:(ANTLRCommonTree *)theTree;
+-
+-- (id) initWithTree:(ANTLRCommonTree *)theTree;
+-
+-- (id) initWithTreeAdaptor:(id<ANTLRTreeAdaptor>)adaptor Tree:(ANTLRCommonTree *)theTree;
+-
+-- (void) reset;
+-
+-    /** Pull elements from tree iterator.  Track tree level 0..max_level.
+-     *  If nil rooted tree, don't give initial nil and DOWN nor final UP.
+-     */
+-- (id) nextElement;
+-
+-- (BOOL) isEOF:(id<ANTLRTree>) o;
+-- (void) setUniqueNavigationNodes:(BOOL) uniqueNavigationNodes;
+-
+-- (id) getTreeSource;
+-
+-- (NSString *) getSourceName;
+-
+-- (id<ANTLRTokenStream>) getTokenStream;
+-
+-- (void) setTokenStream:(id<ANTLRTokenStream>) tokens;
+-
+-- (ANTLRCommonTreeAdaptor *) getTreeAdaptor;
+-
+-- (void) setTreeAdaptor:(ANTLRCommonTreeAdaptor *) adaptor;
+-
+-- (NSInteger) LA:(NSInteger) i;
+-
+-    /** Make stream jump to a new location, saving old location.
+-     *  Switch back with pop().
+-     */
+-- (ANTLRCommonTree *)getNode:(NSInteger) i;
+-
+-- (void) push:(NSInteger) index;
+-
+-    /** Seek back to previous index saved during last push() call.
+-     *  Return top of stack (return index).
+-     */
+-- (NSInteger) pop;
+-
+-// TREE REWRITE INTERFACE
+-
+-- (void) replaceChildren:(id)parent From:(NSInteger)startChildIndex To:(NSInteger)stopChildIndex With:(id) t;
+-
+-- (NSString *) toStringFromNode:(id<ANTLRTree>)startNode ToNode:(id<ANTLRTree>)stopNode;
+-
+-/** For debugging; destructive: moves tree iterator to end. */
+-- (NSString *) toTokenTypeString;
+-
+-@end
+diff --git a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRDFA.h b/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRDFA.h
+deleted file mode 100755
+index 9094a3d..0000000
+--- a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRDFA.h
++++ /dev/null
+@@ -1,75 +0,0 @@
+-// [The "BSD licence"]
+-// Copyright (c) 2006-2007 Kay Roepke 2010 Alan Condit
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions
+-// are met:
+-// 1. Redistributions of source code must retain the above copyright
+-//    notice, this list of conditions and the following disclaimer.
+-// 2. Redistributions in binary form must reproduce the above copyright
+-//    notice, this list of conditions and the following disclaimer in the
+-//    documentation and/or other materials provided with the distribution.
+-// 3. The name of the author may not be used to endorse or promote products
+-//    derived from this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-#import <Cocoa/Cocoa.h>
+-#import "ANTLRBaseRecognizer.h"
+-#import "ANTLRCharStream.h"
+-#import "ANTLRNoViableAltException.h"
+-
+-@interface ANTLRDFA : NSObject {
+-	// the tables are set by subclasses to their own static versions.
+-	const int *eot;
+-	const int *eof;
+-	const unichar *min;
+-	const unichar *max;
+-	const int *accept;
+-	const int *special;
+-	const int **transition;
+-
+-	ANTLRBaseRecognizer *recognizer;
+-	NSInteger decisionNumber;
+-    NSInteger len;
+-}
+-
+-@property (retain, getter=getRecognizer,setter=setRecognizer:) ANTLRBaseRecognizer *recognizer;
+-@property (assign, getter=getDecision,setter=setDecision:) NSInteger decisionNumber;
+-@property (assign, getter=getLen,setter=setLen:) NSInteger len;
+-
+-- (id) initWithRecognizer:(id) theRecognizer;
+-// simulate the DFA using the static tables and predict an alternative
+-- (NSInteger) predict:(id<ANTLRCharStream>)anInput;
+-- (void) noViableAlt:(NSInteger)state Stream:(id<ANTLRIntStream>)anInput;
+-
+-- (NSInteger) specialStateTransition:(NSInteger)state Stream:(id<ANTLRIntStream>)anInput;
+-// - (NSInteger) specialStateTransition:(NSInteger) state;
+-//- (unichar) specialTransition:(unichar) state symbol:(NSInteger) symbol;
+-
+-// hook for debugger support
+-- (void) error:(ANTLRNoViableAltException *)nvae;
+-
+-- (NSString *) description;
+-- (BOOL) evaluateSyntacticPredicate:(SEL)synpredFragment;
+-
+-+ (void) setIsEmittingDebugInfo:(BOOL) shouldEmitDebugInfo;
+-
+-- (NSInteger)getDecision;
+-- (void)setDecision:(NSInteger)aDecison;
+-
+-- (ANTLRBaseRecognizer *)getRecognizer;
+-- (void)setRecognizer:(ANTLRBaseRecognizer *)aRecognizer;
+-- (NSInteger)length;
+-
+-@end
+diff --git a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRDebug.h b/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRDebug.h
+deleted file mode 100755
+index 87383c9..0000000
+--- a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRDebug.h
++++ /dev/null
+@@ -1,33 +0,0 @@
+-// [The "BSD licence"]
+-// Copyright (c) 2006-2007 Kay Roepke
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions
+-// are met:
+-// 1. Redistributions of source code must retain the above copyright
+-//    notice, this list of conditions and the following disclaimer.
+-// 2. Redistributions in binary form must reproduce the above copyright
+-//    notice, this list of conditions and the following disclaimer in the
+-//    documentation and/or other materials provided with the distribution.
+-// 3. The name of the author may not be used to endorse or promote products
+-//    derived from this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-#import "ANTLRDebugEventListener.h"
+-#import "ANTLRDebugEventProxy.h"
+-#import "ANTLRDebugParser.h"
+-#import "ANTLRDebugTokenStream.h"
+-#import "ANTLRDebugTreeParser.h"
+-#import "ANTLRDebugTreeNodeStream.h"
+-#import "ANTLRDebugTreeAdaptor.h"
+diff --git a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRDebugEventListener.h b/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRDebugEventListener.h
+deleted file mode 100755
+index c2bee6c..0000000
+--- a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRDebugEventListener.h
++++ /dev/null
+@@ -1,275 +0,0 @@
+-// [The "BSD licence"]
+-// Copyright (c) 2006-2007 Kay Roepke
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions
+-// are met:
+-// 1. Redistributions of source code must retain the above copyright
+-//    notice, this list of conditions and the following disclaimer.
+-// 2. Redistributions in binary form must reproduce the above copyright
+-//    notice, this list of conditions and the following disclaimer in the
+-//    documentation and/or other materials provided with the distribution.
+-// 3. The name of the author may not be used to endorse or promote products
+-//    derived from this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-#import <Cocoa/Cocoa.h>
+-#import "ANTLRToken.h"
+-#import "ANTLRRecognitionException.h"
+-
+-@protocol ANTLRDebugEventListener
+-
+-#define ANTLRDebugProtocolVersion 1
+-
+-/** The parser has just entered a rule.  No decision has been made about
+-*  which alt is predicted.  This is fired AFTER init actions have been
+-*  executed.  Attributes are defined and available etc...
+-*/
+-- (void) enterRule:(NSString *)ruleName;
+-
+-/** Because rules can have lots of alternatives, it is very useful to
+-*  know which alt you are entering.  This is 1..n for n alts.
+-*/
+-- (void) enterAlt:(NSInteger)alt;
+-
+-/** This is the last thing executed before leaving a rule.  It is
+-*  executed even if an exception is thrown.  This is triggered after
+-*  error reporting and recovery have occurred (unless the exception is
+-											   *  not caught in this rule).  This implies an "exitAlt" event.
+-*/
+-- (void) exitRule:(NSString *)ruleName;
+-
+-/** Track entry into any (...) subrule other EBNF construct */
+-- (void) enterSubRule:(NSInteger)decisionNumber;
+-
+-- (void) exitSubRule:(NSInteger)decisionNumber;
+-
+-/** Every decision, fixed k or arbitrary, has an enter/exit event
+-*  so that a GUI can easily track what LT/consume events are
+-*  associated with prediction.  You will see a single enter/exit
+-*  subrule but multiple enter/exit decision events, one for each
+-*  loop iteration.
+-*/
+-- (void) enterDecision:(NSInteger)decisionNumber;
+-
+-- (void) exitDecision:(NSInteger)decisionNumber;
+-
+-/** An input token was consumed; matched by any kind of element.
+-*  Trigger after the token was matched by things like match(), matchAny().
+-*/
+-- (void) consumeToken:(id<ANTLRToken>)t;
+-
+-/** An off-channel input token was consumed.
+-*  Trigger after the token was matched by things like match(), matchAny().
+-*  (unless of course the hidden token is first stuff in the input stream).
+-*/
+-- (void) consumeHiddenToken:(id<ANTLRToken>)t;
+-
+-/** Somebody (anybody) looked ahead.  Note that this actually gets
+-*  triggered by both LA and LT calls.  The debugger will want to know
+-*  which Token object was examined.  Like consumeToken, this indicates
+-*  what token was seen at that depth.  A remote debugger cannot look
+-*  ahead into a file it doesn't have so LT events must pass the token
+-*  even if the info is redundant.
+-*/
+-- (void) LT:(NSInteger)i foundToken:(id<ANTLRToken>)t;
+-
+-/** The parser is going to look arbitrarily ahead; mark this location,
+-*  the token stream's marker is sent in case you need it.
+-*/
+-- (void) mark:(NSInteger)marker;
+-
+-/** After an arbitrairly long lookahead as with a cyclic DFA (or with
+-*  any backtrack), this informs the debugger that stream should be
+-*  rewound to the position associated with marker.
+-*/
+-- (void) rewind:(NSInteger)marker;
+-
+-/** Rewind to the input position of the last marker.
+-*  Used currently only after a cyclic DFA and just
+-*  before starting a sem/syn predicate to get the
+-*  input position back to the start of the decision.
+-*  Do not "pop" the marker off the state.  mark(i)
+-*  and rewind(i) should balance still.
+-*/
+-- (void) rewind;
+-
+-- (void) beginBacktrack:(NSInteger)level;
+-
+-- (void) endBacktrack:(NSInteger)level wasSuccessful:(BOOL)successful;
+-
+-/** To watch a parser move through the grammar, the parser needs to
+-*  inform the debugger what line/charPos it is passing in the grammar.
+-*  For now, this does not know how to switch from one grammar to the
+-*  other and back for island grammars etc...
+-*
+-*  This should also allow breakpoints because the debugger can stop
+-*  the parser whenever it hits this line/pos.
+-*/
+-- (void) locationLine:(NSInteger)line column:(NSInteger)pos;
+-
+-/** A recognition exception occurred such as NoViableAltException.  I made
+-*  this a generic event so that I can alter the exception hierachy later
+-*  without having to alter all the debug objects.
+-*
+-*  Upon error, the stack of enter rule/subrule must be properly unwound.
+-*  If no viable alt occurs it is within an enter/exit decision, which
+-*  also must be rewound.  Even the rewind for each mark must be unwount.
+-*  In the Java target this is pretty easy using try/finally, if a bit
+-*  ugly in the generated code.  The rewind is generated in DFA.predict()
+-*  actually so no code needs to be generated for that.  For languages
+-*  w/o this "finally" feature (C++?), the target implementor will have
+-*  to build an event stack or something.
+-*
+-*  Across a socket for remote debugging, only the RecognitionException
+-*  data fields are transmitted.  The token object or whatever that
+-*  caused the problem was the last object referenced by LT.  The
+-*  immediately preceding LT event should hold the unexpected Token or
+-*  char.
+-*
+-*  Here is a sample event trace for grammar:
+-*
+-*  b : C ({;}A|B) // {;} is there to prevent A|B becoming a set
+-*    | D
+-*    ;
+-*
+-*  The sequence for this rule (with no viable alt in the subrule) for
+-*  input 'c c' (there are 3 tokens) is:
+-*
+-*		commence
+-*		LT(1)
+-*		enterRule b
+-*		location 7 1
+-*		enter decision 3
+-*		LT(1)
+-*		exit decision 3
+-*		enterAlt1
+-*		location 7 5
+-*		LT(1)
+-*		consumeToken [c/<4>,1:0]
+-*		location 7 7
+-*		enterSubRule 2
+-*		enter decision 2
+-*		LT(1)
+-*		LT(1)
+-*		recognitionException NoViableAltException 2 1 2
+-*		exit decision 2
+-*		exitSubRule 2
+-*		beginResync
+-*		LT(1)
+-*		consumeToken [c/<4>,1:1]
+-*		LT(1)
+-*		endResync
+-*		LT(-1)
+-*		exitRule b
+-*		terminate
+-*/
+-- (void) recognitionException:(ANTLRRecognitionException *)e;
+-
+-/** Indicates the recognizer is about to consume tokens to resynchronize
+-*  the parser.  Any consume events from here until the recovered event
+-*  are not part of the parse--they are dead tokens.
+-*/
+-- (void) beginResync;
+-
+-/** Indicates that the recognizer has finished consuming tokens in order
+-*  to resychronize.  There may be multiple beginResync/endResync pairs
+-*  before the recognizer comes out of errorRecovery mode (in which
+-*  multiple errors are suppressed).  This will be useful
+-*  in a gui where you want to probably grey out tokens that are consumed
+-*  but not matched to anything in grammar.  Anything between
+-*  a beginResync/endResync pair was tossed out by the parser.
+-*/
+-- (void) endResync;
+-
+-/** A semantic predicate was evaluate with this result and action text */
+-- (void) semanticPredicate:(NSString *)predicate matched:(BOOL)result;
+-
+-/** Announce that parsing has begun.  Not technically useful except for
+-*  sending events over a socket.  A GUI for example will launch a thread
+-*  to connect and communicate with a remote parser.  The thread will want
+-*  to notify the GUI when a connection is made.  ANTLR parsers
+-*  trigger this upon entry to the first rule (the ruleLevel is used to
+-*  figure this out).
+-*/
+-- (void) commence;
+-
+-/** Parsing is over; successfully or not.  Mostly useful for telling
+-*  remote debugging listeners that it's time to quit.  When the rule
+-*  invocation level goes to zero at the end of a rule, we are done
+-*  parsing.
+-*/
+-- (void) terminate;
+-
+-
+-// T r e e  P a r s i n g
+-
+-/** Input for a tree parser is an AST, but we know nothing for sure
+-*  about a node except its type and text (obtained from the adaptor).
+-*  This is the analog of the consumeToken method.  Again, the ID is
+-*  the hashCode usually of the node so it only works if hashCode is
+-*  not implemented.  If the type is UP or DOWN, then
+-*  the ID is not really meaningful as it's fixed--there is
+-*  just one UP node and one DOWN navigation node.
+-*/
+-- (void) consumeNode:(NSInteger)nodeHash ofType:(NSInteger)type text:(NSString *)text;
+-
+-/** The tree parser lookedahead.  If the type is UP or DOWN,
+-*  then the ID is not really meaningful as it's fixed--there is
+-*  just one UP node and one DOWN navigation node.
+-*/
+-- (void) LT:(NSInteger)i foundNode:(unsigned)nodeHash ofType:(NSInteger)type text:(NSString *)text;
+-
+-
+-// A S T  E v e n t s
+-
+-/** A nil was created (even nil nodes have a unique ID...
+-*  they are not "null" per se).  As of 4/28/2006, this
+-*  seems to be uniquely triggered when starting a new subtree
+-*  such as when entering a subrule in automatic mode and when
+-*  building a tree in rewrite mode.
+-*/
+-- (void) createNilNode:(unsigned)hash;
+-
+-/** Announce a new node built from text */
+-- (void) createNode:(unsigned)hash text:(NSString *)text type:(NSInteger)type;
+-
+-/** Announce a new node built from an existing token */
+-- (void) createNode:(unsigned)hash fromTokenAtIndex:(NSInteger)tokenIndex;
+-
+-/** Make a node the new root of an existing root.  See
+-*
+-*  Note: the newRootID parameter is possibly different
+-*  than the TreeAdaptor.becomeRoot() newRoot parameter.
+-*  In our case, it will always be the result of calling
+-*  TreeAdaptor.becomeRoot() and not root_n or whatever.
+-*
+-*  The listener should assume that this event occurs
+-*  only when the current subrule (or rule) subtree is
+-*  being reset to newRootID.
+-*
+-*/
+-- (void) makeNode:(unsigned)newRootHash parentOf:(unsigned)oldRootHash;
+-
+-/** Make childID a child of rootID.
+-*  @see org.antlr.runtime.tree.TreeAdaptor.addChild()
+-*/
+-- (void) addChild:(unsigned)childHash toTree:(unsigned)treeHash;
+-
+-/** Set the token start/stop token index for a subtree root or node */
+-- (void) setTokenBoundariesForTree:(unsigned)nodeHash From:(NSUInteger)tokenStartIndex To:(NSUInteger)tokenStopIndex;
+-
+-- (void) waitForDebuggerConnection;
+-
+-@end
+diff --git a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRDebugEventProxy.h b/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRDebugEventProxy.h
+deleted file mode 100755
+index 59bf67b..0000000
+--- a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRDebugEventProxy.h
++++ /dev/null
+@@ -1,112 +0,0 @@
+-// [The "BSD licence"]
+-// Copyright (c) 2006-2007 Kay Roepke
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions
+-// are met:
+-// 1. Redistributions of source code must retain the above copyright
+-//    notice, this list of conditions and the following disclaimer.
+-// 2. Redistributions in binary form must reproduce the above copyright
+-//    notice, this list of conditions and the following disclaimer in the
+-//    documentation and/or other materials provided with the distribution.
+-// 3. The name of the author may not be used to endorse or promote products
+-//    derived from this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-#import <Cocoa/Cocoa.h>
+-#import "ANTLRParser.h"
+-#import "ANTLRDebugEventListener.h"
+-#import <sys/socket.h>
+-#import <netinet/in.h>
+-#import <netinet/tcp.h>
+-#include <arpa/inet.h>
+-
+-// default port for ANTLRWorks
+-#define DEFAULT_DEBUGGER_PORT 0xC001
+-
+-@interface ANTLRDebugEventProxy : NSObject <ANTLRDebugEventListener> {
+-	int serverSocket;
+-
+-	struct sockaddr debugger_sockaddr;
+-	socklen_t debugger_socklen;
+-	int debuggerSocket;
+-	NSFileHandle *debuggerFH;
+-
+-	NSString *grammarName;
+-	int debuggerPort;
+-}
+-
+-- (id) init;
+-- (id) initWithGrammarName:(NSString *)aGrammarName debuggerPort:(NSInteger)aPort;
+-- (void) waitForDebuggerConnection;
+-- (void) waitForAck;
+-- (void) sendToDebugger:(NSString *)message;
+-- (void) sendToDebugger:(NSString *)message waitForResponse:(BOOL)wait;
+-
+-- (NSInteger) serverSocket;
+-- (void) setServerSocket: (NSInteger) aServerSocket;
+-
+-- (NSInteger) debuggerSocket;
+-- (void) setDebuggerSocket: (NSInteger) aDebuggerSocket;
+-
+-- (NSString *) grammarName;
+-- (void) setGrammarName: (NSString *) aGrammarName;
+-
+-- (NSInteger) debuggerPort;
+-- (void) setDebuggerPort: (NSInteger) aDebuggerPort;
+-
+-- (NSString *) escapeNewlines:(NSString *)aString;
+-
+-#pragma mark -
+-
+-#pragma mark DebugEventListener Protocol
+-- (void) enterRule:(NSString *)ruleName;
+-- (void) enterAlt:(NSInteger)alt;
+-- (void) exitRule:(NSString *)ruleName;
+-- (void) enterSubRule:(NSInteger)decisionNumber;
+-- (void) exitSubRule:(NSInteger)decisionNumber;
+-- (void) enterDecision:(NSInteger)decisionNumber;
+-- (void) exitDecision:(NSInteger)decisionNumber;
+-- (void) consumeToken:(id<ANTLRToken>)t;
+-- (void) consumeHiddenToken:(id<ANTLRToken>)t;
+-- (void) LT:(NSInteger)i foundToken:(id<ANTLRToken>)t;
+-- (void) mark:(NSInteger)marker;
+-- (void) rewind:(NSInteger)marker;
+-- (void) rewind;
+-- (void) beginBacktrack:(NSInteger)level;
+-- (void) endBacktrack:(NSInteger)level wasSuccessful:(BOOL)successful;
+-- (void) locationLine:(NSInteger)line column:(NSInteger)pos;
+-- (void) recognitionException:(ANTLRRecognitionException *)e;
+-- (void) beginResync;
+-- (void) endResync;
+-- (void) semanticPredicate:(NSString *)predicate matched:(BOOL)result;
+-- (void) commence;
+-- (void) terminate;
+-
+-
+-#pragma mark Tree Parsing
+-- (void) consumeNode:(unsigned)nodeHash ofType:(NSInteger)type text:(NSString *)text;
+-- (void) LT:(NSInteger)i foundNode:(unsigned)nodeHash ofType:(NSInteger)type text:(NSString *)text;
+-
+-
+-#pragma mark AST Events
+-
+-- (void) createNilNode:(unsigned)hash;
+-- (void) createNode:(unsigned)hash text:(NSString *)text type:(NSInteger)type;
+-- (void) createNode:(unsigned)hash fromTokenAtIndex:(NSInteger)tokenIndex;
+-- (void) makeNode:(unsigned)newRootHash parentOf:(unsigned)oldRootHash;
+-- (void) addChild:(unsigned)childHash toTree:(unsigned)treeHash;
+-- (void) setTokenBoundariesForTree:(unsigned)nodeHash From:(NSInteger)tokenStartIndex To:(NSInteger)tokenStopIndex;
+-
+-@end
+diff --git a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRDebugParser.h b/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRDebugParser.h
+deleted file mode 100755
+index b23ff50..0000000
+--- a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRDebugParser.h
++++ /dev/null
+@@ -1,47 +0,0 @@
+-// [The "BSD licence"]
+-// Copyright (c) 2006-2007 Kay Roepke
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions
+-// are met:
+-// 1. Redistributions of source code must retain the above copyright
+-//    notice, this list of conditions and the following disclaimer.
+-// 2. Redistributions in binary form must reproduce the above copyright
+-//    notice, this list of conditions and the following disclaimer in the
+-//    documentation and/or other materials provided with the distribution.
+-// 3. The name of the author may not be used to endorse or promote products
+-//    derived from this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-#import <Cocoa/Cocoa.h>
+-#import "ANTLRParser.h"
+-#import "ANTLRDebugEventProxy.h"
+-#import "ANTLRDebugTokenStream.h"
+-
+-@interface ANTLRDebugParser : ANTLRParser {
+-	id<ANTLRDebugEventListener> debugListener;
+-}
+-
+-- (id) initWithTokenStream:(id<ANTLRTokenStream>)theStream;
+-- (id) initWithTokenStream:(id<ANTLRTokenStream>)theStream
+-			  debuggerPort:(NSInteger)portNumber;
+-// designated initializer
+-- (id) initWithTokenStream:(id<ANTLRTokenStream>)theStream
+-			 debugListener:(id<ANTLRDebugEventListener>)theDebugListener
+-			  debuggerPort:(NSInteger)portNumber;
+-
+-- (id<ANTLRDebugEventListener>) debugListener;
+-- (void) setDebugListener: (id<ANTLRDebugEventListener>) aDebugListener;
+-
+-@end
+diff --git a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRDebugTokenStream.h b/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRDebugTokenStream.h
+deleted file mode 100755
+index 335b002..0000000
+--- a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRDebugTokenStream.h
++++ /dev/null
+@@ -1,62 +0,0 @@
+-// [The "BSD licence"]
+-// Copyright (c) 2006-2007 Kay Roepke
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions
+-// are met:
+-// 1. Redistributions of source code must retain the above copyright
+-//    notice, this list of conditions and the following disclaimer.
+-// 2. Redistributions in binary form must reproduce the above copyright
+-//    notice, this list of conditions and the following disclaimer in the
+-//    documentation and/or other materials provided with the distribution.
+-// 3. The name of the author may not be used to endorse or promote products
+-//    derived from this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-#import <Cocoa/Cocoa.h>
+-#import "ANTLRParser.h"
+-#import "ANTLRTokenStream.h"
+-#import "ANTLRTokenSource.h"
+-#import "ANTLRDebugTokenStream.h"
+-#import "ANTLRDebugEventListener.h"
+-
+-@interface ANTLRDebugTokenStream : NSObject <ANTLRTokenStream>
+-{
+-	id<ANTLRDebugEventListener> debugListener;
+-	id<ANTLRTokenStream> input;
+-	BOOL initialStreamState;
+-    NSInteger lastMarker;
+-}
+-
+-- (id) initWithTokenStream:(id<ANTLRTokenStream>)theStream debugListener:(id<ANTLRDebugEventListener>)debugger;
+-
+-- (id<ANTLRDebugEventListener>) debugListener;
+-- (void) setDebugListener: (id<ANTLRDebugEventListener>) aDebugListener;
+-
+-- (id<ANTLRTokenStream>) getInput;
+-- (void) setInput:(id<ANTLRTokenStream>)aTokenStream;
+-
+-- (void) consume;
+-- (id<ANTLRToken>) getToken:(NSInteger)index;
+-- (NSInteger) getIndex;
+-- (void) release:(NSInteger)marker;
+-- (void) seek:(NSInteger)index;
+-- (NSInteger) size;
+-- (id<ANTLRTokenSource>) getTokenSource;
+-- (NSString *) getSourceName;
+-- (NSString *) toString;
+-- (NSString *) toStringFromStart:(NSInteger)aStart ToEnd:(NSInteger)aStop;
+-- (NSString *) toStringFromToken:(id<ANTLRToken>)startToken ToToken:(id<ANTLRToken>)stopToken;
+-
+-@end
+diff --git a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRDebugTreeAdaptor.h b/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRDebugTreeAdaptor.h
+deleted file mode 100755
+index 41965fa..0000000
+--- a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRDebugTreeAdaptor.h
++++ /dev/null
+@@ -1,45 +0,0 @@
+-// [The "BSD licence"]
+-// Copyright (c) 2006-2007 Kay Roepke
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions
+-// are met:
+-// 1. Redistributions of source code must retain the above copyright
+-//    notice, this list of conditions and the following disclaimer.
+-// 2. Redistributions in binary form must reproduce the above copyright
+-//    notice, this list of conditions and the following disclaimer in the
+-//    documentation and/or other materials provided with the distribution.
+-// 3. The name of the author may not be used to endorse or promote products
+-//    derived from this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-#import <Cocoa/Cocoa.h>
+-#import "ANTLRParser.h"
+-#import "ANTLRBaseTreeAdaptor.h"
+-#import "ANTLRDebugEventListener.h"
+-
+-@interface ANTLRDebugTreeAdaptor : ANTLRBaseTreeAdaptor {
+-	id<ANTLRDebugEventListener> debugListener;
+-	id<ANTLRTreeAdaptor> treeAdaptor;
+-}
+-
+-- (id) initWithTreeAdaptor:(id<ANTLRTreeAdaptor>)aTreeAdaptor debugListener:(id<ANTLRDebugEventListener>)aDebugListener;
+-
+-- (id<ANTLRDebugEventListener>) debugListener;
+-- (void) setDebugListener: (id<ANTLRDebugEventListener>) aDebugListener;
+-
+-- (id<ANTLRTreeAdaptor>) getTreeAdaptor;
+-- (void) setTreeAdaptor: (id<ANTLRTreeAdaptor>) aTreeAdaptor;
+-
+-@end
+diff --git a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRDebugTreeNodeStream.h b/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRDebugTreeNodeStream.h
+deleted file mode 100755
+index 70f9939..0000000
+--- a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRDebugTreeNodeStream.h
++++ /dev/null
+@@ -1,67 +0,0 @@
+-// [The "BSD licence"]
+-// Copyright (c) 2006-2007 Kay Roepke
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions
+-// are met:
+-// 1. Redistributions of source code must retain the above copyright
+-//    notice, this list of conditions and the following disclaimer.
+-// 2. Redistributions in binary form must reproduce the above copyright
+-//    notice, this list of conditions and the following disclaimer in the
+-//    documentation and/or other materials provided with the distribution.
+-// 3. The name of the author may not be used to endorse or promote products
+-//    derived from this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-#import <Cocoa/Cocoa.h>
+-#import "ANTLRDebugEventListener.h"
+-#import "ANTLRTreeAdaptor.h"
+-#import "ANTLRTreeNodeStream.h"
+-
+-@interface ANTLRDebugTreeNodeStream : NSObject <ANTLRTreeNodeStream> {
+-	id<ANTLRDebugEventListener> debugListener;
+-	id<ANTLRTreeAdaptor> treeAdaptor;
+-	id<ANTLRTreeNodeStream> input;
+-	BOOL initialStreamState;
+-}
+-
+-- (id) initWithTreeNodeStream:(id<ANTLRTreeNodeStream>)theStream debugListener:(id<ANTLRDebugEventListener>)debugger;
+-
+-- (id<ANTLRDebugEventListener>) debugListener;
+-- (void) setDebugListener: (id<ANTLRDebugEventListener>) aDebugListener;
+-
+-- (id<ANTLRTreeNodeStream>) getInput;
+-- (void) setInput: (id<ANTLRTreeNodeStream>) aTreeNodeStream;
+-
+-- (id<ANTLRTreeAdaptor>) getTreeAdaptor;
+-- (void) setTreeAdaptor: (id<ANTLRTreeAdaptor>) aTreeAdaptor;
+-
+-#pragma mark ANTLRTreeNodeStream conformance
+-
+-- (id) LT:(NSInteger)k;
+-- (id<ANTLRTreeAdaptor>) getTreeAdaptor;
+-- (void) setUniqueNavigationNodes:(BOOL)flag;
+-
+-#pragma mark ANTLRIntStream conformance
+-- (void) consume;
+-- (NSInteger) LA:(NSUInteger) i;
+-- (NSUInteger) mark;
+-- (NSUInteger) getIndex;
+-- (void) rewind:(NSUInteger) marker;
+-- (void) rewind;
+-- (void) release:(NSUInteger) marker;
+-- (void) seek:(NSUInteger) index;
+-- (NSUInteger) size;
+-
+-@end
+diff --git a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRDebugTreeParser.h b/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRDebugTreeParser.h
+deleted file mode 100755
+index cbeac76..0000000
+--- a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLRDebugTreeParser.h
++++ /dev/null
+@@ -1,48 +0,0 @@
+-// [The "BSD licence"]
+-// Copyright (c) 2006-2007 Kay Roepke
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions
+-// are met:
+-// 1. Redistributions of source code must retain the above copyright
+-//    notice, this list of conditions and the following disclaimer.
+-// 2. Redistributions in binary form must reproduce the above copyright
+-//    notice, this list of conditions and the following disclaimer in the
+-//    documentation and/or other materials provided with the distribution.
+-// 3. The name of the author may not be used to endorse or promote products
+-//    derived from this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-#import <Cocoa/Cocoa.h>
+-#import "ANTLRTreeParser.h"
+-#import "ANTLRDebugEventProxy.h"
+-#import "ANTLRDebugTreeNodeStream.h"
+-
+-@interface ANTLRDebugTreeParser : ANTLRTreeParser {
+-	id<ANTLRDebugEventListener> debugListener;
+-}
+-
+-- (id) initWithTreeNodeStream:(id<ANTLRTreeNodeStream>)theStream;
+-- (id) initWithTreeNodeStream:(id<ANTLRTreeNodeStream>)theStream
+-				 debuggerPort:(NSInteger)portNumber;
+-	// designated initializer
+-- (id) initWithTreeNodeStream:(id<ANTLRTreeNodeStream>)theStream
+-				debugListener:(id<ANTLRDebugEventListener>)theDebugListener
+-				 debuggerPort:(NSInteger)portNumber;
+-
+-- (id<ANTLRDebugEventListener>) debugListener;
+-- (void) setDebugListener: (id<ANTLRDebugEventListener>) aDebugListener;
+-
+-
+-@end
+diff --git a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLREarlyExitException.h b/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLREarlyExitException.h
+deleted file mode 100755
+index 1a89bbb..0000000
+--- a/runtime/ObjC/ANTLR.framework/Versions/A/Headers/ANTLREarlyExitException.h
++++ /dev/null
+@@ -1,37 +0,0 @@
+-// [The "BSD licence"]
+-// Copyright (c) 2006-2007 Kay Roepke
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions
+-// are met:
+-// 1. Redistributions of source code must retain the above copyright
+-//    notice, this list of conditions and the following disclaimer.
+-// 2. Redistributions in binary form must reproduce the above copyright
+-//    notice, this list of conditions and the following disclaimer in the
+-//    documentation and/or other materials provided with the distribution.
+-// 3. The name of the author may not be used to endorse or promote products
+-//    derived from this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-#import <Cocoa/Cocoa.h>
+-#import "ANTLRRecognitionException.h"
+-
+-@interface ANTLREarlyExitException : ANTLRRecognitionException {
+-	int decisionNumber;
+-}
+-
+-+ (ANTLREarlyExitException *) exceptionWithStream:(id<ANTLRIntStream>) anInputStream decisionNumber:(NSInteger) aDecisionNumber;
+-- (id) initWithStream:(id<ANTLRIntStream>)anInputStream decisionNumber:(NSInteger) aDecisionNumber;
+-
+-@end
+

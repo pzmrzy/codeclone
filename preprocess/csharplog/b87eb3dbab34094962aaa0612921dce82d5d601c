@@ -1,0 +1,39 @@
+commit b87eb3dbab34094962aaa0612921dce82d5d601c
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sat Jan 22 14:49:13 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sat Jan 22 14:49:13 2011 -0800
+
+(C# 3) Forgot one big endian -> little endian change
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7507]
+
+diff --git a/Antlr4.StringTemplate/Compiler/BytecodeDisassembler.cs b/Antlr4.StringTemplate/Compiler/BytecodeDisassembler.cs
+index 8399aa1..92b873a 100644
+--- a/Antlr4.StringTemplate/Compiler/BytecodeDisassembler.cs
++++ b/Antlr4.StringTemplate/Compiler/BytecodeDisassembler.cs
+@@ -33,9 +33,10 @@
+namespace Antlr4.StringTemplate.Compiler
+{
+using System.Collections.Generic;
+-    using StringBuilder = System.Text.StringBuilder;
+using Antlr4.StringTemplate.Misc;
+using ArgumentException = System.ArgumentException;
++    using BitConverter = System.BitConverter;
++    using StringBuilder = System.Text.StringBuilder;
+
+public class BytecodeDisassembler
+{
+@@ -161,10 +162,7 @@ namespace Antlr4.StringTemplate.Compiler
+
+public static int getShort(byte[] memory, int index)
+{
+-            int b1 = memory[index] & 0xFF; // mask off sign-extended bits
+-            int b2 = memory[index + 1] & 0xFF;
+-            int word = b1 << (8 * 1) | b2;
+-            return word;
++            return BitConverter.ToInt16(memory, index);
+}
+
+public virtual string strings()
+

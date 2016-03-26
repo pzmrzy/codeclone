@@ -1,0 +1,21 @@
+commit 7279ac18216a4dd5e3807404ccde96a6a64b316c
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Wed Jan 30 14:52:25 2013 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Wed Jan 30 14:52:25 2013 -0600
+
+Visual Studio updated the project file
+
+diff --git a/AntlrBuildTask/AntlrBuildTask.csproj b/AntlrBuildTask/AntlrBuildTask.csproj
+index 8e6a725..abf67ec 100644
+--- a/AntlrBuildTask/AntlrBuildTask.csproj
++++ b/AntlrBuildTask/AntlrBuildTask.csproj
+@@ -52,6 +52,7 @@
+<ItemGroup>
+<Content Include="Antlr3.targets">
+<CopyToOutputDirectory>Always</CopyToOutputDirectory>
++      <SubType>Designer</SubType>
+</Content>
+</ItemGroup>
+<ItemGroup>
+

@@ -1,0 +1,1236 @@
+commit 112a4b4976405eeb0a643a2ef162bb34abadd783
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Apr 27 05:40:11 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Apr 27 05:40:11 2011 -0800
+
+(C# 3) Reduced dependencies on Antlr3.Runtime.Debug.dll (removed all except those in Interpreter plus some calls to setSize)
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8320]
+
+diff --git a/Antlr3/Analysis/DFA.cs b/Antlr3/Analysis/DFA.cs
+index 02d8103..25a05c9 100644
+--- a/Antlr3/Analysis/DFA.cs
++++ b/Antlr3/Analysis/DFA.cs
+@@ -1091,7 +1091,8 @@ namespace Antlr3.Analysis
+}
+// does a DFA state exist already with everything the same
+// except its state number?
+-            DFAState existing = (DFAState)_uniqueStates.get( d );
++            DFAState existing;
++            _uniqueStates.TryGetValue(d, out existing);
+if ( existing != null )
+{
+/*
+diff --git a/Antlr3/Analysis/DFAState.cs b/Antlr3/Analysis/DFAState.cs
+index a8790f8..d9a56d2 100644
+--- a/Antlr3/Analysis/DFAState.cs
++++ b/Antlr3/Analysis/DFAState.cs
+@@ -35,7 +35,6 @@ namespace Antlr3.Analysis
+using System;
+using System.Collections.Generic;
+using System.Linq;
+-    using Antlr.Runtime.JavaExtensions;
+using Antlr3.Misc;
+
+using Grammar = Antlr3.Tool.Grammar;
+@@ -691,7 +690,8 @@ namespace Antlr3.Analysis
+foreach ( int stateI in states )
+{
+bool thisStateHasPotentialProblem = false;
+-                var configsForState = stateToConfigListMap.get( stateI );
++                IList<NFAConfiguration> configsForState;
++                stateToConfigListMap.TryGetValue(stateI, out configsForState);
+int alt = 0;
+int numConfigsForState = configsForState.Count;
+for ( int i = 0; i < numConfigsForState && numConfigsForState > 1; i++ )
+@@ -755,7 +755,8 @@ namespace Antlr3.Analysis
+// walk each state with potential conflicting configurations
+foreach ( int stateI in states )
+{
+-                var configsForState = stateToConfigListMap.get( stateI );
++                IList<NFAConfiguration> configsForState;
++                stateToConfigListMap.TryGetValue(stateI, out configsForState);
+// compare each configuration pair s, t to ensure:
+// s.ctx different than t.ctx if s.alt != t.alt
+int numConfigsForState = 0;
+diff --git a/Antlr3/Analysis/DecisionProbe.cs b/Antlr3/Analysis/DecisionProbe.cs
+index 510cec2..69ce1ef 100644
+--- a/Antlr3/Analysis/DecisionProbe.cs
++++ b/Antlr3/Analysis/DecisionProbe.cs
+@@ -35,7 +35,6 @@ namespace Antlr3.Analysis
+using System;
+using System.Collections.Generic;
+using System.Linq;
+-    using Antlr.Runtime.JavaExtensions;
+using Antlr3.Misc;
+
+using ANTLRParser = Antlr3.Grammars.ANTLRParser;
+@@ -126,7 +125,7 @@ namespace Antlr3.Analysis
+/** The overall list of alts within the decision that have at least one
+*  conflicting input sequence.
+*/
+-        ICollection<int> _altsWithProblem = new HashSet<int>();
++        private readonly HashSet<int> _altsWithProblem = new HashSet<int>();
+
+/** If decision with > 1 alt has recursion in > 1 alt, it's (likely) nonregular
+*  lookahead.  The decision cannot be made with a DFA.
+@@ -462,12 +461,14 @@ namespace Antlr3.Analysis
+*/
+public virtual SemanticContext GetSemanticContextForAlt( DFAState d, int alt )
+{
+-            var altToPredMap = _stateToAltSetWithSemanticPredicatesMap.get( d );
++            IDictionary<int, SemanticContext> altToPredMap;
++            _stateToAltSetWithSemanticPredicatesMap.TryGetValue(d, out altToPredMap);
+if ( altToPredMap == null )
+-            {
+return null;
+-            }
+-            return altToPredMap.get( alt );
++
++            SemanticContext result;
++            altToPredMap.TryGetValue( alt, out result );
++            return result;
+}
+
+/** Return a list of alts whose predicate context was insufficient to
+@@ -475,7 +476,9 @@ namespace Antlr3.Analysis
+*/
+public virtual IDictionary<int, ICollection<IToken>> GetIncompletelyCoveredAlts( DFAState d )
+{
+-            return _stateToIncompletelyCoveredAltsMap.get( d );
++            IDictionary<int, ICollection<IToken>> result;
++            _stateToIncompletelyCoveredAltsMap.TryGetValue( d, out result );
++            return result;
+}
+
+public virtual void IssueWarnings()
+@@ -641,11 +644,12 @@ namespace Antlr3.Analysis
+//Collections.sort( sortedAlts );
+foreach ( int altI in sortedAlts )
+{
+-                var targetToCallSiteMap =
+-                    altToTargetToCallSitesMap.get( altI );
++                IDictionary<string, ICollection<NFAState>> targetToCallSiteMap;
++                altToTargetToCallSitesMap.TryGetValue(altI, out targetToCallSiteMap);
+var targetRules = targetToCallSiteMap.Keys;
+var callSiteStates = targetToCallSiteMap.Values;
+-                DFAState sampleBadState = (DFAState)altToDFAState.get( altI );
++                DFAState sampleBadState;
++                altToDFAState.TryGetValue(altI, out sampleBadState);
+ErrorManager.RecursionOverflow( this,
+sampleBadState,
+altI,
+@@ -662,7 +666,8 @@ namespace Antlr3.Analysis
+foreach ( int stateI in dfaStatesUnaliased )
+{
+// walk this DFA's config list
+-                IList<NFAConfiguration> configs = configurationsMap.get( stateI );
++                IList<NFAConfiguration> configs;
++                configurationsMap.TryGetValue(stateI, out configs);
+for ( int i = 0; i < configs.Count; i++ )
+{
+NFAConfiguration c = (NFAConfiguration)configs[i];
+@@ -671,14 +676,15 @@ namespace Antlr3.Analysis
+RuleClosureTransition @ref = (RuleClosureTransition)transition0;
+String targetRule = ( (NFAState)@ref.Target ).enclosingRule.Name;
+int altI = c.alt;
+-                    IDictionary<string, ICollection<NFAState>> targetToCallSiteMap =
+-                        altToTargetToCallSitesMap.get( altI );
++                    IDictionary<string, ICollection<NFAState>> targetToCallSiteMap;
++                    altToTargetToCallSitesMap.TryGetValue(altI, out targetToCallSiteMap);
+if ( targetToCallSiteMap == null )
+{
+targetToCallSiteMap = new Dictionary<string, ICollection<NFAState>>();
+altToTargetToCallSitesMap[altI] = targetToCallSiteMap;
+}
+-                    ICollection<NFAState> callSites = targetToCallSiteMap.get( targetRule );
++                    ICollection<NFAState> callSites;
++                    targetToCallSiteMap.TryGetValue(targetRule, out callSites);
+if ( callSites == null )
+{
+callSites = new HashSet<NFAState>();
+@@ -686,7 +692,8 @@ namespace Antlr3.Analysis
+}
+callSites.Add( ruleInvocationState );
+// track one problem DFA state per alt
+-                    if ( altToDFAState.get( altI ) == null )
++                    DFAState state;
++                    if ( !altToDFAState.TryGetValue( altI, out state ) || state == null )
+{
+DFAState sampleBadState = dfa.GetState( stateI );
+altToDFAState[altI] = sampleBadState;
+@@ -729,7 +736,7 @@ namespace Antlr3.Analysis
+*/
+_nonLLStarDecision = true;
+dfa.nfa.grammar.numNonLLStar++;
+-            _altsWithProblem.addAll( dfa.recursiveAltSet.ToList() );
++            _altsWithProblem.UnionWith( dfa.recursiveAltSet.ToList() );
+}
+
+public virtual void ReportRecursionOverflow( DFAState d,
+@@ -751,7 +758,7 @@ namespace Antlr3.Analysis
+
+public virtual void ReportNondeterminism( DFAState d, HashSet<int> nondeterministicAlts )
+{
+-            _altsWithProblem.addAll( nondeterministicAlts ); // track overall list
++            _altsWithProblem.UnionWith( nondeterministicAlts ); // track overall list
+_statesWithSyntacticallyAmbiguousAltsSet.Add( d );
+dfa.nfa.grammar.setOfNondeterministicDecisionNumbers.Add(
+dfa.DecisionNumber
+diff --git a/Antlr3/Analysis/LL1Analyzer.cs b/Antlr3/Analysis/LL1Analyzer.cs
+index b32fc5d..3b916ff 100644
+--- a/Antlr3/Analysis/LL1Analyzer.cs
++++ b/Antlr3/Analysis/LL1Analyzer.cs
+@@ -33,7 +33,6 @@
+namespace Antlr3.Analysis
+{
+using System.Collections.Generic;
+-    using Antlr.Runtime.JavaExtensions;
+
+using ANTLRParser = Antlr3.Grammars.ANTLRParser;
+using Console = System.Console;
+@@ -170,7 +169,8 @@ namespace Antlr3.Analysis
+public LookaheadSet Follow( Rule r )
+{
+//JSystem.@out.println("> FOLLOW("+r.name+") in rule "+r.startState.enclosingRule);
+-            LookaheadSet f = _followCache.get( r );
++            LookaheadSet f;
++            _followCache.TryGetValue(r, out f);
+if ( f != null )
+{
+return f;
+@@ -260,7 +260,7 @@ namespace Antlr3.Analysis
+// if transition 0 is a rule call and we don't want FOLLOW, check cache
+if ( !chaseFollowTransitions && transition0 is RuleClosureTransition )
+{
+-                tset = _firstCache.get( (NFAState)transition0.Target );
++                _firstCache.TryGetValue((NFAState)transition0.Target, out tset);
+}
+
+// if not in cache, must compute
+diff --git a/Antlr3/Analysis/LL1DFA.cs b/Antlr3/Analysis/LL1DFA.cs
+index c69a9aa..e16f141 100644
+--- a/Antlr3/Analysis/LL1DFA.cs
++++ b/Antlr3/Analysis/LL1DFA.cs
+@@ -35,7 +35,6 @@ namespace Antlr3.Analysis
+using System.Collections.Generic;
+using System.Linq;
+using Antlr3.Misc;
+-    using Antlr.Runtime.JavaExtensions;
+
+using ANTLRParser = Antlr3.Grammars.ANTLRParser;
+
+diff --git a/Antlr3/Analysis/NFAtoDFAConverter.cs b/Antlr3/Analysis/NFAtoDFAConverter.cs
+index 66befae..33de3f5 100644
+--- a/Antlr3/Analysis/NFAtoDFAConverter.cs
++++ b/Antlr3/Analysis/NFAtoDFAConverter.cs
+@@ -34,7 +34,6 @@ namespace Antlr3.Analysis
+{
+using System.Collections.Generic;
+using System.Linq;
+-    using Antlr.Runtime.JavaExtensions;
+using Antlr3.Misc;
+
+using BitSet = Antlr3.Misc.BitSet;
+@@ -445,7 +444,8 @@ namespace Antlr3.Analysis
+{
+// track which targets we've hit
+int tI = targetState.StateNumber;
+-                Transition oldTransition = (Transition)targetToLabelMap.get( tI );
++                Transition oldTransition;
++                targetToLabelMap.TryGetValue(tI, out oldTransition);
+if ( oldTransition != null )
+{
+//JSystem.@out.println("extra transition to "+tI+" upon "+label.toString(dfa.nfa.grammar));
+@@ -497,10 +497,10 @@ namespace Antlr3.Analysis
+Console.Out.WriteLine( "closure(" + d + ")" );
+}
+
+-            IList<NFAConfiguration> configs = new List<NFAConfiguration>();
++            List<NFAConfiguration> configs = new List<NFAConfiguration>();
+// Because we are adding to the configurations in closure
+// must clone initial list so we know when to stop doing closure
+-            configs.addAll( d.nfaConfigurations );
++            configs.AddRange( d.nfaConfigurations );
+// for each NFA configuration in d (abort if we detect non-LL(*) state)
+int numConfigs = configs.Count;
+for ( int i = 0; i < numConfigs; i++ )
+@@ -1550,8 +1550,8 @@ namespace Antlr3.Analysis
+for ( int i = 0; i < numConfigs; i++ )
+{
+NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations.Get( i );
+-                    SemanticContext semCtx = (SemanticContext)
+-                            altToPredMap.get( configuration.alt );
++                    SemanticContext semCtx;
++                    altToPredMap.TryGetValue(configuration.alt, out semCtx);
+if ( semCtx != null )
+{
+// resolve (first found) with pred
+@@ -1640,7 +1640,8 @@ namespace Antlr3.Analysis
+if ( configuration.semanticContext !=
+SemanticContext.EmptySemanticContext )
+{
+-                        OrderedHashSet<SemanticContext> predSet = altToSetOfContextsMap.get( altI );
++                        OrderedHashSet<SemanticContext> predSet;
++                        altToSetOfContextsMap.TryGetValue(altI, out predSet);
+predSet.Add( configuration.semanticContext );
+}
+else
+@@ -1680,7 +1681,8 @@ namespace Antlr3.Analysis
+IList<int> incompletelyCoveredAlts = new List<int>();
+foreach ( int altI in nondeterministicAlts )
+{
+-                OrderedHashSet<SemanticContext> contextsForThisAlt = altToSetOfContextsMap.get( altI );
++                OrderedHashSet<SemanticContext> contextsForThisAlt;
++                altToSetOfContextsMap.TryGetValue(altI, out contextsForThisAlt);
+if ( nondetAltsWithUncoveredConfiguration.Contains( altI ) )
+{ // >= 1 config has no ctx
+if ( contextsForThisAlt.Count > 0 )
+@@ -1736,7 +1738,8 @@ namespace Antlr3.Analysis
+}
+else
+{
+-                                ICollection<IToken> locations = altToLocationsReachableWithoutPredicate.get( altI );
++                                ICollection<IToken> locations;
++                                altToLocationsReachableWithoutPredicate.TryGetValue(altI, out locations);
+if ( locations == null )
+{
+locations = new HashSet<IToken>();
+diff --git a/Antlr3/Codegen/CodeGenerator.cs b/Antlr3/Codegen/CodeGenerator.cs
+index 74f50df..a5a1a9b 100644
+--- a/Antlr3/Codegen/CodeGenerator.cs
++++ b/Antlr3/Codegen/CodeGenerator.cs
+@@ -34,13 +34,11 @@ namespace Antlr3.Codegen
+{
+using System.Collections.Generic;
+using System.Linq;
+-    using Antlr.Runtime.JavaExtensions;
+using Antlr3.Analysis;
+-    using Antlr3.Grammars;
+using Antlr3.Extensions;
++    using Antlr3.Grammars;
+using Antlr4.StringTemplate.Visualizer.Extensions;
+
+-    using File = System.IO.File;
+using Activator = System.Activator;
+using ANTLRLexer = Antlr3.Grammars.ANTLRLexer;
+using ANTLRParser = Antlr3.Grammars.ANTLRParser;
+@@ -57,6 +55,8 @@ namespace Antlr3.Codegen
+using DFAState = Antlr3.Analysis.DFAState;
+using ErrorManager = Antlr3.Tool.ErrorManager;
+using Exception = System.Exception;
++    using File = System.IO.File;
++    using FileNotFoundException = System.IO.FileNotFoundException;
+using Grammar = Antlr3.Tool.Grammar;
+using GrammarAST = Antlr3.Tool.GrammarAST;
+using GrammarType = Antlr3.Tool.GrammarType;
+@@ -71,15 +71,15 @@ namespace Antlr3.Codegen
+using NFAState = Antlr3.Analysis.NFAState;
+using Path = System.IO.Path;
+using RecognitionException = Antlr.Runtime.RecognitionException;
++    using Regex = System.Text.RegularExpressions.Regex;
+using Rule = Antlr3.Tool.Rule;
+using RuntimeHelpers = System.Runtime.CompilerServices.RuntimeHelpers;
+using Stopwatch = System.Diagnostics.Stopwatch;
+using StringTemplate = Antlr4.StringTemplate.Template;
+using TemplateGroup = Antlr4.StringTemplate.TemplateGroup;
++    using TemplateGroupFile = Antlr4.StringTemplate.TemplateGroupFile;
+using TextWriter = System.IO.TextWriter;
+using TimeSpan = System.TimeSpan;
+-    using TemplateGroupFile = Antlr4.StringTemplate.TemplateGroupFile;
+-    using FileNotFoundException = System.IO.FileNotFoundException;
+
+/** ANTLR's code generator.
+*
+@@ -810,7 +810,9 @@ namespace Antlr3.Codegen
+ICollection<string> actionNameSet = scopeActions.Keys.ToArray();
+foreach ( string name in actionNameSet )
+{
+-                GrammarAST actionAST = (GrammarAST)scopeActions.get( name );
++                object action;
++                scopeActions.TryGetValue(name, out action);
++                GrammarAST actionAST = action as GrammarAST;
+IList<object> chunks = TranslateAction( ruleName, actionAST );
+scopeActions[name] = chunks; // replace with translation
+}
+@@ -1274,7 +1276,7 @@ namespace Antlr3.Codegen
+{
+return -1;
+}
+-            actionText = actionText.replaceAll( "//.*\n", "" );
++            actionText = Regex.Replace(actionText, "//.*\n", "" );
+int n = actionText.Length;
+//JSystem.@out.println("actionText@"+start+"->"+(char)targetChar+"="+actionText.substring(start,n));
+int p = start;
+diff --git a/Antlr3/Extensions/ExceptionExtensions.cs b/Antlr3/Extensions/ExceptionExtensions.cs
+index a224d64..88fe742 100644
+--- a/Antlr3/Extensions/ExceptionExtensions.cs
++++ b/Antlr3/Extensions/ExceptionExtensions.cs
+@@ -33,7 +33,12 @@
+namespace Antlr3.Extensions
+{
+using System;
++    using System.Linq;
++
+using BindingFlags = System.Reflection.BindingFlags;
++    using StackFrame = System.Diagnostics.StackFrame;
++    using StackTrace = System.Diagnostics.StackTrace;
++    using TextWriter = System.IO.TextWriter;
+
+public static class ExceptionExtensions
+{
+@@ -65,5 +70,28 @@ namespace Antlr3.Extensions
+{
+_internalPreserveStackTrace(e);
+}
++
++        internal static StackFrame[] GetStackTrace(this Exception e)
++        {
++            StackTrace trace = new StackTrace(e, true);
++            StackFrame[] frames = trace.GetFrames();
++            if (frames == null)
++            {
++                // don't include this helper function in the trace
++                frames = new StackTrace(true).GetFrames().Skip(1).ToArray();
++            }
++            return frames;
++        }
++
++        internal static void PrintStackTrace(this Exception e, TextWriter writer)
++        {
++            writer.WriteLine(e.ToString());
++            string trace = e.StackTrace ?? string.Empty;
++            foreach (string line in trace.Split('\n', '\r'))
++            {
++                if (!string.IsNullOrEmpty(line))
++                    writer.WriteLine("        " + line);
++            }
++        }
+}
+}
+diff --git a/Antlr3/Grammars/ANTLRParserHelper.cs b/Antlr3/Grammars/ANTLRParserHelper.cs
+index c42942b..48c1914 100644
+--- a/Antlr3/Grammars/ANTLRParserHelper.cs
++++ b/Antlr3/Grammars/ANTLRParserHelper.cs
+@@ -32,9 +32,7 @@
+
+namespace Antlr3.Grammars
+{
+-    using System;
+using Antlr.Runtime;
+-    using Antlr.Runtime.JavaExtensions;
+using Antlr.Runtime.Tree;
+
+using ErrorManager = Antlr3.Tool.ErrorManager;
+diff --git a/Antlr3/Grammars/DefineGrammarItemsWalkerHelper.cs b/Antlr3/Grammars/DefineGrammarItemsWalkerHelper.cs
+index eaf274a..f00e179 100644
+--- a/Antlr3/Grammars/DefineGrammarItemsWalkerHelper.cs
++++ b/Antlr3/Grammars/DefineGrammarItemsWalkerHelper.cs
+@@ -33,10 +33,9 @@
+namespace Antlr3.Grammars
+{
+using System;
+-    using Antlr.Runtime.JavaExtensions;
++    using System.Linq;
+using Antlr.Runtime.Tree;
+using Antlr3.Tool;
+-    using System.Linq;
+
+partial class DefineGrammarItemsWalker
+{
+@@ -74,7 +73,7 @@ namespace Antlr3.Grammars
+// find the grammar spec
+while ( !p.Text.Equals( "grammar" ) )
+{
+-                p = (GrammarAST)p.getNextSibling();
++                p = (GrammarAST)p.Parent.GetChild(p.ChildIndex + 1);
+}
+for ( int i = 0; i < p.ChildCount; i++ )
+{
+diff --git a/Antlr3/Grammars/LeftRecursiveRuleWalker.g3 b/Antlr3/Grammars/LeftRecursiveRuleWalker.g3
+index 4f3a904..dea7828 100644
+--- a/Antlr3/Grammars/LeftRecursiveRuleWalker.g3
++++ b/Antlr3/Grammars/LeftRecursiveRuleWalker.g3
+@@ -49,7 +49,6 @@ using Antlr3.Tool;
+using Antlr3.Extensions;
+using BitSet = Antlr.Runtime.BitSet;
+using DFA = Antlr.Runtime.DFA;
+-using Antlr.Runtime.JavaExtensions;
+}
+
+optionsSpec
+@@ -130,7 +129,7 @@ block
+outerAlternative returns [bool isLeftRec]
+@init
+{
+-GrammarAST rew=(GrammarAST)$start.getNextSibling();
++GrammarAST rew=(GrammarAST)$start.Parent.GetChild( $start.ChildIndex + 1 );
+if (rew.Type != REWRITES)
+rew = null;
+}
+diff --git a/Antlr3/Misc/BitSet.cs b/Antlr3/Misc/BitSet.cs
+index 9aa5450..79ecd67 100644
+--- a/Antlr3/Misc/BitSet.cs
++++ b/Antlr3/Misc/BitSet.cs
+@@ -34,7 +34,6 @@ namespace Antlr3.Misc
+{
+using System.Collections.Generic;
+using System.Linq;
+-    using Antlr.Runtime.JavaExtensions;
+
+using ArgumentException = System.ArgumentException;
+using Array = System.Array;
+@@ -46,8 +45,6 @@ namespace Antlr3.Misc
+using IList = System.Collections.IList;
+using Label = Antlr3.Analysis.Label;
+using Math = System.Math;
+-    using NotImplementedException = System.NotImplementedException;
+-    using Obsolete = System.ObsoleteAttribute;
+using StringBuilder = System.Text.StringBuilder;
+
+/**A BitSet to replace java.util.BitSet.
+diff --git a/Antlr3/Tool/AssignTokenTypesBehavior.cs b/Antlr3/Tool/AssignTokenTypesBehavior.cs
+index 4eb3498..0b6a244 100644
+--- a/Antlr3/Tool/AssignTokenTypesBehavior.cs
++++ b/Antlr3/Tool/AssignTokenTypesBehavior.cs
+@@ -34,8 +34,6 @@ namespace Antlr3.Tool
+{
+using System.Collections.Generic;
+using System.Linq;
+-    using Antlr.Runtime.JavaExtensions;
+-    using Antlr.Runtime.Tree;
+using Antlr3.Grammars;
+
+using CLSCompliant = System.CLSCompliantAttribute;
+@@ -181,7 +179,8 @@ namespace Antlr3.Tool
+{
+string tokenID = t.Text;
+string literal = s.Text;
+-            string prevAliasLiteralID = aliasesReverseIndex.get( literal );
++            string prevAliasLiteralID;
++            aliasesReverseIndex.TryGetValue(literal, out prevAliasLiteralID);
+if ( prevAliasLiteralID != null )
+{ // we've seen this literal before
+if ( tokenID.Equals( prevAliasLiteralID ) )
+@@ -211,7 +210,8 @@ namespace Antlr3.Tool
+// don't assign a new token type; use existingLiteralType.
+tokens[tokenID] = existingLiteralType;
+}
+-            string prevAliasTokenID = aliases.get( tokenID );
++            string prevAliasTokenID;
++            aliases.TryGetValue(tokenID, out prevAliasTokenID);
+if ( prevAliasTokenID != null )
+{
+ErrorManager.GrammarError( ErrorManager.MSG_TOKEN_ALIAS_REASSIGNMENT,
+@@ -293,9 +293,12 @@ namespace Antlr3.Tool
+string literal = alias.Value;
+if ( literal[0] == '\'' && stringLiterals.ContainsKey( literal ) )
+{
+-                    stringLiterals[literal] = tokens.get( tokenID );
++                    int token;
++                    tokens.TryGetValue(tokenID, out token);
++                    stringLiterals[literal] = token;
+// an alias still means you need a lexer rule for it
+-                    int typeI = (int)tokens.get( tokenID );
++                    int typeI;
++                    tokens.TryGetValue(tokenID, out typeI);
+if ( !tokenRuleDefs.Contains( tokenID ) )
+{
+root.DefineLexerRuleForAliasedStringLiteral( tokenID, literal, typeI );
+diff --git a/Antlr3/Tool/Attribute.cs b/Antlr3/Tool/Attribute.cs
+index 0dee06c..07d64d5 100644
+--- a/Antlr3/Tool/Attribute.cs
++++ b/Antlr3/Tool/Attribute.cs
+@@ -32,8 +32,6 @@
+
+namespace Antlr3.Tool
+{
+-    using Antlr.Runtime.JavaExtensions;
+-
+/** Track the names of attributes define in arg lists, return values,
+*  scope blocks etc...
+*/
+diff --git a/Antlr3/Tool/CompositeGrammar.cs b/Antlr3/Tool/CompositeGrammar.cs
+index 8726202..cb8dae8 100644
+--- a/Antlr3/Tool/CompositeGrammar.cs
++++ b/Antlr3/Tool/CompositeGrammar.cs
+@@ -379,7 +379,7 @@ namespace Antlr3.Tool
+
+public virtual NFAState GetState( int s )
+{
+-            return (NFAState)numberToStateList[s];
++            return numberToStateList[s];
+}
+
+public virtual void AssignTokenTypes()
+@@ -495,7 +495,7 @@ namespace Antlr3.Tool
+// make set of all rules defined thus far walking delegation tree.
+// the same rule in two delegates resolves in favor of first found
+// in tree therefore second must not be included
+-            ruleDefs.addAll( localRuleDefs );
++            ruleDefs.UnionWith( localRuleDefs );
+
+// pass larger set of defined rules to delegates
+if ( p.children != null )
+diff --git a/Antlr3/Tool/ErrorManager.cs b/Antlr3/Tool/ErrorManager.cs
+index c39c5bc..e19e0f1 100644
+--- a/Antlr3/Tool/ErrorManager.cs
++++ b/Antlr3/Tool/ErrorManager.cs
+@@ -34,8 +34,7 @@ namespace Antlr3.Tool
+{
+using System;
+using System.Collections.Generic;
+-    using Antlr.Runtime.JavaExtensions;
+-    using Antlr3.Misc;
++    using Antlr3.Extensions;
+
+using BitSet = Antlr3.Misc.BitSet;
+using CultureInfo = System.Globalization.CultureInfo;
+@@ -44,23 +43,19 @@ namespace Antlr3.Tool
+using FieldAccessException = System.FieldAccessException;
+using FieldInfo = System.Reflection.FieldInfo;
+using ICollection = System.Collections.ICollection;
+-    using IOException = System.IO.IOException;
++    using ITemplateErrorListener = Antlr4.StringTemplate.ITemplateErrorListener;
+using IToken = Antlr.Runtime.IToken;
+using NFAState = Antlr3.Analysis.NFAState;
+using Path = System.IO.Path;
+using RecognitionException = Antlr.Runtime.RecognitionException;
+using StackFrame = System.Diagnostics.StackFrame;
+-    using StreamReader = System.IO.StreamReader;
+using StringTemplate = Antlr4.StringTemplate.Template;
+using TemplateGroup = Antlr4.StringTemplate.TemplateGroup;
+-    using TargetInvocationException = System.Reflection.TargetInvocationException;
++    using TemplateGroupFile = Antlr4.StringTemplate.TemplateGroupFile;
++    using TemplateMessage = Antlr4.StringTemplate.Misc.TemplateMessage;
+using Thread = System.Threading.Thread;
+using Tool = Antlr3.AntlrTool;
+using TraceListener = System.Diagnostics.TraceListener;
+-    using ITemplateErrorListener = Antlr4.StringTemplate.ITemplateErrorListener;
+-    using TemplateErrorManager = Antlr4.StringTemplate.Misc.ErrorManager;
+-    using TemplateGroupFile = Antlr4.StringTemplate.TemplateGroupFile;
+-    using TemplateMessage = Antlr4.StringTemplate.Misc.TemplateMessage;
+
+public static class ErrorManager
+{
+@@ -267,7 +262,7 @@ namespace Antlr3.Tool
+{
+if ( FormatWantsSingleLineMessage() )
+{
+-                    msg = msg.replaceAll( "\n", " " );
++                    msg = msg.Replace( '\n', ' ' );
+}
+Console.Error.WriteLine( msg );
+
+@@ -280,7 +275,7 @@ namespace Antlr3.Tool
+String outputMsg = msg.ToString();
+if ( FormatWantsSingleLineMessage() )
+{
+-                    outputMsg = outputMsg.replaceAll( "\n", " " );
++                    outputMsg = outputMsg.Replace( '\n', ' ' );
+}
+Console.Error.WriteLine( outputMsg );
+
+@@ -293,7 +288,7 @@ namespace Antlr3.Tool
+String outputMsg = msg.ToString();
+if ( FormatWantsSingleLineMessage() )
+{
+-                    outputMsg = outputMsg.replaceAll( "\n", " " );
++                    outputMsg = outputMsg.Replace( '\n', ' ' );
+}
+Console.Error.WriteLine( outputMsg );
+
+@@ -306,7 +301,7 @@ namespace Antlr3.Tool
+String outputMsg = msg.ToString();
+if ( FormatWantsSingleLineMessage() )
+{
+-                    outputMsg = outputMsg.replaceAll( "\n", " " );
++                    outputMsg = outputMsg.Replace( '\n', ' ' );
+}
+Console.Error.WriteLine( outputMsg );
+
+@@ -594,8 +589,8 @@ namespace Antlr3.Tool
+
+public static IANTLRErrorListener GetErrorListener()
+{
+-            IANTLRErrorListener el =
+-                (IANTLRErrorListener)threadToListenerMap.get( Thread.CurrentThread );
++            IANTLRErrorListener el;
++            threadToListenerMap.TryGetValue(Thread.CurrentThread, out el);
+if ( el == null )
+{
+return theDefaultErrorListener;
+@@ -605,8 +600,8 @@ namespace Antlr3.Tool
+
+public static ErrorState GetErrorState()
+{
+-            ErrorState ec =
+-                (ErrorState)threadToErrorStateMap.get( Thread.CurrentThread );
++            ErrorState ec;
++            threadToErrorStateMap.TryGetValue(Thread.CurrentThread, out ec);
+if ( ec == null )
+{
+ec = new ErrorState();
+@@ -690,7 +685,8 @@ namespace Antlr3.Tool
+GetErrorState().errors++;
+Message msg = new GrammarDanglingStateMessage( probe, d );
+GetErrorState().errorMsgIDs.Add( msg.msgID );
+-            ICollection<object> seen = (ICollection<object>)emitSingleError.get( "danglingState" );
++            ICollection<object> seen;
++            emitSingleError.TryGetValue("danglingState", out seen);
+if ( !seen.Contains( d.dfa.decisionNumber + "|" + d.AltSet ) )
+{
+GetErrorListener().Error( msg );
+@@ -865,7 +861,7 @@ namespace Antlr3.Tool
+/** Return first non ErrorManager code location for generating messages */
+private static StackFrame GetLastNonErrorManagerCodeLocation( Exception e )
+{
+-            StackFrame[] stack = e.getStackTrace();
++            StackFrame[] stack = e.GetStackTrace();
+int i = 0;
+for ( ; i < stack.Length; i++ )
+{
+@@ -1008,7 +1004,8 @@ namespace Antlr3.Tool
+*/
+public static void Panic()
+{
+-            Tool tool = (Tool)threadToToolMap.get( Thread.CurrentThread );
++            Tool tool;
++            threadToToolMap.TryGetValue(Thread.CurrentThread, out tool);
+if ( tool == null )
+{
+// no tool registered, exit
+diff --git a/Antlr3/Tool/Grammar.cs b/Antlr3/Tool/Grammar.cs
+index e1301eb..5b7f04f 100644
+--- a/Antlr3/Tool/Grammar.cs
++++ b/Antlr3/Tool/Grammar.cs
+@@ -37,9 +37,9 @@ namespace Antlr3.Tool
+using System.Linq;
+using Antlr.Runtime.JavaExtensions;
+using Antlr3.Analysis;
++    using Antlr3.Extensions;
+using Antlr3.Grammars;
+using Antlr3.Misc;
+-    using Antlr3.Extensions;
+
+using CLSCompliant = System.CLSCompliantAttribute;
+using CodeGenerator = Antlr3.Codegen.CodeGenerator;
+@@ -62,12 +62,12 @@ namespace Antlr3.Tool
+using StringReader = System.IO.StringReader;
+using StringTemplate = Antlr4.StringTemplate.Template;
+using Target = Antlr3.Codegen.Target;
++    using TemplateGroup = Antlr4.StringTemplate.TemplateGroup;
++    using TemplateGroupString = Antlr4.StringTemplate.TemplateGroupString;
+using TextReader = System.IO.TextReader;
+using TextWriter = System.IO.TextWriter;
+using TimeSpan = System.TimeSpan;
+-    using TemplateGroupString = Antlr4.StringTemplate.TemplateGroupString;
+using Tool = Antlr3.AntlrTool;
+-    using TemplateGroup = Antlr4.StringTemplate.TemplateGroup;
+
+/** Represents a grammar in memory. */
+public class Grammar
+@@ -1228,7 +1228,8 @@ namespace Antlr3.Tool
+/** Many imports are illegal such as lexer into a tree grammar */
+public virtual bool ValidImport( Grammar @delegate )
+{
+-            IList<GrammarType> validDelegators = validDelegations.get( @delegate.type );
++            IList<GrammarType> validDelegators;
++            validDelegations.TryGetValue(@delegate.type, out validDelegators);
+return validDelegators != null && validDelegators.Contains( this.type );
+}
+
+@@ -1244,13 +1245,16 @@ namespace Antlr3.Tool
+return null;
+}
+LexerGrammarTemplate.SetAttribute( "name", name );
++
++            IDictionary<string, object> lexerActions;
++            Actions.TryGetValue("lexer", out lexerActions);
+// if there are any actions set for lexer, pass them in
+-            if ( Actions.get( "lexer" ) != null )
++            if ( lexerActions != null )
+{
+LexerGrammarTemplate.SetAttribute( "actionNames",
+-                                            ( Actions.get( "lexer" ) ).Keys );
++                                            lexerActions.Keys );
+LexerGrammarTemplate.SetAttribute( "actions",
+-                                            ( Actions.get( "lexer" ) ).Values );
++                                            lexerActions.Values );
+}
+// make sure generated grammar has the same options
+if ( options != null )
+@@ -2051,13 +2055,17 @@ namespace Antlr3.Tool
+}
+//JSystem.@out.println("@"+scope+"::"+nameAST.getText()+"{"+actionAST.getText()+"}");
+string actionName = nameAST.Text;
+-            var scopeActions = Actions.get( scope );
++            IDictionary<string, object> scopeActions;
++            Actions.TryGetValue(scope, out scopeActions);
+if ( scopeActions == null )
+{
+scopeActions = new Dictionary<string, object>();
+Actions[scope] = scopeActions;
+}
+-            GrammarAST a = (GrammarAST)scopeActions.get( actionName );
++
++            object o;
++            scopeActions.TryGetValue(actionName, out o);
++            GrammarAST a = o as GrammarAST;
+if ( a != null )
+{
+ErrorManager.GrammarError(
+@@ -2086,7 +2094,8 @@ namespace Antlr3.Tool
+public virtual void SetSynPredGateIfNotAlready( StringTemplate gateST )
+{
+string scope = GetDefaultActionScope( type );
+-            var actionsForGrammarScope = Actions.get( scope );
++            IDictionary<string, object> actionsForGrammarScope;
++            Actions.TryGetValue(scope, out actionsForGrammarScope);
+// if no synpredgate action set by user then set
+if ( actionsForGrammarScope == null || !actionsForGrammarScope.ContainsKey( Grammar.SynpredGateActionName ) )
+{
+@@ -2329,7 +2338,9 @@ namespace Antlr3.Tool
+/** Get a global scope */
+public virtual AttributeScope GetGlobalScope( string name )
+{
+-            return (AttributeScope)scopes.get( name );
++            AttributeScope result;
++            scopes.TryGetValue(name, out result);
++            return result;
+}
+
+/** Define a label defined in a rule r; check the validity then ask the
+@@ -3148,11 +3159,11 @@ namespace Antlr3.Tool
+object value = null;
+if ( options != null )
+{
+-                value = options.get( key );
++                options.TryGetValue( key, out value );
+}
+if ( value == null )
+{
+-                value = defaultOptions.get( key );
++                defaultOptions.TryGetValue( key, out value );
+}
+return value;
+}
+@@ -3164,11 +3175,14 @@ namespace Antlr3.Tool
+{
+return v;
+}
+-            if ( type == GrammarType.Lexer )
+-            {
+-                return defaultLexerBlockOptions.get( key );
+-            }
+-            return defaultBlockOptions.get( key );
++
++            object result;
++            if (type == GrammarType.Lexer)
++                defaultLexerBlockOptions.TryGetValue(key, out result);
++            else
++                defaultBlockOptions.TryGetValue(key, out result);
++
++            return result;
+}
+
+public virtual int GetUserMaxLookahead( int decision )
+@@ -3437,7 +3451,9 @@ namespace Antlr3.Tool
+/** Useful for ANTLRWorks to map position in file to the DFA for display */
+public virtual DFA GetLookaheadDFAFromPositionInFile( int line, int col )
+{
+-            return (DFA)lineColumnToLookaheadDFAMap.get( line.ToString() + ":" + col.ToString() );
++            DFA result;
++            lineColumnToLookaheadDFAMap.TryGetValue( line.ToString() + ":" + col.ToString(), out result );
++            return result;
+}
+
+#if false
+diff --git a/Antlr3/Tool/GrammarAST.cs b/Antlr3/Tool/GrammarAST.cs
+index cee2469..cfb9808 100644
+--- a/Antlr3/Tool/GrammarAST.cs
++++ b/Antlr3/Tool/GrammarAST.cs
+@@ -34,7 +34,6 @@ namespace Antlr3.Tool
+{
+using System.Collections.Generic;
+using System.Linq;
+-    using Antlr.Runtime.JavaExtensions;
+using Antlr3.Extensions;
+
+using ANTLRParser = Antlr3.Grammars.ANTLRParser;
+@@ -42,10 +41,8 @@ namespace Antlr3.Tool
+using CommonToken = Antlr.Runtime.CommonToken;
+using DFA = Antlr3.Analysis.DFA;
+using IIntSet = Antlr3.Misc.IIntSet;
+-    using Interval = Antlr3.Misc.Interval;
+using IToken = Antlr.Runtime.IToken;
+using ITree = Antlr.Runtime.Tree.ITree;
+-    using Math = System.Math;
+using NFAState = Antlr3.Analysis.NFAState;
+using StringTemplate = Antlr4.StringTemplate.Template;
+
+@@ -304,7 +301,7 @@ namespace Antlr3.Tool
+object value = null;
+if ( blockOptions != null )
+{
+-                value = blockOptions.get( key );
++                blockOptions.TryGetValue( key, out value );
+}
+return value;
+}
+@@ -318,7 +315,9 @@ namespace Antlr3.Tool
+}
+foreach ( string optionName in options.Keys.ToArray() )
+{
+-                string stored = SetBlockOption( grammar, optionName, options.get( optionName ) );
++                object option;
++                options.TryGetValue(optionName, out option);
++                string stored = SetBlockOption( grammar, optionName, option );
+if ( stored == null )
+options.Remove( optionName );
+}
+@@ -684,7 +683,7 @@ namespace Antlr3.Tool
+if (obj == null)
+return 0;
+
+-                return ObjectExtensions.ShiftPrimeXOR(obj.Token.Line, obj.Token.CharPositionInLine);
++                return obj.Token.Line ^ obj.Token.CharPositionInLine;
+}
+}
+}
+diff --git a/Antlr3/Tool/GrammarDanglingStateMessage.cs b/Antlr3/Tool/GrammarDanglingStateMessage.cs
+index a960492..8201d91 100644
+--- a/Antlr3/Tool/GrammarDanglingStateMessage.cs
++++ b/Antlr3/Tool/GrammarDanglingStateMessage.cs
+@@ -33,7 +33,6 @@
+namespace Antlr3.Tool
+{
+using System.Collections.Generic;
+-    using Antlr.Runtime.JavaExtensions;
+using Antlr3.Extensions;
+
+using DecisionProbe = Antlr3.Analysis.DecisionProbe;
+@@ -70,7 +69,7 @@ namespace Antlr3.Tool
+string input = probe.GetInputSequenceDisplay( labels );
+StringTemplate st = GetMessageTemplate();
+List<int> alts = new List<int>();
+-            alts.addAll( problemState.AltSet );
++            alts.AddRange( problemState.AltSet );
+alts.Sort();
+st.SetAttribute( "danglingAlts", alts );
+st.SetAttribute( "input", input );
+diff --git a/Antlr3/Tool/GrammarInsufficientPredicatesMessage.cs b/Antlr3/Tool/GrammarInsufficientPredicatesMessage.cs
+index 94ae346..f9ddfce 100644
+--- a/Antlr3/Tool/GrammarInsufficientPredicatesMessage.cs
++++ b/Antlr3/Tool/GrammarInsufficientPredicatesMessage.cs
+@@ -33,7 +33,6 @@
+namespace Antlr3.Tool
+{
+using System.Collections.Generic;
+-    using Antlr.Runtime.JavaExtensions;
+using Antlr3.Analysis;
+using Antlr3.Extensions;
+
+@@ -71,11 +70,13 @@ namespace Antlr3.Tool
+// convert to string key to avoid 3.1 ST bug
+var altToLocationsWithStringKey = new SortedList<string, ICollection<IToken>>(StringComparer.Ordinal);
+List<int> alts = new List<int>();
+-            alts.addAll( altToLocations.Keys );
++            alts.AddRange( altToLocations.Keys );
+alts.Sort();
+foreach ( int altI in alts )
+{
+-                altToLocationsWithStringKey[altI.ToString()] = altToLocations.get( altI );
++                ICollection<IToken> locations;
++                altToLocations.TryGetValue(altI, out locations);
++                altToLocationsWithStringKey[altI.ToString()] = locations;
+//List<string> tokens = new List<string>();
+//foreach ( IToken t in altToLocations.get( altI ) )
+//{
+diff --git a/Antlr3/Tool/GrammarReport.cs b/Antlr3/Tool/GrammarReport.cs
+index 9852f15..c26e260 100644
+--- a/Antlr3/Tool/GrammarReport.cs
++++ b/Antlr3/Tool/GrammarReport.cs
+@@ -36,7 +36,6 @@ namespace Antlr3.Tool
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+-    using Antlr.Runtime.JavaExtensions;
+using Antlr3.Grammars;
+
+using DFA = Antlr3.Analysis.DFA;
+@@ -93,9 +92,8 @@ namespace Antlr3.Tool
+int totalNonSynPredProductions = 0;
+int totalNonSynPredRules = 0;
+ICollection<Rule> rules = g.Rules;
+-            for (Iterator it = rules.iterator(); it.hasNext(); )
++            foreach (Rule r in rules)
+{
+-                Rule r = (Rule)it.next();
+if (!r.Name.StartsWith(Grammar.SynpredRulePrefix, StringComparison.OrdinalIgnoreCase))
+{
+totalNonSynPredProductions += r.NumberOfAlts;
+@@ -320,11 +318,12 @@ namespace Antlr3.Tool
+protected static ReportData DecodeReportData(string dataS)
+{
+ReportData data = new ReportData();
+-            StringTokenizer st = new StringTokenizer(dataS, "\t");
++            IEnumerator<string> st = dataS.Split('\t').Cast<string>().GetEnumerator();
+FieldInfo[] fields = typeof(ReportData).GetFields();
+foreach (FieldInfo f in fields)
+{
+-                string v = st.nextToken();
++                st.MoveNext();
++                string v = st.Current;
+try
+{
+if (f.FieldType == typeof(string))
+diff --git a/Antlr3/Tool/GrammarSanity.cs b/Antlr3/Tool/GrammarSanity.cs
+index 8f93811..9818242 100644
+--- a/Antlr3/Tool/GrammarSanity.cs
++++ b/Antlr3/Tool/GrammarSanity.cs
+@@ -33,7 +33,6 @@
+namespace Antlr3.Tool
+{
+using System.Collections.Generic;
+-    using Antlr.Runtime.JavaExtensions;
+
+using ANTLRParser = Antlr3.Grammars.ANTLRParser;
+using NFAState = Antlr3.Analysis.NFAState;
+@@ -297,7 +296,7 @@ namespace Antlr3.Tool
+{
+if ( IsValidSimpleElementNode( elementAST ) )
+{
+-                GrammarAST next = (GrammarAST)elementAST.getNextSibling();
++                GrammarAST next = (GrammarAST)elementAST.Parent.GetChild(elementAST.ChildIndex + 1);
+if ( !IsNextNonActionElementEOA( next ) )
+{
+ErrorManager.GrammarWarning( ErrorManager.MSG_REWRITE_FOR_MULTI_ELEMENT_ALT,
+@@ -322,7 +321,7 @@ namespace Antlr3.Tool
+case ANTLRParser.BACKTRACK_SEMPRED:
+case ANTLRParser.GATED_SEMPRED:
+EnsureAltIsSimpleNodeOrTree( altAST,
+-                                            (GrammarAST)elementAST.getNextSibling(),
++                                            (GrammarAST)elementAST.Parent.GetChild(elementAST.ChildIndex + 1),
+outerAltNum );
+return;
+}
+@@ -352,12 +351,14 @@ namespace Antlr3.Tool
+while ( t.Type == ANTLRParser.ACTION ||
+t.Type == ANTLRParser.SEMPRED )
+{
+-                t = (GrammarAST)t.getNextSibling();
++                t = (GrammarAST)t.Parent.GetChild(t.ChildIndex + 1);
+}
++
+if ( t.Type == ANTLRParser.EOA )
+{
+return true;
+}
++
+return false;
+}
+}
+diff --git a/Antlr3/Tool/LeftRecursiveRuleAnalyzer.cs b/Antlr3/Tool/LeftRecursiveRuleAnalyzer.cs
+index 61f8b57..daeb055 100644
+--- a/Antlr3/Tool/LeftRecursiveRuleAnalyzer.cs
++++ b/Antlr3/Tool/LeftRecursiveRuleAnalyzer.cs
+@@ -33,15 +33,15 @@
+namespace Antlr3.Tool
+{
+using System.Collections.Generic;
+-    using Antlr.Runtime.JavaExtensions;
++    using System.Linq;
+using Antlr.Runtime.Tree;
+using Antlr3.Codegen;
+using Antlr3.Extensions;
+using Antlr3.Grammars;
+-    using Console = System.Console;
++
+using Exception = System.Exception;
+-    using StringTemplate = Antlr4.StringTemplate.Template;
+using StringBuilder = System.Text.StringBuilder;
++    using StringTemplate = Antlr4.StringTemplate.Template;
+using TemplateGroup = Antlr4.StringTemplate.TemplateGroup;
+using TemplateGroupFile = Antlr4.StringTemplate.TemplateGroupFile;
+
+@@ -114,7 +114,9 @@ namespace Antlr3.Tool
+ASSOC assoc = ASSOC.left;
+if (t.terminalOptions != null)
+{
+-                string a = (string)t.terminalOptions.get("assoc");
++                object o;
++                t.terminalOptions.TryGetValue("assoc", out o);
++                string a = o as string;
+if (a != null)
+{
+if (a.Equals(ASSOC.right.ToString()))
+@@ -264,13 +266,11 @@ namespace Antlr3.Tool
+generator.Templates.GetInstanceOf("recRuleSetResultAction");
+ruleST.SetAttribute("setResultAction", setResultST);
+
+-            IDictionary<int, string> opPrecRuleAlts = new Dictionary<int, string>();
+-            opPrecRuleAlts.addAll(binaryAlts);
+-            opPrecRuleAlts.addAll(ternaryAlts);
+-            opPrecRuleAlts.addAll(suffixAlts);
++            IDictionary<int, string> opPrecRuleAlts = binaryAlts.Concat(ternaryAlts).Concat(suffixAlts).ToDictionary(i => i.Key, i => i.Value);
+foreach (int alt in opPrecRuleAlts.Keys)
+{
+-                string altText = opPrecRuleAlts.get(alt);
++                string altText;
++                opPrecRuleAlts.TryGetValue(alt, out altText);
+StringTemplate altST = recRuleTemplates.GetInstanceOf("recRuleAlt");
+StringTemplate predST =
+generator.Templates.GetInstanceOf("recRuleAltPredicate");
+@@ -388,8 +388,11 @@ namespace Antlr3.Tool
+public int NextPrecedence(int alt)
+{
+int p = Precedence(alt);
+-            if (altAssociativity.get(alt) == ASSOC.left)
++            ASSOC assoc;
++            altAssociativity.TryGetValue(alt, out assoc);
++            if (assoc == ASSOC.left)
+p++;
++
+return p;
+}
+
+diff --git a/Antlr3/Tool/NameSpaceChecker.cs b/Antlr3/Tool/NameSpaceChecker.cs
+index 4311419..4afbdd4 100644
+--- a/Antlr3/Tool/NameSpaceChecker.cs
++++ b/Antlr3/Tool/NameSpaceChecker.cs
+@@ -34,7 +34,6 @@ namespace Antlr3.Tool
+{
+using System.Collections.Generic;
+using System.Linq;
+-    using Antlr.Runtime.JavaExtensions;
+
+using IToken = Antlr.Runtime.IToken;
+using Label = Antlr3.Analysis.Label;
+@@ -285,8 +284,8 @@ namespace Antlr3.Tool
+*/
+public virtual bool CheckForLabelTypeMismatch( Rule r, IToken label, LabelType type )
+{
+-            Grammar.LabelElementPair prevLabelPair =
+-                (Grammar.LabelElementPair)r.LabelNameSpace.get( label.Text );
++            Grammar.LabelElementPair prevLabelPair;
++            r.LabelNameSpace.TryGetValue(label.Text, out prevLabelPair);
+if ( prevLabelPair != null )
+{
+// label already defined; if same type, no problem
+diff --git a/Antlr3/Tool/NonRegularDecisionMessage.cs b/Antlr3/Tool/NonRegularDecisionMessage.cs
+index c81bc08..e951946 100644
+--- a/Antlr3/Tool/NonRegularDecisionMessage.cs
++++ b/Antlr3/Tool/NonRegularDecisionMessage.cs
+@@ -33,7 +33,6 @@
+namespace Antlr3.Tool
+{
+using System.Collections.Generic;
+-    using Antlr.Runtime.JavaExtensions;
+using Antlr3.Extensions;
+
+using DecisionProbe = Antlr3.Analysis.DecisionProbe;
+@@ -67,7 +66,7 @@ namespace Antlr3.Tool
+string ruleName = probe.dfa.NFADecisionStartState.enclosingRule.Name;
+st.SetAttribute( "ruleName", ruleName );
+List<int> sortedAlts = new List<int>();
+-            sortedAlts.addAll( altsWithRecursion );
++            sortedAlts.AddRange( altsWithRecursion );
+sortedAlts.Sort();
+st.SetAttribute( "alts", sortedAlts );
+
+diff --git a/Antlr3/Tool/Rule.cs b/Antlr3/Tool/Rule.cs
+index 84525d7..4d825e2 100644
+--- a/Antlr3/Tool/Rule.cs
++++ b/Antlr3/Tool/Rule.cs
+@@ -34,7 +34,6 @@ namespace Antlr3.Tool
+{
+using System.Collections.Generic;
+using System.Linq;
+-    using Antlr.Runtime.JavaExtensions;
+using Antlr3.Extensions;
+
+using ANTLRParser = Antlr3.Grammars.ANTLRParser;
+@@ -753,7 +752,8 @@ namespace Antlr3.Tool
+*/
+public virtual void TrackTokenReferenceInAlt( GrammarAST refAST, int outerAltNum )
+{
+-            IList<GrammarAST> refs = _altToTokenRefMap[outerAltNum].get( refAST.Text );
++            IList<GrammarAST> refs;
++            _altToTokenRefMap[outerAltNum].TryGetValue(refAST.Text, out refs);
+if ( refs == null )
+{
+refs = new List<GrammarAST>();
+@@ -766,7 +766,8 @@ namespace Antlr3.Tool
+{
+if ( _altToTokenRefMap[outerAltNum] != null )
+{
+-                IList<GrammarAST> tokenRefASTs = _altToTokenRefMap[outerAltNum].get( @ref );
++                IList<GrammarAST> tokenRefASTs;
++                _altToTokenRefMap[outerAltNum].TryGetValue(@ref, out tokenRefASTs);
+return tokenRefASTs;
+}
+
+@@ -775,7 +776,8 @@ namespace Antlr3.Tool
+
+public virtual void TrackRuleReferenceInAlt( GrammarAST refAST, int outerAltNum )
+{
+-            IList<GrammarAST> refs = _altToRuleRefMap[outerAltNum].get( refAST.Text );
++            IList<GrammarAST> refs;
++            _altToRuleRefMap[outerAltNum].TryGetValue(refAST.Text, out refs);
+if ( refs == null )
+{
+refs = new List<GrammarAST>();
+@@ -789,7 +791,8 @@ namespace Antlr3.Tool
+{
+if ( _altToRuleRefMap[outerAltNum] != null )
+{
+-                IList<GrammarAST> ruleRefASTs = _altToRuleRefMap[outerAltNum].get( @ref );
++                IList<GrammarAST> ruleRefASTs;
++                _altToRuleRefMap[outerAltNum].TryGetValue(@ref, out ruleRefASTs);
+return ruleRefASTs;
+}
+
+@@ -856,7 +859,7 @@ namespace Antlr3.Tool
+{
+GrammarAST blk = Tree.FindFirstType(ANTLRParser.BLOCK);
+GrammarAST alt = blk.GetBlockAlt(i);
+-            GrammarAST rew = (GrammarAST)alt.getNextSibling();
++            GrammarAST rew = (GrammarAST)alt.Parent.GetChild(alt.ChildIndex + 1);
+if (rew != null && rew.Type == ANTLRParser.REWRITES)
+return true;
+
+@@ -991,7 +994,9 @@ namespace Antlr3.Tool
+{
+//JSystem.@out.println("rule @"+nameAST.getText()+"{"+actionAST.getText()+"}");
+string actionName = nameAST.Text;
+-            GrammarAST a = (GrammarAST)_actions.get( actionName );
++            object actionsObject;
++            _actions.TryGetValue(actionName, out actionsObject);
++            GrammarAST a = (GrammarAST)actionsObject;
+if ( a != null )
+{
+ErrorManager.GrammarError(
+diff --git a/Antlr3/Tool/ToolMessage.cs b/Antlr3/Tool/ToolMessage.cs
+index 04ef98c..f49ce77 100644
+--- a/Antlr3/Tool/ToolMessage.cs
++++ b/Antlr3/Tool/ToolMessage.cs
+@@ -32,7 +32,6 @@
+
+namespace Antlr3.Tool
+{
+-    using Antlr.Runtime.JavaExtensions;
+using Antlr3.Extensions;
+
+using Exception = System.Exception;
+@@ -87,7 +86,7 @@ namespace Antlr3.Tool
+if ( e != null )
+{
+st.SetAttribute( "exception", e );
+-                st.SetAttribute( "stackTrace", e.getStackTrace() );
++                st.SetAttribute( "stackTrace", e.GetStackTrace() );
+}
+return base.ToString( st );
+}
+

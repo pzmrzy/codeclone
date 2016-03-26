@@ -1,0 +1,24 @@
+commit 81949f9deb72cdf74ff13e63ed7d78919605f252
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sat Jul 30 09:28:19 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sat Jul 30 09:28:19 2011 -0800
+
+(C# 3) Fix NullReferenceException for some syntax error cases
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8944]
+
+diff --git a/Antlr3/Grammars/DefineGrammarItemsWalkerHelper.cs b/Antlr3/Grammars/DefineGrammarItemsWalkerHelper.cs
+index 8546354..f1a61a4 100644
+--- a/Antlr3/Grammars/DefineGrammarItemsWalkerHelper.cs
++++ b/Antlr3/Grammars/DefineGrammarItemsWalkerHelper.cs
+@@ -51,7 +51,7 @@ namespace Antlr3.Grammars
+public int CountAltsForRule( CommonTree t )
+{
+CommonTree block = (CommonTree)t.GetFirstChildWithType(BLOCK);
+-            if (block.ChildCount == 0)
++            if (block == null || block.ChildCount == 0)
+return 0;
+
+return block.Children.Count(i => i.Type == ALT);
+

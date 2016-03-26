@@ -1,0 +1,245 @@
+commit 8de110f2e410cee29f289de5bf11ab3e26c52bf8
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Feb 2 15:52:08 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Feb 2 15:52:08 2011 -0800
+
+(C# 3) Preserve enclosing instance and locals during interpretation
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7605]
+
+diff --git a/Antlr4.StringTemplate.Visualizer/TemplateVisualizerFrame.xaml.cs b/Antlr4.StringTemplate.Visualizer/TemplateVisualizerFrame.xaml.cs
+index 2ac73cf..acd9267 100644
+--- a/Antlr4.StringTemplate.Visualizer/TemplateVisualizerFrame.xaml.cs
++++ b/Antlr4.StringTemplate.Visualizer/TemplateVisualizerFrame.xaml.cs
+@@ -224,9 +224,9 @@ namespace Antlr4.StringTemplate.Visualizer
+FontFamily = new FontFamily("Consolas")
+}));
+Interval r = currentTemplate.impl.TemplateRange;
+-            if (currentTemplate.enclosingInstance != null)
++            if (currentTemplate.EnclosingInstance != null)
+{
+-                int i = GetIndexOfChild((DebugST)currentTemplate.enclosingInstance, currentTemplate);
++                int i = GetIndexOfChild((DebugST)currentTemplate.EnclosingInstance, currentTemplate);
+if (i == -1)
+{
+Highlight(OutputTextBox.Document, null);
+@@ -234,7 +234,7 @@ namespace Antlr4.StringTemplate.Visualizer
+}
+else
+{
+-                    InterpEvent e = ViewModel.Visualizer.Interpreter.GetEvents(currentTemplate.enclosingInstance)[i];
++                    InterpEvent e = ViewModel.Visualizer.Interpreter.GetEvents(currentTemplate.EnclosingInstance)[i];
+if (e is EvalTemplateEvent)
+{
+if (currentTemplate.IsAnonymousSubtemplate)
+diff --git a/Antlr4.StringTemplate/Interpreter.cs b/Antlr4.StringTemplate/Interpreter.cs
+index 61d2d62..ee82506 100644
+--- a/Antlr4.StringTemplate/Interpreter.cs
++++ b/Antlr4.StringTemplate/Interpreter.cs
+@@ -497,9 +497,9 @@ namespace Antlr4.StringTemplate
+EvalTemplateEvent e = new EvalTemplateEvent((DebugST)self, Interval.FromBounds(start, @out.Index));
+//System.out.println("eval template "+self+": "+e);
+events.Add(e);
+-                if (self.enclosingInstance != null)
++                if (self.EnclosingInstance != null)
+{
+-                    DebugST parent = (DebugST)self.enclosingInstance;
++                    DebugST parent = (DebugST)self.EnclosingInstance;
+GetEvents(parent).Add(e);
+}
+}
+@@ -524,7 +524,7 @@ namespace Antlr4.StringTemplate
+}
+
+st = imported.nativeGroup.CreateStringTemplate();
+-            st.enclosingInstance = self; // self invoked super.name()
++            st.EnclosingInstance = self; // self invoked super.name()
+st.groupThatCreatedThisInstance = group;
+st.impl = imported;
+
+@@ -548,7 +548,7 @@ namespace Antlr4.StringTemplate
+}
+
+st = imported.nativeGroup.CreateStringTemplate();
+-            st.enclosingInstance = self; // self invoked super.name()
++            st.EnclosingInstance = self; // self invoked super.name()
+st.groupThatCreatedThisInstance = group;
+st.impl = imported;
+
+@@ -698,24 +698,36 @@ namespace Antlr4.StringTemplate
+if (proxyFactory != null)
+o = proxyFactory.CreateProxy(o);
+
+-            if (o is Template)
++            Template template = o as Template;
++            if (template != null)
+{
+-                ((Template)o).enclosingInstance = self;
+-                SetDefaultArguments((Template)o);
+-                if (options != null && options[(int)Option.Wrap] != null)
++                Template previousEnclosingInstance = template.EnclosingInstance;
++                object[] previousLocals = template.locals;
++
++                try
+{
+-                    // if we have a wrap string, then inform writer it
+-                    // might need to wrap
+-                    try
+-                    {
+-                        @out.WriteWrap(options[(int)Option.Wrap]);
+-                    }
+-                    catch (IOException ioe)
++                    template.EnclosingInstance = self;
++                    template.locals = SetDefaultArguments(template);
++                    if (options != null && options[(int)Option.Wrap] != null)
+{
+-                        errMgr.IOError(self, ErrorType.WRITE_IO_ERROR, ioe);
++                        // if we have a wrap string, then inform writer it
++                        // might need to wrap
++                        try
++                        {
++                            @out.WriteWrap(options[(int)Option.Wrap]);
++                        }
++                        catch (IOException ioe)
++                        {
++                            errMgr.IOError(self, ErrorType.WRITE_IO_ERROR, ioe);
++                        }
+}
++                    n = Execute(@out, template);
++                }
++                finally
++                {
++                    template.EnclosingInstance = previousEnclosingInstance;
++                    template.locals = previousLocals;
+}
+-                n = Execute(@out, (Template)o);
+}
+else
+{
+@@ -1155,7 +1167,7 @@ namespace Antlr4.StringTemplate
+return (string)value;
+// if Template, make sure it evaluates with enclosing template as self
+if (value is Template)
+-                    ((Template)value).enclosingInstance = self;
++                    ((Template)value).EnclosingInstance = self;
+// if not string already, must evaluate it
+StringWriter sw = new StringWriter();
+/*
+@@ -1275,17 +1287,25 @@ namespace Antlr4.StringTemplate
+*
+*  The evaluation context is the template enclosing invokedST.
+*/
+-        public virtual void SetDefaultArguments(Template invokedST)
++        public virtual object[] SetDefaultArguments(Template invokedST)
+{
+if (invokedST.impl.formalArguments == null)
+-                return;
++                return invokedST.locals;
++
++            object[] previousLocals = null;
+foreach (FormalArgument arg in invokedST.impl.formalArguments)
+{
+// if no value for attribute and default arg, inject default arg into self
+if (invokedST.locals[arg.Index] == Template.EmptyAttribute && arg.CompiledDefaultValue != null)
+{
++                    if (previousLocals == null)
++                    {
++                        previousLocals = invokedST.locals;
++                        invokedST.locals = (object[])invokedST.locals.Clone();
++                    }
++
+Template defaultArgST = group.CreateStringTemplate();
+-                    defaultArgST.enclosingInstance = invokedST.enclosingInstance;
++                    defaultArgST.EnclosingInstance = invokedST.EnclosingInstance;
+defaultArgST.groupThatCreatedThisInstance = group;
+defaultArgST.impl = arg.CompiledDefaultValue;
+//Console.WriteLine("setting def arg " + arg.Name + " to " + defaultArgST);
+@@ -1305,6 +1325,8 @@ namespace Antlr4.StringTemplate
+}
+}
+}
++
++            return previousLocals ?? invokedST.locals;
+}
+
+protected virtual void Trace(Template self, int ip)
+diff --git a/Antlr4.StringTemplate/Template.cs b/Antlr4.StringTemplate/Template.cs
+index 51621dc..bc6fb2d 100644
+--- a/Antlr4.StringTemplate/Template.cs
++++ b/Antlr4.StringTemplate/Template.cs
+@@ -84,7 +84,7 @@ namespace Antlr4.StringTemplate
+*  IF-subtemplates are considered embedded as well. We look up
+*  dynamically scoped attributes with this ptr.
+*/
+-        public Template enclosingInstance; // who's your daddy?
++        private Template _enclosingInstance; // who's your daddy?
+
+/** Created as instance of which group? We need this to init interpreter
+*  via Render.  So, we create st and then it needs to know which
+@@ -158,10 +158,23 @@ namespace Antlr4.StringTemplate
+if (proto.locals != null)
+this.locals = (object[])proto.locals.Clone();
+
+-            this.enclosingInstance = proto.enclosingInstance;
++            this.EnclosingInstance = proto.EnclosingInstance;
+this.groupThatCreatedThisInstance = proto.groupThatCreatedThisInstance;
+}
+
++        public Template EnclosingInstance
++        {
++            get
++            {
++                return _enclosingInstance;
++            }
++
++            set
++            {
++                _enclosingInstance = value;
++            }
++        }
++
+/** Inject an attribute (name/value pair). If there is already an
+*  attribute with that name, this method turns the attribute into an
+*  AttributeList with both the previous and the new attribute as elements.
+@@ -206,7 +219,7 @@ namespace Antlr4.StringTemplate
+}
+
+if (value is Template)
+-                ((Template)value).enclosingInstance = this;
++                ((Template)value).EnclosingInstance = this;
+
+object curvalue = locals[arg.Index];
+if (curvalue == EmptyAttribute)
+@@ -290,7 +303,7 @@ namespace Antlr4.StringTemplate
+return o;
+}
+
+-                p = p.enclosingInstance;
++                p = p.EnclosingInstance;
+}
+// got to root template and no definition, try dictionaries in group
+if (impl.nativeGroup.IsDictionary(name))
+@@ -388,7 +401,7 @@ namespace Antlr4.StringTemplate
+else
+stack.Add(p);
+
+-                p = p.enclosingInstance;
++                p = p.EnclosingInstance;
+}
+return stack;
+}
+diff --git a/Antlr4.StringTemplate/TemplateGroup.cs b/Antlr4.StringTemplate/TemplateGroup.cs
+index 97ba882..136df17 100644
+--- a/Antlr4.StringTemplate/TemplateGroup.cs
++++ b/Antlr4.StringTemplate/TemplateGroup.cs
+@@ -226,7 +226,7 @@ namespace Antlr4.StringTemplate
+st.impl = new CompiledTemplate();
+return st;
+}
+-            st.enclosingInstance = enclosingInstance;
++            st.EnclosingInstance = enclosingInstance;
+return st;
+}
+
+

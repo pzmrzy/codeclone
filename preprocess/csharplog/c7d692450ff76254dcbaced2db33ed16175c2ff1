@@ -1,0 +1,106 @@
+commit c7d692450ff76254dcbaced2db33ed16175c2ff1
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Tue Jan 18 16:46:37 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Tue Jan 18 16:46:37 2011 -0800
+
+(C# 3) Remove ST4 from the solution (going to re-port it after the move to VS2010)
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7448]
+
+diff --git a/Antlr3.Test/Antlr3.Test.csproj b/Antlr3.Test/Antlr3.Test.csproj
+index ee9933b..661d912 100644
+--- a/Antlr3.Test/Antlr3.Test.csproj
++++ b/Antlr3.Test/Antlr3.Test.csproj
+@@ -16,6 +16,7 @@
+<SccLocalPath>SAK</SccLocalPath>
+<SccAuxPath>SAK</SccAuxPath>
+<SccProvider>SAK</SccProvider>
++    <TargetFrameworkSubset>Full</TargetFrameworkSubset>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+@@ -45,30 +46,6 @@
+<Compile Include="JavaRuntimeTestHarness.cs" />
+<Compile Include="Properties\AssemblyInfo.cs" />
+<Compile Include="RuntimeTestHarness.cs" />
+-    <Compile Include="ST4\StringTemplateTestBase.cs" />
+-    <Compile Include="ST4\TestCompiler.cs" />
+-    <Compile Include="ST4\TestCoreBasics.cs" />
+-    <Compile Include="ST4\TestDebugEvents.cs" />
+-    <Compile Include="ST4\TestDictionaries.cs" />
+-    <Compile Include="ST4\TestDollarDelimiters.cs" />
+-    <Compile Include="ST4\TestFunctions.cs" />
+-    <Compile Include="ST4\TestGroups.cs" />
+-    <Compile Include="ST4\TestGroupSyntax.cs" />
+-    <Compile Include="ST4\TestGroupSyntaxErrors.cs" />
+-    <Compile Include="ST4\TestImports.cs" />
+-    <Compile Include="ST4\TestIndentation.cs" />
+-    <Compile Include="ST4\TestIndirectionAndEarlyEvaluation.cs" />
+-    <Compile Include="ST4\TestInterptimeErrors.cs" />
+-    <Compile Include="ST4\TestLexer.cs" />
+-    <Compile Include="ST4\TestLineWrap.cs" />
+-    <Compile Include="ST4\TestLists.cs" />
+-    <Compile Include="ST4\TestNullAndEmptyValues.cs" />
+-    <Compile Include="ST4\TestOptions.cs" />
+-    <Compile Include="ST4\TestRegions.cs" />
+-    <Compile Include="ST4\TestRenderers.cs" />
+-    <Compile Include="ST4\TestSubtemplates.cs" />
+-    <Compile Include="ST4\TestSyntaxErrors.cs" />
+-    <Compile Include="ST4\TestWhitespace.cs" />
+<Compile Include="StringTemplateTests.cs" />
+<Compile Include="TestASTConstruction.cs" />
+<Compile Include="TestAttributes.cs" />
+@@ -146,10 +123,6 @@
+<Name>Antlr3</Name>
+<Private>True</Private>
+</ProjectReference>
+-    <ProjectReference Include="..\StringTemplate4\StringTemplate4.csproj">
+-      <Project>{BBE5D9E6-2F4C-46EF-8CDB-17F886A36837}</Project>
+-      <Name>StringTemplate4</Name>
+-    </ProjectReference>
+</ItemGroup>
+<Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+<!-- To modify your build process, add your task inside one of the targets below and uncomment it.
+diff --git a/Antlr3.sln b/Antlr3.sln
+index d6d76d2..1ab353c 100644
+--- a/Antlr3.sln
++++ b/Antlr3.sln
+@@ -64,14 +64,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Runtime.Test", "..\.
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AntlrBuildTask", "AntlrBuildTask\AntlrBuildTask.csproj", "{60F8B554-5C53-4DE2-B868-A0BFEF4EF80E}"
+EndProject
+-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StringTemplate4", "StringTemplate4\StringTemplate4.csproj", "{BBE5D9E6-2F4C-46EF-8CDB-17F886A36837}"
+-EndProject
+Global
+GlobalSection(TestCaseManagementSettings) = postSolution
+CategoryFile = Antlr3.vsmdi
+EndGlobalSection
+GlobalSection(SourceCodeControl) = preSolution
+-		SccNumberOfProjects = 22
++		SccNumberOfProjects = 21
+SccProjectName0 = Perforce\u0020Project
+SccLocalPath0 = ..\\..
+SccProvider0 = MSSCCI:Perforce\u0020SCM
+@@ -148,9 +146,6 @@ Global
+SccProjectUniqueName20 = AntlrBuildTask\\AntlrBuildTask.csproj
+SccLocalPath20 = ..\\..
+SccProjectFilePathRelativizedFromConnection20 = antlrcs\\main\\AntlrBuildTask\\
+-		SccProjectUniqueName21 = StringTemplate4\\StringTemplate4.csproj
+-		SccLocalPath21 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection21 = antlrcs\\main\\StringTemplate4\\
+EndGlobalSection
+GlobalSection(SolutionConfigurationPlatforms) = preSolution
+Debug|Any CPU = Debug|Any CPU
+@@ -236,10 +231,6 @@ Global
+{60F8B554-5C53-4DE2-B868-A0BFEF4EF80E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+{60F8B554-5C53-4DE2-B868-A0BFEF4EF80E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+{60F8B554-5C53-4DE2-B868-A0BFEF4EF80E}.Release|Any CPU.Build.0 = Release|Any CPU
+-		{BBE5D9E6-2F4C-46EF-8CDB-17F886A36837}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+-		{BBE5D9E6-2F4C-46EF-8CDB-17F886A36837}.Debug|Any CPU.Build.0 = Debug|Any CPU
+-		{BBE5D9E6-2F4C-46EF-8CDB-17F886A36837}.Release|Any CPU.ActiveCfg = Release|Any CPU
+-		{BBE5D9E6-2F4C-46EF-8CDB-17F886A36837}.Release|Any CPU.Build.0 = Release|Any CPU
+EndGlobalSection
+GlobalSection(SolutionProperties) = preSolution
+HideSolutionNode = FALSE
+

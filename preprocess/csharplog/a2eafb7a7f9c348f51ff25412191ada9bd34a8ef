@@ -1,0 +1,109 @@
+commit a2eafb7a7f9c348f51ff25412191ada9bd34a8ef
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Apr 5 16:43:43 2010 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Apr 5 16:43:43 2010 -0800
+
+C# Port: Serializing exceptions
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6801]
+
+diff --git a/Antlr3/Analysis/AnalysisRecursionOverflowException.cs b/Antlr3/Analysis/AnalysisRecursionOverflowException.cs
+index 967aa22..8eb5cfd 100644
+--- a/Antlr3/Analysis/AnalysisRecursionOverflowException.cs
++++ b/Antlr3/Analysis/AnalysisRecursionOverflowException.cs
+@@ -33,17 +33,25 @@
+namespace Antlr3.Analysis
+{
+using Exception = System.Exception;
++    using SerializationInfo = System.Runtime.Serialization.SerializationInfo;
++    using StreamingContext = System.Runtime.Serialization.StreamingContext;
+
+/** An NFA configuration context stack overflowed. */
++    [System.Serializable]
+public class AnalysisRecursionOverflowException : Exception
+{
+-        DFAState _ovfState;
+-        NFAConfiguration _proposedNFAConfiguration;
++        private readonly DFAState _ovfState;
++        private readonly NFAConfiguration _proposedNFAConfiguration;
+
+-        public AnalysisRecursionOverflowException( DFAState ovfState, NFAConfiguration proposedNFAConfiguration )
++        public AnalysisRecursionOverflowException(DFAState ovfState, NFAConfiguration proposedNFAConfiguration)
+{
+_ovfState = ovfState;
+_proposedNFAConfiguration = proposedNFAConfiguration;
+}
++
++        protected AnalysisRecursionOverflowException(SerializationInfo info, StreamingContext context)
++            : base(info, context)
++        {
++        }
+}
+}
+diff --git a/Antlr3/Analysis/AnalysisTimeoutException.cs b/Antlr3/Analysis/AnalysisTimeoutException.cs
+index 0600915..015cb5e 100644
+--- a/Antlr3/Analysis/AnalysisTimeoutException.cs
++++ b/Antlr3/Analysis/AnalysisTimeoutException.cs
+@@ -32,16 +32,24 @@
+
+namespace Antlr3.Analysis
+{
+-    using Exception = System.Exception;
++    using TimeoutException = System.TimeoutException;
++    using SerializationInfo = System.Runtime.Serialization.SerializationInfo;
++    using StreamingContext = System.Runtime.Serialization.StreamingContext;
+
+/** Analysis took too long; bail out of entire DFA construction. */
+-    public class AnalysisTimeoutException : Exception
++    [System.Serializable]
++    public class AnalysisTimeoutException : TimeoutException
+{
+-        DFA _abortedDFA;
++        private readonly DFA _abortedDFA;
+
+-        public AnalysisTimeoutException( DFA abortedDFA )
++        public AnalysisTimeoutException(DFA abortedDFA)
+{
+_abortedDFA = abortedDFA;
+}
++
++        protected AnalysisTimeoutException(SerializationInfo info, StreamingContext context)
++            : base(info, context)
++        {
++        }
+}
+}
+diff --git a/Antlr3/Analysis/NonLLStarDecisionException.cs b/Antlr3/Analysis/NonLLStarDecisionException.cs
+index f628326..77e703b 100644
+--- a/Antlr3/Analysis/NonLLStarDecisionException.cs
++++ b/Antlr3/Analysis/NonLLStarDecisionException.cs
+@@ -33,17 +33,25 @@
+namespace Antlr3.Analysis
+{
+using Exception = System.Exception;
++    using SerializationInfo = System.Runtime.Serialization.SerializationInfo;
++    using StreamingContext = System.Runtime.Serialization.StreamingContext;
+
+/** Used to abort DFA construction when we find non-LL(*) decision; i.e.,
+*  a decision that has recursion in more than a single alt.
+*/
++    [System.Serializable]
+public class NonLLStarDecisionException : Exception
+{
+-        DFA _abortedDFA;
++        private readonly DFA _abortedDFA;
+
+-        public NonLLStarDecisionException( DFA abortedDFA )
++        public NonLLStarDecisionException(DFA abortedDFA)
+{
+_abortedDFA = abortedDFA;
+}
++
++        protected NonLLStarDecisionException(SerializationInfo info, StreamingContext context)
++            : base(info, context)
++        {
++        }
+}
+}
+

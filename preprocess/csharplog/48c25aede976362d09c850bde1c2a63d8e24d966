@@ -1,0 +1,35 @@
+commit 48c25aede976362d09c850bde1c2a63d8e24d966
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Fri Mar 20 11:30:55 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Fri Mar 20 11:30:55 2009 -0800
+
+C# Port:
+* HashSet<T> doesn't implement ICollection, so TestAttributeTrue has to also check for (IEnumerable && !string) to find that an empty set is false
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 5957]
+
+diff --git a/Antlr3.StringTemplate/Language/ASTExpr.cs b/Antlr3.StringTemplate/Language/ASTExpr.cs
+index cc06eb7..629d4fa 100644
+--- a/Antlr3.StringTemplate/Language/ASTExpr.cs
++++ b/Antlr3.StringTemplate/Language/ASTExpr.cs
+@@ -40,6 +40,7 @@ namespace Antlr3.ST.Language
+using FieldInfo = System.Reflection.FieldInfo;
+using ICollection = System.Collections.ICollection;
+using IDictionary = System.Collections.IDictionary;
++    using IEnumerable = System.Collections.IEnumerable;
+using IList = System.Collections.IList;
+using InvalidOperationException = System.InvalidOperationException;
+using IOException = System.IO.IOException;
+@@ -843,6 +844,10 @@ namespace Antlr3.ST.Language
+{
+return ( (IDictionary)a ).Count > 0;
+}
++            if ( a is IEnumerable && !( a is string ) )
++            {
++                return ( (IEnumerable)a ).GetEnumerator().MoveNext();
++            }
+if ( a is Iterator )
+{
+return ( (Iterator)a ).hasNext();
+

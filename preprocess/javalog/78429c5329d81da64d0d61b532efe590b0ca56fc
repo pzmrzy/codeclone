@@ -1,0 +1,800 @@
+commit 78429c5329d81da64d0d61b532efe590b0ca56fc
+Author:     acondit <acondit@parrt.spork>
+AuthorDate: Sun Jan 29 18:33:44 2012 -0800
+Commit:     acondit <acondit@parrt.spork>
+CommitDate: Sun Jan 29 18:33:44 2012 -0800
+
+Changes related to rename of sources and push before moving from perforce to git.
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 9928]
+
+diff --git a/runtime/ObjC/Framework/Tree.m b/runtime/ObjC/Framework/Tree.m
+index 4d9edaa..25c02dd 100644
+--- a/runtime/ObjC/Framework/Tree.m
++++ b/runtime/ObjC/Framework/Tree.m
+@@ -24,30 +24,30 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import "ANTLRTree.h"
+-#import "ANTLRToken.h"
++#import "Tree.h"
++#import "Token.h"
+// TODO: this shouldn't be here...but needed for invalidNode
+-#import "ANTLRCommonTree.h"
++#import "CommonTree.h"
+
+-@implementation ANTLRTree
++@implementation Tree
+
+@synthesize isEmpty;
+@synthesize isEmptyNode;
+@synthesize invalidNode;
+@synthesize children;
+
+-#pragma mark ANTLRTree protocol conformance
++#pragma mark Tree protocol conformance
+
+-+ (id<ANTLRTree>) invalidNode
+++ (id<Tree>) invalidNode
+{
+-	static id<ANTLRTree> invalidNode = nil;
++	static id<Tree> invalidNode = nil;
+if (!invalidNode) {
+-		invalidNode = [[ANTLRCommonTree alloc] initWithTokenType:ANTLRTokenTypeInvalid];
++		invalidNode = [[CommonTree alloc] initWithTokenType:TokenTypeInvalid];
+}
+return invalidNode;
+}
+
+-- (id<ANTLRTree>) init
++- (id<Tree>) init
+{
+self = [super init];
+if ( self != nil ) {
+@@ -61,7 +61,7 @@
+[super dealloc];
+}
+
+-- (id<ANTLRTree>) getChild:(NSUInteger) index
++- (id<Tree>) getChild:(NSUInteger) index
+{
+return nil;
+}
+@@ -79,7 +79,7 @@
+// Add tree as a child to this node.  If tree is nil, do nothing.  If tree
+// is an empty node, add all children of tree to our children.
+
+-- (void) addChild:(id<ANTLRTree>) tree
++- (void) addChild:(id<Tree>) tree
+{
+}
+
+@@ -104,7 +104,7 @@
+isEmptyNode = emptyFlag;
+}
+
+-#pragma mark ANTLRTree abstract base class
++#pragma mark Tree abstract base class
+
+// Return a token type; needed for tree parsing
+- (NSInteger) getType
+diff --git a/runtime/ObjC/Framework/TreeAdaptor.m b/runtime/ObjC/Framework/TreeAdaptor.m
+index d852e02..fe837ee 100644
+--- a/runtime/ObjC/Framework/TreeAdaptor.m
++++ b/runtime/ObjC/Framework/TreeAdaptor.m
+@@ -24,21 +24,21 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import "ANTLRTreeAdaptor.h"
+-#import "ANTLRTreeException.h"
+-#import "ANTLRBaseTree.h"
++#import "TreeAdaptor.h"
++#import "TreeException.h"
++#import "BaseTree.h"
+
+-@implementation ANTLRTreeAdaptor
++@implementation TreeAdaptor
+
+
++ (id) newEmptyTree
+{
+-	return [ANTLRTreeAdaptor newTreeWithToken:nil];
++	return [TreeAdaptor newTreeWithToken:nil];
+}
+
++ (id) newAdaptor
+{
+-    return [[ANTLRTreeAdaptor alloc] init];
++    return [[TreeAdaptor alloc] init];
+}
+
+- (id) init
+@@ -47,7 +47,7 @@
+return self;
+}
+
+-- (id) initWithPayload:(id<ANTLRToken>)payload
++- (id) initWithPayload:(id<Token>)payload
+{
+self = [super init];
+return self;
+@@ -61,7 +61,7 @@
+*
+*  Override if you want another kind of node to be built.
+*/
+-- (id) create:(id<ANTLRToken>) payload
++- (id) create:(id<Token>) payload
+{
+return nil;
+}
+@@ -72,9 +72,9 @@
+*
+*  This should invoke createToken(Token).
+*/
+-- (id) createTree:(NSInteger)tokenType fromToken:(id<ANTLRToken>)fromToken
++- (id) createTree:(NSInteger)tokenType fromToken:(id<Token>)fromToken
+{
+-	id<ANTLRToken> newToken = [self createToken:fromToken];
++	id<Token> newToken = [self createToken:fromToken];
+[newToken setType:tokenType];
+
+id newTree = [self create:newToken];
+@@ -88,9 +88,9 @@
+*
+*  This should invoke createToken(Token).
+*/
+-- (id) createTree:(NSInteger)tokenType fromToken:(id<ANTLRToken>)fromToken text:(NSString *)tokenText
++- (id) createTree:(NSInteger)tokenType fromToken:(id<Token>)fromToken text:(NSString *)tokenText
+{
+-	id<ANTLRToken> newToken = [self createToken:fromToken];
++	id<Token> newToken = [self createToken:fromToken];
+[newToken setText:tokenText];
+
+id newTree = [self create:newToken];
+@@ -106,7 +106,7 @@
+*/
+- (id) createTree:(NSInteger)tokenType text:(NSString *)tokenText
+{
+-	id<ANTLRToken> newToken = [self createToken:tokenType text:tokenText];
++	id<Token> newToken = [self createToken:tokenType text:tokenText];
+
+id newTree = [self create:newToken];
+[newToken release];
+@@ -139,7 +139,7 @@
+if ([newRootNode isNil]) {
+if ([newRootNode getChildCount] > 1) {
+#warning TODO: Find a way to the current input stream here!
+-			@throw [ANTLRTreeException exceptionWithOldRoot:oldRoot newRoot:newRootNode stream:nil];
++			@throw [TreeException exceptionWithOldRoot:oldRoot newRoot:newRootNode stream:nil];
+}
+#warning TODO: double check memory management with respect to code generation
+// remove the empty node, placing its sole child in its role.
+@@ -217,7 +217,7 @@
+
+#pragma mark Subclass Responsibilties
+
+-- (void) setBoundariesForTree:(id)aTree fromToken:(id<ANTLRToken>)startToken toToken:(id<ANTLRToken>)stopToken
++- (void) setBoundariesForTree:(id)aTree fromToken:(id<Token>)startToken toToken:(id<Token>)stopToken
+{
+// subclass responsibility
+}
+diff --git a/runtime/ObjC/Framework/TreeFilter.h b/runtime/ObjC/Framework/TreeFilter.h
+new file mode 100644
+index 0000000..d54072d
+--- /dev/null
++++ b/runtime/ObjC/Framework/TreeFilter.h
+@@ -0,0 +1,204 @@
++/*
++ [The "BSD license"]
++ Copyright (c) 2005-2009 Terence Parr
++ All rights reserved.
++
++ Redistribution and use in source and binary forms, with or without
++ modification, are permitted provided that the following conditions
++ are met:
++ 1. Redistributions of source code must retain the above copyright
++     notice, this list of conditions and the following disclaimer.
++ 2. Redistributions in binary form must reproduce the above copyright
++     notice, this list of conditions and the following disclaimer in the
++     documentation and/or other materials provided with the distribution.
++ 3. The name of the author may not be used to endorse or promote products
++     derived from this software without specific prior written permission.
++
++ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++/* Java Stuff
++package org.antlr.runtime.tree;
++
++import org.antlr.runtime.RecognizerSharedState;
++import org.antlr.runtime.RecognitionException;
++import org.antlr.runtime.TokenStream;
++*/
++
++/**
++ Cut-n-paste from material I'm not using in the book anymore (edit later
++ to make sense):
++
++ Now, how are we going to test these tree patterns against every
++subtree in our original tree?  In what order should we visit nodes?
++For this application, it turns out we need a simple ``apply once''
++rule application strategy and a ``down then up'' tree traversal
++strategy.  Let's look at rule application first.
++
++As we visit each node, we need to see if any of our patterns match. If
++a pattern matches, we execute the associated tree rewrite and move on
++to the next node. In other words, we only look for a single rule
++application opportunity (we'll see below that we sometimes need to
++repeatedly apply rules). The following method applies a rule in a @cl
++TreeParser (derived from a tree grammar) to a tree:
++
++here is where weReferenced code/walking/patterns/TreePatternMatcher.java
++
++It uses reflection to lookup the appropriate rule within the generated
++tree parser class (@cl Simplify in this case). Most of the time, the
++rule will not match the tree.  To avoid issuing syntax errors and
++attempting error recovery, it bumps up the backtracking level.  Upon
++failure, the invoked rule immediately returns. If you don't plan on
++using this technique in your own ANTLR-based application, don't sweat
++the details. This method boils down to ``call a rule to match a tree,
++executing any embedded actions and rewrite rules.''
++
++At this point, we know how to define tree grammar rules and how to
++apply them to a particular subtree. The final piece of the tree
++pattern matcher is the actual tree traversal. We have to get the
++correct node visitation order.  In particular, we need to perform the
++scalar-vector multiply transformation on the way down (preorder) and
++we need to reduce multiply-by-zero subtrees on the way up (postorder).
++
++To implement a top-down visitor, we do a depth first walk of the tree,
++executing an action in the preorder position. To get a bottom-up
++visitor, we execute an action in the postorder position.  ANTLR
++provides a standard @cl TreeVisitor class with a depth first search @v
++visit method. That method executes either a @m pre or @m post method
++or both. In our case, we need to call @m applyOnce in both. On the way
++down, we'll look for @r vmult patterns. On the way up,
++we'll look for @r mult0 patterns.
++ */
++
++/*  Java Stuff
++public class TreeFilter extends TreeParser {
++    public interface fptr {
++        public void rule() throws RecognitionException;
++    }
++
++    protected TokenStream originalTokenStream;
++    protected TreeAdaptor originalAdaptor;
++
++    public TreeFilter(TreeNodeStream input) {
++        this(input, new RecognizerSharedState());
++    }
++    public TreeFilter(TreeNodeStream input, RecognizerSharedState state) {
++        super(input, state);
++        originalAdaptor = input.getTreeAdaptor();
++        originalTokenStream = input.getTokenStream();
++    }
++
++    public void applyOnce(Object t, fptr whichRule) {
++        if ( t==null ) return;
++        try {
++            // share TreeParser object but not parsing-related state
++            state = new RecognizerSharedState();
++            input = new CommonTreeNodeStream(originalAdaptor, t);
++            ((CommonTreeNodeStream)input).setTokenStream(originalTokenStream);
++            setBacktrackingLevel(1);
++            whichRule.rule();
++            setBacktrackingLevel(0);
++        }
++        catch (RecognitionException e) { ; }
++    }
++
++    public void downup(Object t) {
++        TreeVisitor v = new TreeVisitor(new CommonTreeAdaptor());
++        TreeVisitorAction actions = new TreeVisitorAction() {
++            public Object pre(Object t)  { applyOnce(t, topdown_fptr); return t; }
++            public Object post(Object t) { applyOnce(t, bottomup_fptr); return t; }
++        };
++        v.visit(t, actions);
++    }
++
++    fptr topdown_fptr = new fptr() {
++        public void rule() throws RecognitionException {
++            topdown();
++        }
++    };
++
++    fptr bottomup_fptr = new fptr() {
++        public void rule() throws RecognitionException {
++            bottomup();
++        }
++    };
++
++    // methods the downup strategy uses to do the up and down rules.
++    // to override, just define tree grammar rule topdown and turn on
++    // filter=true.
++    public void topdown() throws RecognitionException {;}
++    public void bottomup() throws RecognitionException {;}
++}
++*/
++
++#import "RecognizerSharedState.h"
++#import "TokenStream.h"
++#import "TreeAdaptor.h"
++#import "TreeNodeStream.h"
++#import "TreeParser.h"
++#import "TreeVisitor.h"
++
++@class TreeFilter;
++
++@interface fptr : NSObject {
++    SEL whichRule;
++    TreeFilter *treeFilter;
++}
++
++@property (assign) SEL whichRule;
++@property (assign) TreeFilter *treeFilter;
++
+++ (fptr *) newfptr;
+++ (fptr *) newfptr:(TreeFilter *)aTreeFilter Rule:(SEL) aRule;
++
++
++- (fptr *) init:(TreeFilter *)aTreeFilter Rule:(SEL)aRule;
++
++- (void) rule;
++
++@end
++
++@interface TreeFilter : TreeParser {
++
++id<TokenStream> originalTokenStream;
++id<TreeAdaptor> originalAdaptor;
++fptr *topdown_fptr;
++fptr *bottomup_fptr;
++
++}
++
+++ (id) newTreeFilter:(id<TreeNodeStream>)input;
++
+++ (id) newTreeFilter:(id<TreeNodeStream>)input State:(RecognizerSharedState *)state;
++
++- (id) initWithStream:(id<TreeNodeStream>)anInput State:(RecognizerSharedState *)aState;
++
++- (void) applyOnce:(id<BaseTree>)t rule:(fptr *)whichRule;
++
++- (void) downup:(id<BaseTree>)t;
++
++- (void) settopdown_fptr;
++- (void) setbottomdown_fptr;
++
++    // methods the downup strategy uses to do the up and down rules.
++    // to override, just define tree grammar rule topdown and turn on
++    // filter=true.
++- (void) topdown;
++- (void) bottomup;
++
++@property (retain) id<TokenStream> originalTokenStream;
++@property (retain) id<TreeAdaptor> originalAdaptor;
++@property (retain, setter=settopdown_fptr:) fptr *topdown_fptr;
++@property (retain, setter=setbottomdown_fptr:) fptr *bottomup_fptr;
++
++@end
++// end TreeFilter.h
+diff --git a/runtime/ObjC/Framework/TreeFilter.m b/runtime/ObjC/Framework/TreeFilter.m
+new file mode 100644
+index 0000000..1a37e64
+--- /dev/null
++++ b/runtime/ObjC/Framework/TreeFilter.m
+@@ -0,0 +1,262 @@
++/*
++ [The "BSD license"]
++ Copyright (c) 2005-2009 Terence Parr
++ All rights reserved.
++
++ Redistribution and use in source and binary forms, with or without
++ modification, are permitted provided that the following conditions
++ are met:
++ 1. Redistributions of source code must retain the above copyright
++     notice, this list of conditions and the following disclaimer.
++ 2. Redistributions in binary form must reproduce the above copyright
++     notice, this list of conditions and the following disclaimer in the
++     documentation and/or other materials provided with the distribution.
++ 3. The name of the author may not be used to endorse or promote products
++     derived from this software without specific prior written permission.
++
++ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++/* Java Stuff
++package org.antlr.runtime.tree;
++
++import org.antlr.runtime.RecognizerSharedState;
++import org.antlr.runtime.RecognitionException;
++import org.antlr.runtime.TokenStream;
++*/
++
++/**
++ Cut-n-paste from material I'm not using in the book anymore (edit later
++ to make sense):
++
++ Now, how are we going to test these tree patterns against every
++subtree in our original tree?  In what order should we visit nodes?
++For this application, it turns out we need a simple ``apply once''
++rule application strategy and a ``down then up'' tree traversal
++strategy.  Let's look at rule application first.
++
++As we visit each node, we need to see if any of our patterns match. If
++a pattern matches, we execute the associated tree rewrite and move on
++to the next node. In other words, we only look for a single rule
++application opportunity (we'll see below that we sometimes need to
++repeatedly apply rules). The following method applies a rule in a @cl
++TreeParser (derived from a tree grammar) to a tree:
++
++here is where weReferenced code/walking/patterns/TreePatternMatcher.java
++
++It uses reflection to lookup the appropriate rule within the generated
++tree parser class (@cl Simplify in this case). Most of the time, the
++rule will not match the tree.  To avoid issuing syntax errors and
++attempting error recovery, it bumps up the backtracking level.  Upon
++failure, the invoked rule immediately returns. If you don't plan on
++using this technique in your own ANTLR-based application, don't sweat
++the details. This method boils down to ``call a rule to match a tree,
++executing any embedded actions and rewrite rules.''
++
++At this point, we know how to define tree grammar rules and how to
++apply them to a particular subtree. The final piece of the tree
++pattern matcher is the actual tree traversal. We have to get the
++correct node visitation order.  In particular, we need to perform the
++scalar-vector multiply transformation on the way down (preorder) and
++we need to reduce multiply-by-zero subtrees on the way up (postorder).
++
++To implement a top-down visitor, we do a depth first walk of the tree,
++executing an action in the preorder position. To get a bottom-up
++visitor, we execute an action in the postorder position.  ANTLR
++provides a standard @cl TreeVisitor class with a depth first search @v
++visit method. That method executes either a @m pre or @m post method
++or both. In our case, we need to call @m applyOnce in both. On the way
++down, we'll look for @r vmult patterns. On the way up,
++we'll look for @r mult0 patterns.
++ */
++
++/*  Java Stuff
++public class TreeFilter extends TreeParser {
++    public interface fptr {
++        public void rule() throws RecognitionException;
++    }
++
++    protected TokenStream originalTokenStream;
++    protected TreeAdaptor originalAdaptor;
++
++    public TreeFilter(TreeNodeStream input) {
++        this(input, new RecognizerSharedState());
++    }
++    public TreeFilter(TreeNodeStream input, RecognizerSharedState state) {
++        super(input, state);
++        originalAdaptor = input.getTreeAdaptor();
++        originalTokenStream = input.getTokenStream();
++    }
++
++    public void applyOnce(Object t, fptr whichRule) {
++        if ( t==null ) return;
++        try {
++            // share TreeParser object but not parsing-related state
++            state = new RecognizerSharedState();
++            input = new CommonTreeNodeStream(originalAdaptor, t);
++            ((CommonTreeNodeStream)input).setTokenStream(originalTokenStream);
++            setBacktrackingLevel(1);
++            whichRule.rule();
++            setBacktrackingLevel(0);
++        }
++        catch (RecognitionException e) { ; }
++    }
++
++    public void downup(Object t) {
++        TreeVisitor v = new TreeVisitor(new CommonTreeAdaptor());
++        TreeVisitorAction actions = new TreeVisitorAction() {
++            public Object pre(Object t)  { applyOnce(t, topdown_fptr); return t; }
++            public Object post(Object t) { applyOnce(t, bottomup_fptr); return t; }
++        };
++        v.visit(t, actions);
++    }
++
++    fptr topdown_fptr = new fptr() {
++        public void rule() throws RecognitionException {
++            topdown();
++        }
++    };
++
++    fptr bottomup_fptr = new fptr() {
++        public void rule() throws RecognitionException {
++            bottomup();
++        }
++    };
++
++    // methods the downup strategy uses to do the up and down rules.
++    // to override, just define tree grammar rule topdown and turn on
++    // filter=true.
++    public void topdown() throws RecognitionException {;}
++    public void bottomup() throws RecognitionException {;}
++}
++
++*/
++
++#import "CommonTreeNodeStream.h"
++#import "TreeFilter.h"
++
++@class TreeFilter;
++
++@implementation fptr
++
++- (void) rule
++{
++    if ( [treeFilter respondsToSelector:whichRule] ) {
++        [treeFilter performSelector:whichRule];
++    }
++    return;
++}
++
+++ (fptr *) newfptr:(TreeFilter *)aTreeFilter Rule:(SEL) aRule
++{
++    return [[fptr alloc] init];
++}
++
++- (fptr *) init:(TreeFilter *)aTreeFilter Rule:(SEL)aRule
++{
++    if ( (self = [super init]) != nil ) {
++        whichRule = aRule;
++        treeFilter = aTreeFilter;
++    }
++    return self;
++}
++
++@synthesize whichRule;
++@synthesize treeFilter;
++
++@end
++
++@implementation TreeFilter
++
+++ (TreeFilter *) newTreeFilter:(id<TreeNodeStream>)anInput
++{
++
++    return [[TreeFilter alloc] initWithStream:anInput State:[RecognizerSharedState newRecognizerSharedState]];
++}
++
+++ (TreeFilter *) newTreeFilter:(id<TreeNodeStream>)anInput State:(RecognizerSharedState *) aState
++{
++    return [[TreeFilter alloc] init:anInput State:aState];
++}
++
++- (id) initWithStream:(id<TreeNodeStream>)anInput State:(RecognizerSharedState *)aState
++{
++    if (( self = [super initWithStream:input State:aState]) != nil ) {
++        originalAdaptor = [anInput getTreeAdaptor];
++        originalTokenStream = [anInput getTokenStream];
++        topdown_fptr = nil;
++        bottomup_fptr = nil;
++    }
++    return self;
++}
++
++- (void) applyOnce:(id<BaseTree>)t rule:(fptr *)whichRule
++{
++        if ( t==nil ) return;
++        @try {
++            // share TreeParser object but not parsing-related state
++            state = [RecognizerSharedState newRecognizerSharedState];
++            input = [CommonTreeNodeStream newCommonTreeNodeStream:originalAdaptor Tree:t];
++            [(CommonTreeNodeStream *)input setTokenStream:originalTokenStream];
++            [state setBacktrackingLevel:1];
++            [whichRule rule];
++            [state setBacktrackingLevel:0];
++        }
++        @catch (RecognitionException *e) { ; }
++    }
++
++- (void) downup:(id<BaseTree>) t
++{
++    TreeVisitor *v = [TreeVisitor newTreeVisitor:[CommonTreeAdaptor newTreeAdaptor]];
++    TreeVisitorAction *actions = [TreeVisitorAction newTreeVisitorAction];
++    {
++        /* java stuff
++        - ((id<BaseTree>)) pre:(id<BaseTree>) t { [self applyOnce:t rule:(fptr *)topdown_fptr]; return t; }
++        - ((id<BaseTree>)) post:(id<BaseTree>) t { [self applyOnce:t rule:(fptr *)bottomup_fptr]; return t; }
++         */
++    }
++    [v visit:t actions:actions];
++}
++
++- (void) settopdown_fptr
++{
++    SEL aRule = @selector(topdown);
++    topdown_fptr =  [fptr newfptr:self Rule:aRule];
++}
++- (void) setbottomdown_fptr
++{
++    SEL aRule = @selector(bottomup);
++    bottomup_fptr =  [fptr newfptr:self Rule:aRule];
++}
++
++    // methods the downup strategy uses to do the up and down rules.
++    // to override, just define tree grammar rule topdown and turn on
++    // filter=true.
++- (void) topdown
++{
++    return;
++}
++
++- (void) bottomup
++{
++    return;
++}
++
++@synthesize originalTokenStream;
++@synthesize originalAdaptor;
++@synthesize topdown_fptr;
++@synthesize bottomup_fptr;
++
++@end
++
++// end TreeFilter.h
++
+diff --git a/runtime/ObjC/Framework/TreeParser.m b/runtime/ObjC/Framework/TreeParser.m
+index 99abffb..949771f 100644
+--- a/runtime/ObjC/Framework/TreeParser.m
++++ b/runtime/ObjC/Framework/TreeParser.m
+@@ -169,10 +169,10 @@
+{
+if ( [self isKindOfClass:[TreeParser class]] ) {
+CommonTreeAdaptor *adaptor = (CommonTreeAdaptor *)[((id<TreeNodeStream>)e.input) getTreeAdaptor];
+-        e.token = [adaptor getToken:((id<BaseTree>)e.node)];
++        e.token = [adaptor getToken:((CommonTree *)e.node)];
+if ( e.token == nil ) { // could be an UP/DOWN node
+-            e.token = [CommonToken newToken:[adaptor getType:e.node]
+-                                                        Text:[adaptor getText:e.node]];
++            e.token = [CommonToken newToken:[adaptor getType:(CommonTree *)e.node]
++                                                        Text:[adaptor getText:(CommonTree *)e.node]];
+}
+}
+return [super getErrorMessage:e TokenNames:theTokNams];
+diff --git a/runtime/ObjC/Framework/TreeVisitor.h b/runtime/ObjC/Framework/TreeVisitor.h
+index e52f65a..f6aef1d 100644
+--- a/runtime/ObjC/Framework/TreeVisitor.h
++++ b/runtime/ObjC/Framework/TreeVisitor.h
+@@ -41,7 +41,7 @@
+- (id)init;
+- (id)initWithAdaptor:(id<TreeAdaptor>)anAdaptor;
+- (void) dealloc;
+-- (TreeVisitor *)visit:(id<BaseTree>)t Action:(TreeVisitorAction *)action;
++- (id<BaseTree>)visit:(id<BaseTree>)t Action:(TreeVisitorAction *)action;
+
+@property (retain) id<TreeAdaptor> adaptor;
+@end
+diff --git a/runtime/ObjC/Framework/TreeVisitor.m b/runtime/ObjC/Framework/TreeVisitor.m
+index b08bcd7..fea76c7 100644
+--- a/runtime/ObjC/Framework/TreeVisitor.m
++++ b/runtime/ObjC/Framework/TreeVisitor.m
+@@ -80,22 +80,22 @@
+*
+*  Return result of applying post action to this node.
+*/
+-- (TreeVisitor *)visit:(CommonTree *)t Action:(TreeVisitorAction *)action
++- (id<BaseTree>)visit:(id<BaseTree>)t Action:(TreeVisitorAction *)action
+{
+// System.out.println("visit "+((Tree)t).toStringTree());
+BOOL isNil = [adaptor isNil:t];
+if ( action != nil && !isNil ) {
+-        t = [action pre:(TreeVisitorAction *)t]; // if rewritten, walk children of new t
++        t = [action pre:(id<BaseTree>)t]; // if rewritten, walk children of new t
+}
+for (int i=0; i < [adaptor getChildCount:t]; i++) {
+-        CommonTree *child = [adaptor getChild:t At:i];
+-        CommonTree *visitResult = [self visit:child Action:action];
+-        CommonTree *childAfterVisit = [adaptor getChild:t At:i];
++        id<BaseTree> child = [adaptor getChild:t At:i];
++        id<BaseTree> visitResult = [self visit:child Action:action];
++        id<BaseTree> childAfterVisit = [adaptor getChild:t At:i];
+if ( visitResult !=  childAfterVisit ) { // result & child differ?
+[adaptor setChild:t At:i Child:visitResult];
+}
+}
+-    if ( action != nil && !isNil ) t = [action post:(TreeVisitorAction *)t];
++    if ( action != nil && !isNil ) t = [action post:(id<BaseTree>)t];
+return t;
+}
+
+diff --git a/runtime/ObjC/Framework/TreeVisitorAction.h b/runtime/ObjC/Framework/TreeVisitorAction.h
+index e9df870..52576ec 100644
+--- a/runtime/ObjC/Framework/TreeVisitorAction.h
++++ b/runtime/ObjC/Framework/TreeVisitorAction.h
+@@ -30,13 +30,18 @@
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+#import <Cocoa/Cocoa.h>
+-
++#import "BaseTree.h"
+
+@interface TreeVisitorAction : NSObject
+{
++    SEL preAction;
++    SEL postAction;
+
+}
+
++@property (assign) SEL preAction;
++@property (assign) SEL postAction;
++
++ (TreeVisitorAction *)newTreeVisitorAction;
+- (id) init;
+
+@@ -45,12 +50,12 @@
+*  with the return value.  Children of returned value will be
+*  visited if using TreeVisitor.visit().
+*/
+-- (TreeVisitorAction *)pre:(TreeVisitorAction *) t;
++- (id<Tree>)pre:(id<BaseTree>) t;
+
+/** Execute an action after visiting children of t.  Return t or
+*  a rewritten t.  It is up to the visitor to decide what to do
+*  with the return value.
+*/
+-- (TreeVisitorAction *)post:(TreeVisitorAction *) t;
++- (id<Tree>)post:(id<BaseTree>) t;
+
+@end
+diff --git a/runtime/ObjC/Framework/TreeVisitorAction.m b/runtime/ObjC/Framework/TreeVisitorAction.m
+index 34cae97..579845c 100644
+--- a/runtime/ObjC/Framework/TreeVisitorAction.m
++++ b/runtime/ObjC/Framework/TreeVisitorAction.m
+@@ -42,6 +42,8 @@
+- (id) init
+{
+if ((self = [super init]) != nil ) {
++        preAction = nil;
++        postAction = nil;
+}
+return self;
+}
+@@ -51,7 +53,7 @@
+*  with the return value.  Children of returned value will be
+*  visited if using TreeVisitor.visit().
+*/
+-- (TreeVisitorAction *)pre:(TreeVisitorAction *) t
++- (id<BaseTree>)pre:(id<BaseTree>) t
+{
+return nil;
+}
+@@ -60,10 +62,12 @@
+*  a rewritten t.  It is up to the visitor to decide what to do
+*  with the return value.
+*/
+-- (TreeVisitorAction *)post:(TreeVisitorAction *) t
++- (id<BaseTree>)post:(id<BaseTree>) t
+{
+return nil;
+}
+
++@synthesize preAction;
++@synthesize postAction;
+
+@end
+

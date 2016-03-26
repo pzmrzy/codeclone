@@ -1,0 +1,334 @@
+commit a8e2de06bf5df90997dd2de5c35f5d3436f4dbbd
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Feb 2 15:58:06 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Feb 2 15:58:06 2011 -0800
+
+(C# 3) Rename DebugST to DebugTemplate
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7607]
+
+diff --git a/Antlr4.StringTemplate.Visualizer/Extensions/TemplateExtensions.cs b/Antlr4.StringTemplate.Visualizer/Extensions/TemplateExtensions.cs
+index 52d0e2f..c566983 100644
+--- a/Antlr4.StringTemplate.Visualizer/Extensions/TemplateExtensions.cs
++++ b/Antlr4.StringTemplate.Visualizer/Extensions/TemplateExtensions.cs
+@@ -39,22 +39,22 @@ namespace Antlr4.StringTemplate.Visualizer.Extensions
+
+public static class TemplateExtensions
+{
+-        public static void Visualize(this DebugST template)
++        public static void Visualize(this DebugTemplate template)
+{
+Visualize(template, CultureInfo.CurrentCulture);
+}
+
+-        public static void Visualize(this DebugST template, int lineWidth)
++        public static void Visualize(this DebugTemplate template, int lineWidth)
+{
+Visualize(template, template.impl.nativeGroup.ErrorManager, CultureInfo.CurrentCulture, lineWidth);
+}
+
+-        public static void Visualize(this DebugST template, CultureInfo culture)
++        public static void Visualize(this DebugTemplate template, CultureInfo culture)
+{
+Visualize(template, template.impl.nativeGroup.ErrorManager, culture, AutoIndentWriter.NoWrap);
+}
+
+-        public static void Visualize(this DebugST template, ErrorManager errorManager, CultureInfo culture, int lineWidth)
++        public static void Visualize(this DebugTemplate template, ErrorManager errorManager, CultureInfo culture, int lineWidth)
+{
+ErrorBuffer errors = new ErrorBuffer();
+template.impl.nativeGroup.Listener = errors;
+diff --git a/Antlr4.StringTemplate.Visualizer/TemplateCallHierarchyViewModel.cs b/Antlr4.StringTemplate.Visualizer/TemplateCallHierarchyViewModel.cs
+index 5258e12..1b7cc16 100644
+--- a/Antlr4.StringTemplate.Visualizer/TemplateCallHierarchyViewModel.cs
++++ b/Antlr4.StringTemplate.Visualizer/TemplateCallHierarchyViewModel.cs
+@@ -45,13 +45,13 @@ namespace Antlr4.StringTemplate.Visualizer
+private static readonly PropertyChangedEventArgs IsSelectedPropertyChangedEventArgs = new PropertyChangedEventArgs("IsSelected");
+
+private readonly Interpreter _interpreter;
+-        private readonly DebugST _template;
++        private readonly DebugTemplate _template;
+private List<TemplateCallHierarchyViewModel> _children;
+
+private bool _isExpanded;
+private bool _isSelected;
+
+-        public TemplateCallHierarchyViewModel(Interpreter interpreter, DebugST template)
++        public TemplateCallHierarchyViewModel(Interpreter interpreter, DebugTemplate template)
+{
+if (interpreter == null)
+throw new ArgumentNullException("interpreter");
+@@ -64,7 +64,7 @@ namespace Antlr4.StringTemplate.Visualizer
+
+public event PropertyChangedEventHandler PropertyChanged;
+
+-        public DebugST Template
++        public DebugTemplate Template
+{
+get
+{
+diff --git a/Antlr4.StringTemplate.Visualizer/TemplateVisualizer.cs b/Antlr4.StringTemplate.Visualizer/TemplateVisualizer.cs
+index be6fac7..6cf5a2f 100644
+--- a/Antlr4.StringTemplate.Visualizer/TemplateVisualizer.cs
++++ b/Antlr4.StringTemplate.Visualizer/TemplateVisualizer.cs
+@@ -41,13 +41,13 @@ namespace Antlr4.StringTemplate.Visualizer
+public class TemplateVisualizer
+{
+private readonly ErrorManager _errorManager;
+-        private readonly DebugST _root;
++        private readonly DebugTemplate _root;
+private readonly string _output;
+private readonly Interpreter _interpreter;
+private readonly List<string> _trace;
+private readonly ReadOnlyCollection<TemplateMessage> _errors;
+
+-        public TemplateVisualizer(ErrorManager errorManager, DebugST root, string output, Interpreter interpreter, List<string> trace, ReadOnlyCollection<TemplateMessage> errors)
++        public TemplateVisualizer(ErrorManager errorManager, DebugTemplate root, string output, Interpreter interpreter, List<string> trace, ReadOnlyCollection<TemplateMessage> errors)
+{
+if (errorManager == null)
+throw new ArgumentNullException("errorManager");
+@@ -76,7 +76,7 @@ namespace Antlr4.StringTemplate.Visualizer
+}
+}
+
+-        public DebugST RootTemplate
++        public DebugTemplate RootTemplate
+{
+get
+{
+diff --git a/Antlr4.StringTemplate.Visualizer/TemplateVisualizerFrame.xaml.cs b/Antlr4.StringTemplate.Visualizer/TemplateVisualizerFrame.xaml.cs
+index acd9267..9867ffe 100644
+--- a/Antlr4.StringTemplate.Visualizer/TemplateVisualizerFrame.xaml.cs
++++ b/Antlr4.StringTemplate.Visualizer/TemplateVisualizerFrame.xaml.cs
+@@ -50,7 +50,7 @@ namespace Antlr4.StringTemplate.Visualizer
+
+public partial class TemplateVisualizerFrame : UserControl
+{
+-        private DebugST currentTemplate;
++        private DebugTemplate currentTemplate;
+
+public TemplateVisualizerFrame()
+{
+@@ -97,7 +97,7 @@ namespace Antlr4.StringTemplate.Visualizer
+if (runtimeMessage != null)
+{
+Interval interval = runtimeMessage.SourceInterval;
+-                currentTemplate = (DebugST)message.Self;
++                currentTemplate = (DebugTemplate)message.Self;
+UpdateCurrentTemplate();
+Highlight(TemplateTextBox.Document, interval);
+}
+@@ -226,7 +226,7 @@ namespace Antlr4.StringTemplate.Visualizer
+Interval r = currentTemplate.impl.TemplateRange;
+if (currentTemplate.EnclosingInstance != null)
+{
+-                int i = GetIndexOfChild((DebugST)currentTemplate.EnclosingInstance, currentTemplate);
++                int i = GetIndexOfChild((DebugTemplate)currentTemplate.EnclosingInstance, currentTemplate);
+if (i == -1)
+{
+Highlight(OutputTextBox.Document, null);
+@@ -251,7 +251,7 @@ namespace Antlr4.StringTemplate.Visualizer
+}
+}
+
+-        private int GetIndexOfChild(DebugST parent, Template child)
++        private int GetIndexOfChild(DebugTemplate parent, Template child)
+{
+if (parent == null)
+throw new ArgumentNullException("parent");
+diff --git a/Antlr4.StringTemplate/Debug/DebugTemplate.cs b/Antlr4.StringTemplate/Debug/DebugTemplate.cs
+index 3b1b8d0..42c7d81 100644
+--- a/Antlr4.StringTemplate/Debug/DebugTemplate.cs
++++ b/Antlr4.StringTemplate/Debug/DebugTemplate.cs
+@@ -40,7 +40,7 @@ namespace Antlr4.StringTemplate.Debug
+/** To avoid polluting Template instances with debug info when not debugging.
+*  Setting debug mode in TemplateGroup makes it create these instead of STs.
+*/
+-    public class DebugST : Template
++    public class DebugTemplate : Template
+{
+public class State
+{
+@@ -56,11 +56,11 @@ namespace Antlr4.StringTemplate.Debug
+
+//public Interpreter interp; // set when we start interpreter in inspect()
+
+-        public DebugST()
++        public DebugTemplate()
+{
+}
+
+-        public DebugST(Template proto) : base(proto)
++        public DebugTemplate(Template proto) : base(proto)
+{
+}
+
+diff --git a/Antlr4.StringTemplate/Debug/EvalExprEvent.cs b/Antlr4.StringTemplate/Debug/EvalExprEvent.cs
+index 2b726df..37a8181 100644
+--- a/Antlr4.StringTemplate/Debug/EvalExprEvent.cs
++++ b/Antlr4.StringTemplate/Debug/EvalExprEvent.cs
+@@ -40,7 +40,7 @@ namespace Antlr4.StringTemplate.Debug
+private readonly Interval _sourceInterval;
+private readonly string expr;
+
+-        public EvalExprEvent(DebugST template, Interval outputInterval, Interval sourceInterval)
++        public EvalExprEvent(DebugTemplate template, Interval outputInterval, Interval sourceInterval)
+: base(template, outputInterval)
+{
+this._sourceInterval = sourceInterval;
+diff --git a/Antlr4.StringTemplate/Debug/EvalTemplateEvent.cs b/Antlr4.StringTemplate/Debug/EvalTemplateEvent.cs
+index a7e4e54..e42042e 100644
+--- a/Antlr4.StringTemplate/Debug/EvalTemplateEvent.cs
++++ b/Antlr4.StringTemplate/Debug/EvalTemplateEvent.cs
+@@ -36,7 +36,7 @@ namespace Antlr4.StringTemplate.Debug
+
+public class EvalTemplateEvent : InterpEvent
+{
+-        public EvalTemplateEvent(DebugST template, Interval interval)
++        public EvalTemplateEvent(DebugTemplate template, Interval interval)
+: base(template, interval)
+{
+}
+diff --git a/Antlr4.StringTemplate/Debug/InterpEvent.cs b/Antlr4.StringTemplate/Debug/InterpEvent.cs
+index e487801..a0734d1 100644
+--- a/Antlr4.StringTemplate/Debug/InterpEvent.cs
++++ b/Antlr4.StringTemplate/Debug/InterpEvent.cs
+@@ -37,11 +37,11 @@ namespace Antlr4.StringTemplate.Debug
+
+public class InterpEvent
+{
+-        private readonly DebugST _template;
++        private readonly DebugTemplate _template;
+// output location
+private readonly Interval _interval;
+
+-        public InterpEvent(DebugST template, Interval interval)
++        public InterpEvent(DebugTemplate template, Interval interval)
+{
+if (template == null)
+throw new ArgumentNullException("template");
+@@ -52,7 +52,7 @@ namespace Antlr4.StringTemplate.Debug
+this._interval = interval;
+}
+
+-        public DebugST Template
++        public DebugTemplate Template
+{
+get
+{
+diff --git a/Antlr4.StringTemplate/Interpreter.cs b/Antlr4.StringTemplate/Interpreter.cs
+index ee82506..7ae04bf 100644
+--- a/Antlr4.StringTemplate/Interpreter.cs
++++ b/Antlr4.StringTemplate/Interpreter.cs
+@@ -66,8 +66,8 @@ namespace Antlr4.StringTemplate
+*  These are used by STViz to pair up output chunks with the template
+*  expressions that generate them.
+*
+-     *  We create a new interpreter for each Template.Render(), DebugST.inspect, or
+-     *  DebugST.GetEvents() invocation.
++     *  We create a new interpreter for each Template.Render(), DebugTemplate.Visualize, or
++     *  DebugTemplate.GetEvents() invocation.
+*/
+public class Interpreter
+{
+@@ -494,12 +494,12 @@ namespace Antlr4.StringTemplate
+}
+if (group.Debug)
+{
+-                EvalTemplateEvent e = new EvalTemplateEvent((DebugST)self, Interval.FromBounds(start, @out.Index));
++                EvalTemplateEvent e = new EvalTemplateEvent((DebugTemplate)self, Interval.FromBounds(start, @out.Index));
+//System.out.println("eval template "+self+": "+e);
+events.Add(e);
+if (self.EnclosingInstance != null)
+{
+-                    DebugST parent = (DebugST)self.EnclosingInstance;
++                    DebugTemplate parent = (DebugTemplate)self.EnclosingInstance;
+GetEvents(parent).Add(e);
+}
+}
+@@ -632,7 +632,7 @@ namespace Antlr4.StringTemplate
+if (group.Debug)
+{
+Interval templateLocation = self.impl.sourceMap[current_ip];
+-                EvalExprEvent e = new EvalExprEvent((DebugST)self, Interval.FromBounds(start, @out.Index), templateLocation);
++                EvalExprEvent e = new EvalExprEvent((DebugTemplate)self, Interval.FromBounds(start, @out.Index), templateLocation);
+Console.WriteLine(e);
+events.Add(e);
+}
+@@ -672,7 +672,7 @@ namespace Antlr4.StringTemplate
+if (group.Debug)
+{
+Interval templateLocation = self.impl.sourceMap[current_ip];
+-                EvalExprEvent e = new EvalExprEvent((DebugST)self, Interval.FromBounds(start, @out.Index), templateLocation);
++                EvalExprEvent e = new EvalExprEvent((DebugTemplate)self, Interval.FromBounds(start, @out.Index), templateLocation);
+Console.WriteLine(e);
+events.Add(e);
+}
+diff --git a/Antlr4.StringTemplate/TemplateGroup.cs b/Antlr4.StringTemplate/TemplateGroup.cs
+index 136df17..f1fa0b5 100644
+--- a/Antlr4.StringTemplate/TemplateGroup.cs
++++ b/Antlr4.StringTemplate/TemplateGroup.cs
+@@ -642,7 +642,7 @@ namespace Antlr4.StringTemplate
+{
+// TODO: try making a mem pool?
+if (Debug)
+-                return new DebugST();
++                return new DebugTemplate();
+
+return new Template();
+}
+@@ -650,7 +650,7 @@ namespace Antlr4.StringTemplate
+public virtual Template CreateStringTemplate(Template proto)
+{
+if (Debug)
+-                return new DebugST(proto);
++                return new DebugTemplate(proto);
+
+return new Template(proto);
+}
+diff --git a/Antlr4.Test.StringTemplate/TestDebugEvents.cs b/Antlr4.Test.StringTemplate/TestDebugEvents.cs
+index 057b8cb..d05d810 100644
+--- a/Antlr4.Test.StringTemplate/TestDebugEvents.cs
++++ b/Antlr4.Test.StringTemplate/TestDebugEvents.cs
+@@ -52,7 +52,7 @@ namespace Antlr4.Test.StringTemplate
+writeFile(tmpdir, "t.stg", templates);
+TemplateGroup group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
+group.Debug = true;
+-            DebugST st = (DebugST)group.GetInstanceOf("t");
++            DebugTemplate st = (DebugTemplate)group.GetInstanceOf("t");
+List<InterpEvent> events = st.GetEvents();
+string expected =
+"[EvalExprEvent{self=t(), output=[0..3), expr=foo}," +
+@@ -70,7 +70,7 @@ namespace Antlr4.Test.StringTemplate
+writeFile(tmpdir, "t.stg", templates);
+TemplateGroup group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
+group.Debug = true;
+-            DebugST st = (DebugST)group.GetInstanceOf("t");
++            DebugTemplate st = (DebugTemplate)group.GetInstanceOf("t");
+List<InterpEvent> events = st.GetEvents();
+string expected =
+"[EvalExprEvent{self=t(), output=[0..0), expr=<x>}," +
+@@ -90,7 +90,7 @@ namespace Antlr4.Test.StringTemplate
+writeFile(tmpdir, "t.stg", templates);
+TemplateGroup group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
+group.Debug = true;
+-            DebugST st = (DebugST)group.GetInstanceOf("t");
++            DebugTemplate st = (DebugTemplate)group.GetInstanceOf("t");
+List<InterpEvent> events = st.GetEvents();
+string expected =
+"[EvalExprEvent{self=t(), output=[0..1), expr=[}," +
+diff --git a/Antlr4.Test.StringTemplate/TestVisualizer.cs b/Antlr4.Test.StringTemplate/TestVisualizer.cs
+index b133984..2632e32 100644
+--- a/Antlr4.Test.StringTemplate/TestVisualizer.cs
++++ b/Antlr4.Test.StringTemplate/TestVisualizer.cs
+@@ -63,7 +63,7 @@ namespace Antlr4.Test.StringTemplate
+writeFile(tmpdir, "t.stg", templates);
+TemplateGroup group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
+group.Debug = true;
+-            DebugST st = (DebugST)group.GetInstanceOf("method");
++            DebugTemplate st = (DebugTemplate)group.GetInstanceOf("method");
+st.impl.Dump();
+st.Add("type", "float");
+st.Add("name", "foo");
+

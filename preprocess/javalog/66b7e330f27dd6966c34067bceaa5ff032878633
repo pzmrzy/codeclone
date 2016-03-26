@@ -1,0 +1,24 @@
+commit 66b7e330f27dd6966c34067bceaa5ff032878633
+Author:     Ivan Brezina <ibrezina@ibrezina.net>
+AuthorDate: Thu Jun 20 23:51:49 2013 +0200
+Commit:     Ivan Brezina <ibre5041@ibrezina.net>
+CommitDate: Mon Sep 9 11:14:04 2013 +0200
+
+Fix ST compile warning - Java target used as an example
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Cpp/Cpp.stg b/tool/src/main/resources/org/antlr/codegen/templates/Cpp/Cpp.stg
+index b3eb31f..39bd926 100755
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Cpp/Cpp.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Cpp/Cpp.stg
+@@ -967,8 +967,8 @@ static ANTLR_UINT8**	getTokenNames()
+<grammar.delegatedRules:{ruleDescriptor|
+<returnType()> <name>::<ruleDescriptor.name>(<ruleDescriptor.parameterScope:parameterScope()>)
+{
+-        <if(ruleDescriptor.hasReturnValue)>return <endif>   m_<ruleDescriptor.grammar:delegateName()>-><ruleDescriptor.name>( <ruleDescriptor.parameterScope.attributes:{a|<a.name>}; separator=", ">);
+-	\}}; separator="\n">
++        <if(ruleDescriptor.hasReturnValue)>return <endif>m_<ruleDescriptor.grammar:delegateName()>-><ruleDescriptor.name>(<if(ruleDescriptor.parameterScope)><ruleDescriptor.parameterScope.attributes:{a|<a.name>}; separator=", "><endif>);
++    \}}; separator="\n">
+
+<endif>
+/* End of parsing rules
+

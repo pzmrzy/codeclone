@@ -1,0 +1,45 @@
+commit 0bb46038cf1665b5d8e8941a9eec7c06e217a77c
+Author:     Benjamin Niemann <pink@odahoda.de>
+AuthorDate: Fri Apr 1 05:24:48 2011 -0800
+Commit:     Benjamin Niemann <pink@odahoda.de>
+CommitDate: Fri Apr 1 05:24:48 2011 -0800
+
+[Python] Remove leftover references to RecognizerSharedState.failed
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8020]
+
+diff --git a/runtime/Python/antlr3/recognizers.py b/runtime/Python/antlr3/recognizers.py
+index 0763506..9ea82ec 100644
+--- a/runtime/Python/antlr3/recognizers.py
++++ b/runtime/Python/antlr3/recognizers.py
+@@ -880,12 +880,6 @@ class BaseRecognizer(object):
+self._state.backtracking = n
+
+
+-    def failed(self):
+-        """Return whether or not a backtracking attempt failed."""
+-
+-        return self._state.failed
+-
+-
+def getGrammarFileName(self):
+"""For debugging and other purposes, might want the grammar name.
+
+@@ -983,10 +977,12 @@ class BaseRecognizer(object):
+if self._state.backtracking > 0:
+sys.stdout.write(" backtracking=%s" % self._state.backtracking)
+
+-        if self._state.failed:
+-            sys.stdout.write(" failed")
+-        else:
+-            sys.stdout.write(" succeeded")
++        # mmmm... we use BacktrackingFailed exceptions now. So how could we
++        # get that information here?
++        #if self._state.failed:
++        #    sys.stdout.write(" failed")
++        #else:
++        #    sys.stdout.write(" succeeded")
+
+sys.stdout.write('\n')
+
+

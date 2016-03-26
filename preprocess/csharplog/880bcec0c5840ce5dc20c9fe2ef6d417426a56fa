@@ -1,0 +1,24 @@
+commit 880bcec0c5840ce5dc20c9fe2ef6d417426a56fa
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Sat Feb 2 15:51:41 2013 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Sat Feb 2 15:51:41 2013 -0600
+
+Specify Generator for Antlr3 items as MSBuild:Compile so users don't need to specify it manually
+
+diff --git a/ANTLRCSharpDocumentation.docx b/ANTLRCSharpDocumentation.docx
+index e319cb9..5b3e977 100644
+Binary files a/ANTLRCSharpDocumentation.docx and b/ANTLRCSharpDocumentation.docx differ
+diff --git a/AntlrBuildTask/Antlr3.targets b/AntlrBuildTask/Antlr3.targets
+index 1d75124..70b7c57 100644
+--- a/AntlrBuildTask/Antlr3.targets
++++ b/AntlrBuildTask/Antlr3.targets
+@@ -80,6 +80,7 @@
+
+<ItemDefinitionGroup>
+<Antlr3>
++      <Generator>MSBuild:Compile</Generator>
+<TargetLanguage/>
+<DebugGrammar>false</DebugGrammar>
+<ProfileGrammar>false</ProfileGrammar>
+

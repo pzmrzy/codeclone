@@ -1,0 +1,53 @@
+commit 859d6423d5a729300215cbcb3bf2e6f83d19d2fc
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Thu Aug 4 10:10:33 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Thu Aug 4 10:10:33 2011 -0800
+
+(C# 3) Use $(ProjectDir) instead of $(SolutionDir) to reference Antlr3.exe
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8995]
+
+diff --git a/Antlr3.StringTemplate/Antlr3.StringTemplate.csproj b/Antlr3.StringTemplate/Antlr3.StringTemplate.csproj
+index b123bcb..542b447 100644
+--- a/Antlr3.StringTemplate/Antlr3.StringTemplate.csproj
++++ b/Antlr3.StringTemplate/Antlr3.StringTemplate.csproj
+@@ -139,13 +139,13 @@
+<Link>Key.snk</Link>
+</None>
+</ItemGroup>
++  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+<PropertyGroup>
+<!-- Folder containing AntlrBuildTask.dll -->
+-    <AntlrBuildTaskPath>$(SolutionDir)bin\Bootstrap</AntlrBuildTaskPath>
++    <AntlrBuildTaskPath>$(ProjectDir)..\bin\Bootstrap</AntlrBuildTaskPath>
+<!-- Path to the ANTLR Tool itself. -->
+-    <AntlrToolPath>$(SolutionDir)bin\Bootstrap\Antlr3.exe</AntlrToolPath>
++    <AntlrToolPath>$(ProjectDir)..\bin\Bootstrap\Antlr3.exe</AntlrToolPath>
+</PropertyGroup>
+-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+<Import Project="$(ProjectDir)..\bin\Bootstrap\Antlr3.targets" />
+<!-- To modify your build process, add your task inside one of the targets below and uncomment it.
+Other similar extension points exist, see Microsoft.Common.targets.
+diff --git a/Antlr3/Antlr3.csproj b/Antlr3/Antlr3.csproj
+index 42f3daa..a9f9065 100644
+--- a/Antlr3/Antlr3.csproj
++++ b/Antlr3/Antlr3.csproj
+@@ -515,13 +515,13 @@
+<Name>Antlr4.StringTemplate</Name>
+</ProjectReference>
+</ItemGroup>
++  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+<PropertyGroup>
+<!-- Folder containing AntlrBuildTask.dll -->
+-    <AntlrBuildTaskPath>$(SolutionDir)bin\Bootstrap</AntlrBuildTaskPath>
++    <AntlrBuildTaskPath>$(ProjectDir)..\bin\Bootstrap</AntlrBuildTaskPath>
+<!-- Path to the ANTLR Tool itself. -->
+-    <AntlrToolPath>$(SolutionDir)bin\Bootstrap\Antlr3.exe</AntlrToolPath>
++    <AntlrToolPath>$(ProjectDir)..\bin\Bootstrap\Antlr3.exe</AntlrToolPath>
+</PropertyGroup>
+-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+<Import Project="$(ProjectDir)..\bin\Bootstrap\Antlr3.targets" />
+<!-- To modify your build process, add your task inside one of the targets below and uncomment it.
+Other similar extension points exist, see Microsoft.Common.targets.
+

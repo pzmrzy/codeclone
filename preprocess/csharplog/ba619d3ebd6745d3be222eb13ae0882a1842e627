@@ -1,0 +1,1180 @@
+commit ba619d3ebd6745d3be222eb13ae0882a1842e627
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Dec 14 01:40:52 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Dec 14 01:40:52 2009 -0800
+
+C# Port:
+* Merge 6399
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6504]
+
+diff --git a/Antlr3.Test/ST4/TestDebugEvents.cs b/Antlr3.Test/ST4/TestDebugEvents.cs
+index 2e5f14a..4790ea2 100644
+--- a/Antlr3.Test/ST4/TestDebugEvents.cs
++++ b/Antlr3.Test/ST4/TestDebugEvents.cs
+@@ -35,6 +35,7 @@ namespace AntlrUnitTests.ST4
+using System.Collections.Generic;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using StringTemplate;
++    using StringTemplate.Debug;
+using Interpreter = StringTemplate.Interpreter;
+using ST = StringTemplate.Template;
+using STGroup = StringTemplate.TemplateGroup;
+@@ -53,14 +54,14 @@ namespace AntlrUnitTests.ST4
+
+WriteFile(tmpdir, "t.stg", templates);
+STGroup group = new STGroupFile(tmpdir + "/" + "t.stg");
++            group.Debug = true;
+ST st = group.GetInstanceOf("t");
+st.code.Dump();
+StringWriter sw = new StringWriter();
+Interpreter interp = new Interpreter(group, new AutoIndentWriter(sw));
+-            interp.Debug = true;
+interp.Exec(st);
+String expected = "";
+-            IList<Interpreter.DebugEvent> events = interp.Events;
++            IList<InterpEvent> events = interp.Events;
+String result = events.ToString();
+Assert.AreEqual(expected, result);
+}
+@@ -73,15 +74,15 @@ namespace AntlrUnitTests.ST4
+
+WriteFile(tmpdir, "t.stg", templates);
+STGroup group = new STGroupFile(tmpdir + "/" + "t.stg");
++            group.Debug = true;
+ST st = group.GetInstanceOf("t");
+st.code.Dump();
+st.Add("x", "foo");
+StringWriter sw = new StringWriter();
+Interpreter interp = new Interpreter(group, new AutoIndentWriter(sw));
+-            interp.Debug = true;
+interp.Exec(st);
+String expected = "";
+-            IList<Interpreter.DebugEvent> events = interp.Events;
++            IList<InterpEvent> events = interp.Events;
+String result = events.ToString();
+Assert.AreEqual(expected, result);
+}
+@@ -95,15 +96,15 @@ namespace AntlrUnitTests.ST4
+
+WriteFile(tmpdir, "t.stg", templates);
+STGroup group = new STGroupFile(tmpdir + "/" + "t.stg");
++            group.Debug = true;
+ST st = group.GetInstanceOf("t");
+st.code.Dump();
+st.Add("x", "foo");
+StringWriter sw = new StringWriter();
+Interpreter interp = new Interpreter(group, new AutoIndentWriter(sw));
+-            interp.Debug = true;
+interp.Exec(st);
+String expected = "";
+-            IList<Interpreter.DebugEvent> events = interp.Events;
++            IList<InterpEvent> events = interp.Events;
+String result = events.ToString();
+Assert.AreEqual(expected, result);
+}
+diff --git a/STViz/Window1.xaml b/STViz/Window1.xaml
+index 089ece2..9316cc4 100644
+--- a/STViz/Window1.xaml
++++ b/STViz/Window1.xaml
+@@ -12,7 +12,7 @@
+<TextBlock Text="{Binding Name}" />
+</DataTemplate>
+
+-        <HierarchicalDataTemplate x:Key="TemplateEventsItemTemplate" ItemsSource="{Binding Path=Template.Events}">
++        <HierarchicalDataTemplate x:Key="TemplateEventsItemTemplate" ItemsSource="{Binding Path=Template.DebugInfo.InterpreterEvents}">
+<TextBlock Text="{Binding Template.Name}" />
+</HierarchicalDataTemplate>
+</Window.Resources>
+diff --git a/STViz/Window1.xaml.cs b/STViz/Window1.xaml.cs
+index 93beaa4..f768055 100644
+--- a/STViz/Window1.xaml.cs
++++ b/STViz/Window1.xaml.cs
+@@ -41,6 +41,7 @@ namespace STViz
+using StringWriter = System.IO.StringWriter;
+using System.Windows.Documents;
+using System.Windows.Media;
++    using StringTemplate.Debug;
+
+public partial class Window1 : Window
+{
+@@ -62,6 +63,7 @@ namespace STViz
+string tmpdir = Path.GetTempPath();
+File.WriteAllText(Path.Combine(tmpdir, "t.stg"), templates);
+TemplateGroup group = new TemplateGroupFile(Path.Combine(tmpdir, "t.stg"));
++            group.Debug = true;
+Template st = group.GetInstanceOf("method");
+st.code.Dump();
+st.Add("type", "float");
+@@ -84,9 +86,8 @@ namespace STViz
+
+StringWriter sw = new StringWriter();
+Interpreter interp = new Interpreter(group, new AutoIndentWriter(sw));
+-            interp.Debug = true;
+interp.Exec(st);
+-            IList<Interpreter.DebugEvent> events = interp.Events;
++            IList<InterpEvent> events = interp.Events;
+
+string text = sw.ToString();
+templatesTree.Items.Add(new RootEvent(st, 0, text.Length));
+@@ -97,7 +98,7 @@ namespace STViz
+{
+txtTemplate.Document.Blocks.Clear();
+
+-            Interpreter.DebugEvent templateEvent = e.NewValue as Interpreter.DebugEvent;
++            InterpEvent templateEvent = e.NewValue as InterpEvent;
+if (templateEvent == null)
+return;
+
+@@ -122,14 +123,14 @@ namespace STViz
+
+private void OnTemplatesTreeSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+{
+-            Interpreter.DebugEvent debugEvent = e.NewValue as Interpreter.DebugEvent;
++            InterpEvent debugEvent = e.NewValue as InterpEvent;
+if (debugEvent == null)
+return;
+
+Highlight(txtOutput.Document, debugEvent.Start, debugEvent.Stop - debugEvent.Start + 1);
+}
+
+-        private class RootEvent : Interpreter.DebugEvent
++        private class RootEvent : InterpEvent
+{
+public RootEvent(Template template, int start, int stop)
+: base(template, start, stop)
+diff --git a/StringTemplate4/Debug/AddAttributeEvent.cs b/StringTemplate4/Debug/AddAttributeEvent.cs
+new file mode 100644
+index 0000000..bf28d46
+--- /dev/null
++++ b/StringTemplate4/Debug/AddAttributeEvent.cs
+@@ -0,0 +1,55 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace StringTemplate.Debug
++{
++    public class AddAttributeEvent : ConstructionEvent
++    {
++        private string name;
++        private object value; // unused really; leave for future
++
++        public AddAttributeEvent(string name, object value)
++        {
++            this.name = name;
++            this.value = value;
++        }
++
++        public override string ToString()
++        {
++            return "addEvent{" +
++                ", name='" + name + '\'' +
++                ", value=" + value +
++                ", location=" + FileName + ":" + Line +
++                '}';
++        }
++    }
++}
+diff --git a/StringTemplate4/Debug/ConstructionEvent.cs b/StringTemplate4/Debug/ConstructionEvent.cs
+new file mode 100644
+index 0000000..fc2c86b
+--- /dev/null
++++ b/StringTemplate4/Debug/ConstructionEvent.cs
+@@ -0,0 +1,82 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace StringTemplate
++{
++    using System.Diagnostics;
++
++    public class ConstructionEvent
++    {
++        private StackTrace stack;
++
++        public ConstructionEvent()
++        {
++            this.stack = new StackTrace(true);
++        }
++
++        public string FileName
++        {
++            get
++            {
++                return TemplateEntryPoint.GetFileName();
++            }
++        }
++
++        public int Line
++        {
++            get
++            {
++                return TemplateEntryPoint.GetFileLineNumber();
++            }
++        }
++
++        public StackFrame TemplateEntryPoint
++        {
++            get
++            {
++                var frames = stack.GetFrames();
++                foreach (var frame in frames)
++                {
++                    var method = frame.GetMethod();
++
++                    if (method.Name == "Main")
++                        return frame;
++
++                    if (!method.DeclaringType.Namespace.StartsWith("StringTemplate"))
++                        return frame;
++                }
++
++                return frames[0];
++            }
++        }
++    }
++}
+diff --git a/StringTemplate4/Debug/DebugTemplate.cs b/StringTemplate4/Debug/DebugTemplate.cs
+deleted file mode 100644
+index 57d9624..0000000
+--- a/StringTemplate4/Debug/DebugTemplate.cs
++++ /dev/null
+@@ -1,74 +0,0 @@
+-﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
+- * All rights reserved.
+- *
+- * Conversion to C#:
+- * Copyright (c) 2008-2009 Sam Harwell
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. Redistributions in binary form must reproduce the above copyright
+- *    notice, this list of conditions and the following disclaimer in the
+- *    documentation and/or other materials provided with the distribution.
+- * 3. The name of the author may not be used to endorse or promote products
+- *    derived from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- */
+-
+-namespace StringTemplate
+-{
+-    using Exception = System.Exception;
+-    using System.Collections.Generic;
+-
+-    public class DebugTemplate : Template
+-    {
+-        /// <summary>
+-        /// Track add attribute "events"; used for ST user-level debugging;
+-        /// Avoid polluting Template with this field when not debugging.
+-        /// </summary>
+-        IList<AddAttributeEvent> addEvents;
+-
+-        public override void Add(string name, object value)
+-        {
+-            if (name == null)
+-                return; // allow null value
+-
+-            base.Add(name, value);
+-
+-            if (code.nativeGroup.Detects(ErrorTolerance.DETECT_ADD_ATTR))
+-            {
+-                if (addEvents == null)
+-                    addEvents = new List<AddAttributeEvent>();
+-
+-                addEvents.Add(new AddAttributeEvent(name, value));
+-            }
+-        }
+-
+-        public class AddAttributeEvent : Event
+-        {
+-            string name;
+-            object value;
+-
+-            public AddAttributeEvent(string name, object value)
+-            {
+-                this.name = name;
+-                this.value = value;
+-            }
+-        }
+-    }
+-}
+diff --git a/StringTemplate4/Debug/EvalExprEvent.cs b/StringTemplate4/Debug/EvalExprEvent.cs
+new file mode 100644
+index 0000000..b62a3ba
+--- /dev/null
++++ b/StringTemplate4/Debug/EvalExprEvent.cs
+@@ -0,0 +1,60 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace StringTemplate.Debug
++{
++    public class EvalExprEvent : InterpEvent
++    {
++        int exprStart;
++        int exprStop; // template pattern location
++        string expr;
++
++        public EvalExprEvent(Template self, int start, int stop, int exprStart, int exprStop)
++            : base(self, start, stop)
++        {
++            this.exprStart = exprStart;
++            this.exprStop = exprStop;
++            expr = self.code.template.Substring(exprStart, exprStop - exprStart + 2);
++        }
++
++        public override string ToString()
++        {
++            return GetType().Name + "{" +
++                   "self=" + Template +
++                   //", attr=" + Template.Attributes +
++                   ", start=" + Start +
++                   ", stop=" + Stop +
++                   ", expr=" + expr +
++                   '}';
++        }
++    }
++}
+diff --git a/StringTemplate4/Debug/EvalTemplateEvent.cs b/StringTemplate4/Debug/EvalTemplateEvent.cs
+new file mode 100644
+index 0000000..3cb5ec7
+--- /dev/null
++++ b/StringTemplate4/Debug/EvalTemplateEvent.cs
+@@ -0,0 +1,42 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace StringTemplate.Debug
++{
++    public class EvalTemplateEvent : InterpEvent
++    {
++        public EvalTemplateEvent(Template template, int start, int stop)
++            : base(template, start, stop)
++        {
++        }
++    }
++}
+diff --git a/StringTemplate4/Debug/Event.cs b/StringTemplate4/Debug/Event.cs
+deleted file mode 100644
+index 122b6ff..0000000
+--- a/StringTemplate4/Debug/Event.cs
++++ /dev/null
+@@ -1,82 +0,0 @@
+-﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
+- * All rights reserved.
+- *
+- * Conversion to C#:
+- * Copyright (c) 2008-2009 Sam Harwell
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. Redistributions in binary form must reproduce the above copyright
+- *    notice, this list of conditions and the following disclaimer in the
+- *    documentation and/or other materials provided with the distribution.
+- * 3. The name of the author may not be used to endorse or promote products
+- *    derived from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- */
+-
+-namespace StringTemplate
+-{
+-    using System.Diagnostics;
+-
+-    public class Event
+-    {
+-        private StackTrace stack;
+-
+-        public Event()
+-        {
+-            this.stack = new StackTrace(true);
+-        }
+-
+-        public string FileName
+-        {
+-            get
+-            {
+-                return TemplateEntryPoint.GetFileName();
+-            }
+-        }
+-
+-        public int Line
+-        {
+-            get
+-            {
+-                return TemplateEntryPoint.GetFileLineNumber();
+-            }
+-        }
+-
+-        public StackFrame TemplateEntryPoint
+-        {
+-            get
+-            {
+-                var frames = stack.GetFrames();
+-                foreach (var frame in frames)
+-                {
+-                    var method = frame.GetMethod();
+-
+-                    if (method.Name == "Main")
+-                        return frame;
+-
+-                    if (!method.DeclaringType.Namespace.StartsWith("StringTemplate"))
+-                        return frame;
+-                }
+-
+-                return frames[0];
+-            }
+-        }
+-    }
+-}
+diff --git a/StringTemplate4/Debug/InterpEvent.cs b/StringTemplate4/Debug/InterpEvent.cs
+new file mode 100644
+index 0000000..3abc22b
+--- /dev/null
++++ b/StringTemplate4/Debug/InterpEvent.cs
+@@ -0,0 +1,67 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace StringTemplate.Debug
++{
++    public class InterpEvent
++    {
++        public InterpEvent(Template self, int start, int stop)
++        {
++            this.Template = self;
++            this.Start = start;
++            this.Stop = stop;
++        }
++
++        public Template Template
++        {
++            get;
++            private set;
++        }
++
++        public int Start
++        {
++            get;
++            private set;
++        }
++
++        public int Stop
++        {
++            get;
++            private set;
++        }
++
++        public override string ToString()
++        {
++            return string.Format("{0}{{self={1},start={2},stop={3}}}", GetType().Name, Template, Start, Stop);
++        }
++    }
++}
+diff --git a/StringTemplate4/Debug/TemplateDebugInfo.cs b/StringTemplate4/Debug/TemplateDebugInfo.cs
+new file mode 100644
+index 0000000..330b951
+--- /dev/null
++++ b/StringTemplate4/Debug/TemplateDebugInfo.cs
+@@ -0,0 +1,72 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace StringTemplate.Debug
++{
++    using System.Collections.Generic;
++
++    public class TemplateDebugInfo
++    {
++        public TemplateDebugInfo()
++        {
++            this.InterpreterEvents = new List<InterpEvent>();
++            this.AddAttributeEvents = new Dictionary<string, ICollection<AddAttributeEvent>>();
++            this.TemplateConstructionEvent = new ConstructionEvent();
++        }
++
++        /** Track all events that occur during rendering.  Create room
++         *  for each new ST, but make sure to wipe this list
++         *  upon creation of interpreter to reset.  The construction-time
++         *  events like "new ST" and "add attribute" can stay, of course.
++         */
++        public IList<InterpEvent> InterpreterEvents
++        {
++            get;
++            private set;
++        }
++
++        /** Track add attribute "events"; used for ST user-level debugging;
++         *  Avoid polluting ST with this field when not debugging.
++         */
++        public IDictionary<string, ICollection<AddAttributeEvent>> AddAttributeEvents
++        {
++            get;
++            private set;
++        }
++
++        public ConstructionEvent TemplateConstructionEvent
++        {
++            get;
++            private set;
++        }
++    }
++}
+diff --git a/StringTemplate4/ErrorTolerance.cs b/StringTemplate4/ErrorTolerance.cs
+index e5a6235..fdd0d1f 100644
+--- a/StringTemplate4/ErrorTolerance.cs
++++ b/StringTemplate4/ErrorTolerance.cs
+@@ -35,13 +35,12 @@ namespace StringTemplate
+public class ErrorTolerance
+{
+// bit set values telling ST what to care about
+-        public static readonly int DETECT_ADD_ATTR = 1;
+public static readonly int DETECT_UNKNOWN_PROPERTY = 2;
+public static readonly int DETECT_UNKNOWN_ATTRIBUTE = 4;
+public static readonly int DETECT_MALFORMED_TEMPLATE_NAME = 8;
+public static readonly int DETECT_UNKNOWN_TEMPLATE = 16;
+
+-        public static readonly int DEFAULT_TOLERANCE = DETECT_ADD_ATTR;
++        public static readonly int DEFAULT_TOLERANCE = 0;
+
+public int detect = DEFAULT_TOLERANCE;
+
+diff --git a/StringTemplate4/Interpreter.cs b/StringTemplate4/Interpreter.cs
+index 4a4de8f..3d4376d 100644
+--- a/StringTemplate4/Interpreter.cs
++++ b/StringTemplate4/Interpreter.cs
+@@ -50,6 +50,7 @@ namespace StringTemplate
+using StringBuilder = System.Text.StringBuilder;
+using StringWriter = System.IO.StringWriter;
+using Type = System.Type;
++    using StringTemplate.Debug;
+
+public class Interpreter
+{
+@@ -60,7 +61,10 @@ namespace StringTemplate
+public static readonly int OPTION_SEPARATOR = 3;
+public static readonly int OPTION_WRAP = 4;
+
+-        protected internal IList<DebugEvent> events;
++        /// <summary>
++        /// Track everything happening in interp if debug
++        /// </summary>
++        protected internal IList<InterpEvent> events;
+
+public static readonly int DEFAULT_OPERAND_STACK_SIZE = 100;
+
+@@ -87,7 +91,6 @@ namespace StringTemplate
+CultureInfo culture;
+
+public bool trace = false;
+-        public bool debug = false;
+
+public Interpreter(TemplateGroup group, ITemplateWriter @out)
+: this(group, @out, CultureInfo.CurrentCulture)
+@@ -99,26 +102,24 @@ namespace StringTemplate
+this.group = group;
+this.@out = @out;
+this.culture = culture;
+-        }
+-
+-        public IList<DebugEvent> Events
+-        {
+-            get
++            if (group.Debug)
+{
+-                return events;
++                events = new List<InterpEvent>();
++                if (group.DebugInfo != null)
++                {
++                    foreach (TemplateDebugInfo info in group.DebugInfo.Values)
++                    {
++                        info.InterpreterEvents.Clear();
++                    }
++                }
+}
+}
+
+-        public bool Debug
++        public IList<InterpEvent> Events
+{
+get
+{
+-                return debug;
+-            }
+-            set
+-            {
+-                debug = value;
+-                events = new List<DebugEvent>();
++                return events;
+}
+}
+
+@@ -399,14 +400,17 @@ namespace StringTemplate
+prevOpcode = opcode;
+}
+
+-            if (debug)
++            if (group.Debug)
+{
+int stop = @out.Index - 1;
+EvalTemplateEvent e = new EvalTemplateEvent(self, start, stop);
+Console.WriteLine(e);
+events.Add(e);
+if (self.enclosingInstance != null)
+-                    self.enclosingInstance.events.Add(e);
++                {
++                    TemplateDebugInfo info = self.enclosingInstance.DebugInfo;
++                    info.InterpreterEvents.Add(e);
++                }
+}
+
+return n;
+@@ -414,21 +418,21 @@ namespace StringTemplate
+
+protected int WriteObjectNoOptions(Template self, object o, int exprStart, int exprStop)
+{
+-            int start = @out.Index; // track char we're about to write
++            //int start = @out.Index; // track char we're about to write
+int n = WriteObject(@out, self, o, null);
+
+-            if (debug)
+-            {
+-                events.Add(new EvalExprEvent(self, start, @out.Index - 1, exprStart, exprStop));
+-                //self.events.Add(new EvalExprEvent(self, start, @out.Index, exprStart, exprStop));
+-            }
++            //if (debug)
++            //{
++            //    events.Add(new EvalExprEvent(self, start, @out.Index - 1, exprStart, exprStop));
++            //    //self.events.Add(new EvalExprEvent(self, start, @out.Index, exprStart, exprStop));
++            //}
+
+return n;
+}
+
+protected int WriteObjectWithOptions(Template self, object o, object[] options, int exprStart, int exprStop)
+{
+-            int start = @out.Index; // track char we're about to write
++            //int start = @out.Index; // track char we're about to write
+// precompute all option values (render all the way to strings)
+string[] optionStrings = null;
+if (options != null)
+@@ -448,11 +452,11 @@ namespace StringTemplate
+if (options != null && options[OPTION_ANCHOR] != null)
+@out.PopAnchorPoint();
+
+-            if (debug)
+-            {
+-                events.Add(new EvalTemplateEvent(self, start, @out.Index - 1));
+-                //self.events.Add(new EvalTemplateEvent(self, start, @out.Index));
+-            }
++            //if (debug)
++            //{
++            //    events.Add(new EvalTemplateEvent(self, start, @out.Index - 1));
++            //    //self.events.Add(new EvalTemplateEvent(self, start, @out.Index));
++            //}
+
+return n;
+}
+@@ -1167,67 +1171,5 @@ namespace StringTemplate
+int word = b1 << (8 * 1) | b2;
+return word;
+}
+-
+-        public class DebugEvent
+-        {
+-            public DebugEvent(Template self, int start, int stop)
+-            {
+-                this.Template = self;
+-                this.Start = start;
+-                this.Stop = stop;
+-            }
+-
+-            public Template Template
+-            {
+-                get;
+-                private set;
+-            }
+-
+-            public int Start
+-            {
+-                get;
+-                private set;
+-            }
+-
+-            public int Stop
+-            {
+-                get;
+-                private set;
+-            }
+-
+-            public override string ToString()
+-            {
+-                return string.Format("{0}{{self={1},attr={2},start={3},stop={4}}}", GetType().Name, Template, Template.Attributes, Start, Stop);
+-            }
+-        }
+-
+-        public class EvalTemplateEvent : DebugEvent
+-        {
+-            public EvalTemplateEvent(Template self, int start, int stop)
+-                : base(self, start, stop)
+-            {
+-            }
+-        }
+-
+-        public class EvalExprEvent : DebugEvent
+-        {
+-            // template pattern location
+-            protected int exprStart;
+-            protected int exprStop;
+-            protected string expr;
+-
+-            public EvalExprEvent(Template self, int start, int stop, int exprStart, int exprStop)
+-                : base(self, start, stop)
+-            {
+-                this.exprStart = exprStart;
+-                this.exprStop = exprStop;
+-                this.expr = self.code.template.Substring(exprStart, exprStop - exprStart + 1);
+-            }
+-
+-            public override string ToString()
+-            {
+-                return string.Format("{0}{{self={1},attr={2},start={3},stop={4},expr={5}}}", GetType().Name, Template, Template.Attributes, Start, Stop, expr);
+-            }
+-        }
+}
+}
+diff --git a/StringTemplate4/StringTemplate4.csproj b/StringTemplate4/StringTemplate4.csproj
+index f357509..5aebe64 100644
+--- a/StringTemplate4/StringTemplate4.csproj
++++ b/StringTemplate4/StringTemplate4.csproj
+@@ -52,8 +52,12 @@
+<Compile Include="CompiledTemplate.cs" />
+<Compile Include="Compiler.cs" />
+<Compile Include="DateTimeRenderer.cs" />
+-    <None Include="Debug\DebugTemplate.cs" />
+-    <Compile Include="Debug\Event.cs" />
++    <Compile Include="Debug\AddAttributeEvent.cs" />
++    <Compile Include="Debug\ConstructionEvent.cs" />
++    <Compile Include="Debug\EvalExprEvent.cs" />
++    <Compile Include="Debug\EvalTemplateEvent.cs" />
++    <Compile Include="Debug\InterpEvent.cs" />
++    <Compile Include="Debug\TemplateDebugInfo.cs" />
+<Compile Include="ErrorTolerance.cs" />
+<Compile Include="FormalArgument.cs" />
+<Compile Include="GroupLexerHelper.cs" />
+diff --git a/StringTemplate4/Template.cs b/StringTemplate4/Template.cs
+index 4f9e699..822bcf3 100644
+--- a/StringTemplate4/Template.cs
++++ b/StringTemplate4/Template.cs
+@@ -43,6 +43,7 @@ namespace StringTemplate
+using StringBuilder = System.Text.StringBuilder;
+using StringWriter = System.IO.StringWriter;
+using System.Diagnostics;
++    using StringTemplate.Debug;
+
+public class Template
+{
+@@ -58,15 +59,6 @@ namespace StringTemplate
+/** Map an attribute name to its value(s). */
+internal IDictionary<string, object> attributes;
+
+-        // TEMPORARY! TODO move to DebugTemplate
+-        public IList<Interpreter.DebugEvent> events = new List<Interpreter.DebugEvent>();
+-
+-        /** Track add attribute "events"; used for ST user-level debugging;
+-         *  Avoid polluting ST with this field when not debugging.
+-         */
+-        public IDictionary<string, ICollection<AddAttributeEvent>> addEvents;
+-        //public List<AddAttributeEvent> addEvents;
+-
+/** Enclosing instance if I'm embedded within another template.
+*  IF-subtemplates are considered embedded as well.
+*/
+@@ -135,20 +127,20 @@ namespace StringTemplate
+}
+}
+
+-        [DebuggerHidden]
+-        public IEnumerable<Template> EnclosingInstanceStack
++        public TemplateDebugInfo DebugInfo
+{
+get
+{
+-                return GetEnclosingInstanceStack(false);
++                return groupThatCreatedThisInstance.GetDebugInfo(this);
+}
+}
+
+-        public ICollection<Interpreter.DebugEvent> Events
++        [DebuggerHidden]
++        public IEnumerable<Template> EnclosingInstanceStack
+{
+get
+{
+-                return this.events;
++                return GetEnclosingInstanceStack(false);
+}
+}
+
+@@ -181,19 +173,20 @@ namespace StringTemplate
+if (value is Template)
+((Template)value).enclosingInstance = this;
+
+-            if (true)
++            if (groupThatCreatedThisInstance.Debug)
+{
+-                if (addEvents == null)
+-                    addEvents = new Dictionary<string, ICollection<AddAttributeEvent>>();
+-
+-                ICollection<AddAttributeEvent> collection;
+-                if (!addEvents.TryGetValue(name, out collection))
++                TemplateDebugInfo info;
++                if (groupThatCreatedThisInstance.DebugInfo.TryGetValue(this, out info) && info != null)
+{
+-                    collection = new List<AddAttributeEvent>();
+-                    addEvents[name] = collection;
++                    ICollection<AddAttributeEvent> collection;
++                    if (!info.AddAttributeEvents.TryGetValue(name, out collection))
++                    {
++                        collection = new List<AddAttributeEvent>();
++                        info.AddAttributeEvents[name] = collection;
++                    }
++
++                    collection.Add(new AddAttributeEvent(name, value));
+}
+-
+-                collection.Add(new AddAttributeEvent(this, name, value));
+}
+
+object curvalue = null;
+@@ -406,29 +399,5 @@ namespace StringTemplate
+Embedded,
+Explicit
+}
+-
+-        public class AddAttributeEvent : Event
+-        {
+-            Template self;
+-            string name;
+-            object value;
+-
+-            public AddAttributeEvent(Template self, string name, object value)
+-            {
+-                this.self = self;
+-                this.name = name;
+-                this.value = value;
+-            }
+-
+-            public override string ToString()
+-            {
+-                return "addEvent{" +
+-                    "self=" + self +
+-                    ", name='" + name + '\'' +
+-                    ", value=" + value +
+-                    ", location=" + FileName + ":" + Line +
+-                    '}';
+-            }
+-        }
+}
+}
+diff --git a/StringTemplate4/TemplateGroup.cs b/StringTemplate4/TemplateGroup.cs
+index 7f7d7fc..2301e5d 100644
+--- a/StringTemplate4/TemplateGroup.cs
++++ b/StringTemplate4/TemplateGroup.cs
+@@ -44,6 +44,7 @@ namespace StringTemplate
+using Type = System.Type;
+using Antlr.Runtime;
+using TextWriter = System.IO.TextWriter;
++    using StringTemplate.Debug;
+
+/** A directory or directory tree of .st template files and/or group files.
+*  Individual template files contain formal template definitions. In a sense,
+@@ -79,6 +80,11 @@ namespace StringTemplate
+
+public static readonly ITemplateErrorListener DefaultErrorListener = new DefaultErrorListenerImpl();
+
++        /** To avoid polluting ST instances with debug info when not debugging,
++         *  we map ST instances to associated debug objects in group.
++         */
++        protected IDictionary<Template, TemplateDebugInfo> debugInfoMap;
++
+public string fullyQualifiedRootDirName;
+
+/** Load files using what encoding? */
+@@ -126,10 +132,37 @@ namespace StringTemplate
+
+public static TemplateGroup defaultGroup = new TemplateGroup();
+
++        private bool _debug;
++
+public TemplateGroup()
+{
+}
+
++        public bool Debug
++        {
++            get
++            {
++                return _debug;
++            }
++            set
++            {
++                if (_debug == value)
++                    return;
++
++                _debug = value;
++                if (_debug)
++                    debugInfoMap = new Dictionary<Template, TemplateDebugInfo>();
++            }
++        }
++
++        public IDictionary<Template, TemplateDebugInfo> DebugInfo
++        {
++            get
++            {
++                return debugInfoMap;
++            }
++        }
++
+public virtual string Name
+{
+get
+@@ -409,14 +442,29 @@ namespace StringTemplate
+return renderer;
+}
+
++        public TemplateDebugInfo GetDebugInfo(Template template)
++        {
++            if (!Debug)
++                return null;
++
++            TemplateDebugInfo debugInfo;
++            if (!debugInfoMap.TryGetValue(template, out debugInfo))
++                return null;
++
++            return debugInfo;
++        }
++
+/// <summary>
+/// StringTemplate object factory; each group can have its own.
+/// </summary>
+public virtual Template CreateStringTemplate()
+{
+// TODO: try making a mem pool
+-            Template st = new Template();
+-            return st;
++            Template template = new Template();
++            if (Debug)
++                debugInfoMap[template] = new TemplateDebugInfo();
++
++            return template;
+}
+
+public override string ToString()
+

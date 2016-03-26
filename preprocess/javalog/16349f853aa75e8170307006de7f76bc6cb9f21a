@@ -1,0 +1,35 @@
+commit 16349f853aa75e8170307006de7f76bc6cb9f21a
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Sun Dec 16 16:24:25 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Sun Dec 16 16:24:25 2012 -0600
+
+Reference latest RC 2 releases of ANTLR 3 (maven plugin) and ST 4
+
+diff --git a/pom.xml b/pom.xml
+index c86888d..c7ff7ee 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -109,7 +109,7 @@
+<dependency>
+<groupId>org.antlr</groupId>
+<artifactId>ST4</artifactId>
+-                <version>4.0.7-SNAPSHOT</version>
++                <version>4.0.7-rc-2</version>
+<scope>compile</scope>
+</dependency>
+
+diff --git a/tool/pom.xml b/tool/pom.xml
+index bb4a02d..8f51c4c 100644
+--- a/tool/pom.xml
++++ b/tool/pom.xml
+@@ -60,7 +60,7 @@
+<plugin>
+<groupId>org.antlr</groupId>
+<artifactId>antlr3-maven-plugin</artifactId>
+-                <version>3.5-rc-1</version>
++                <version>3.5-rc-2</version>
+<configuration>
+<libDirectory>target/generated-sources/antlr/org/antlr/grammar/v3</libDirectory>
+</configuration>
+

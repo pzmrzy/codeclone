@@ -1,0 +1,32 @@
+commit fc0cd2043e85f87a4c674417f0892476a2a0020e
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Wed Nov 28 22:09:00 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Wed Nov 28 22:09:00 2012 -0600
+
+Update POM to include the Implementation-Title, Implementation-Version, and Implementation-Vendor-Id in the MANIFEST.MF
+
+diff --git a/pom.xml b/pom.xml
+index 807c473..e16dc1f 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -124,6 +124,18 @@
+</resources>
+
+<plugins>
++            <plugin>
++                <groupId>org.apache.maven.plugins</groupId>
++                <artifactId>maven-jar-plugin</artifactId>
++                <version>2.4</version>
++                <configuration>
++                    <archive>
++                        <manifest>
++                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
++                        </manifest>
++                    </archive>
++                </configuration>
++            </plugin>
+
+<plugin>
+<artifactId>maven-compiler-plugin</artifactId>
+

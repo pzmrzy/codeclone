@@ -1,0 +1,140 @@
+commit 6ce122bf7dd139d44a85b7eb233c050c90c74951
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Sat Jan 5 06:17:17 2013 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Sat Jan 5 06:17:17 2013 -0600
+
+Now working on release 3.5.1 line
+
+diff --git a/antlr-complete/pom.xml b/antlr-complete/pom.xml
+index bbfbb83..b4044d1 100644
+--- a/antlr-complete/pom.xml
++++ b/antlr-complete/pom.xml
+@@ -17,7 +17,7 @@
+<parent>
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+-        <version>3.5-SNAPSHOT</version>
++        <version>3.5.1-SNAPSHOT</version>
+</parent>
+
+<url>http://antlr.org/</url>
+diff --git a/antlr3-maven-archetype/pom.xml b/antlr3-maven-archetype/pom.xml
+index 7338219..a1b5e62 100644
+--- a/antlr3-maven-archetype/pom.xml
++++ b/antlr3-maven-archetype/pom.xml
+@@ -20,7 +20,7 @@
+<parent>
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+-        <version>3.5-SNAPSHOT</version>
++        <version>3.5.1-SNAPSHOT</version>
+</parent>
+
+<build>
+diff --git a/antlr3-maven-plugin/pom.xml b/antlr3-maven-plugin/pom.xml
+index e949aed..4bccb6d 100644
+--- a/antlr3-maven-plugin/pom.xml
++++ b/antlr3-maven-plugin/pom.xml
+@@ -63,7 +63,7 @@
+<parent>
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+-        <version>3.5-SNAPSHOT</version>
++        <version>3.5.1-SNAPSHOT</version>
+</parent>
+
+<name>ANTLR 3 Maven plugin</name>
+diff --git a/gunit-maven-plugin/pom.xml b/gunit-maven-plugin/pom.xml
+index c47eca1..2e133a9 100644
+--- a/gunit-maven-plugin/pom.xml
++++ b/gunit-maven-plugin/pom.xml
+@@ -57,7 +57,7 @@
+<parent>
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+-        <version>3.5-SNAPSHOT</version>
++        <version>3.5.1-SNAPSHOT</version>
+</parent>
+
+<properties>
+diff --git a/gunit/pom.xml b/gunit/pom.xml
+index ad4db91..c893cbf 100644
+--- a/gunit/pom.xml
++++ b/gunit/pom.xml
+@@ -17,7 +17,7 @@
+<parent>
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+-        <version>3.5-SNAPSHOT</version>
++        <version>3.5.1-SNAPSHOT</version>
+</parent>
+
+<url>http://www.antlr.org/wiki/display/ANTLR3/gUnit+-+Grammar+Unit+Testing</url>
+diff --git a/pom.xml b/pom.xml
+index a2ab34e..8fc0e20 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -11,7 +11,7 @@
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+<packaging>pom</packaging>
+-    <version>3.5-SNAPSHOT</version>
++    <version>3.5.1-SNAPSHOT</version>
+<name>ANTLR 3 Master build control POM</name>
+<description>Master build POM for ANTLR 3</description>
+<url>http://antlr.org</url>
+@@ -100,7 +100,7 @@
+<dependency>
+<groupId>junit</groupId>
+<artifactId>junit</artifactId>
+-                <version>4.11</version>
++                <version>4.10</version>
+<scope>test</scope>
+</dependency>
+
+@@ -121,7 +121,7 @@
+<dependency>
+<groupId>org.antlr</groupId>
+<artifactId>ST4</artifactId>
+-                <version>4.0.7-rc-2</version>
++                <version>4.0.7</version>
+<scope>compile</scope>
+</dependency>
+
+diff --git a/runtime/Java/pom.xml b/runtime/Java/pom.xml
+index 0ea21bb..3d50bd6 100644
+--- a/runtime/Java/pom.xml
++++ b/runtime/Java/pom.xml
+@@ -15,7 +15,7 @@
+<parent>
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+-      <version>3.5-SNAPSHOT</version>
++      <version>3.5.1-SNAPSHOT</version>
+<relativePath>../..</relativePath>
+</parent>
+
+diff --git a/tool/pom.xml b/tool/pom.xml
+index 8f51c4c..1ec7018 100644
+--- a/tool/pom.xml
++++ b/tool/pom.xml
+@@ -16,7 +16,7 @@
+<parent>
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+-        <version>3.5-SNAPSHOT</version>
++        <version>3.5.1-SNAPSHOT</version>
+</parent>
+
+<dependencies>
+@@ -60,7 +60,7 @@
+<plugin>
+<groupId>org.antlr</groupId>
+<artifactId>antlr3-maven-plugin</artifactId>
+-                <version>3.5-rc-2</version>
++                <version>3.5</version>
+<configuration>
+<libDirectory>target/generated-sources/antlr/org/antlr/grammar/v3</libDirectory>
+</configuration>
+

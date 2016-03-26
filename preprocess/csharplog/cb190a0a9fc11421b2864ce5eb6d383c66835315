@@ -1,0 +1,149 @@
+commit cb190a0a9fc11421b2864ce5eb6d383c66835315
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Thu Dec 18 17:34:14 2014 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Thu Dec 18 17:37:26 2014 -0600
+
+Fix several paths following relocation of projects
+
+diff --git a/Antlr3.sln b/Antlr3.sln
+index 1f4e5e6..5dbb1b0 100644
+--- a/Antlr3.sln
++++ b/Antlr3.sln
+@@ -54,13 +54,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Targets.Python", "An
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Targets.Ruby", "Antlr3.Targets\Antlr3.Targets.Ruby\Antlr3.Targets.Ruby.csproj", "{64418260-E75A-4556-BB7E-8BDAAFC2EFB9}"
+EndProject
+-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Runtime", "Reference\antlr3\runtime\CSharp3\Sources\Antlr3.Runtime\Antlr3.Runtime.csproj", "{8FDC0A87-9005-4D5A-AB75-E55CEB575559}"
++Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Runtime", "Runtime\Antlr3.Runtime\Antlr3.Runtime.csproj", "{8FDC0A87-9005-4D5A-AB75-E55CEB575559}"
+EndProject
+-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Runtime.Debug", "Reference\antlr3\runtime\CSharp3\Sources\Antlr3.Runtime.Debug\Antlr3.Runtime.Debug.csproj", "{5EE27A90-B023-42C9-AAF1-52B0424C5D0B}"
++Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Runtime.Debug", "Runtime\Antlr3.Runtime.Debug\Antlr3.Runtime.Debug.csproj", "{5EE27A90-B023-42C9-AAF1-52B0424C5D0B}"
+EndProject
+-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Runtime.JavaExtensions", "Reference\antlr3\runtime\CSharp3\Sources\Antlr3.Runtime.JavaExtensions\Antlr3.Runtime.JavaExtensions.csproj", "{A7EEC557-EB14-451C-9616-B7A61F4ECE69}"
++Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Runtime.JavaExtensions", "Runtime\Antlr3.Runtime.JavaExtensions\Antlr3.Runtime.JavaExtensions.csproj", "{A7EEC557-EB14-451C-9616-B7A61F4ECE69}"
+EndProject
+-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Runtime.Test", "Reference\antlr3\runtime\CSharp3\Sources\Antlr3.Runtime.Test\Antlr3.Runtime.Test.csproj", "{19B965DE-5100-4064-A580-159644F6980E}"
++Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Runtime.Test", "Runtime\Antlr3.Runtime.Test\Antlr3.Runtime.Test.csproj", "{19B965DE-5100-4064-A580-159644F6980E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AntlrBuildTask", "AntlrBuildTask\AntlrBuildTask.csproj", "{60F8B554-5C53-4DE2-B868-A0BFEF4EF80E}"
+EndProject
+diff --git a/Runtime/Antlr3.Runtime.Debug/Antlr3.Runtime.Debug.csproj b/Runtime/Antlr3.Runtime.Debug/Antlr3.Runtime.Debug.csproj
+index 9c52017..e94ecc8 100644
+--- a/Runtime/Antlr3.Runtime.Debug/Antlr3.Runtime.Debug.csproj
++++ b/Runtime/Antlr3.Runtime.Debug/Antlr3.Runtime.Debug.csproj
+@@ -13,7 +13,7 @@
+<TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+<FileAlignment>512</FileAlignment>
+<SignAssembly>true</SignAssembly>
+-    <AssemblyOriginatorKeyFile>..\..\..\..\..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
++    <AssemblyOriginatorKeyFile>..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+@@ -51,7 +51,7 @@
+<Compile Include="JavaExtensions\ExceptionExtensions.cs" />
+<Compile Include="Misc\DoubleKeyMap`3.cs" />
+<Compile Include="Misc\Stats.cs" />
+-    <None Include="..\..\..\..\..\..\..\..\..\keys\antlr\Key.snk">
++    <None Include="..\..\..\..\..\keys\antlr\Key.snk">
+<Link>Key.snk</Link>
+</None>
+<None Include="ParserDebugger.cs" />
+diff --git a/Runtime/Antlr3.Runtime.JavaExtensions/Antlr3.Runtime.JavaExtensions.csproj b/Runtime/Antlr3.Runtime.JavaExtensions/Antlr3.Runtime.JavaExtensions.csproj
+index 2c90504..c168b80 100644
+--- a/Runtime/Antlr3.Runtime.JavaExtensions/Antlr3.Runtime.JavaExtensions.csproj
++++ b/Runtime/Antlr3.Runtime.JavaExtensions/Antlr3.Runtime.JavaExtensions.csproj
+@@ -35,7 +35,7 @@
+<SignAssembly>true</SignAssembly>
+</PropertyGroup>
+<PropertyGroup>
+-    <AssemblyOriginatorKeyFile>..\..\..\..\..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
++    <AssemblyOriginatorKeyFile>..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+</PropertyGroup>
+<ItemGroup>
+<Reference Include="System" />
+@@ -76,7 +76,7 @@
+</ProjectReference>
+</ItemGroup>
+<ItemGroup>
+-    <None Include="..\..\..\..\..\..\..\..\..\keys\antlr\Key.snk">
++    <None Include="..\..\..\..\..\keys\antlr\Key.snk">
+<Link>Key.snk</Link>
+</None>
+</ItemGroup>
+diff --git a/Runtime/Antlr3.Runtime.Test/Antlr3.Runtime.Test.csproj b/Runtime/Antlr3.Runtime.Test/Antlr3.Runtime.Test.csproj
+index 75c4cac..d00d11e 100644
+--- a/Runtime/Antlr3.Runtime.Test/Antlr3.Runtime.Test.csproj
++++ b/Runtime/Antlr3.Runtime.Test/Antlr3.Runtime.Test.csproj
+@@ -40,7 +40,7 @@
+<Reference Include="System.Numerics" />
+</ItemGroup>
+<ItemGroup>
+-    <ProjectReference Include="..\..\..\..\..\..\Antlr3.StringTemplate\Antlr3.StringTemplate.csproj">
++    <ProjectReference Include="..\..\Antlr3.StringTemplate\Antlr3.StringTemplate.csproj">
+<Project>{B5910BE2-DE21-4AA9-95C1-486F42B9E794}</Project>
+<Name>Antlr3.StringTemplate</Name>
+</ProjectReference>
+@@ -172,11 +172,11 @@
+<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+<PropertyGroup>
+<!-- Folder containing AntlrBuildTask.dll -->
+-    <AntlrBuildTaskPath>$(ProjectDir)..\..\..\..\..\..\bin\Bootstrap</AntlrBuildTaskPath>
++    <AntlrBuildTaskPath>$(ProjectDir)..\..\bin\Bootstrap</AntlrBuildTaskPath>
+<!-- Path to the ANTLR Tool itself. -->
+-    <AntlrToolPath>$(ProjectDir)..\..\..\..\..\..\bin\Bootstrap\Antlr3.exe</AntlrToolPath>
++    <AntlrToolPath>$(ProjectDir)..\..\bin\Bootstrap\Antlr3.exe</AntlrToolPath>
+</PropertyGroup>
+-  <Import Project="$(ProjectDir)..\..\..\..\..\..\bin\Bootstrap\Antlr3.targets" />
++  <Import Project="$(ProjectDir)..\..\bin\Bootstrap\Antlr3.targets" />
+<!-- To modify your build process, add your task inside one of the targets below and uncomment it.
+Other similar extension points exist, see Microsoft.Common.targets.
+<Target Name="BeforeBuild">
+diff --git a/Runtime/Antlr3.Runtime/Antlr3.Runtime.csproj b/Runtime/Antlr3.Runtime/Antlr3.Runtime.csproj
+index 5da739f..74492b8 100644
+--- a/Runtime/Antlr3.Runtime/Antlr3.Runtime.csproj
++++ b/Runtime/Antlr3.Runtime/Antlr3.Runtime.csproj
+@@ -13,7 +13,7 @@
+<TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+<FileAlignment>512</FileAlignment>
+<SignAssembly>true</SignAssembly>
+-    <AssemblyOriginatorKeyFile>..\..\..\..\..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
++    <AssemblyOriginatorKeyFile>..\..\..\..\..\keys\antlr\Key.snk</AssemblyOriginatorKeyFile>
+</PropertyGroup>
+<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+<DebugSymbols>true</DebugSymbols>
+@@ -128,7 +128,7 @@
+<Compile Include="UnwantedTokenException.cs" />
+</ItemGroup>
+<ItemGroup>
+-    <None Include="..\..\..\..\..\..\..\..\..\keys\antlr\Key.snk">
++    <None Include="..\..\..\..\..\keys\antlr\Key.snk">
+<Link>Key.snk</Link>
+</None>
+</ItemGroup>
+diff --git a/bin/prep/Antlr3.Runtime.Debug.nuspec b/bin/prep/Antlr3.Runtime.Debug.nuspec
+index 40d9764..48ada48 100644
+--- a/bin/prep/Antlr3.Runtime.Debug.nuspec
++++ b/bin/prep/Antlr3.Runtime.Debug.nuspec
+@@ -29,6 +29,6 @@
+
+<!-- Source Code -->
+
+-    <file exclude="..\..\Reference\antlr3\runtime\CSharp3\Sources\Antlr3.Runtime.Debug\obj\**\*.cs" src="..\..\Reference\antlr3\runtime\CSharp3\Sources\Antlr3.Runtime.Debug\**\*.cs" target="src"/>
++    <file exclude="..\..\Runtime\Antlr3.Runtime.Debug\obj\**\*.cs" src="..\..\Runtime\Antlr3.Runtime.Debug\**\*.cs" target="src"/>
+</files>
+</package>
+diff --git a/bin/prep/Antlr3.Runtime.nuspec b/bin/prep/Antlr3.Runtime.nuspec
+index 8a26b16..4ebbba2 100644
+--- a/bin/prep/Antlr3.Runtime.nuspec
++++ b/bin/prep/Antlr3.Runtime.nuspec
+@@ -26,6 +26,6 @@
+
+<!-- Source Code -->
+
+-    <file exclude="..\..\Reference\antlr3\runtime\CSharp3\Sources\Antlr3.Runtime\obj\**\*.cs" src="..\..\Reference\antlr3\runtime\CSharp3\Sources\Antlr3.Runtime\**\*.cs" target="src"/>
++    <file exclude="..\..\Runtime\Antlr3.Runtime\obj\**\*.cs" src="..\..\Runtime\Antlr3.Runtime\**\*.cs" target="src"/>
+</files>
+</package>
+

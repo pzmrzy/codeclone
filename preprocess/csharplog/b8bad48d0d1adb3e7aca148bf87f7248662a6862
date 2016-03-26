@@ -1,0 +1,42 @@
+commit b8bad48d0d1adb3e7aca148bf87f7248662a6862
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sun Nov 21 08:01:27 2010 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sun Nov 21 08:01:27 2010 -0800
+
+(C# 3) FastQueue<T> should throw InvalidOperationException if Dequeue is called when the queue is empty
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7091]
+
+diff --git a/Antlr3.Test/TestFastQueue.cs b/Antlr3.Test/TestFastQueue.cs
+index 1b3954d..80267f8 100644
+--- a/Antlr3.Test/TestFastQueue.cs
++++ b/Antlr3.Test/TestFastQueue.cs
+@@ -111,7 +111,7 @@ namespace AntlrUnitTests
+{
+q.Dequeue();
+}
+-            catch (IndexOutOfRangeException nsee)
++            catch (InvalidOperationException nsee)
+{
+msg = nsee.Message;
+}
+@@ -133,7 +133,7 @@ namespace AntlrUnitTests
+{
+q.Dequeue();
+}
+-            catch (IndexOutOfRangeException nsee)
++            catch (InvalidOperationException nsee)
+{
+msg = nsee.Message;
+}
+@@ -154,7 +154,7 @@ namespace AntlrUnitTests
+{
+q.Dequeue();
+}
+-            catch ( IndexOutOfRangeException nsee )
++            catch ( InvalidOperationException nsee )
+{
+msg = nsee.Message;
+}
+

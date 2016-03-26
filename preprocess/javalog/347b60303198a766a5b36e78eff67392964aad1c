@@ -1,0 +1,36 @@
+commit 347b60303198a766a5b36e78eff67392964aad1c
+Author:     Alan Condit <acondit@ipns.com>
+AuthorDate: Mon Apr 23 07:57:01 2012 -0700
+Commit:     Alan Condit <acondit@ipns.com>
+CommitDate: Mon Apr 23 07:57:01 2012 -0700
+
+Fixed incorrect calling sequence and incorrect message to NSMutableString.
+Changed newEntryIterator: to newEntryIterator and append: to appendString:.
+
+diff --git a/runtime/ObjC/Framework/HashMap.m b/runtime/ObjC/Framework/HashMap.m
+index 11583d8..2755953 100644
+--- a/runtime/ObjC/Framework/HashMap.m
++++ b/runtime/ObjC/Framework/HashMap.m
+@@ -385,7 +385,7 @@ static NSInteger itIndex;
+if ( self ) {
+hm = aHM;
+anArray = [[AMutableArray arrayWithCapacity:16] retain];
+-        HMEntryIterator *it = [hm newEntryIterator:hm];
++        HMEntryIterator *it = [hm newEntryIterator];
+while ( [it hasNext] ) {
+HMEntry *entry = [it next];
+[anArray addObject:entry];
+@@ -1544,8 +1544,10 @@ float const DEFAULT_LOAD_FACTOR = 0.75f;
+NSString *key = e.key;
+id value = e.value;
+[sb appendFormat:@"%@=%@", (key == self ? @"[self Map]" : key), (value == self ? @"[self Map]" : value)];
+-        if ( ![it hasNext] )
+-            return [sb append:@"}"];
++        if ( ![it hasNext] ) {
++            [sb appendString:@"}"];
++            return sb;
++        }
+[sb appendString:@", "];
+}
+}
+

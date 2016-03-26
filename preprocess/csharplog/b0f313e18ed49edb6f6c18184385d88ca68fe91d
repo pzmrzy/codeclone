@@ -1,0 +1,180 @@
+commit b0f313e18ed49edb6f6c18184385d88ca68fe91d
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Nov 16 08:05:12 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Nov 16 08:05:12 2009 -0800
+
+C# Port: Improved MSBuild error/warning reporting
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6358]
+
+diff --git a/AntlrBuildTask/AntlrClassGenerationTask.cs b/AntlrBuildTask/AntlrClassGenerationTask.cs
+index 2ec498f..00ab53a 100644
+--- a/AntlrBuildTask/AntlrClassGenerationTask.cs
++++ b/AntlrBuildTask/AntlrClassGenerationTask.cs
+@@ -30,6 +30,7 @@ namespace Antlr3.Build.Tasks
+{
+using System;
+using System.Collections.Generic;
++    using System.Diagnostics;
+using System.Linq;
+using System.Reflection;
+using System.Security;
+@@ -138,12 +139,10 @@ namespace Antlr3.Build.Tasks
+{
+_generatedCodeFiles.AddRange(wrapper.GeneratedCodeFiles.Select(file => (ITaskItem)new TaskItem(file)));
+}
+-                else
++
++                foreach (BuildMessage message in wrapper.BuildMessages)
+{
+-                    foreach (BuildMessage message in wrapper.BuildMessages)
+-                    {
+-                        ProcessBuildMessage(message);
+-                    }
++                    ProcessBuildMessage(message);
+}
+}
+catch (Exception exception)
+@@ -181,7 +180,22 @@ namespace Antlr3.Build.Tasks
+
+string subcategory = null;
+string helpKeyword = null;
+-            this.Log.LogError(subcategory, errorCode, helpKeyword, message.FileName, message.LineNumber, message.ColumnNumber, 0, 0, logMessage, null);
++
++            switch (message.Severity)
++            {
++            case TraceLevel.Error:
++                this.Log.LogError(subcategory, errorCode, helpKeyword, message.FileName, message.LineNumber, message.ColumnNumber, 0, 0, logMessage);
++                break;
++            case TraceLevel.Warning:
++                this.Log.LogWarning(subcategory, errorCode, helpKeyword, message.FileName, message.LineNumber, message.ColumnNumber, 0, 0, logMessage);
++                break;
++            case TraceLevel.Info:
++                this.Log.LogMessage(MessageImportance.Normal, logMessage);
++                break;
++            case TraceLevel.Verbose:
++                this.Log.LogMessage(MessageImportance.Low, logMessage);
++                break;
++            }
+}
+
+private AntlrClassGenerationTaskInternal CreateBuildTaskWrapper(AppDomain domain)
+diff --git a/AntlrBuildTask/AntlrClassGenerationTaskInternal.cs b/AntlrBuildTask/AntlrClassGenerationTaskInternal.cs
+index e0fd22a..bc29006 100644
+--- a/AntlrBuildTask/AntlrClassGenerationTaskInternal.cs
++++ b/AntlrBuildTask/AntlrClassGenerationTaskInternal.cs
+@@ -128,16 +128,16 @@ namespace Antlr3.Build.Tasks
+
+args.AddRange(SourceCodeFiles);
+
+-                LoggingTraceListener traceListener = new LoggingTraceListener(_buildMessages);
+-                SetTraceListener(traceListener);
+-                ProcessArgs(args.ToArray());
+-                process();
++                using (LoggingTraceListener traceListener = new LoggingTraceListener(_buildMessages))
++                {
++                    SetTraceListener(traceListener);
++                    ProcessArgs(args.ToArray());
++                    process();
++                }
++
+_generatedCodeFiles.AddRange(GetGeneratedFiles().Where(file => Path.GetExtension(file).Equals(".cs", StringComparison.OrdinalIgnoreCase)));
+
+int errorCount = GetNumErrors();
+-                if (errorCount > 0)
+-                    _buildMessages.Add(new BuildMessage(errorCount + " errors occurred."));
+-
+return errorCount == 0;
+}
+catch (Exception e)
+@@ -158,6 +158,14 @@ namespace Antlr3.Build.Tasks
+_currentLine = new StringBuilder();
+}
+
++            protected override void Dispose(bool disposing)
++            {
++                if (disposing)
++                    WriteLine(string.Empty);
++
++                base.Dispose(disposing);
++            }
++
+public override void Write(string message)
+{
+_currentLine.Append(message);
+@@ -167,7 +175,7 @@ namespace Antlr3.Build.Tasks
+{
+if (_currentLine.Length > 0)
+{
+-                    _buildMessages.Add(new BuildMessage(_currentLine.ToString(), null, 0, 0));
++                    _buildMessages.Add(new BuildMessage(_currentLine.ToString()));
+_currentLine.Length = 0;
+}
+
+diff --git a/AntlrBuildTask/BuildMessage.cs b/AntlrBuildTask/BuildMessage.cs
+index f45299c..50acff5 100644
+--- a/AntlrBuildTask/BuildMessage.cs
++++ b/AntlrBuildTask/BuildMessage.cs
+@@ -29,24 +29,58 @@
+namespace Antlr3.Build.Tasks
+{
+using System;
++    using System.Diagnostics;
++    using System.Text.RegularExpressions;
+
+[Serializable]
+internal struct BuildMessage
+{
++        private static readonly Regex BuildMessageFormat = new Regex(@"^\s*(?<FILE>.*)\((?<LINE>[0-9]+),(?<COLUMN>[0-9]+)\) : (?<SEVERITY>[a-z]+)\s*(?<CODE>[0-9]+) : (?<MESSAGE>.*)$", RegexOptions.Compiled);
++
+public BuildMessage(string message)
+-            : this(message, null, 0, 0)
++            : this(TraceLevel.Error, message, null, 0, 0)
+{
++            Match match = BuildMessageFormat.Match(message);
++            if (match.Success)
++            {
++                FileName = match.Groups["FILE"].Value;
++                LineNumber = int.Parse(match.Groups["LINE"].Value);
++                ColumnNumber = int.Parse(match.Groups["COLUMN"].Value);
++
++                switch (match.Groups["SEVERITY"].Value)
++                {
++                case "warning":
++                    Severity = TraceLevel.Warning;
++                    break;
++                case "error":
++                    Severity = TraceLevel.Error;
++                    break;
++                default:
++                    Severity = TraceLevel.Info;
++                    break;
++                }
++
++                int code = int.Parse(match.Groups["CODE"].Value);
++                Message = string.Format("AC{0:0000}: {1}", code, match.Groups["MESSAGE"].Value);
++            }
+}
+
+-        public BuildMessage(string message, string fileName, int lineNumber, int columnNumber)
++        public BuildMessage(TraceLevel severity, string message, string fileName, int lineNumber, int columnNumber)
+: this()
+{
++            Severity = severity;
+Message = message;
+FileName = fileName;
+LineNumber = lineNumber;
+ColumnNumber = columnNumber;
+}
+
++        public TraceLevel Severity
++        {
++            get;
++            set;
++        }
++
+public string Message
+{
+get;
+

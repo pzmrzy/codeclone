@@ -1,0 +1,29 @@
+commit 291d8f63231326e2ba9d4fd0fe590014fcd028fa
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Mon Dec 3 12:05:01 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Mon Dec 3 12:05:01 2012 -0600
+
+When possible, use the implementation version provided by the build in the manifest
+
+diff --git a/tool/src/main/java/org/antlr/Tool.java b/tool/src/main/java/org/antlr/Tool.java
+index 108e48e..061138a 100644
+--- a/tool/src/main/java/org/antlr/Tool.java
++++ b/tool/src/main/java/org/antlr/Tool.java
+@@ -41,8 +41,13 @@ import java.util.*;
+public class Tool {
+
+public final Properties antlrSettings = new Properties();
+-    public String VERSION = "3.5.1-SNAPSHOT";
+-    //public static final String VERSION = "${project.version}";
++
++	public final String VERSION;
++	{
++		String version = Tool.class.getPackage().getImplementationVersion();
++		VERSION = version != null ? version : "3.x";
++	}
++
+public static final String UNINITIALIZED_DIR = "<unset-dir>";
+private List<String> grammarFileNames = new ArrayList<String>();
+private boolean generate_NFA_dot = false;
+

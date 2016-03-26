@@ -1,0 +1,450 @@
+commit 0cfc93fc351447fb42704648ffad555e8b6e7e1d
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Jan 20 12:54:13 2010 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Jan 20 12:54:13 2010 -0800
+
+C# Port:
+* Merge CL6434
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6578]
+
+diff --git a/Antlr3.Test/ST4/TestLexer.cs b/Antlr3.Test/ST4/TestLexer.cs
+index 4e5d751..1c947c5 100644
+--- a/Antlr3.Test/ST4/TestLexer.cs
++++ b/Antlr3.Test/ST4/TestLexer.cs
+@@ -64,7 +64,7 @@ namespace AntlrUnitTests.ST4
+public void TestEscDelim()
+{
+string template = "hi \\<name>";
+-            string expected = "[[@0,0:0='hi <name>',<TEXT>,1:0]]";
++            string expected = "[[@0,0:9='hi <name>',<TEXT>,1:0]]";
+CheckTokens(template, expected);
+}
+
+@@ -74,7 +74,7 @@ namespace AntlrUnitTests.ST4
+string template = "<a>\\<dog";
+string expected =
+"[[@0,0:0='<',<LDELIM>,1:0], [@1,1:1='a',<ID>,1:1], [@2,2:2='>',<RDELIM>,1:2], " +
+-                "[@3,3:0='<dog',<TEXT>,1:3]]";
++                "[@3,3:7='<dog',<TEXT>,1:3]]";
+CheckTokens(template, expected);
+}
+
+@@ -105,7 +105,7 @@ namespace AntlrUnitTests.ST4
+string expected =
+"[[@0,0:2='hi ',<TEXT>,1:0], [@1,3:3='<',<LDELIM>,1:3], [@2,4:6='foo',<ID>,1:4], " +
+"[@3,7:7='(',<LPAREN>,1:7], [@4,8:8='a',<ID>,1:8], [@5,9:9='=',<EQUALS>,1:9], " +
+-                "[@6,10:0='\">\"\"',<STRING>,1:10], [@7,15:15=')',<RPAREN>,1:15], " +
++                "[@6,10:14='\">\"\"',<STRING>,1:10], [@7,15:15=')',<RPAREN>,1:15], " +
+"[@8,16:16='>',<RDELIM>,1:16]]";
+CheckTokens(template, expected);
+}
+diff --git a/StringTemplate4/Compiler/BytecodeDisassembler.cs b/StringTemplate4/Compiler/BytecodeDisassembler.cs
+index 2f5cb75..7b683c7 100644
+--- a/StringTemplate4/Compiler/BytecodeDisassembler.cs
++++ b/StringTemplate4/Compiler/BytecodeDisassembler.cs
+@@ -41,40 +41,38 @@ namespace StringTemplate.Compiler
+public class BytecodeDisassembler
+{
+// TODO: make disassembler point at compiledST code?
++        CompiledTemplate code;
++#if false
+private readonly byte[] code;
+private readonly int codeSize;
+private readonly string[] strings;
++        private readonly Interval[] sourceMap;
++#endif
+
+-        public BytecodeDisassembler(byte[] code,
+-                                    int codeSize,
+-                                    string[] strings)
++        public BytecodeDisassembler(CompiledTemplate code)
+{
+if (code == null)
+throw new ArgumentNullException("code");
+-            if (strings == null)
+-                throw new ArgumentNullException("strings");
+
+this.code = code;
+-            this.codeSize = codeSize;
+-            this.strings = strings;
+}
+
+public virtual string Instructions()
+{
+StringBuilder buf = new StringBuilder();
+int ip = 0;
+-            while (ip < codeSize)
++            while (ip < code.codeSize)
+{
+if (ip > 0)
+buf.Append(", ");
+-                int opcode = code[ip];
++                int opcode = code.instrs[ip];
+Bytecode.Instruction I = Bytecode.instructions[opcode];
+buf.Append(I.name);
+ip++;
+for (int opnd = 0; opnd < I.n; opnd++)
+{
+buf.Append(' ');
+-                    buf.Append(GetShort(code, ip));
++                    buf.Append(GetShort(code.instrs, ip));
+ip += Bytecode.OPND_SIZE_IN_BYTES;
+}
+}
+@@ -85,7 +83,7 @@ namespace StringTemplate.Compiler
+{
+StringBuilder buf = new StringBuilder();
+int i = 0;
+-            while (i < codeSize)
++            while (i < code.codeSize)
+{
+i = DisassembleInstruction(buf, i);
+buf.Append('\n');
+@@ -100,8 +98,8 @@ namespace StringTemplate.Compiler
+if (ip < 0)
+throw new ArgumentOutOfRangeException("ip");
+
+-            int opcode = code[ip];
+-            if (ip >= codeSize)
++            int opcode = code.instrs[ip];
++            if (ip >= code.codeSize)
+{
+throw new ArgumentException("ip out of range: " + ip);
+}
+@@ -123,7 +121,7 @@ namespace StringTemplate.Compiler
+List<string> operands = new List<string>();
+for (int i = 0; i < I.n; i++)
+{
+-                int opnd = GetShort(code, ip);
++                int opnd = GetShort(code.instrs, ip);
+ip += Bytecode.OPND_SIZE_IN_BYTES;
+switch (I.type[i])
+{
+@@ -155,14 +153,14 @@ namespace StringTemplate.Compiler
+buf.Append("#");
+buf.Append(poolIndex);
+string s = "<bad string index>";
+-            if (poolIndex > 0 && poolIndex < strings.Length)
++            if (poolIndex > 0 && poolIndex < code.strings.Length)
+{
+-                if (strings[poolIndex] == null)
++                if (code.strings[poolIndex] == null)
+s = "null";
+else
+{
+-                    s = strings[poolIndex].ToString();
+-                    if (strings[poolIndex] is string)
++                    s = code.strings[poolIndex].ToString();
++                    if (code.strings[poolIndex] is string)
+{
+s = Misc.ReplaceEscapes(s);
+s = '"' + s + '"';
+@@ -193,7 +191,7 @@ namespace StringTemplate.Compiler
+{
+StringBuilder buf = new StringBuilder();
+int addr = 0;
+-            foreach (object o in strings)
++            foreach (object o in code.strings)
+{
+if (o is string)
+{
+@@ -209,5 +207,19 @@ namespace StringTemplate.Compiler
+}
+return buf.ToString();
+}
++
++        public string SourceMap()
++        {
++            StringBuilder buf = new StringBuilder();
++            int addr = 0;
++            foreach (Interval i in code.sourceMap)
++            {
++                string chunk = code.template.Substring(i.A, i.B + 1);
++                buf.Append(string.Format("{0:0000}: {1}\t\"{2}\"\n", addr, i, chunk));
++            }
++            addr++;
++
++            return buf.ToString();
++        }
+}
+}
+diff --git a/StringTemplate4/Compiler/CompiledTemplate.cs b/StringTemplate4/Compiler/CompiledTemplate.cs
+index 62796c1..6201a8f 100644
+--- a/StringTemplate4/Compiler/CompiledTemplate.cs
++++ b/StringTemplate4/Compiler/CompiledTemplate.cs
+@@ -83,11 +83,13 @@ namespace StringTemplate.Compiler
+{
+get
+{
+-                BytecodeDisassembler dis = new BytecodeDisassembler(instrs, codeSize, strings);
++                BytecodeDisassembler dis = new BytecodeDisassembler(this);
+StringBuilder buffer = new StringBuilder();
+buffer.AppendLine(dis.Disassemble());
+buffer.AppendLine("Strings:");
+buffer.AppendLine(dis.Strings());
++                buffer.AppendLine("Bytecode to template map:");
++                buffer.AppendLine(dis.SourceMap());
+return buffer.ToString();
+}
+}
+@@ -119,13 +121,13 @@ namespace StringTemplate.Compiler
+
+public virtual string Instructions()
+{
+-            var disassembler = new BytecodeDisassembler(instrs, codeSize, strings);
++            var disassembler = new BytecodeDisassembler(this);
+return disassembler.Instructions();
+}
+
+public virtual void Dump()
+{
+-            var disassembler = new BytecodeDisassembler(instrs, codeSize, strings);
++            var disassembler = new BytecodeDisassembler(this);
+Console.WriteLine(disassembler.Disassemble());
+Console.WriteLine("Strings:");
+Console.WriteLine(disassembler.Strings());
+diff --git a/StringTemplate4/Compiler/Interval.cs b/StringTemplate4/Compiler/Interval.cs
+index cd1c9a8..f4f66ce 100644
+--- a/StringTemplate4/Compiler/Interval.cs
++++ b/StringTemplate4/Compiler/Interval.cs
+@@ -52,5 +52,33 @@ namespace StringTemplate.Compiler
+get;
+private set;
+}
++
++        public static bool operator ==(Interval x, Interval y)
++        {
++            return x.A == y.A && x.B == y.B;
++        }
++
++        public static bool operator !=(Interval x, Interval y)
++        {
++            return !(x == y);
++        }
++
++        public override bool Equals(object obj)
++        {
++            if (!(obj is Interval))
++                return false;
++
++            return this == (Interval)obj;
++        }
++
++        public override int GetHashCode()
++        {
++            return A ^ B;
++        }
++
++        public override string ToString()
++        {
++            return A.ToString() + ".." + B.ToString();
++        }
+}
+}
+diff --git a/StringTemplate4/Compiler/TemplateCompiler.cs b/StringTemplate4/Compiler/TemplateCompiler.cs
+index 2aa58d4..f59ba7c 100644
+--- a/StringTemplate4/Compiler/TemplateCompiler.cs
++++ b/StringTemplate4/Compiler/TemplateCompiler.cs
+@@ -86,6 +86,7 @@ namespace StringTemplate.Compiler
+
+StringTable strings = new StringTable();
+byte[] instrs;
++        Interval[] sourceMap;
+int ip = 0;
+CompiledTemplate code = new CompiledTemplate();
+
+@@ -129,6 +130,7 @@ namespace StringTemplate.Compiler
+{
+int initialSize = Math.Max(5, (int)(template.Length / CODE_SIZE_FACTOR));
+instrs = new byte[initialSize];
++            sourceMap = new Interval[initialSize];
+code.template = template;
+
+TemplateLexer lexer = new TemplateLexer(new ANTLRStringStream(template), delimiterStartChar, delimiterStopChar);
+@@ -147,14 +149,18 @@ namespace StringTemplate.Compiler
+
+if (strings != null)
+code.strings = strings.ToArray();
+-            code.instrs = instrs;
+code.codeSize = ip;
++            code.instrs = new byte[code.codeSize];
++            code.sourceMap = new Interval[code.codeSize];
++            Array.Copy(instrs, 0, code.instrs, 0, code.codeSize);
++            Array.Copy(sourceMap, 0, code.sourceMap, 0, code.codeSize);
+return code;
+}
+
+public CompiledTemplate Compile(ITokenStream tokens, RecognizerSharedState state)
+{
+instrs = new byte[SUBTEMPLATE_INITIAL_CODE_SIZE];
++            sourceMap = new Interval[SUBTEMPLATE_INITIAL_CODE_SIZE];
+TemplateParser parser = new TemplateParser(tokens, state, this, enclosingTemplateName);
+try
+{
+@@ -169,8 +175,11 @@ namespace StringTemplate.Compiler
+
+if (strings != null)
+code.strings = strings.ToArray();
+-            code.instrs = instrs;
+code.codeSize = ip;
++            code.instrs = new byte[code.codeSize];
++            code.sourceMap = new Interval[code.codeSize];
++            Array.Copy(instrs, 0, code.instrs, 0, code.codeSize);
++            Array.Copy(sourceMap, 0, code.sourceMap, 0, code.codeSize);
+return code;
+}
+
+@@ -189,6 +198,8 @@ namespace StringTemplate.Compiler
+public void Emit(short opcode, int sourceStart, int sourceStop)
+{
+EnsureCapacity(1);
++            if (!(sourceStart < 0 || sourceStop < 0))
++                sourceMap[ip] = new Interval(sourceStart, sourceStop);
+instrs[ip++] = (byte)opcode;
+}
+
+@@ -199,7 +210,7 @@ namespace StringTemplate.Compiler
+
+public void Emit(short opcode, int arg, int sourceStart, int sourceStop)
+{
+-            Emit(opcode);
++            Emit(opcode, sourceStart, sourceStop);
+EnsureCapacity(2);
+WriteShort(instrs, ip, (short)arg);
+ip += 2;
+@@ -207,7 +218,7 @@ namespace StringTemplate.Compiler
+
+public void Emit(short opcode, int arg1, int arg2, int sourceStart, int sourceStop)
+{
+-            Emit(opcode, arg1);
++            Emit(opcode, arg1, sourceStart, sourceStop);
+EnsureCapacity(2);
+WriteShort(instrs, ip, (short)arg2);
+ip += 2;
+@@ -221,7 +232,7 @@ namespace StringTemplate.Compiler
+public void Emit(short opcode, string s, int sourceStart, int sourceStop)
+{
+int i = DefineString(s);
+-            Emit(opcode, i);
++            Emit(opcode, i, sourceStart, sourceStop);
+}
+
+public void Write(int addr, short value)
+@@ -320,6 +331,9 @@ namespace StringTemplate.Compiler
+byte[] c = new byte[instrs.Length * 2];
+Array.Copy(instrs, 0, c, 0, instrs.Length);
+instrs = c;
++                Interval[] sm = new Interval[sourceMap.Length * 2];
++                Array.Copy(sourceMap, 0, sm, 0, sourceMap.Length);
++                sourceMap = sm;
+}
+}
+
+diff --git a/StringTemplate4/Compiler/TemplateLexer.cs b/StringTemplate4/Compiler/TemplateLexer.cs
+index 181b909..7061256 100644
+--- a/StringTemplate4/Compiler/TemplateLexer.cs
++++ b/StringTemplate4/Compiler/TemplateLexer.cs
+@@ -596,7 +596,6 @@ namespace StringTemplate.Compiler
+TemplateToken t =
+new TemplateToken(input, ttype, Lexer.DefaultTokenChannel,
+input.Index - 1, input.Index - 1);
+-            t.StartIndex = input.Index - 1;
+t.Line = input.Line;
+t.CharPositionInLine = input.CharPositionInLine - 1;
+return t;
+@@ -614,6 +613,7 @@ namespace StringTemplate.Compiler
+{
+TemplateToken t = new TemplateToken(ttype, text);
+t.StartIndex = startCharIndex;
++            t.StopIndex = input.Index - 1;
+t.Line = startLine;
+t.CharPositionInLine = startCharPositionInLine;
+return t;
+diff --git a/StringTemplate4/Interpreter.cs b/StringTemplate4/Interpreter.cs
+index a6c14f7..6470f17 100644
+--- a/StringTemplate4/Interpreter.cs
++++ b/StringTemplate4/Interpreter.cs
+@@ -127,8 +127,8 @@ namespace StringTemplate
+object o = null, left = null, right = null;
+Template st = null;
+object[] options = null;
+-            int ip = 0;
+byte[] code = self.code.instrs;        // which code block are we executing
++            int ip = 0;
+while (ip < self.code.codeSize)
+{
+if (trace)
+@@ -246,23 +246,11 @@ namespace StringTemplate
+options[optionIndex] = o; // store value into options on stack
+break;
+case Bytecode.INSTR_WRITE:
+-#if false
+-                    int exprStart = GetShort(code, ip);
+-                    ip += 2;
+-                    int exprStop = GetShort(code, ip);
+-                    ip += 2;
+-#endif
+o = operands[sp--];
+nw = WriteObjectNoOptions(@out, self, o);
+n += nw;
+break;
+case Bytecode.INSTR_WRITE_OPT:
+-#if false
+-                    exprStart = GetShort(code, ip);
+-                    ip += 2;
+-                    exprStop = GetShort(code, ip);
+-                    ip += 2;
+-#endif
+options = (object[])operands[sp--]; // get options
+o = operands[sp--];                 // get option to write
+nw = WriteObjectWithOptions(@out, self, o, options);
+@@ -429,12 +417,15 @@ namespace StringTemplate
+int start = @out.Index; // track char we're about to write
+int n = WriteObject(@out, self, o, null);
+
++#if false
+if (group.Debug)
+{
+-                int exprStart = -1;
+-                int exprStop = -1;
++                Interval templateLocation = self.code.sourceMap[ip];
++                int exprStart = templateLocation.A;
++                int exprStop = templateLocation.B;
+events.Add(new EvalExprEvent((DebugTemplate)self, start, @out.Index - 1, exprStart, exprStop));
+}
++#endif
+
+return n;
+}
+@@ -461,12 +452,15 @@ namespace StringTemplate
+if (options != null && options[OPTION_ANCHOR] != null)
+@out.PopAnchorPoint();
+
++#if false
+if (group.Debug)
+{
+-                int exprStart = -1;
+-                int exprStop = -1;
++                Interval templateLocation = self.code.sourceMap[ip];
++                int exprStart = templateLocation.A;
++                int exprStop = templateLocation.B;
+events.Add(new EvalExprEvent((DebugTemplate)self, start, @out.Index - 1, exprStart, exprStop));
+}
++#endif
+
+return n;
+}
+@@ -1166,9 +1160,7 @@ namespace StringTemplate
+
+protected void Trace(Template self, int ip)
+{
+-            BytecodeDisassembler dis = new BytecodeDisassembler(self.code.instrs,
+-                                                                self.code.instrs.Length,
+-                                                                self.code.strings);
++            BytecodeDisassembler dis = new BytecodeDisassembler(self.code);
+StringBuilder buf = new StringBuilder();
+dis.DisassembleInstruction(buf, ip);
+string name = self.code.Name + ":";
+

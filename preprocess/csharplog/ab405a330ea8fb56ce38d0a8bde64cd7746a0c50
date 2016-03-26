@@ -1,0 +1,33 @@
+commit ab405a330ea8fb56ce38d0a8bde64cd7746a0c50
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Apr 4 17:24:54 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Apr 4 17:24:54 2011 -0800
+
+(C# 3) Remove unnecessary predicates
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8072]
+
+diff --git a/Antlr4.StringTemplate/Compiler/TemplateParser.g3 b/Antlr4.StringTemplate/Compiler/TemplateParser.g3
+index 21b43bf..5bf6a30 100644
+--- a/Antlr4.StringTemplate/Compiler/TemplateParser.g3
++++ b/Antlr4.StringTemplate/Compiler/TemplateParser.g3
+@@ -241,7 +241,7 @@ primary
+|	subtemplate
+|	list
+|	{$conditional.Count > 0}? => '('! conditional ')'!
+-	|	{$conditional.Count == 0}? => lp='(' expr ')'
++	|	lp='(' expr ')'
+(	'(' argExprList? ')'				-> ^(INCLUDE_IND[$lp] expr argExprList?)
+|										-> ^(TO_STR[$lp] expr)
+)
+@@ -272,7 +272,7 @@ bool finished = false;
+) {{empty=false;}}
+|	','<NULL> {{empty=false;}}
+|	{!empty}? => ']'<NULL> {{finished=true;}}
+-				|	{empty}? => ']'! {{finished=true;}}
++				|	']'! {{finished=true;}}
+)
+)+
+;
+

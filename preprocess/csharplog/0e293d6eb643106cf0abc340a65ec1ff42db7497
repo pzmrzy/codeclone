@@ -1,0 +1,16 @@
+commit 0e293d6eb643106cf0abc340a65ec1ff42db7497
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Thu Dec 18 20:30:18 2014 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Thu Dec 18 20:30:18 2014 -0600
+
+Update antlr3 submodule reference
+
+diff --git a/Reference/antlr3 b/Reference/antlr3
+index c034866..d6b1f0f 160000
+--- a/Reference/antlr3
++++ b/Reference/antlr3
+@@ -1 +1 @@
+-Subproject commit c034866d7f26832c497733edcfe9818adb5dd9d3
++Subproject commit d6b1f0f9a6159e5f046e577cd6f1d9f6367fca01
+

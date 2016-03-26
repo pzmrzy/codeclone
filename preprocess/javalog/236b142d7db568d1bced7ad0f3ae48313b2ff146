@@ -1,0 +1,2995 @@
+commit 236b142d7db568d1bced7ad0f3ae48313b2ff146
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Wed Feb 22 08:27:19 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Wed Feb 22 12:25:47 2012 -0600
+
+Remove unnecessary casts
+
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/ANTLRStringStream.java b/runtime/Java/src/main/java/org/antlr/runtime/ANTLRStringStream.java
+index 78f5148..194a2fc 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/ANTLRStringStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/ANTLRStringStream.java
+@@ -165,7 +165,7 @@ public class ANTLRStringStream implements CharStream {
+markers.add(state);
+}
+else {
+-			state = (CharStreamState)markers.get(markDepth);
++			state = markers.get(markDepth);
+}
+state.p = p;
+state.line = line;
+@@ -176,7 +176,7 @@ public class ANTLRStringStream implements CharStream {
+
+@Override
+public void rewind(int m) {
+-		CharStreamState state = (CharStreamState)markers.get(m);
++		CharStreamState state = markers.get(m);
+// restore stream state
+seek(state.p);
+line = state.line;
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/BaseRecognizer.java b/runtime/Java/src/main/java/org/antlr/runtime/BaseRecognizer.java
+index 84daecd..60313c9 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/BaseRecognizer.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/BaseRecognizer.java
+@@ -533,7 +533,7 @@ public abstract class BaseRecognizer {
+int top = state._fsp;
+BitSet followSet = new BitSet();
+for (int i=top; i>=0; i--) {
+-			BitSet localFollowSet = (BitSet)state.following[i];
++			BitSet localFollowSet = state.following[i];
+/*
+System.out.println("local follow depth "+i+"="+
+localFollowSet.toString(getTokenNames())+")");
+@@ -775,7 +775,7 @@ public abstract class BaseRecognizer {
+if ( tokens==null ) return null;
+List<String> strings = new ArrayList<String>(tokens.size());
+for (int i=0; i<tokens.size(); i++) {
+-			strings.add(((Token)tokens.get(i)).getText());
++			strings.add(tokens.get(i).getText());
+}
+return strings;
+}
+@@ -795,7 +795,7 @@ public abstract class BaseRecognizer {
+state.ruleMemo[ruleIndex] = new HashMap<Integer, Integer>();
+}
+Integer stopIndexI =
+-			(Integer)state.ruleMemo[ruleIndex].get(new Integer(ruleStartIndex));
++			state.ruleMemo[ruleIndex].get(new Integer(ruleStartIndex));
+if ( stopIndexI==null ) {
+return MEMO_RULE_UNKNOWN;
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/BitSet.java b/runtime/Java/src/main/java/org/antlr/runtime/BitSet.java
+index ffe3144..5216518 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/BitSet.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/BitSet.java
+@@ -61,8 +61,8 @@ public class BitSet implements Cloneable {
+public BitSet(List<Integer> items) {
+this();
+for (int i = 0; i < items.size(); i++) {
+-			Integer v = (Integer) items.get(i);
+-			add(v.intValue());
++			Integer v = items.get(i);
++			add(v);
+}
+}
+
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/CommonTokenStream.java b/runtime/Java/src/main/java/org/antlr/runtime/CommonTokenStream.java
+index 48aeb75..99cfece 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/CommonTokenStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/CommonTokenStream.java
+@@ -119,7 +119,7 @@ public class CommonTokenStream extends BufferedTokenStream {
+}
+
+protected int skipOffTokenChannelsReverse(int i) {
+-        while ( i>=0 && ((Token)tokens.get(i)).getChannel()!=channel ) {
++        while ( i>=0 && tokens.get(i).getChannel()!=channel ) {
+i--;
+}
+return i;
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/LegacyCommonTokenStream.java b/runtime/Java/src/main/java/org/antlr/runtime/LegacyCommonTokenStream.java
+index 9c55cdc..3ca8a1a 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/LegacyCommonTokenStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/LegacyCommonTokenStream.java
+@@ -99,8 +99,7 @@ public class LegacyCommonTokenStream implements TokenStream {
+boolean discard = false;
+// is there a channel override for token type?
+if ( channelOverrideMap!=null ) {
+-				Integer channelI = (Integer)
+-					channelOverrideMap.get(new Integer(t.getType()));
++				Integer channelI = channelOverrideMap.get(t.getType());
+if ( channelI!=null ) {
+t.setChannel(channelI.intValue());
+}
+@@ -145,14 +144,14 @@ public class LegacyCommonTokenStream implements TokenStream {
+*/
+protected int skipOffTokenChannels(int i) {
+int n = tokens.size();
+-		while ( i<n && ((Token)tokens.get(i)).getChannel()!=channel ) {
++		while ( i<n && tokens.get(i).getChannel()!=channel ) {
+i++;
+}
+return i;
+}
+
+protected int skipOffTokenChannelsReverse(int i) {
+-		while ( i>=0 && ((Token)tokens.get(i)).getChannel()!=channel ) {
++		while ( i>=0 && tokens.get(i).getChannel()!=channel ) {
+i--;
+}
+return i;
+@@ -214,7 +213,7 @@ public class LegacyCommonTokenStream implements TokenStream {
+// list = tokens[start:stop]:{Token t, t.getType() in types}
+List<Token> filteredTokens = new ArrayList<Token>();
+for (int i=start; i<=stop; i++) {
+-			Token t = (Token)tokens.get(i);
++			Token t = tokens.get(i);
+if ( types==null || types.member(t.getType()) ) {
+filteredTokens.add(t);
+}
+@@ -249,7 +248,7 @@ public class LegacyCommonTokenStream implements TokenStream {
+}
+//System.out.print("LT(p="+p+","+k+")=");
+if ( (p+k-1) >= tokens.size() ) {
+-            return (Token)tokens.get(tokens.size()-1);
++            return tokens.get(tokens.size()-1);
+}
+//System.out.println(tokens.get(p+k-1));
+int i = p;
+@@ -261,11 +260,11 @@ public class LegacyCommonTokenStream implements TokenStream {
+n++;
+}
+if ( i>=tokens.size() ) {
+-            return (Token)tokens.get(tokens.size()-1); // must be EOF
++            return tokens.get(tokens.size()-1); // must be EOF
+}
+
+if ( i>range ) range = i;
+-        return (Token)tokens.get(i);
++        return tokens.get(i);
+}
+
+/** Look backwards k tokens on-channel tokens */
+@@ -292,7 +291,7 @@ public class LegacyCommonTokenStream implements TokenStream {
+if ( i<0 ) {
+return null;
+}
+-		return (Token)tokens.get(i);
++		return tokens.get(i);
+}
+
+/** Return absolute token i; ignore which channel the tokens are on;
+@@ -300,7 +299,7 @@ public class LegacyCommonTokenStream implements TokenStream {
+*/
+@Override
+public Token get(int i) {
+-		return (Token)tokens.get(i);
++		return tokens.get(i);
+}
+
+/** Get all tokens from start..stop inclusively */
+@@ -395,7 +394,7 @@ public class LegacyCommonTokenStream implements TokenStream {
+}
+StringBuilder buf = new StringBuilder();
+for (int i = start; i <= stop; i++) {
+-			Token t = (Token)tokens.get(i);
++			Token t = tokens.get(i);
+buf.append(t.getText());
+}
+return buf.toString();
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/Lexer.java b/runtime/Java/src/main/java/org/antlr/runtime/Lexer.java
+index a6ea223..c7f8e27 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/Lexer.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/Lexer.java
+@@ -80,7 +80,7 @@ public abstract class Lexer extends BaseRecognizer implements TokenSource {
+state.tokenStartLine = input.getLine();
+state.text = null;
+if ( input.LA(1)==CharStream.EOF ) {
+-                Token eof = new CommonToken((CharStream)input,Token.EOF,
++                Token eof = new CommonToken(input,Token.EOF,
+Token.DEFAULT_CHANNEL,
+input.index(),input.index());
+eof.setLine(getLine());
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/TokenRewriteStream.java b/runtime/Java/src/main/java/org/antlr/runtime/TokenRewriteStream.java
+index 33f5ec9..6e69f58 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/TokenRewriteStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/TokenRewriteStream.java
+@@ -310,7 +310,7 @@ public class TokenRewriteStream extends CommonTokenStream {
+}
+
+protected int getLastRewriteTokenIndex(String programName) {
+-		Integer I = (Integer)lastRewriteTokenIndexes.get(programName);
++		Integer I = lastRewriteTokenIndexes.get(programName);
+if ( I==null ) {
+return -1;
+}
+@@ -382,9 +382,9 @@ public class TokenRewriteStream extends CommonTokenStream {
+// Walk buffer, executing instructions and emitting tokens
+int i = start;
+while ( i <= end && i < tokens.size() ) {
+-			RewriteOperation op = (RewriteOperation)indexToOp.get(new Integer(i));
++			RewriteOperation op = indexToOp.get(new Integer(i));
+indexToOp.remove(new Integer(i)); // remove so any left have index size-1
+-			Token t = (Token) tokens.get(i);
++			Token t = tokens.get(i);
+if ( op==null ) {
+// no operation at that index, just dump token
+if ( t.getType()!=Token.EOF ) buf.append(t.getText());
+@@ -403,7 +403,7 @@ public class TokenRewriteStream extends CommonTokenStream {
+// should be included (they will be inserts).
+Iterator<? extends RewriteOperation> it = indexToOp.values().iterator();
+while (it.hasNext()) {
+-                RewriteOperation op = (RewriteOperation)it.next();
++                RewriteOperation op = it.next();
+if ( op.index >= tokens.size()-1 ) buf.append(op.text);
+}
+}
+@@ -464,14 +464,14 @@ public class TokenRewriteStream extends CommonTokenStream {
+
+// WALK REPLACES
+for (int i = 0; i < rewrites.size(); i++) {
+-			RewriteOperation op = (RewriteOperation)rewrites.get(i);
++			RewriteOperation op = rewrites.get(i);
+if ( op==null ) continue;
+if ( !(op instanceof ReplaceOp) ) continue;
+ReplaceOp rop = (ReplaceOp)rewrites.get(i);
+// Wipe prior inserts within range
+List<? extends InsertBeforeOp> inserts = getKindOfOps(rewrites, InsertBeforeOp.class, i);
+for (int j = 0; j < inserts.size(); j++) {
+-				InsertBeforeOp iop = (InsertBeforeOp) inserts.get(j);
++				InsertBeforeOp iop = inserts.get(j);
+if ( iop.index == rop.index ) {
+// E.g., insert before 2, delete 2..2; update replace
+// text to include insert before, kill insert
+@@ -486,7 +486,7 @@ public class TokenRewriteStream extends CommonTokenStream {
+// Drop any prior replaces contained within
+List<? extends ReplaceOp> prevReplaces = getKindOfOps(rewrites, ReplaceOp.class, i);
+for (int j = 0; j < prevReplaces.size(); j++) {
+-				ReplaceOp prevRop = (ReplaceOp) prevReplaces.get(j);
++				ReplaceOp prevRop = prevReplaces.get(j);
+if ( prevRop.index>=rop.index && prevRop.lastIndex <= rop.lastIndex ) {
+// delete replace as it's a no-op.
+rewrites.set(prevRop.instructionIndex, null);
+@@ -515,14 +515,14 @@ public class TokenRewriteStream extends CommonTokenStream {
+
+// WALK INSERTS
+for (int i = 0; i < rewrites.size(); i++) {
+-			RewriteOperation op = (RewriteOperation)rewrites.get(i);
++			RewriteOperation op = rewrites.get(i);
+if ( op==null ) continue;
+if ( !(op instanceof InsertBeforeOp) ) continue;
+InsertBeforeOp iop = (InsertBeforeOp)rewrites.get(i);
+// combine current insert with prior if any at same index
+List<? extends InsertBeforeOp> prevInserts = getKindOfOps(rewrites, InsertBeforeOp.class, i);
+for (int j = 0; j < prevInserts.size(); j++) {
+-				InsertBeforeOp prevIop = (InsertBeforeOp) prevInserts.get(j);
++				InsertBeforeOp prevIop = prevInserts.get(j);
+if ( prevIop.index == iop.index ) { // combine objects
+// convert to strings...we're in process of toString'ing
+// whole token buffer so no lazy eval issue with any templates
+@@ -534,7 +534,7 @@ public class TokenRewriteStream extends CommonTokenStream {
+// look for replaces where iop.index is in range; error
+List<? extends ReplaceOp> prevReplaces = getKindOfOps(rewrites, ReplaceOp.class, i);
+for (int j = 0; j < prevReplaces.size(); j++) {
+-				ReplaceOp rop = (ReplaceOp) prevReplaces.get(j);
++				ReplaceOp rop = prevReplaces.get(j);
+if ( iop.index == rop.index ) {
+rop.text = catOpText(iop.text,rop.text);
+rewrites.set(i, null);  // delete current insert
+@@ -549,7 +549,7 @@ public class TokenRewriteStream extends CommonTokenStream {
+// System.out.println("rewrites after="+rewrites);
+Map<Integer, RewriteOperation> m = new HashMap<Integer, RewriteOperation>();
+for (int i = 0; i < rewrites.size(); i++) {
+-			RewriteOperation op = (RewriteOperation)rewrites.get(i);
++			RewriteOperation op = rewrites.get(i);
+if ( op==null ) continue; // ignore deleted ops
+if ( m.get(new Integer(op.index))!=null ) {
+throw new Error("should only be one op per index");
+@@ -575,7 +575,7 @@ public class TokenRewriteStream extends CommonTokenStream {
+protected <T extends RewriteOperation> List<? extends T> getKindOfOps(List<? extends RewriteOperation> rewrites, Class<T> kind, int before) {
+List<T> ops = new ArrayList<T>();
+for (int i=0; i<before && i<rewrites.size(); i++) {
+-			RewriteOperation op = (RewriteOperation)rewrites.get(i);
++			RewriteOperation op = rewrites.get(i);
+if ( op==null ) continue; // ignore deleted
+if ( kind.isInstance(op) ) ops.add(kind.cast(op));
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugEventHub.java b/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugEventHub.java
+index 7e072ec..7a22723 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugEventHub.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugEventHub.java
+@@ -70,7 +70,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void enterRule(String grammarFileName, String ruleName) {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.enterRule(grammarFileName,ruleName);
+}
+}
+@@ -78,7 +78,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void exitRule(String grammarFileName, String ruleName) {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.exitRule(grammarFileName, ruleName);
+}
+}
+@@ -86,7 +86,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void enterAlt(int alt) {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.enterAlt(alt);
+}
+}
+@@ -94,7 +94,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void enterSubRule(int decisionNumber) {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.enterSubRule(decisionNumber);
+}
+}
+@@ -102,7 +102,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void exitSubRule(int decisionNumber) {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.exitSubRule(decisionNumber);
+}
+}
+@@ -110,7 +110,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void enterDecision(int decisionNumber, boolean couldBacktrack) {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.enterDecision(decisionNumber, couldBacktrack);
+}
+}
+@@ -118,7 +118,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void exitDecision(int decisionNumber) {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.exitDecision(decisionNumber);
+}
+}
+@@ -126,7 +126,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void location(int line, int pos) {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.location(line, pos);
+}
+}
+@@ -134,7 +134,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void consumeToken(Token token) {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.consumeToken(token);
+}
+}
+@@ -142,7 +142,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void consumeHiddenToken(Token token) {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.consumeHiddenToken(token);
+}
+}
+@@ -150,7 +150,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void LT(int index, Token t) {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.LT(index, t);
+}
+}
+@@ -158,7 +158,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void mark(int index) {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.mark(index);
+}
+}
+@@ -166,7 +166,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void rewind(int index) {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.rewind(index);
+}
+}
+@@ -174,7 +174,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void rewind() {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.rewind();
+}
+}
+@@ -182,7 +182,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void beginBacktrack(int level) {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.beginBacktrack(level);
+}
+}
+@@ -190,7 +190,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void endBacktrack(int level, boolean successful) {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.endBacktrack(level, successful);
+}
+}
+@@ -198,7 +198,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void recognitionException(RecognitionException e) {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.recognitionException(e);
+}
+}
+@@ -206,7 +206,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void beginResync() {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.beginResync();
+}
+}
+@@ -214,7 +214,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void endResync() {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.endResync();
+}
+}
+@@ -222,7 +222,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void semanticPredicate(boolean result, String predicate) {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.semanticPredicate(result, predicate);
+}
+}
+@@ -230,7 +230,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void commence() {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.commence();
+}
+}
+@@ -238,7 +238,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void terminate() {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.terminate();
+}
+}
+@@ -249,7 +249,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void consumeNode(Object t) {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.consumeNode(t);
+}
+}
+@@ -257,7 +257,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void LT(int index, Object t) {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.LT(index, t);
+}
+}
+@@ -268,7 +268,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void nilNode(Object t) {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.nilNode(t);
+}
+}
+@@ -276,7 +276,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void errorNode(Object t) {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.errorNode(t);
+}
+}
+@@ -284,7 +284,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void createNode(Object t) {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.createNode(t);
+}
+}
+@@ -292,7 +292,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void createNode(Object node, Token token) {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.createNode(node, token);
+}
+}
+@@ -300,7 +300,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void becomeRoot(Object newRoot, Object oldRoot) {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.becomeRoot(newRoot, oldRoot);
+}
+}
+@@ -308,7 +308,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void addChild(Object root, Object child) {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.addChild(root, child);
+}
+}
+@@ -316,7 +316,7 @@ public class DebugEventHub implements DebugEventListener {
+@Override
+public void setTokenBoundaries(Object t, int tokenStartIndex, int tokenStopIndex) {
+for (int i = 0; i < listeners.size(); i++) {
+-			DebugEventListener listener = (DebugEventListener)listeners.get(i);
++			DebugEventListener listener = listeners.get(i);
+listener.setTokenBoundaries(t, tokenStartIndex, tokenStopIndex);
+}
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/debug/ParseTreeBuilder.java b/runtime/Java/src/main/java/org/antlr/runtime/debug/ParseTreeBuilder.java
+index 6c4f609..ac62cad 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/debug/ParseTreeBuilder.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/debug/ParseTreeBuilder.java
+@@ -51,7 +51,7 @@ public class ParseTreeBuilder extends BlankDebugEventListener {
+}
+
+public ParseTree getTree() {
+-		return (ParseTree)callStack.elementAt(0);
++		return callStack.elementAt(0);
+}
+
+/**  What kind of node to create.  You might want to override
+@@ -74,7 +74,7 @@ public class ParseTreeBuilder extends BlankDebugEventListener {
+@Override
+public void enterRule(String filename, String ruleName) {
+if ( backtracking>0 ) return;
+-		ParseTree parentRuleNode = (ParseTree)callStack.peek();
++		ParseTree parentRuleNode = callStack.peek();
+ParseTree ruleNode = create(ruleName);
+parentRuleNode.addChild(ruleNode);
+callStack.push(ruleNode);
+@@ -83,7 +83,7 @@ public class ParseTreeBuilder extends BlankDebugEventListener {
+@Override
+public void exitRule(String filename, String ruleName) {
+if ( backtracking>0 ) return;
+-		ParseTree ruleNode = (ParseTree)callStack.peek();
++		ParseTree ruleNode = callStack.peek();
+if ( ruleNode.getChildCount()==0 ) {
+ruleNode.addChild(epsilonNode());
+}
+@@ -93,7 +93,7 @@ public class ParseTreeBuilder extends BlankDebugEventListener {
+@Override
+public void consumeToken(Token token) {
+if ( backtracking>0 ) return;
+-		ParseTree ruleNode = (ParseTree)callStack.peek();
++		ParseTree ruleNode = callStack.peek();
+ParseTree elementNode = create(token);
+elementNode.hiddenTokens = this.hiddenTokens;
+this.hiddenTokens = new ArrayList<Token>();
+@@ -109,7 +109,7 @@ public class ParseTreeBuilder extends BlankDebugEventListener {
+@Override
+public void recognitionException(RecognitionException e) {
+if ( backtracking>0 ) return;
+-		ParseTree ruleNode = (ParseTree)callStack.peek();
++		ParseTree ruleNode = callStack.peek();
+ParseTree errorNode = create(e);
+ruleNode.addChild(errorNode);
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/debug/Profiler.java b/runtime/Java/src/main/java/org/antlr/runtime/debug/Profiler.java
+index ef4ed8b..e8fa264 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/debug/Profiler.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/debug/Profiler.java
+@@ -222,16 +222,16 @@ public class Profiler extends BlankDebugEventListener {
+" backtrack depth " + backtrackDepth +
+" @ " + input.get(input.index()) +
+" rule " +locationDescription());
+-		String g = (String) currentGrammarFileName.peek();
++		String g = currentGrammarFileName.peek();
+DecisionDescriptor descriptor = decisions.get(g, decisionNumber);
+if ( descriptor == null ) {
+descriptor = new DecisionDescriptor();
+decisions.put(g, decisionNumber, descriptor);
+descriptor.decision = decisionNumber;
+-			descriptor.fileName = (String)currentGrammarFileName.peek();
+-			descriptor.ruleName = (String)currentRuleName.peek();
+-			descriptor.line = (Integer)currentLine.peek();
+-			descriptor.pos = (Integer)currentPos.peek();
++			descriptor.fileName = currentGrammarFileName.peek();
++			descriptor.ruleName = currentRuleName.peek();
++			descriptor.line = currentLine.peek();
++			descriptor.pos = currentPos.peek();
+descriptor.couldBacktrack = couldBacktrack;
+}
+descriptor.n++;
+@@ -714,7 +714,7 @@ public class Profiler extends BlankDebugEventListener {
+protected int[] toArray(List<Integer> a) {
+int[] x = new int[a.size()];
+for (int i = 0; i < a.size(); i++) {
+-			Integer I = (Integer) a.get(i);
++			Integer I = a.get(i);
+x[i] = I.intValue();
+}
+return x;
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/debug/RemoteDebugEventSocketListener.java b/runtime/Java/src/main/java/org/antlr/runtime/debug/RemoteDebugEventSocketListener.java
+index ad754a8..1c9d311 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/debug/RemoteDebugEventSocketListener.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/debug/RemoteDebugEventSocketListener.java
+@@ -358,8 +358,7 @@ public class RemoteDebugEventSocketListener implements Runnable {
+Class<? extends RecognitionException> excClass;
+try {
+excClass = Class.forName(excName).asSubclass(RecognitionException.class);
+-				RecognitionException e =
+-					(RecognitionException)excClass.newInstance();
++				RecognitionException e = excClass.newInstance();
+e.index = Integer.parseInt(indexS);
+e.line = Integer.parseInt(lineS);
+e.charPositionInLine = Integer.parseInt(posS);
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTree.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTree.java
+index 97117b0..defac7f 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTree.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTree.java
+@@ -134,7 +134,7 @@ public abstract class BaseTree implements Tree {
+/** Add all elements of kids list as children of this node */
+public void addChildren(List<? extends Tree> kids) {
+for (int i = 0; i < kids.size(); i++) {
+-			Tree t = (Tree) kids.get(i);
++			Tree t = kids.get(i);
+addChild(t);
+}
+}
+@@ -267,7 +267,7 @@ public abstract class BaseTree implements Tree {
+public void freshenParentAndChildIndexes(int offset) {
+int n = getChildCount();
+for (int c = offset; c < n; c++) {
+-			Tree child = (Tree)getChild(c);
++			Tree child = getChild(c);
+child.setChildIndex(c);
+child.setParent(this);
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTreeAdaptor.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTreeAdaptor.java
+index 6a76841..3b9e366 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTreeAdaptor.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTreeAdaptor.java
+@@ -150,7 +150,7 @@ public abstract class BaseTreeAdaptor implements TreeAdaptor {
+// handle ^(nil real-node)
+if ( newRootTree.isNil() ) {
+int nc = newRootTree.getChildCount();
+-            if ( nc==1 ) newRootTree = (Tree)newRootTree.getChild(0);
++            if ( nc==1 ) newRootTree = newRootTree.getChild(0);
+else if ( nc >1 ) {
+// TODO: make tree run time exceptions hierarchy
+throw new RuntimeException("more than one node as root (TODO: make exception hierarchy)");
+@@ -173,7 +173,7 @@ public abstract class BaseTreeAdaptor implements TreeAdaptor {
+r = null;
+}
+else if ( r.getChildCount()==1 ) {
+-				r = (Tree)r.getChild(0);
++				r = r.getChild(0);
+// whoever invokes rule will set parent and child index
+r.setParent(null);
+r.setChildIndex(-1);
+@@ -258,7 +258,7 @@ public abstract class BaseTreeAdaptor implements TreeAdaptor {
+if ( treeToUniqueIDMap==null ) {
+treeToUniqueIDMap = new HashMap<Object, Integer>();
+}
+-		Integer prevID = (Integer)treeToUniqueIDMap.get(node);
++		Integer prevID = treeToUniqueIDMap.get(node);
+if ( prevID!=null ) {
+return prevID.intValue();
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/BufferedTreeNodeStream.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/BufferedTreeNodeStream.java
+index 33b6b26..c04544d 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/BufferedTreeNodeStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/BufferedTreeNodeStream.java
+@@ -177,7 +177,7 @@ public class BufferedTreeNodeStream implements TreeNodeStream {
+fillBuffer();
+}
+for (int i = 0; i < nodes.size(); i++) {
+-			Object t = (Object) nodes.get(i);
++			Object t = nodes.get(i);
+if ( t==node ) {
+return i;
+}
+@@ -415,7 +415,7 @@ public class BufferedTreeNodeStream implements TreeNodeStream {
+}
+StringBuilder buf = new StringBuilder();
+for (int i = 0; i < nodes.size(); i++) {
+-			Object t = (Object) nodes.get(i);
++			Object t = nodes.get(i);
+buf.append(" ");
+buf.append(adaptor.getType(t));
+}
+@@ -429,7 +429,7 @@ public class BufferedTreeNodeStream implements TreeNodeStream {
+}
+StringBuilder buf = new StringBuilder();
+for (int i = start; i < nodes.size() && i <= stop; i++) {
+-			Object t = (Object) nodes.get(i);
++			Object t = nodes.get(i);
+buf.append(" ");
+buf.append(adaptor.getToken(t));
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonErrorNode.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonErrorNode.java
+index c0fc41c..b3fb375 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonErrorNode.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonErrorNode.java
+@@ -70,9 +70,9 @@ public class CommonErrorNode extends CommonTree {
+public String getText() {
+String badText;
+if ( start instanceof Token ) {
+-			int i = ((Token)start).getTokenIndex();
+-			int j = ((Token)stop).getTokenIndex();
+-			if ( ((Token)stop).getType() == Token.EOF ) {
++			int i = start.getTokenIndex();
++			int j = stop.getTokenIndex();
++			if ( stop.getType() == Token.EOF ) {
+j = ((TokenStream)input).size();
+}
+badText = ((TokenStream)input).toString(i, j);
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/DOTTreeGenerator.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/DOTTreeGenerator.java
+index 0cac04a..8b0e315 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/DOTTreeGenerator.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/DOTTreeGenerator.java
+@@ -192,7 +192,7 @@ public class DOTTreeGenerator {
+}
+
+protected int getNodeNumber(Object t) {
+-		Integer nI = (Integer)nodeToNumberMap.get(t);
++		Integer nI = nodeToNumberMap.get(t);
+if ( nI!=null ) {
+return nI.intValue();
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/ParseTree.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/ParseTree.java
+index a451e48..fd30891 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/ParseTree.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/ParseTree.java
+@@ -96,7 +96,7 @@ public class ParseTree extends BaseTree {
+StringBuilder buf = new StringBuilder();
+if ( hiddenTokens!=null ) {
+for (int i = 0; i < hiddenTokens.size(); i++) {
+-				Token hidden = (Token) hiddenTokens.get(i);
++				Token hidden = hiddenTokens.get(i);
+buf.append(hidden.getText());
+}
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeWizard.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeWizard.java
+index 2eabf25..d77d763 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeWizard.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeWizard.java
+@@ -160,7 +160,7 @@ public class TreeWizard {
+if ( tokenNameToTypeMap==null ) {
+return Token.INVALID_TOKEN_TYPE;
+}
+-		Integer ttypeI = (Integer)tokenNameToTypeMap.get(tokenName);
++		Integer ttypeI = tokenNameToTypeMap.get(tokenName);
+if ( ttypeI!=null ) {
+return ttypeI.intValue();
+}
+diff --git a/tool/src/main/antlr3/org/antlr/grammar/v3/ActionTranslator.g b/tool/src/main/antlr3/org/antlr/grammar/v3/ActionTranslator.g
+index 713cef0..7597273 100644
+--- a/tool/src/main/antlr3/org/antlr/grammar/v3/ActionTranslator.g
++++ b/tool/src/main/antlr3/org/antlr/grammar/v3/ActionTranslator.g
+@@ -96,7 +96,7 @@ public String translate() {
+//System.out.println("chunks="+a.chunks);
+StringBuffer buf = new StringBuffer();
+for (int i = 0; i < theChunks.size(); i++) {
+-		Object o = (Object) theChunks.get(i);
++		Object o = theChunks.get(i);
+if ( o instanceof ST ) buf.append(((ST)o).render());
+else buf.append(o);
+}
+diff --git a/tool/src/main/antlr3/org/antlr/grammar/v3/DefineGrammarItemsWalker.g b/tool/src/main/antlr3/org/antlr/grammar/v3/DefineGrammarItemsWalker.g
+index 022320d..8fc2dd0 100644
+--- a/tool/src/main/antlr3/org/antlr/grammar/v3/DefineGrammarItemsWalker.g
++++ b/tool/src/main/antlr3/org/antlr/grammar/v3/DefineGrammarItemsWalker.g
+@@ -80,7 +80,7 @@ protected final void trimGrammar() {
+GrammarAST p = root;
+// find the grammar spec
+while ( !p.getText().equals( "grammar" ) ) {
+-        p = (GrammarAST)p.getNextSibling();
++        p = p.getNextSibling();
+}
+for ( int i = 0; i < p.getChildCount(); i++ ) {
+if ( p.getChild( i ).getType() != RULE )
+diff --git a/tool/src/main/java/org/antlr/Tool.java b/tool/src/main/java/org/antlr/Tool.java
+index 484339b..013e9e7 100644
+--- a/tool/src/main/java/org/antlr/Tool.java
++++ b/tool/src/main/java/org/antlr/Tool.java
+@@ -580,7 +580,7 @@ public class Tool {
+//System.out.println("sorted="+sorted);
+grammarFileNames.clear(); // wipe so we can give new ordered list
+for (int i = 0; i < sorted.size(); i++) {
+-            String f = (String)sorted.get(i);
++            String f = sorted.get(i);
+if ( missingFiles.contains(f) ) continue;
+if ( !(f.endsWith(".g") || f.endsWith(".g3")) ) continue;
+grammarFileNames.add(f);
+@@ -660,7 +660,7 @@ public class Tool {
+
+List<Grammar> delegates = grammar.getDirectDelegates();
+for (int i = 0; delegates != null && i < delegates.size(); i++) {
+-                Grammar delegate = (Grammar) delegates.get(i);
++                Grammar delegate = delegates.get(i);
+if (delegate != grammar) { // already processing this one
+generateRecognizer(delegate);
+}
+@@ -696,7 +696,7 @@ public class Tool {
+rules.addAll(g.getRules());
+
+for (Iterator<Rule> itr = rules.iterator(); itr.hasNext();) {
+-            Rule r = (Rule) itr.next();
++            Rule r = itr.next();
+try {
+String dot = dotGenerator.getDOT(r.startState);
+if (dot != null) {
+diff --git a/tool/src/main/java/org/antlr/analysis/DFA.java b/tool/src/main/java/org/antlr/analysis/DFA.java
+index 72cba38..833a742 100644
+--- a/tool/src/main/java/org/antlr/analysis/DFA.java
++++ b/tool/src/main/java/org/antlr/analysis/DFA.java
+@@ -363,14 +363,14 @@ public class DFA {
+int i = 0;
+Integer emptyValue = Utils.integer(-1);
+while ( i < data.size() ) {
+-			Integer I = (Integer)data.get(i);
++			Integer I = data.get(i);
+if ( I==null ) {
+I = emptyValue;
+}
+// count how many v there are?
+int n = 0;
+for (int j = i; j < data.size(); j++) {
+-				Integer v = (Integer)data.get(j);
++				Integer v = data.get(j);
+if ( v==null ) {
+v = emptyValue;
+}
+@@ -424,7 +424,7 @@ public class DFA {
+it = getUniqueStates().values().iterator();
+}
+while ( it.hasNext() ) {
+-			DFAState s = (DFAState)it.next();
++			DFAState s = it.next();
+if ( s==null ) {
+// ignore null states; some acylic DFA see this condition
+// when inlining DFA (due to lacking of exit branch pruning?)
+@@ -445,7 +445,7 @@ public class DFA {
+
+// now that we have computed list of specialStates, gen code for 'em
+for (int i = 0; i < specialStates.size(); i++) {
+-			DFAState ss = (DFAState) specialStates.get(i);
++			DFAState ss = specialStates.get(i);
+ST stateST =
+generator.generateSpecialState(ss);
+specialStateSTs.add(stateST);
+@@ -501,7 +501,7 @@ public class DFA {
+int smin = Label.MAX_CHAR_VALUE + 1;
+int smax = Label.MIN_ATOM_VALUE - 1;
+for (int j = 0; j < s.getNumberOfTransitions(); j++) {
+-			Transition edge = (Transition) s.transition(j);
++			Transition edge = s.transition(j);
+Label label = edge.label;
+if ( label.isAtom() ) {
+if ( label.getAtom()>=Label.MIN_CHAR_VALUE ) {
+@@ -545,14 +545,14 @@ public class DFA {
+System.out.println("createTransitionTableEntryForState s"+s.stateNumber+
+" dec "+s.dfa.decisionNumber+" cyclic="+s.dfa.isCyclic());
+*/
+-		int smax = ((Integer)max.get(s.stateNumber)).intValue();
+-		int smin = ((Integer)min.get(s.stateNumber)).intValue();
++		int smax = max.get(s.stateNumber).intValue();
++		int smin = min.get(s.stateNumber).intValue();
+
+Vector<Integer> stateTransitions = new Vector<Integer>(smax-smin+1);
+stateTransitions.setSize(smax-smin+1);
+transition.set(s.stateNumber, stateTransitions);
+for (int j = 0; j < s.getNumberOfTransitions(); j++) {
+-			Transition edge = (Transition) s.transition(j);
++			Transition edge = s.transition(j);
+Label label = edge.label;
+if ( label.isAtom() && label.getAtom()>=Label.MIN_CHAR_VALUE ) {
+int labelIndex = label.getAtom()-smin; // offset from 0
+@@ -573,7 +573,7 @@ public class DFA {
+}
+}
+// track unique state transition tables so we can reuse
+-		Integer edgeClass = (Integer)edgeTransitionClassMap.get(stateTransitions);
++		Integer edgeClass = edgeTransitionClassMap.get(stateTransitions);
+if ( edgeClass!=null ) {
+//System.out.println("we've seen this array before; size="+stateTransitions.size());
+transitionEdgeTables.set(s.stateNumber, edgeClass);
+@@ -591,7 +591,7 @@ public class DFA {
+*/
+protected void createEOTAndEOFTables(DFAState s) {
+for (int j = 0; j < s.getNumberOfTransitions(); j++) {
+-			Transition edge = (Transition) s.transition(j);
++			Transition edge = s.transition(j);
+Label label = edge.label;
+if ( label.isAtom() ) {
+if ( label.getAtom()==Label.EOT ) {
+@@ -625,7 +625,7 @@ public class DFA {
+
+// TODO this code is very similar to canGenerateSwitch.  Refactor to share
+for (int j = 0; j < s.getNumberOfTransitions(); j++) {
+-			Transition edge = (Transition) s.transition(j);
++			Transition edge = s.transition(j);
+Label label = edge.label;
+// can't do a switch if the edges have preds or are going to
+// require gated predicates
+@@ -637,8 +637,8 @@ public class DFA {
+}
+}
+// if has pred or too big for table, make it special
+-		int smax = ((Integer)max.get(s.stateNumber)).intValue();
+-		int smin = ((Integer)min.get(s.stateNumber)).intValue();
++		int smax = max.get(s.stateNumber).intValue();
++		int smin = min.get(s.stateNumber).intValue();
+if ( hasSemPred || smax-smin>MAX_STATE_TRANSITIONS_FOR_TABLE ) {
+special.set(s.stateNumber,
+Utils.integer(uniqueCompressedSpecialStateNum));
+@@ -668,7 +668,7 @@ public class DFA {
+}
+// does a DFA state exist already with everything the same
+// except its state number?
+-		DFAState existing = (DFAState)uniqueStates.get(d);
++		DFAState existing = uniqueStates.get(d);
+if ( existing != null ) {
+/*
+System.out.println("state "+d.stateNumber+" exists as state "+
+@@ -685,7 +685,7 @@ public class DFA {
+}
+
+public void removeState(DFAState d) {
+-		DFAState it = (DFAState)uniqueStates.remove(d);
++		DFAState it = uniqueStates.remove(d);
+if ( it!=null ) {
+numberOfStates--;
+}
+@@ -703,7 +703,7 @@ public class DFA {
+}
+
+public DFAState getState(int stateNumber) {
+-		return (DFAState)states.get(stateNumber);
++		return states.get(stateNumber);
+}
+
+public void setState(int stateNumber, DFAState d) {
+diff --git a/tool/src/main/java/org/antlr/analysis/DFAOptimizer.java b/tool/src/main/java/org/antlr/analysis/DFAOptimizer.java
+index aa40596..494e54d 100644
+--- a/tool/src/main/java/org/antlr/analysis/DFAOptimizer.java
++++ b/tool/src/main/java/org/antlr/analysis/DFAOptimizer.java
+@@ -189,7 +189,7 @@ public class DFAOptimizer {
+visited.add(sI);
+int nAlts = d.dfa.getNumberOfAlts();
+for (int i = 0; i < d.getNumberOfTransitions(); i++) {
+-			Transition edge = (Transition) d.transition(i);
++			Transition edge = d.transition(i);
+DFAState edgeTarget = ((DFAState)edge.target);
+/*
+System.out.println(d.stateNumber+"-"+
+@@ -218,7 +218,7 @@ public class DFAOptimizer {
+}
+visited.add(sI);
+for (int i = 0; i < d.getNumberOfTransitions(); i++) {
+-			Transition edge = (Transition) d.transition(i);
++			Transition edge = d.transition(i);
+DFAState edgeTarget = ((DFAState)edge.target);
+/*
+System.out.println(d.stateNumber+"-"+
+diff --git a/tool/src/main/java/org/antlr/analysis/DFAState.java b/tool/src/main/java/org/antlr/analysis/DFAState.java
+index 8d61787..8159e4e 100644
+--- a/tool/src/main/java/org/antlr/analysis/DFAState.java
++++ b/tool/src/main/java/org/antlr/analysis/DFAState.java
+@@ -175,7 +175,7 @@ public class DFAState extends State {
+
+@Override
+public Transition transition(int i) {
+-        return (Transition)transitions.get(i);
++        return transitions.get(i);
+}
+
+@Override
+@@ -434,7 +434,7 @@ public class DFAState extends State {
+int alt = NFA.INVALID_ALT_NUMBER;
+int numConfigs = nfaConfigurations.size();
+for (int i = 0; i < numConfigs; i++) {
+-			NFAConfiguration configuration = (NFAConfiguration) nfaConfigurations.get(i);
++			NFAConfiguration configuration = nfaConfigurations.get(i);
+// ignore anything we resolved; predicates will still result
+// in transitions out of this state, so must count those
+// configurations; i.e., don't ignore resolveWithPredicate configs
+@@ -460,7 +460,7 @@ public class DFAState extends State {
+int alt = NFA.INVALID_ALT_NUMBER;
+int numConfigs = nfaConfigurations.size();
+for (int i = 0; i < numConfigs; i++) {
+-			NFAConfiguration configuration = (NFAConfiguration) nfaConfigurations.get(i);
++			NFAConfiguration configuration = nfaConfigurations.get(i);
+if ( alt==NFA.INVALID_ALT_NUMBER ) {
+alt = configuration.alt; // found first alt
+}
+@@ -487,7 +487,7 @@ public class DFAState extends State {
+Set<Integer> disabled = new LinkedHashSet<Integer>();
+int numConfigs = nfaConfigurations.size();
+for (int i = 0; i < numConfigs; i++) {
+-			NFAConfiguration configuration = (NFAConfiguration) nfaConfigurations.get(i);
++			NFAConfiguration configuration = nfaConfigurations.get(i);
+if ( configuration.resolved ) {
+disabled.add(Utils.integer(configuration.alt));
+}
+@@ -546,7 +546,7 @@ public class DFAState extends State {
+MultiMap<Integer, NFAConfiguration> stateToConfigListMap =
+new MultiMap<Integer, NFAConfiguration>();
+for (int i = 0; i < numConfigs; i++) {
+-			NFAConfiguration configuration = (NFAConfiguration) nfaConfigurations.get(i);
++			NFAConfiguration configuration = nfaConfigurations.get(i);
+Integer stateI = Utils.integer(configuration.state);
+stateToConfigListMap.map(stateI, configuration);
+}
+@@ -554,13 +554,13 @@ public class DFAState extends State {
+Set<Integer> states = stateToConfigListMap.keySet();
+int numPotentialConflicts = 0;
+for (Iterator<Integer> it = states.iterator(); it.hasNext();) {
+-			Integer stateI = (Integer) it.next();
++			Integer stateI = it.next();
+boolean thisStateHasPotentialProblem = false;
+List<NFAConfiguration> configsForState = stateToConfigListMap.get(stateI);
+int alt=0;
+int numConfigsForState = configsForState.size();
+for (int i = 0; i < numConfigsForState && numConfigsForState>1 ; i++) {
+-				NFAConfiguration c = (NFAConfiguration) configsForState.get(i);
++				NFAConfiguration c = configsForState.get(i);
+if ( alt==0 ) {
+alt = c.alt;
+}
+@@ -614,7 +614,7 @@ public class DFAState extends State {
+// alts 1 and 2.
+// walk each state with potential conflicting configurations
+for (Iterator<Integer> it = states.iterator(); it.hasNext();) {
+-			Integer stateI = (Integer) it.next();
++			Integer stateI = it.next();
+List<NFAConfiguration> configsForState = stateToConfigListMap.get(stateI);
+// compare each configuration pair s, t to ensure:
+// s.ctx different than t.ctx if s.alt != t.alt
+@@ -623,9 +623,9 @@ public class DFAState extends State {
+numConfigsForState = configsForState.size();
+}
+for (int i = 0; i < numConfigsForState; i++) {
+-				NFAConfiguration s = (NFAConfiguration) configsForState.get(i);
++				NFAConfiguration s = configsForState.get(i);
+for (int j = i+1; j < numConfigsForState; j++) {
+-					NFAConfiguration t = (NFAConfiguration)configsForState.get(j);
++					NFAConfiguration t = configsForState.get(j);
+// conflicts means s.ctx==t.ctx or s.ctx is a stack
+// suffix of t.ctx or vice versa (if alts differ).
+// Also a conflict if s.ctx or t.ctx is empty
+@@ -650,7 +650,7 @@ public class DFAState extends State {
+int numConfigs = nfaConfigurations.size();
+Set<Integer> alts = new HashSet<Integer>();
+for (int i = 0; i < numConfigs; i++) {
+-			NFAConfiguration configuration = (NFAConfiguration) nfaConfigurations.get(i);
++			NFAConfiguration configuration = nfaConfigurations.get(i);
+alts.add(Utils.integer(configuration.alt));
+}
+if ( alts.isEmpty() ) {
+@@ -663,7 +663,7 @@ public class DFAState extends State {
+int numConfigs = nfaConfigurations.size();
+Set<SemanticContext> synpreds = new HashSet<SemanticContext>();
+for (int i = 0; i < numConfigs; i++) {
+-			NFAConfiguration configuration = (NFAConfiguration) nfaConfigurations.get(i);
++			NFAConfiguration configuration = nfaConfigurations.get(i);
+SemanticContext gatedPredExpr =
+configuration.semanticContext.getGatedPredicateContext();
+// if this is a manual syn pred (gated and syn pred), add
+@@ -709,7 +709,7 @@ public class DFAState extends State {
+SemanticContext unionOfPredicatesFromAllAlts = null;
+int numConfigs = nfaConfigurations.size();
+for (int i = 0; i < numConfigs; i++) {
+-			NFAConfiguration configuration = (NFAConfiguration) nfaConfigurations.get(i);
++			NFAConfiguration configuration = nfaConfigurations.get(i);
+SemanticContext gatedPredExpr =
+configuration.semanticContext.getGatedPredicateContext();
+if ( gatedPredExpr==null ) {
+@@ -758,7 +758,7 @@ public class DFAState extends State {
+StringBuilder buf = new StringBuilder();
+buf.append(stateNumber).append(":{");
+for (int i = 0; i < nfaConfigurations.size(); i++) {
+-			NFAConfiguration configuration = (NFAConfiguration) nfaConfigurations.get(i);
++			NFAConfiguration configuration = nfaConfigurations.get(i);
+if ( i>0 ) {
+buf.append(", ");
+}
+diff --git a/tool/src/main/java/org/antlr/analysis/DecisionProbe.java b/tool/src/main/java/org/antlr/analysis/DecisionProbe.java
+index 5f231d0..c510c7d 100644
+--- a/tool/src/main/java/org/antlr/analysis/DecisionProbe.java
++++ b/tool/src/main/java/org/antlr/analysis/DecisionProbe.java
+@@ -201,7 +201,7 @@ public class DecisionProbe {
+Iterator<DFAState> it =
+statesWithSyntacticallyAmbiguousAltsSet.iterator();
+while (	it.hasNext() ) {
+-				DFAState d = (DFAState) it.next();
++				DFAState d = it.next();
+if ( !statesResolvedWithSemanticPredicatesSet.contains(d) ) {
+return false;
+}
+@@ -320,7 +320,7 @@ public class DecisionProbe {
+Grammar g = dfa.nfa.grammar;
+StringBuilder buf = new StringBuilder();
+for (Iterator<? extends Label> it = labels.iterator(); it.hasNext();) {
+-			Label label = (Label) it.next();
++			Label label = it.next();
+buf.append(label.toString(g));
+if ( it.hasNext() && g.type!=Grammar.LEXER ) {
+buf.append(' ');
+@@ -392,7 +392,7 @@ public class DecisionProbe {
+if ( altToPredMap==null ) {
+return null;
+}
+-		return (SemanticContext)altToPredMap.get(Utils.integer(alt));
++		return altToPredMap.get(Utils.integer(alt));
+}
+
+/** At least one alt refs a sem or syn pred */
+@@ -428,7 +428,7 @@ public class DecisionProbe {
+Iterator<DFAState> it =
+problemStates.iterator();
+while (	it.hasNext() && !dfa.nfa.grammar.NFAToDFAConversionExternallyAborted() ) {
+-				DFAState d = (DFAState) it.next();
++				DFAState d = it.next();
+Map<Integer, Set<Token>> insufficientAltToLocations = getIncompletelyCoveredAlts(d);
+if ( insufficientAltToLocations!=null && insufficientAltToLocations.size()>0 ) {
+ErrorManager.insufficientPredicates(this,d,insufficientAltToLocations);
+@@ -459,7 +459,7 @@ public class DecisionProbe {
+if ( danglingStates.size()>0 ) {
+//System.err.println("no emanating edges for states: "+danglingStates);
+for (Iterator<DFAState> it = danglingStates.iterator(); it.hasNext();) {
+-				DFAState d = (DFAState) it.next();
++				DFAState d = it.next();
+ErrorManager.danglingState(this,d);
+}
+}
+@@ -502,7 +502,7 @@ public class DecisionProbe {
+List<Integer> sortedDisableAlts = new ArrayList<Integer>(disabledAlts);
+Collections.sort(sortedDisableAlts);
+Integer lastAlt =
+-			(Integer)sortedDisableAlts.get(sortedDisableAlts.size()-1);
++			sortedDisableAlts.get(sortedDisableAlts.size()-1);
+GrammarAST blockAST =
+dfa.nfa.grammar.getDecisionBlockAST(dfa.decisionNumber);
+//System.out.println("block with error = "+blockAST.toStringTree());
+@@ -549,12 +549,12 @@ public class DecisionProbe {
+List<Integer> sortedAlts = new ArrayList<Integer>(alts);
+Collections.sort(sortedAlts);
+for (Iterator<Integer> altsIt = sortedAlts.iterator(); altsIt.hasNext();) {
+-			Integer altI = (Integer) altsIt.next();
++			Integer altI = altsIt.next();
+Map<String, Set<NFAState>> targetToCallSiteMap =
+altToTargetToCallSitesMap.get(altI);
+Set<String> targetRules = targetToCallSiteMap.keySet();
+Collection<Set<NFAState>> callSiteStates = targetToCallSiteMap.values();
+-			DFAState sampleBadState = (DFAState)altToDFAState.get(altI);
++			DFAState sampleBadState = altToDFAState.get(altI);
+ErrorManager.recursionOverflow(this,
+sampleBadState,
+altI.intValue(),
+@@ -569,11 +569,11 @@ public class DecisionProbe {
+Map<Integer, DFAState> altToDFAState)
+{
+for (Iterator<Integer> it = dfaStatesUnaliased.iterator(); it.hasNext();) {
+-			Integer stateI = (Integer) it.next();
++			Integer stateI = it.next();
+// walk this DFA's config list
+List<? extends NFAConfiguration> configs = configurationsMap.get(stateI);
+for (int i = 0; i < configs.size(); i++) {
+-				NFAConfiguration c = (NFAConfiguration) configs.get(i);
++				NFAConfiguration c = configs.get(i);
+NFAState ruleInvocationState = dfa.nfa.getState(c.state);
+Transition transition0 = ruleInvocationState.transition[0];
+RuleClosureTransition ref = (RuleClosureTransition)transition0;
+@@ -604,7 +604,7 @@ public class DecisionProbe {
+private Set<Integer> getUnaliasedDFAStateSet(Set<Integer> dfaStatesWithRecursionProblems) {
+Set<Integer> dfaStatesUnaliased = new HashSet<Integer>();
+for (Iterator<Integer> it = dfaStatesWithRecursionProblems.iterator(); it.hasNext();) {
+-			Integer stateI = (Integer) it.next();
++			Integer stateI = it.next();
+DFAState d = dfa.getState(stateI.intValue());
+dfaStatesUnaliased.add(Utils.integer(d.stateNumber));
+}
+diff --git a/tool/src/main/java/org/antlr/analysis/LL1Analyzer.java b/tool/src/main/java/org/antlr/analysis/LL1Analyzer.java
+index a88b913..b5dd463 100644
+--- a/tool/src/main/java/org/antlr/analysis/LL1Analyzer.java
++++ b/tool/src/main/java/org/antlr/analysis/LL1Analyzer.java
+@@ -259,7 +259,7 @@ public class LL1Analyzer {
+(RuleClosureTransition)transition0;
+// remove the EOR and get what follows
+//tset.remove(Label.EOR_TOKEN_TYPE);
+-				NFAState following = (NFAState) ruleInvocationTrans.followState;
++				NFAState following = ruleInvocationTrans.followState;
+LookaheadSet fset =	_FIRST(following, chaseFollowTransitions);
+fset.orInPlace(tset); // tset cached; or into new set
+fset.remove(Label.EOR_TOKEN_TYPE);
+@@ -361,7 +361,7 @@ public class LL1Analyzer {
+// should include A.
+RuleClosureTransition ruleInvocationTrans =
+(RuleClosureTransition)transition0;
+-				NFAState following = (NFAState) ruleInvocationTrans.followState;
++				NFAState following = ruleInvocationTrans.followState;
+int afterRuleResult =
+_detectConfoundingPredicates(following,
+enclosingRule,
+diff --git a/tool/src/main/java/org/antlr/analysis/LL1DFA.java b/tool/src/main/java/org/antlr/analysis/LL1DFA.java
+index bf9f9f1..32b018b 100644
+--- a/tool/src/main/java/org/antlr/analysis/LL1DFA.java
++++ b/tool/src/main/java/org/antlr/analysis/LL1DFA.java
+@@ -84,7 +84,7 @@ public class LL1DFA extends DFA {
+initAltRelatedInfo();
+unreachableAlts = null;
+for (Iterator<IntervalSet> it = edgeMap.keySet().iterator(); it.hasNext();) {
+-			IntervalSet edge = (IntervalSet)it.next();
++			IntervalSet edge = it.next();
+List<Integer> alts = edgeMap.get(edge);
+Collections.sort(alts); // make sure alts are attempted in order
+//System.out.println(edge+" -> "+alts);
+diff --git a/tool/src/main/java/org/antlr/analysis/Label.java b/tool/src/main/java/org/antlr/analysis/Label.java
+index fcfe108..e8e67bd 100644
+--- a/tool/src/main/java/org/antlr/analysis/Label.java
++++ b/tool/src/main/java/org/antlr/analysis/Label.java
+@@ -295,7 +295,7 @@ public class Label implements Comparable<Label>, Cloneable {
+
+@Override
+public int compareTo(Label o) {
+-        return this.label-((Label)o).label;
++        return this.label-o.label;
+}
+
+/** Predicates are lists of AST nodes from the NFA created from the
+diff --git a/tool/src/main/java/org/antlr/analysis/LookaheadSet.java b/tool/src/main/java/org/antlr/analysis/LookaheadSet.java
+index 9d77567..4c4efb4 100644
+--- a/tool/src/main/java/org/antlr/analysis/LookaheadSet.java
++++ b/tool/src/main/java/org/antlr/analysis/LookaheadSet.java
+@@ -84,7 +84,7 @@ public class LookaheadSet {
+}
+
+public void remove(int a) {
+-		tokenTypeSet = (IntervalSet)tokenTypeSet.subtract(IntervalSet.of(a));
++		tokenTypeSet = tokenTypeSet.subtract(IntervalSet.of(a));
+}
+
+@Override
+diff --git a/tool/src/main/java/org/antlr/analysis/NFAToDFAConverter.java b/tool/src/main/java/org/antlr/analysis/NFAToDFAConverter.java
+index 6c2c6f7..63cdf5d 100644
+--- a/tool/src/main/java/org/antlr/analysis/NFAToDFAConverter.java
++++ b/tool/src/main/java/org/antlr/analysis/NFAToDFAConverter.java
+@@ -83,7 +83,7 @@ public class NFAToDFAConverter {
+while ( work.size()>0 &&
+!dfa.nfa.grammar.NFAToDFAConversionExternallyAborted() )
+{
+-			DFAState d = (DFAState) work.get(0);
++			DFAState d = work.get(0);
+if ( dfa.nfa.grammar.composite.watchNFAConversion ) {
+System.out.println("convert DFA state "+d.stateNumber+
+" ("+d.nfaConfigurations.size()+" nfa states)");
+@@ -271,7 +271,7 @@ public class NFAToDFAConverter {
+numLabels = labels.size();
+}
+for (int i=0; i<numLabels; i++) {
+-			Label label = (Label)labels.get(i);
++			Label label = labels.get(i);
+DFAState t = reach(d, label);
+if ( debug ) {
+System.out.println("DFA state after reach "+label+" "+d+"-" +
+@@ -415,7 +415,7 @@ public class NFAToDFAConverter {
+if ( DFAOptimizer.COLLAPSE_ALL_PARALLEL_EDGES ) {
+// track which targets we've hit
+Integer tI = Utils.integer(targetState.stateNumber);
+-			Transition oldTransition = (Transition)targetToLabelMap.get(tI);
++			Transition oldTransition = targetToLabelMap.get(tI);
+if ( oldTransition!=null ) {
+//System.out.println("extra transition to "+tI+" upon "+label.toString(dfa.nfa.grammar));
+// already seen state d to target transition, just add label
+@@ -466,7 +466,7 @@ public class NFAToDFAConverter {
+// for each NFA configuration in d (abort if we detect non-LL(*) state)
+int numConfigs = configs.size();
+for (int i = 0; i < numConfigs; i++) {
+-			NFAConfiguration c = (NFAConfiguration)configs.get(i);
++			NFAConfiguration c = configs.get(i);
+if ( c.singleAtomTransitionEmanating ) {
+continue; // ignore NFA states w/o epsilon transitions
+}
+@@ -916,7 +916,7 @@ public class NFAToDFAConverter {
+Label eot = new Label(Label.EOT);
+int numConfigs = d.nfaConfigurations.size();
+for (int i = 0; i < numConfigs; i++) {
+-			NFAConfiguration c = (NFAConfiguration)d.nfaConfigurations.get(i);
++			NFAConfiguration c = d.nfaConfigurations.get(i);
+if ( c.resolved || c.resolveWithPredicate ) {
+continue; // the conflict resolver indicates we must leave alone
+}
+@@ -1299,7 +1299,7 @@ public class NFAToDFAConverter {
+protected static void turnOffOtherAlts(DFAState d, int min, Set<Integer> nondeterministicAlts) {
+int numConfigs = d.nfaConfigurations.size();
+for (int i = 0; i < numConfigs; i++) {
+-			NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations.get(i);
++			NFAConfiguration configuration = d.nfaConfigurations.get(i);
+if ( configuration.alt!=min ) {
+if ( nondeterministicAlts==null ||
+nondeterministicAlts.contains(Utils.integer(configuration.alt)) )
+@@ -1417,7 +1417,7 @@ public class NFAToDFAConverter {
+int numConfigs = d.nfaConfigurations.size();
+for (int i = 0; i < numConfigs; i++) { // TODO: I don't think we need to do this; altToPredMap has it
+//7/27/10  theok, I removed it and it still seems to work with everything; leave in anyway just in case
+-				NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations.get(i);
++				NFAConfiguration configuration = d.nfaConfigurations.get(i);
+if ( configuration.alt == nakedAlt ) {
+configuration.semanticContext = nakedAltPred;
+}
+@@ -1435,9 +1435,8 @@ public class NFAToDFAConverter {
+int numConfigs = d.nfaConfigurations.size();
+//System.out.println("pred map="+altToPredMap);
+for (int i = 0; i < numConfigs; i++) {
+-				NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations.get(i);
+-				SemanticContext semCtx = (SemanticContext)
+-						altToPredMap.get(Utils.integer(configuration.alt));
++				NFAConfiguration configuration = d.nfaConfigurations.get(i);
++				SemanticContext semCtx = altToPredMap.get(Utils.integer(configuration.alt));
+if ( semCtx!=null ) {
+// resolve (first found) with pred
+// and remove alt from problem list
+@@ -1493,7 +1492,7 @@ public class NFAToDFAConverter {
+Map<Integer, OrderedHashSet<SemanticContext>> altToSetOfContextsMap =
+new HashMap<Integer, OrderedHashSet<SemanticContext>>();
+for (Iterator<Integer> it = nondeterministicAlts.iterator(); it.hasNext();) {
+-			Integer altI = (Integer) it.next();
++			Integer altI = it.next();
+altToSetOfContextsMap.put(altI, new OrderedHashSet<SemanticContext>());
+}
+
+@@ -1513,7 +1512,7 @@ public class NFAToDFAConverter {
+//System.out.println("configs with preds="+d.configurationsWithPredicateEdges);
+int numConfigs = d.nfaConfigurations.size();
+for (int i = 0; i < numConfigs; i++) {
+-			NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations.get(i);
++			NFAConfiguration configuration = d.nfaConfigurations.get(i);
+Integer altI = Utils.integer(configuration.alt);
+// if alt is nondeterministic, combine its predicates
+if ( nondeterministicAlts.contains(altI) ) {
+@@ -1559,7 +1558,7 @@ public class NFAToDFAConverter {
+// predicate. We want this in order to report to the decision probe.
+List<Integer> incompletelyCoveredAlts = new ArrayList<Integer>();
+for (Iterator<Integer> it = nondeterministicAlts.iterator(); it.hasNext();) {
+-			Integer altI = (Integer) it.next();
++			Integer altI = it.next();
+Set<SemanticContext> contextsForThisAlt = altToSetOfContextsMap.get(altI);
+if ( nondetAltsWithUncoveredConfiguration.contains(altI) ) { // >= 1 config has no ctx
+if ( contextsForThisAlt.size()>0 ) {    // && at least one pred
+@@ -1569,7 +1568,7 @@ public class NFAToDFAConverter {
+}
+SemanticContext combinedContext = null;
+for (Iterator<SemanticContext> itrSet = contextsForThisAlt.iterator(); itrSet.hasNext();) {
+-				SemanticContext ctx = (SemanticContext) itrSet.next();
++				SemanticContext ctx = itrSet.next();
+combinedContext =
+SemanticContext.or(combinedContext,ctx);
+}
+@@ -1589,7 +1588,7 @@ public class NFAToDFAConverter {
+System.out.println("altToPredicateContextMap="+altToPredicateContextMap);
+*/
+for (int i = 0; i < numConfigs; i++) {
+-				NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations.get(i);
++				NFAConfiguration configuration = d.nfaConfigurations.get(i);
+Integer altI = Utils.integer(configuration.alt);
+if ( incompletelyCoveredAlts.contains(altI) &&
+configuration.semanticContext == SemanticContext.EMPTY_SEMANTIC_CONTEXT )
+@@ -1635,7 +1634,7 @@ public class NFAToDFAConverter {
+SemanticContext unionOfPredicatesFromAllAlts = null;
+iter = altToPredMap.values().iterator();
+while ( iter.hasNext() ) {
+-			SemanticContext semCtx = (SemanticContext)iter.next();
++			SemanticContext semCtx = iter.next();
+if ( unionOfPredicatesFromAllAlts==null ) {
+unionOfPredicatesFromAllAlts = semCtx;
+}
+@@ -1661,7 +1660,7 @@ public class NFAToDFAConverter {
+// get a list of all configs with predicates
+int numConfigs = d.nfaConfigurations.size();
+for (int i = 0; i < numConfigs; i++) {
+-			NFAConfiguration c = (NFAConfiguration)d.nfaConfigurations.get(i);
++			NFAConfiguration c = d.nfaConfigurations.get(i);
+if ( c.resolveWithPredicate ) {
+configsWithPreds.add(c);
+}
+@@ -1679,7 +1678,7 @@ public class NFAToDFAConverter {
+List<NFAConfiguration> predConfigsSortedByAlt = configsWithPreds;
+// Now, we can add edges emanating from d for these preds in right order
+for (int i = 0; i < predConfigsSortedByAlt.size(); i++) {
+-			NFAConfiguration c = (NFAConfiguration)predConfigsSortedByAlt.get(i);
++			NFAConfiguration c = predConfigsSortedByAlt.get(i);
+DFAState predDFATarget = d.dfa.getAcceptState(c.alt);
+if ( predDFATarget==null ) {
+predDFATarget = dfa.newState(); // create if not there.
+@@ -1724,7 +1723,7 @@ public class NFAToDFAConverter {
+int m = 0;
+for (Iterator<Integer> it = s.iterator(); it.hasNext();) {
+i++;
+-			Integer I = (Integer) it.next();
++			Integer I = it.next();
+if ( i==1 ) { // init m with first value
+m = I.intValue();
+continue;
+diff --git a/tool/src/main/java/org/antlr/codegen/ACyclicDFACodeGenerator.java b/tool/src/main/java/org/antlr/codegen/ACyclicDFACodeGenerator.java
+index 686f397..26f303f 100644
+--- a/tool/src/main/java/org/antlr/codegen/ACyclicDFACodeGenerator.java
++++ b/tool/src/main/java/org/antlr/codegen/ACyclicDFACodeGenerator.java
+@@ -97,7 +97,7 @@ public class ACyclicDFACodeGenerator {
+DFAState EOTTarget = null;
+//System.out.println("DFA state "+s.stateNumber);
+for (int i = 0; i < s.getNumberOfTransitions(); i++) {
+-			Transition edge = (Transition) s.transition(i);
++			Transition edge = s.transition(i);
+//System.out.println("edge "+s.stateNumber+"-"+edge.label.toString()+"->"+edge.target.stateNumber);
+if ( edge.label.getAtom()==Label.EOT ) {
+// don't generate a real edge for EOT; track alt EOT predicts
+@@ -117,7 +117,7 @@ public class ACyclicDFACodeGenerator {
+List<Integer> labels = edge.label.getSet().toList();
+List<String> targetLabels = new ArrayList<String>(labels.size());
+for (int j = 0; j < labels.size(); j++) {
+-					Integer vI = (Integer) labels.get(j);
++					Integer vI = labels.get(j);
+String label =
+parentGenerator.getTokenTypeAsTargetLabel(vI.intValue());
+targetLabels.add(label); // rewrite List element to be name
+@@ -171,7 +171,7 @@ public class ACyclicDFACodeGenerator {
+// state number.  Predicates emanating from EOT targets are
+// hoisted up to the state that has the EOT edge.
+for (int i = 0; i < EOTTarget.getNumberOfTransitions(); i++) {
+-				Transition predEdge = (Transition)EOTTarget.transition(i);
++				Transition predEdge = EOTTarget.transition(i);
+ST edgeST = templates.getInstanceOf(dfaEdgeName);
+edgeST.add("labelExpr",
+parentGenerator.genSemanticPredicateExpr(templates,predEdge));
+diff --git a/tool/src/main/java/org/antlr/codegen/CodeGenerator.java b/tool/src/main/java/org/antlr/codegen/CodeGenerator.java
+index e4a19a2..39787a2 100644
+--- a/tool/src/main/java/org/antlr/codegen/CodeGenerator.java
++++ b/tool/src/main/java/org/antlr/codegen/CodeGenerator.java
+@@ -344,10 +344,10 @@ public class CodeGenerator {
+headerFileST.add("actions", actions);
+outputFileST.add("actions", actions);
+
+-		headerFileST.add("buildTemplate", new Boolean(grammar.buildTemplate()));
+-		outputFileST.add("buildTemplate", new Boolean(grammar.buildTemplate()));
+-		headerFileST.add("buildAST", new Boolean(grammar.buildAST()));
+-		outputFileST.add("buildAST", new Boolean(grammar.buildAST()));
++		headerFileST.add("buildTemplate", grammar.buildTemplate());
++		outputFileST.add("buildTemplate", grammar.buildTemplate());
++		headerFileST.add("buildAST", grammar.buildAST());
++		outputFileST.add("buildAST", grammar.buildAST());
+
+outputFileST.add("rewriteMode", Boolean.valueOf(grammar.rewriteMode()));
+headerFileST.add("rewriteMode", Boolean.valueOf(grammar.rewriteMode()));
+@@ -489,7 +489,7 @@ public class CodeGenerator {
+protected void verifyActionScopesOkForTarget(Map<String, Map<String, Object>> actions) {
+Set<String> actionScopeKeySet = actions.keySet();
+for (Iterator<String> it = actionScopeKeySet.iterator(); it.hasNext();) {
+-			String scope = (String)it.next();
++			String scope = it.next();
+if ( !target.isValidActionScope(grammar.type, scope) ) {
+// get any action from the scope to get error location
+Map<String, Object> scopeActions = actions.get(scope);
+@@ -509,7 +509,7 @@ public class CodeGenerator {
+protected void translateActionAttributeReferences(Map<String, Map<String, Object>> actions) {
+Set<String> actionScopeKeySet = actions.keySet();
+for (Iterator<String> it = actionScopeKeySet.iterator(); it.hasNext();) {
+-			String scope = (String)it.next();
++			String scope = it.next();
+Map<String, Object> scopeActions = actions.get(scope);
+translateActionAttributeReferencesForSingleScope(null,scopeActions);
+}
+@@ -526,7 +526,7 @@ public class CodeGenerator {
+}
+Set<String> actionNameSet = scopeActions.keySet();
+for (Iterator<String> nameIT = actionNameSet.iterator(); nameIT.hasNext();) {
+-			String name = (String) nameIT.next();
++			String name = nameIT.next();
+GrammarAST actionAST = (GrammarAST)scopeActions.get(name);
+List<?> chunks = translateAction(ruleName,actionAST);
+scopeActions.put(name, chunks); // replace with translation
+@@ -675,7 +675,7 @@ public class CodeGenerator {
+boolean foundGatedPred = false;
+ST eotST = null;
+for (int i = 0; i < s.getNumberOfTransitions(); i++) {
+-			Transition edge = (Transition) s.transition(i);
++			Transition edge = s.transition(i);
+ST edgeST;
+if ( edge.label.getAtom()==Label.EOT ) {
+// this is the default clause; has to held until last
+@@ -711,7 +711,7 @@ public class CodeGenerator {
+if ( foundGatedPred ) {
+// state has >= 1 edge with a gated pred (syn or sem)
+// must rewind input first, set flag.
+-			stateST.add("semPredState", new Boolean(foundGatedPred));
++			stateST.add("semPredState", foundGatedPred);
+}
+if ( eotST!=null ) {
+stateST.add("edges", eotST);
+@@ -775,7 +775,7 @@ public class CodeGenerator {
+Iterator<Interval> iter = iset.getIntervals().iterator();
+int rangeNumber = 1;
+while (iter.hasNext()) {
+-			Interval I = (Interval) iter.next();
++			Interval I = iter.next();
+int a = I.a;
+int b = I.b;
+ST eST;
+@@ -810,7 +810,7 @@ public class CodeGenerator {
+// make constants for the token types
+Iterator<String> tokenIDs = grammar.getTokenIDs().iterator();
+while (tokenIDs.hasNext()) {
+-			String tokenID = (String) tokenIDs.next();
++			String tokenID = tokenIDs.next();
+int tokenType = grammar.getTokenType(tokenID);
+if ( tokenType==Label.EOF ||
+tokenType>=Label.MIN_TOKEN_TYPE )
+@@ -867,7 +867,7 @@ public class CodeGenerator {
+// make constants for the token names
+Iterator<String> tokenIDs = grammar.getTokenIDs().iterator();
+while (tokenIDs.hasNext()) {
+-			String tokenID = (String) tokenIDs.next();
++			String tokenID = tokenIDs.next();
+int tokenType = grammar.getTokenType(tokenID);
+if ( tokenType>=Label.MIN_TOKEN_TYPE ) {
+vocabFileST.addAggr("tokens.{name,type}", tokenID, Utils.integer(tokenType));
+@@ -877,7 +877,7 @@ public class CodeGenerator {
+// now dump the strings
+Iterator<String> literals = grammar.getStringLiterals().iterator();
+while (literals.hasNext()) {
+-			String literal = (String) literals.next();
++			String literal = literals.next();
+int tokenType = grammar.getTokenType(literal);
+if ( tokenType>=Label.MIN_TOKEN_TYPE ) {
+vocabFileST.addAggr("tokens.{name,type}", literal, Utils.integer(tokenType));
+@@ -1281,7 +1281,7 @@ public class CodeGenerator {
+}
+int size = 0;
+for (int i = 0; i < s.getNumberOfTransitions(); i++) {
+-			Transition edge = (Transition) s.transition(i);
++			Transition edge = s.transition(i);
+if ( edge.label.isSemanticPredicate() ) {
+return false;
+}
+diff --git a/tool/src/main/java/org/antlr/misc/BitSet.java b/tool/src/main/java/org/antlr/misc/BitSet.java
+index 8df08bd..da1f7cc 100644
+--- a/tool/src/main/java/org/antlr/misc/BitSet.java
++++ b/tool/src/main/java/org/antlr/misc/BitSet.java
+@@ -103,7 +103,7 @@ public class BitSet implements IntSet, Cloneable {
+IntervalSet other = (IntervalSet)set;
+// walk set and add each interval
+for (Iterator<Interval> iter = other.intervals.iterator(); iter.hasNext();) {
+-				Interval I = (Interval) iter.next();
++				Interval I = iter.next();
+this.orInPlace(BitSet.range(I.a,I.b));
+}
+}
+@@ -342,7 +342,7 @@ public class BitSet implements IntSet, Cloneable {
+BitSet s = new BitSet();
+Iterator<? extends Integer> iter = elements.iterator();
+while (iter.hasNext()) {
+-            Integer el = (Integer) iter.next();
++            Integer el = iter.next();
+s.add(el.intValue());
+}
+return s;
+@@ -537,7 +537,7 @@ public class BitSet implements IntSet, Cloneable {
+str += "'" + (char)i + "'";
+}
+else {
+-                    str += (String)vocabulary.get(i);
++                    str += vocabulary.get(i);
+}
+}
+}
+diff --git a/tool/src/main/java/org/antlr/misc/Graph.java b/tool/src/main/java/org/antlr/misc/Graph.java
+index 9b59ba8..e79aa12 100644
+--- a/tool/src/main/java/org/antlr/misc/Graph.java
++++ b/tool/src/main/java/org/antlr/misc/Graph.java
+@@ -86,7 +86,7 @@ public class Graph<T> {
+// pick any unvisited node, n
+Node<T> n = null;
+for (Iterator<Node<T>> it = nodes.values().iterator(); it.hasNext();) {
+-                n = (Node<T>)it.next();
++                n = it.next();
+if ( !visited.contains(n) ) break;
+}
+DFS(n, visited, sorted);
+@@ -99,7 +99,7 @@ public class Graph<T> {
+visited.add(n);
+if ( n.edges!=null ) {
+for (Iterator<Node<T>> it = n.edges.iterator(); it.hasNext();) {
+-                Node<T> target = (Node<T>) it.next();
++                Node<T> target = it.next();
+DFS(target, visited, sorted);
+}
+}
+diff --git a/tool/src/main/java/org/antlr/misc/IntervalSet.java b/tool/src/main/java/org/antlr/misc/IntervalSet.java
+index 47227e8..9b19725 100644
+--- a/tool/src/main/java/org/antlr/misc/IntervalSet.java
++++ b/tool/src/main/java/org/antlr/misc/IntervalSet.java
+@@ -106,7 +106,7 @@ public class IntervalSet implements IntSet {
+// find position in list
+// Use iterators as we modify list in place
+for (ListIterator<Interval> iter = intervals.listIterator(); iter.hasNext();) {
+-			Interval r = (Interval) iter.next();
++			Interval r = iter.next();
+if ( addition.equals(r) ) {
+return;
+}
+@@ -117,7 +117,7 @@ public class IntervalSet implements IntSet {
+// make sure we didn't just create an interval that
+// should be merged with next interval in list
+if ( iter.hasNext() ) {
+-					Interval next = (Interval) iter.next();
++					Interval next = iter.next();
+if ( bigger.adjacent(next)||!bigger.disjoint(next) ) {
+// if we bump up against or overlap next, merge
+iter.remove();   // remove this one
+@@ -199,7 +199,7 @@ public class IntervalSet implements IntSet {
+// walk set and add each interval
+int n = other.intervals.size();
+for (int i = 0; i < n; i++) {
+-			Interval I = (Interval) other.intervals.get(i);
++			Interval I = other.intervals.get(i);
+this.add(I.a,I.b);
+}
+}
+@@ -231,25 +231,25 @@ public class IntervalSet implements IntSet {
+if ( n ==0 ) {
+return compl;
+}
+-		Interval first = (Interval)intervals.get(0);
++		Interval first = intervals.get(0);
+// add a range from 0 to first.a constrained to vocab
+if ( first.a > 0 ) {
+IntervalSet s = IntervalSet.of(0, first.a-1);
+-			IntervalSet a = (IntervalSet)s.and(vocabularyIS);
++			IntervalSet a = s.and(vocabularyIS);
+compl.addAll(a);
+}
+for (int i=1; i<n; i++) { // from 2nd interval .. nth
+-			Interval previous = (Interval)intervals.get(i-1);
+-			Interval current = (Interval)intervals.get(i);
++			Interval previous = intervals.get(i-1);
++			Interval current = intervals.get(i);
+IntervalSet s = IntervalSet.of(previous.b+1, current.a-1);
+-			IntervalSet a = (IntervalSet)s.and(vocabularyIS);
++			IntervalSet a = s.and(vocabularyIS);
+compl.addAll(a);
+}
+-		Interval last = (Interval)intervals.get(n -1);
++		Interval last = intervals.get(n -1);
+// add a range from last.b to maxElement constrained to vocab
+if ( last.b < maxElement ) {
+IntervalSet s = IntervalSet.of(last.b+1, maxElement);
+-			IntervalSet a = (IntervalSet)s.and(vocabularyIS);
++			IntervalSet a = s.and(vocabularyIS);
+compl.addAll(a);
+}
+return compl;
+@@ -420,8 +420,8 @@ public class IntervalSet implements IntSet {
+int j = 0;
+// iterate down both interval lists looking for nondisjoint intervals
+while ( i<mySize && j<theirSize ) {
+-			Interval mine = (Interval)myIntervals.get(i);
+-			Interval theirs = (Interval)theirIntervals.get(j);
++			Interval mine = myIntervals.get(i);
++			Interval theirs = theirIntervals.get(j);
+//System.out.println("mine="+mine+" and theirs="+theirs);
+if ( mine.startsBeforeDisjoint(theirs) ) {
+// move this iterator looking for interval that might overlap
+@@ -479,7 +479,7 @@ public class IntervalSet implements IntSet {
+public boolean member(int el) {
+int n = intervals.size();
+for (int i = 0; i < n; i++) {
+-			Interval I = (Interval) intervals.get(i);
++			Interval I = intervals.get(i);
+int a = I.a;
+int b = I.b;
+if ( el<a ) {
+@@ -514,7 +514,7 @@ public class IntervalSet implements IntSet {
+@Override
+public int getSingleElement() {
+if ( intervals!=null && intervals.size()==1 ) {
+-            Interval I = (Interval)intervals.get(0);
++            Interval I = intervals.get(0);
+if ( I.a == I.b ) {
+return I.a;
+}
+@@ -526,7 +526,7 @@ public class IntervalSet implements IntSet {
+if ( isNil() ) {
+return Label.INVALID;
+}
+-		Interval last = (Interval)intervals.get(intervals.size()-1);
++		Interval last = intervals.get(intervals.size()-1);
+return last.b;
+}
+
+@@ -537,7 +537,7 @@ public class IntervalSet implements IntSet {
+}
+int n = intervals.size();
+for (int i = 0; i < n; i++) {
+-			Interval I = (Interval) intervals.get(i);
++			Interval I = intervals.get(i);
+int a = I.a;
+int b = I.b;
+for (int v=a; v<=b; v++) {
+@@ -582,7 +582,7 @@ public class IntervalSet implements IntSet {
+}
+Iterator<Interval> iter = this.intervals.iterator();
+while (iter.hasNext()) {
+-            Interval I = (Interval) iter.next();
++            Interval I = iter.next();
+int a = I.a;
+int b = I.b;
+if ( a==b ) {
+@@ -620,7 +620,7 @@ public class IntervalSet implements IntSet {
+return firstInterval.b-firstInterval.a+1;
+}
+for (int i = 0; i < numIntervals; i++) {
+-			Interval I = (Interval) intervals.get(i);
++			Interval I = intervals.get(i);
+n += (I.b-I.a+1);
+}
+return n;
+@@ -631,7 +631,7 @@ public class IntervalSet implements IntSet {
+List<Integer> values = new ArrayList<Integer>();
+int n = intervals.size();
+for (int i = 0; i < n; i++) {
+-			Interval I = (Interval) intervals.get(i);
++			Interval I = intervals.get(i);
+int a = I.a;
+int b = I.b;
+for (int v=a; v<=b; v++) {
+@@ -649,7 +649,7 @@ public class IntervalSet implements IntSet {
+int n = intervals.size();
+int index = 0;
+for (int j = 0; j < n; j++) {
+-			Interval I = (Interval) intervals.get(j);
++			Interval I = intervals.get(j);
+int a = I.a;
+int b = I.b;
+for (int v=a; v<=b; v++) {
+@@ -667,7 +667,7 @@ public class IntervalSet implements IntSet {
+int n = intervals.size();
+int j = 0;
+for (int i = 0; i < n; i++) {
+-			Interval I = (Interval) intervals.get(i);
++			Interval I = intervals.get(i);
+int a = I.a;
+int b = I.b;
+for (int v=a; v<=b; v++) {
+@@ -683,7 +683,7 @@ public class IntervalSet implements IntSet {
+new org.antlr.runtime.BitSet(getMaxElement()+1);
+int n = intervals.size();
+for (int i = 0; i < n; i++) {
+-			Interval I = (Interval) intervals.get(i);
++			Interval I = intervals.get(i);
+int a = I.a;
+int b = I.b;
+for (int v=a; v<=b; v++) {
+diff --git a/tool/src/main/java/org/antlr/misc/OrderedHashSet.java b/tool/src/main/java/org/antlr/misc/OrderedHashSet.java
+index 8f26b5d..7679c22 100644
+--- a/tool/src/main/java/org/antlr/misc/OrderedHashSet.java
++++ b/tool/src/main/java/org/antlr/misc/OrderedHashSet.java
+@@ -64,7 +64,7 @@ public class OrderedHashSet<T> extends LinkedHashSet<T> {
+public boolean add(T value) {
+boolean result = super.add(value);
+if ( result ) {  // only track if new element not in set
+-			elements.add((T)value);
++			elements.add(value);
+}
+return result;
+}
+diff --git a/tool/src/main/java/org/antlr/tool/AssignTokenTypesBehavior.java b/tool/src/main/java/org/antlr/tool/AssignTokenTypesBehavior.java
+index 7f4fbad..02f5311 100644
+--- a/tool/src/main/java/org/antlr/tool/AssignTokenTypesBehavior.java
++++ b/tool/src/main/java/org/antlr/tool/AssignTokenTypesBehavior.java
+@@ -249,8 +249,8 @@ protected void defineStringLiteralsFromDelegates() {
+// walk string literals assigning types to unassigned ones
+Set<String> s = stringLiterals.keySet();
+for (Iterator<String> it = s.iterator(); it.hasNext();) {
+-			String lit = (String) it.next();
+-			Integer oldTypeI = (Integer)stringLiterals.get(lit);
++			String lit = it.next();
++			Integer oldTypeI = stringLiterals.get(lit);
+int oldType = oldTypeI.intValue();
+if ( oldType<Label.MIN_TOKEN_TYPE ) {
+Integer typeI = Utils.integer(root.getNewTokenType());
+@@ -271,12 +271,12 @@ protected void defineStringLiteralsFromDelegates() {
+// was referenced
+Set<String> s = aliases.keySet();
+for (Iterator<String> it = s.iterator(); it.hasNext();) {
+-			String tokenID = (String) it.next();
+-			String literal = (String)aliases.get(tokenID);
++			String tokenID = it.next();
++			String literal = aliases.get(tokenID);
+if ( literal.charAt(0)=='\'' && stringLiterals.get(literal)!=null ) {
+stringLiterals.put(literal, tokens.get(tokenID));
+// an alias still means you need a lexer rule for it
+-				Integer typeI = (Integer)tokens.get(tokenID);
++				Integer typeI = tokens.get(tokenID);
+if ( !tokenRuleDefs.contains(tokenID) ) {
+root.defineLexerRuleForAliasedStringLiteral(tokenID, literal, typeI.intValue());
+}
+@@ -289,7 +289,7 @@ protected void defineStringLiteralsFromDelegates() {
+// walk token names, assigning values if unassigned
+Set<String> s = tokens.keySet();
+for (Iterator<String> it = s.iterator(); it.hasNext();) {
+-			String tokenID = (String) it.next();
++			String tokenID = it.next();
+if ( tokens.get(tokenID)==UNASSIGNED ) {
+tokens.put(tokenID, Utils.integer(root.getNewTokenType()));
+}
+@@ -300,14 +300,14 @@ protected void defineStringLiteralsFromDelegates() {
+protected void defineTokenNamesAndLiteralsInGrammar(Grammar root) {
+Set<String> s = tokens.keySet();
+for (Iterator<String> it = s.iterator(); it.hasNext();) {
+-			String tokenID = (String) it.next();
+-			int ttype = ((Integer)tokens.get(tokenID)).intValue();
++			String tokenID = it.next();
++			int ttype = tokens.get(tokenID).intValue();
+root.defineToken(tokenID, ttype);
+}
+s = stringLiterals.keySet();
+for (Iterator<String> it = s.iterator(); it.hasNext();) {
+-			String lit = (String) it.next();
+-			int ttype = ((Integer)stringLiterals.get(lit)).intValue();
++			String lit = it.next();
++			int ttype = stringLiterals.get(lit).intValue();
+root.defineToken(lit, ttype);
+}
+}
+diff --git a/tool/src/main/java/org/antlr/tool/AttributeScope.java b/tool/src/main/java/org/antlr/tool/AttributeScope.java
+index befae52..3eabe65 100644
+--- a/tool/src/main/java/org/antlr/tool/AttributeScope.java
++++ b/tool/src/main/java/org/antlr/tool/AttributeScope.java
+@@ -156,7 +156,7 @@ public class AttributeScope {
+}
+
+public Attribute getAttribute(String name) {
+-		return (Attribute)attributes.get(name);
++		return attributes.get(name);
+}
+
+/** Used by templates to get all attributes */
+@@ -176,7 +176,7 @@ public class AttributeScope {
+Set<String> inter = new HashSet<String>();
+Set<String> thisKeys = attributes.keySet();
+for (Iterator<String> it = thisKeys.iterator(); it.hasNext();) {
+-			String key = (String) it.next();
++			String key = it.next();
+if ( other.attributes.get(key)!=null ) {
+inter.add(key);
+}
+diff --git a/tool/src/main/java/org/antlr/tool/CompositeGrammar.java b/tool/src/main/java/org/antlr/tool/CompositeGrammar.java
+index 2b4371c..ca219a8 100644
+--- a/tool/src/main/java/org/antlr/tool/CompositeGrammar.java
++++ b/tool/src/main/java/org/antlr/tool/CompositeGrammar.java
+@@ -211,7 +211,7 @@ public class CompositeGrammar {
+}
+List<Grammar> grammars = new ArrayList<Grammar>();
+for (int i = 0; children!=null && i < children.size(); i++) {
+-			CompositeGrammarTree child = (CompositeGrammarTree) children.get(i);
++			CompositeGrammarTree child = children.get(i);
+grammars.add(child.grammar);
+}
+return grammars;
+@@ -258,7 +258,7 @@ public class CompositeGrammar {
+}
+Set<? extends Rule> rules = getAllImportedRules(g);
+for (Iterator<? extends Rule> it = rules.iterator(); it.hasNext();) {
+-			Rule r = (Rule) it.next();
++			Rule r = it.next();
+Rule localRule = g.getLocallyDefinedRule(r.name);
+// if locally defined or it's not local but synpred, don't make
+// a delegation method
+@@ -280,11 +280,11 @@ public class CompositeGrammar {
+List<Grammar> grammars = subtreeRoot.getPreOrderedGrammarList();
+// walk all grammars preorder, priority given to grammar listed first.
+for (int i = 0; i < grammars.size(); i++) {
+-			Grammar delegate = (org.antlr.tool.Grammar) grammars.get(i);
++			Grammar delegate = grammars.get(i);
+// for each rule in delegate, add to rules if no rule with that
+// name as been seen.  (can't use removeAll; wrong hashcode/equals on Rule)
+for (Iterator<Rule> it = delegate.getRules().iterator(); it.hasNext();) {
+-				Rule r = (Rule)it.next();
++				Rule r = it.next();
+if ( !ruleNames.contains(r.name) ) {
+ruleNames.add(r.name); // track that we've seen this
+rules.add(r);
+@@ -321,7 +321,7 @@ public class CompositeGrammar {
+}
+
+public NFAState getState(int s) {
+-		return (NFAState)numberToStateList.get(s);
++		return numberToStateList.get(s);
+}
+
+public void assignTokenTypes() throws RecognitionException {
+@@ -330,7 +330,7 @@ public class CompositeGrammar {
+AssignTokenTypesWalker ttypesWalker = new AssignTokenTypesBehavior();
+List<Grammar> grammars = delegateGrammarTreeRoot.getPostOrderedGrammarList();
+for (int i = 0; grammars!=null && i < grammars.size(); i++) {
+-			Grammar g = (Grammar)grammars.get(i);
++			Grammar g = grammars.get(i);
+ttypesWalker.setTreeNodeStream(new CommonTreeNodeStream(g.getGrammarTree()));
+try {
+//System.out.println("    walking "+g.name);
+@@ -382,11 +382,11 @@ public class CompositeGrammar {
+List<Grammar> grammars = delegateGrammarTreeRoot.getPostOrderedGrammarList();
+//System.out.println("### createNFAs for composite; grammars: "+names);
+for (int i = 0; grammars!=null && i < grammars.size(); i++) {
+-			Grammar g = (Grammar)grammars.get(i);
++			Grammar g = grammars.get(i);
+g.createRuleStartAndStopNFAStates();
+}
+for (int i = 0; grammars!=null && i < grammars.size(); i++) {
+-			Grammar g = (Grammar)grammars.get(i);
++			Grammar g = grammars.get(i);
+g.buildNFA();
+}
+}
+diff --git a/tool/src/main/java/org/antlr/tool/DOTGenerator.java b/tool/src/main/java/org/antlr/tool/DOTGenerator.java
+index 734f240..0de37a6 100644
+--- a/tool/src/main/java/org/antlr/tool/DOTGenerator.java
++++ b/tool/src/main/java/org/antlr/tool/DOTGenerator.java
+@@ -130,7 +130,7 @@ public class DOTGenerator {
+
+// make a DOT edge for each transition
+for (int i = 0; i < s.getNumberOfTransitions(); i++) {
+-			Transition edge = (Transition) s.transition(i);
++			Transition edge = s.transition(i);
+/*
+System.out.println("dfa "+s.dfa.decisionNumber+
+" edge from s"+s.stateNumber+" ["+i+"] of "+s.getNumberOfTransitions());
+@@ -205,7 +205,7 @@ public class DOTGenerator {
+// make a DOT edge for each transition
+ST edgeST;
+for (int i = 0; i < s.getNumberOfTransitions(); i++) {
+-            Transition edge = (Transition) s.transition(i);
++            Transition edge = s.transition(i);
+if ( edge instanceof RuleClosureTransition ) {
+RuleClosureTransition rr = ((RuleClosureTransition)edge);
+// don't jump to other rules, but display edge to follow node
+@@ -330,9 +330,9 @@ public class DOTGenerator {
+List<Integer> altList = new ArrayList<Integer>();
+altList.addAll(alts);
+Collections.sort(altList);
+-					Set configurations = ((DFAState) s).nfaConfigurations;
++					Set<NFAConfiguration> configurations = ((DFAState) s).nfaConfigurations;
+for (int altIndex = 0; altIndex < altList.size(); altIndex++) {
+-						Integer altI = (Integer) altList.get(altIndex);
++						Integer altI = altList.get(altIndex);
+int alt = altI.intValue();
+if ( altIndex>0 ) {
+buf.append("\\n");
+@@ -344,14 +344,13 @@ public class DOTGenerator {
+// it will help us print better later
+List<NFAConfiguration> configsInAlt = new ArrayList<NFAConfiguration>();
+for (Iterator<NFAConfiguration> it = configurations.iterator(); it.hasNext();) {
+-							NFAConfiguration c = (NFAConfiguration) it.next();
++							NFAConfiguration c = it.next();
+if ( c.alt!=alt ) continue;
+configsInAlt.add(c);
+}
+int n = 0;
+for (int cIndex = 0; cIndex < configsInAlt.size(); cIndex++) {
+-							NFAConfiguration c =
+-								(NFAConfiguration)configsInAlt.get(cIndex);
++							NFAConfiguration c = configsInAlt.get(cIndex);
+n++;
+buf.append(c.toString(false));
+if ( (cIndex+1)<configsInAlt.size() ) {
+diff --git a/tool/src/main/java/org/antlr/tool/ErrorManager.java b/tool/src/main/java/org/antlr/tool/ErrorManager.java
+index e1d5989..078db64 100644
+--- a/tool/src/main/java/org/antlr/tool/ErrorManager.java
++++ b/tool/src/main/java/org/antlr/tool/ErrorManager.java
+@@ -557,7 +557,7 @@ public class ErrorManager {
+
+public static ANTLRErrorListener getErrorListener() {
+ANTLRErrorListener el =
+-			(ANTLRErrorListener)threadToListenerMap.get(Thread.currentThread());
++			threadToListenerMap.get(Thread.currentThread());
+if ( el==null ) {
+return theDefaultErrorListener;
+}
+@@ -566,7 +566,7 @@ public class ErrorManager {
+
+public static ErrorState getErrorState() {
+ErrorState ec =
+-			(ErrorState)threadToErrorStateMap.get(Thread.currentThread());
++			threadToErrorStateMap.get(Thread.currentThread());
+if ( ec==null ) {
+ec = new ErrorState();
+threadToErrorStateMap.put(Thread.currentThread(), ec);
+@@ -925,7 +925,7 @@ public class ErrorManager {
+*  for GUIs etc...
+*/
+public static void panic() {
+-		Tool tool = (Tool)threadToToolMap.get(Thread.currentThread());
++		Tool tool = threadToToolMap.get(Thread.currentThread());
+if ( tool==null ) {
+// no tool registered, exit
+throw new Error("ANTLR ErrorManager panic");
+diff --git a/tool/src/main/java/org/antlr/tool/FASerializer.java b/tool/src/main/java/org/antlr/tool/FASerializer.java
+index f20951b..ede0df4 100644
+--- a/tool/src/main/java/org/antlr/tool/FASerializer.java
++++ b/tool/src/main/java/org/antlr/tool/FASerializer.java
+@@ -97,7 +97,7 @@ public class FASerializer {
+// and then ordered by edge labels then by target state number :)
+Collections.sort(lines);
+for (int i = 0; i < lines.size(); i++) {
+-            String line = (String) lines.get(i);
++            String line = lines.get(i);
+buf.append(line);
+}
+return buf.toString();
+@@ -121,7 +121,7 @@ public class FASerializer {
+
+// visit nodes pointed to by each transition;
+for (int i = 0; i < s.getNumberOfTransitions(); i++) {
+-            Transition edge = (Transition) s.transition(i);
++            Transition edge = s.transition(i);
+walkFANormalizingStateNumbers(edge.target); // keep walkin'
+// if this transition is a rule reference, the node "following" this state
+// will not be found and appear to be not in graph.  Must explicitly jump
+@@ -141,7 +141,7 @@ public class FASerializer {
+
+int normalizedStateNumber = s.stateNumber;
+if ( stateNumberTranslator!=null ) {
+-	        Integer normalizedStateNumberI = (Integer)stateNumberTranslator.get(s);
++	        Integer normalizedStateNumberI = stateNumberTranslator.get(s);
+normalizedStateNumber = normalizedStateNumberI.intValue();
+}
+
+@@ -149,7 +149,7 @@ public class FASerializer {
+
+// depth first walk each transition, printing its edge first
+for (int i = 0; i < s.getNumberOfTransitions(); i++) {
+-            Transition edge = (Transition) s.transition(i);
++            Transition edge = s.transition(i);
+StringBuilder buf = new StringBuilder();
+buf.append(stateStr);
+if ( edge.isAction() ) {
+@@ -180,7 +180,7 @@ public class FASerializer {
+int normalizedTargetStateNumber = edge.target.stateNumber;
+if ( stateNumberTranslator!=null ) {
+Integer normalizedTargetStateNumberI =
+-					(Integer)stateNumberTranslator.get(edge.target);
++					stateNumberTranslator.get(edge.target);
+normalizedTargetStateNumber = normalizedTargetStateNumberI.intValue();
+}
+buf.append(getStateString(normalizedTargetStateNumber, edge.target));
+diff --git a/tool/src/main/java/org/antlr/tool/Grammar.java b/tool/src/main/java/org/antlr/tool/Grammar.java
+index 9628000..a8eb596 100644
+--- a/tool/src/main/java/org/antlr/tool/Grammar.java
++++ b/tool/src/main/java/org/antlr/tool/Grammar.java
+@@ -790,7 +790,7 @@ public class Grammar {
+if ( options!=null ) {
+Iterator<String> optionNames = options.keySet().iterator();
+while (optionNames.hasNext()) {
+-				String optionName = (String) optionNames.next();
++				String optionName = optionNames.next();
+if ( !doNotCopyOptionsToLexer.contains(optionName) ) {
+Object value = options.get(optionName);
+lexerGrammarST.addAggr("options.{name,value}", optionName, value);
+@@ -865,11 +865,11 @@ public class Grammar {
+
+// Now add token rule references
+for (int i = 0; i < ruleNames.size(); i++) {
+-			String rname = (String) ruleNames.get(i);
++			String rname = ruleNames.get(i);
+matchTokenRuleST.add("rules", rname);
+}
+for (int i = 0; i < delegateNames.size(); i++) {
+-			String dname = (String) delegateNames.get(i);
++			String dname = delegateNames.get(i);
+matchTokenRuleST.add("rules", dname+".Tokens");
+}
+//System.out.println("tokens rule: "+matchTokenRuleST.toString());
+@@ -974,7 +974,7 @@ public class Grammar {
+
+Collection<Rule> rules = getRules();
+for (Iterator<Rule> itr = rules.iterator(); itr.hasNext();) {
+-			Rule r = (Rule) itr.next();
++			Rule r = itr.next();
+String ruleName = r.name;
+NFAState ruleBeginState = factory.newState();
+ruleBeginState.setDescription("rule "+ruleName+" start");
+@@ -1207,14 +1207,14 @@ outer:
+List<IntervalSet> edges = new ArrayList<IntervalSet>();
+for (int i = 1; i < altLook.length; i++) {
+LookaheadSet s = altLook[i];
+-			edges.add((IntervalSet)s.tokenTypeSet);
++			edges.add(s.tokenTypeSet);
+}
+List<IntervalSet> disjoint = makeEdgeSetsDisjoint(edges);
+//System.out.println("disjoint="+disjoint);
+
+MultiMap<IntervalSet, Integer> edgeMap = new MultiMap<IntervalSet, Integer>();
+for (int i = 0; i < disjoint.size(); i++) {
+-			IntervalSet ds = (IntervalSet) disjoint.get(i);
++			IntervalSet ds = disjoint.get(i);
+for (int alt = 1; alt < altLook.length; alt++) {
+LookaheadSet look = altLook[alt];
+if ( !ds.and(look.tokenTypeSet).isNil() ) {
+@@ -1249,7 +1249,7 @@ outer:
+// walk each incoming edge label/set and add to disjoint set
+int numEdges = edges.size();
+for (int e = 0; e < numEdges; e++) {
+-			IntervalSet t = (IntervalSet) edges.get(e);
++			IntervalSet t = edges.get(e);
+if ( disjointSets.contains(t) ) { // exact set present
+continue;
+}
+@@ -1258,7 +1258,7 @@ outer:
+IntervalSet remainder = t; // remainder starts out as whole set to add
+int numDisjointElements = disjointSets.size();
+for (int i = 0; i < numDisjointElements; i++) {
+-				IntervalSet s_i = (IntervalSet)disjointSets.get(i);
++				IntervalSet s_i = disjointSets.get(i);
+
+if ( t.and(s_i).isNil() ) { // nothing in common
+continue;
+@@ -1270,7 +1270,7 @@ outer:
+
+// Replace existing s_i with intersection since we
+// know that will always be a non nil character class
+-				IntervalSet intersection = (IntervalSet)s_i.and(t);
++				IntervalSet intersection = s_i.and(t);
+disjointSets.set(i, intersection);
+
+// Compute s_i-t to see what is in current set and not in incoming
+@@ -1283,7 +1283,7 @@ outer:
+}
+
+// anything left to add to the reachableLabels?
+-				remainder = (IntervalSet)t.subtract(s_i);
++				remainder = t.subtract(s_i);
+if ( remainder.isNil() ) {
+break; // nothing left to add to set.  done!
+}
+@@ -1399,7 +1399,7 @@ outer:
+if ( index>=composite.typeToTokenList.size() ) {
+composite.typeToTokenList.setSize(index+1);
+}
+-		String prevToken = (String)composite.typeToTokenList.get(index);
++		String prevToken = composite.typeToTokenList.get(index);
+if ( prevToken==null || prevToken.charAt(0)=='\'' ) {
+// only record if nothing there before or if thing before was a literal
+composite.typeToTokenList.set(index, text);
+@@ -1473,7 +1473,7 @@ outer:
+if ( nameToSynpredASTMap==null ) {
+return null;
+}
+-		return (GrammarAST)nameToSynpredASTMap.get(name);
++		return nameToSynpredASTMap.get(name);
+}
+
+public void synPredUsedInDFA(DFA dfa, SemanticContext semCtx) {
+@@ -1746,7 +1746,7 @@ outer:
+
+/** Get a global scope */
+public AttributeScope getGlobalScope(String name) {
+-		return (AttributeScope)scopes.get(name);
++		return scopes.get(name);
+}
+
+public Map<String, AttributeScope> getGlobalScopes() {
+@@ -1886,11 +1886,11 @@ outer:
+protected void examineAllExecutableActions() {
+Collection<Rule> rules = getRules();
+for (Iterator<Rule> it = rules.iterator(); it.hasNext();) {
+-			Rule r = (Rule) it.next();
++			Rule r = it.next();
+// walk all actions within the rule elements, args, and exceptions
+List<GrammarAST> actions = r.getInlineActions();
+for (int i = 0; i < actions.size(); i++) {
+-				GrammarAST actionAST = (GrammarAST) actions.get(i);
++				GrammarAST actionAST = actions.get(i);
+ActionAnalysis sniffer =
+new ActionAnalysis(this, r.name, actionAST);
+sniffer.analyze();
+@@ -1898,7 +1898,7 @@ outer:
+// walk any named actions like @init, @after
+Collection<? extends Object> namedActions = r.getActions().values();
+for (Iterator<? extends Object> it2 = namedActions.iterator(); it2.hasNext();) {
+-				GrammarAST actionAST = (GrammarAST) it2.next();
++				GrammarAST actionAST = (GrammarAST)it2.next();
+ActionAnalysis sniffer =
+new ActionAnalysis(this, r.name, actionAST);
+sniffer.analyze();
+@@ -1915,7 +1915,7 @@ outer:
+}
+Set<String> rules = nameToRuleMap.keySet();
+for (Iterator<String> it = rules.iterator(); it.hasNext();) {
+-			String ruleName = (String) it.next();
++			String ruleName = it.next();
+Rule r = getRule(ruleName);
+removeUselessLabels(r.getRuleLabels());
+removeUselessLabels(r.getRuleListLabels());
+@@ -1932,7 +1932,7 @@ outer:
+Collection<LabelElementPair> labels = ruleToElementLabelPairMap.values();
+List<String> kill = new ArrayList<String>();
+for (Iterator<LabelElementPair> labelit = labels.iterator(); labelit.hasNext();) {
+-			LabelElementPair pair = (LabelElementPair) labelit.next();
++			LabelElementPair pair = labelit.next();
+Rule refdRule = getRule(pair.elementRef.getText());
+if ( refdRule!=null && !refdRule.getHasReturnValue() && !pair.actionReferencesLabel ) {
+//System.out.println(pair.label.getText()+" is useless");
+@@ -1940,7 +1940,7 @@ outer:
+}
+}
+for (int i = 0; i < kill.size(); i++) {
+-			String labelToKill = (String) kill.get(i);
++			String labelToKill = kill.get(i);
+// System.out.println("kill "+labelToKill);
+ruleToElementLabelPairMap.remove(labelToKill);
+}
+@@ -2078,10 +2078,10 @@ outer:
+public int getTokenType(String tokenName) {
+Integer I;
+if ( tokenName.charAt(0)=='\'') {
+-			I = (Integer)composite.stringLiteralToTypeMap.get(tokenName);
++			I = composite.stringLiteralToTypeMap.get(tokenName);
+}
+else { // must be a label like ID
+-			I = (Integer)composite.tokenIDToTypeMap.get(tokenName);
++			I = composite.tokenIDToTypeMap.get(tokenName);
+}
+int i = (I!=null)?I.intValue():Label.INVALID;
+//System.out.println("grammar type "+type+" "+tokenName+"->"+i);
+@@ -2190,7 +2190,7 @@ outer:
+else if ( Character.isDigit(c) ) {
+ErrorManager.error(ErrorManager.MSG_SYNTAX_ERROR,
+"invalid char literal: "+literal);
+-					buf.append("\\").append((char)c);
++					buf.append("\\").append(c);
+}
+else {
+buf.append((char)ANTLRLiteralEscapedCharValue[c]); // normal \x escape
+@@ -2216,7 +2216,7 @@ outer:
+public int importTokenVocabulary(Grammar importFromGr) {
+Set<String> importedTokenIDs = importFromGr.getTokenIDs();
+for (Iterator<String> it = importedTokenIDs.iterator(); it.hasNext();) {
+-			String tokenID = (String) it.next();
++			String tokenID = it.next();
+int tokenType = importFromGr.getTokenType(tokenID);
+composite.maxTokenType = Math.max(composite.maxTokenType,tokenType);
+if ( tokenType>=Label.MIN_TOKEN_TYPE ) {
+@@ -2421,7 +2421,7 @@ outer:
+}
+// faux label?
+else if ( ttype<0 ) {
+-			tokenName = (String)composite.typeToTokenList.get(Label.NUM_FAUX_LABELS+ttype);
++			tokenName = composite.typeToTokenList.get(Label.NUM_FAUX_LABELS+ttype);
+}
+else {
+// compute index in typeToTokenList for ttype
+@@ -2429,7 +2429,7 @@ outer:
+index += Label.NUM_FAUX_LABELS;     // jump over faux tokens
+
+if ( index<composite.typeToTokenList.size() ) {
+-				tokenName = (String)composite.typeToTokenList.get(index);
++				tokenName = composite.typeToTokenList.get(index);
+if ( tokenName!=null &&
+tokenName.startsWith(AUTO_GENERATED_TOKEN_NAME_PREFIX) )
+{
+@@ -2518,7 +2518,7 @@ outer:
+}
+Set<String> keys = options.keySet();
+for (Iterator<String> it = keys.iterator(); it.hasNext();) {
+-			String optionName = (String) it.next();
++			String optionName = it.next();
+Object optionValue = options.get(optionName);
+String stored=setOption(optionName, optionValue, optionsStartToken);
+if ( stored==null ) {
+@@ -2772,7 +2772,7 @@ outer:
+public List<NFAState> getDecisionNFAStartStateList() {
+List<NFAState> states = new ArrayList<NFAState>(100);
+for (int d = 0; d < indexToDecision.size(); d++) {
+-			Decision dec = (Decision) indexToDecision.get(d);
++			Decision dec = indexToDecision.get(d);
+states.add(dec.startState);
+}
+return states;
+@@ -2816,7 +2816,7 @@ outer:
+List<Integer> columns = new ArrayList<Integer>();
+for(Iterator<String> iter = lineColumnToLookaheadDFAMap.keySet().iterator();
+iter.hasNext(); ) {
+-			String key = (String)iter.next();
++			String key = iter.next();
+if(key.startsWith(prefix)) {
+columns.add(Integer.valueOf(key.substring(prefix.length())));
+}
+@@ -2826,7 +2826,7 @@ outer:
+
+/** Useful for ANTLRWorks to map position in file to the DFA for display */
+public DFA getLookaheadDFAFromPositionInFile(int line, int col) {
+-		return (DFA)lineColumnToLookaheadDFAMap.get(
++		return lineColumnToLookaheadDFAMap.get(
+new StringBuffer().append(line).append(":").append(col).toString());
+}
+
+diff --git a/tool/src/main/java/org/antlr/tool/GrammarAST.java b/tool/src/main/java/org/antlr/tool/GrammarAST.java
+index 4a86cdf..c21a405 100644
+--- a/tool/src/main/java/org/antlr/tool/GrammarAST.java
++++ b/tool/src/main/java/org/antlr/tool/GrammarAST.java
+@@ -246,7 +246,7 @@ public class GrammarAST extends CommonTree {
+this.blockOptions = null;
+return;
+}
+-		String[] keys = (String[])options.keySet().toArray(new String[options.size()]);
++		String[] keys = options.keySet().toArray(new String[options.size()]);
+for (String optionName : keys) {
+String stored= setBlockOption(grammar, optionName, options.get(optionName));
+if ( stored==null ) {
+@@ -346,7 +346,7 @@ public class GrammarAST extends CommonTree {
+
+
+public GrammarAST[] getChildrenAsArray() {
+-        return (GrammarAST[])getChildren().toArray(new GrammarAST[getChildCount()]);
++        return getChildren().toArray(new GrammarAST[getChildCount()]);
+}
+
+private static final GrammarAST DescendantDownNode = new GrammarAST(Token.DOWN, "DOWN");
+diff --git a/tool/src/main/java/org/antlr/tool/GrammarNonDeterminismMessage.java b/tool/src/main/java/org/antlr/tool/GrammarNonDeterminismMessage.java
+index 00c1b0e..d56da8c 100644
+--- a/tool/src/main/java/org/antlr/tool/GrammarNonDeterminismMessage.java
++++ b/tool/src/main/java/org/antlr/tool/GrammarNonDeterminismMessage.java
+@@ -76,7 +76,7 @@ public class GrammarNonDeterminismMessage extends Message {
+if ( probe.dfa.isTokensRuleDecision() ) {
+Set<Integer> disabledAlts = probe.getDisabledAlternatives(problemState);
+for (Iterator<Integer> it = disabledAlts.iterator(); it.hasNext();) {
+-				Integer altI = (Integer) it.next();
++				Integer altI = it.next();
+String tokenName =
+probe.getTokenNameForTokensRuleAlt(altI.intValue());
+// reset the line/col to the token definition (pick last one)
+@@ -97,7 +97,7 @@ public class GrammarNonDeterminismMessage extends Message {
+int firstAlt = 0;
+if ( nondetAlts!=null ) {
+for (Iterator<Integer> iter = nondetAlts.iterator(); iter.hasNext();) {
+-				Integer displayAltI = (Integer) iter.next();
++				Integer displayAltI = iter.next();
+if ( DecisionProbe.verbose ) {
+int tracePathAlt =
+nfaStart.translateDisplayAltToWalkAlt(displayAltI.intValue());
+diff --git a/tool/src/main/java/org/antlr/tool/GrammarReport.java b/tool/src/main/java/org/antlr/tool/GrammarReport.java
+index de2eff4..2e947c2 100644
+--- a/tool/src/main/java/org/antlr/tool/GrammarReport.java
++++ b/tool/src/main/java/org/antlr/tool/GrammarReport.java
+@@ -114,7 +114,7 @@ public class GrammarReport {
+int totalNonSynPredRules = 0;
+Collection<Rule> rules = g.getRules();
+for (Iterator<Rule> it = rules.iterator(); it.hasNext();) {
+-			Rule r = (Rule) it.next();
++			Rule r = it.next();
+if ( !r.name.toUpperCase()
+.startsWith(Grammar.SYNPRED_RULE_PREFIX.toUpperCase()) )
+{
+@@ -292,7 +292,7 @@ public class GrammarReport {
+StringBuilder buf = new StringBuilder();
+Iterator<DFA> it = dfas.iterator();
+while ( it.hasNext() ) {
+-			DFA dfa = (DFA) it.next();
++			DFA dfa = it.next();
+// if we aborted a DFA and redid with k=1, the backtrackin
+if ( decisions.contains(Utils.integer(dfa.decisionNumber)) ) {
+continue;
+diff --git a/tool/src/main/java/org/antlr/tool/GrammarSanity.java b/tool/src/main/java/org/antlr/tool/GrammarSanity.java
+index f4376f6..8af477f 100644
+--- a/tool/src/main/java/org/antlr/tool/GrammarSanity.java
++++ b/tool/src/main/java/org/antlr/tool/GrammarSanity.java
+@@ -267,7 +267,7 @@ public class GrammarSanity {
+int outerAltNum)
+{
+if ( isValidSimpleElementNode(elementAST) ) {
+-			GrammarAST next = (GrammarAST)elementAST.getNextSibling();
++			GrammarAST next = elementAST.getNextSibling();
+if ( !isNextNonActionElementEOA(next)) {
+ErrorManager.grammarWarning(ErrorManager.MSG_REWRITE_FOR_MULTI_ELEMENT_ALT,
+grammar,
+@@ -289,7 +289,7 @@ public class GrammarSanity {
+case ANTLRParser.BACKTRACK_SEMPRED :
+case ANTLRParser.GATED_SEMPRED :
+ensureAltIsSimpleNodeOrTree(altAST,
+-											(GrammarAST)elementAST.getNextSibling(),
++											elementAST.getNextSibling(),
+outerAltNum);
+return;
+}
+@@ -316,7 +316,7 @@ public class GrammarSanity {
+while ( t.getType()==ANTLRParser.ACTION ||
+t.getType()==ANTLRParser.SEMPRED )
+{
+-			t = (GrammarAST)t.getNextSibling();
++			t = t.getNextSibling();
+}
+if ( t.getType()==ANTLRParser.EOA ) {
+return true;
+diff --git a/tool/src/main/java/org/antlr/tool/GrammarUnreachableAltsMessage.java b/tool/src/main/java/org/antlr/tool/GrammarUnreachableAltsMessage.java
+index a44a7fb..89ff1d1 100644
+--- a/tool/src/main/java/org/antlr/tool/GrammarUnreachableAltsMessage.java
++++ b/tool/src/main/java/org/antlr/tool/GrammarUnreachableAltsMessage.java
+@@ -67,7 +67,7 @@ public class GrammarUnreachableAltsMessage extends Message {
+if ( probe.dfa.isTokensRuleDecision() ) {
+// alts are token rules, convert to the names instead of numbers
+for (int i = 0; i < alts.size(); i++) {
+-				Integer altI = (Integer) alts.get(i);
++				Integer altI = alts.get(i);
+String tokenName =
+probe.getTokenNameForTokensRuleAlt(altI.intValue());
+// reset the line/col to the token definition
+diff --git a/tool/src/main/java/org/antlr/tool/Interpreter.java b/tool/src/main/java/org/antlr/tool/Interpreter.java
+index 2af82aa..320b5dc 100644
+--- a/tool/src/main/java/org/antlr/tool/Interpreter.java
++++ b/tool/src/main/java/org/antlr/tool/Interpreter.java
+@@ -290,7 +290,7 @@ public class Interpreter implements TokenSource {
+break;
+}
+// pop invoking state off the stack to know where to return to
+-				NFAState invokingState = (NFAState)ruleInvocationStack.pop();
++				NFAState invokingState = ruleInvocationStack.pop();
+RuleClosureTransition invokingTransition =
+(RuleClosureTransition)invokingState.transition[0];
+// move to node after state that invoked this rule
+diff --git a/tool/src/main/java/org/antlr/tool/NFAFactory.java b/tool/src/main/java/org/antlr/tool/NFAFactory.java
+index ec2f983..b511d6d 100644
+--- a/tool/src/main/java/org/antlr/tool/NFAFactory.java
++++ b/tool/src/main/java/org/antlr/tool/NFAFactory.java
+@@ -294,7 +294,7 @@ public class NFAFactory {
+public int build_EOFStates(Collection<Rule> rules) {
+int numberUnInvokedRules = 0;
+for (Iterator<Rule> iterator = rules.iterator(); iterator.hasNext();) {
+-			Rule r = (Rule) iterator.next();
++			Rule r = iterator.next();
+NFAState endNFAState = r.stopState;
+// Is this rule a start symbol?  (no follow links)
+if ( endNFAState.transition[0] ==null ) {
+@@ -394,7 +394,7 @@ public class NFAFactory {
+// single alt case
+if ( alternativeStateClusters.size()==1 ) {
+// single alt, no decision, just return only alt state cluster
+-			StateCluster g = (StateCluster)alternativeStateClusters.get(0);
++			StateCluster g = alternativeStateClusters.get(0);
+NFAState startOfAlt = newState(); // must have this no matter what
+transitionBetweenStates(startOfAlt, g.left, Label.EPSILON);
+
+@@ -412,7 +412,7 @@ public class NFAFactory {
+blockEndNFAState.setDescription("end block");
+int altNum = 1;
+for (Iterator<StateCluster> iter = alternativeStateClusters.iterator(); iter.hasNext();) {
+-            StateCluster g = (StateCluster) iter.next();
++            StateCluster g = iter.next();
+// add begin NFAState for this alt connected by epsilon
+NFAState left = newState();
+left.setDescription("alt "+altNum+" of ()");
+diff --git a/tool/src/main/java/org/antlr/tool/NameSpaceChecker.java b/tool/src/main/java/org/antlr/tool/NameSpaceChecker.java
+index 9d24366..b9f1904 100644
+--- a/tool/src/main/java/org/antlr/tool/NameSpaceChecker.java
++++ b/tool/src/main/java/org/antlr/tool/NameSpaceChecker.java
+@@ -51,7 +51,7 @@ public class NameSpaceChecker {
+if ( r.labelNameSpace!=null ) {
+Iterator<Grammar.LabelElementPair> it = r.labelNameSpace.values().iterator();
+while ( it.hasNext() ) {
+-					Grammar.LabelElementPair pair = (Grammar.LabelElementPair) it.next();
++					Grammar.LabelElementPair pair = it.next();
+checkForLabelConflict(r, pair.label);
+}
+}
+@@ -59,7 +59,7 @@ public class NameSpaceChecker {
+if ( r.ruleScope!=null ) {
+List<Attribute> attributes = r.ruleScope.getAttributes();
+for (int j = 0; j < attributes.size(); j++) {
+-					Attribute attribute = (Attribute) attributes.get(j);
++					Attribute attribute = attributes.get(j);
+checkForRuleScopeAttributeConflict(r, attribute);
+}
+}
+@@ -69,7 +69,7 @@ public class NameSpaceChecker {
+// check all global scopes against tokens
+Iterator<AttributeScope> it = grammar.getGlobalScopes().values().iterator();
+while (it.hasNext()) {
+-			AttributeScope scope = (AttributeScope) it.next();
++			AttributeScope scope = it.next();
+checkForGlobalScopeTokenConflict(scope);
+}
+// check for missing rule, tokens
+@@ -81,7 +81,7 @@ public class NameSpaceChecker {
+Set<String> conflictingKeys = r.returnScope.intersection(r.parameterScope);
+if (conflictingKeys!=null) {
+for (Iterator<String> it = conflictingKeys.iterator(); it.hasNext();) {
+-					String key = (String) it.next();
++					String key = it.next();
+ErrorManager.grammarError(
+ErrorManager.MSG_ARG_RETVAL_CONFLICT,
+grammar,
+@@ -126,7 +126,7 @@ public class NameSpaceChecker {
+protected void lookForReferencesToUndefinedSymbols() {
+// for each rule ref, ask if there is a rule definition
+for (Iterator<GrammarAST> iter = grammar.ruleRefs.iterator(); iter.hasNext();) {
+-			GrammarAST refAST = (GrammarAST)iter.next();
++			GrammarAST refAST = iter.next();
+Token tok = refAST.token;
+String ruleName = tok.getText();
+Rule localRule = grammar.getLocallyDefinedRule(ruleName);
+@@ -146,7 +146,7 @@ public class NameSpaceChecker {
+// if we're a combined grammar, we know which token IDs have no
+// associated lexer rule.
+for (Iterator<Token> iter = grammar.tokenIDRefs.iterator(); iter.hasNext();) {
+-				Token tok = (Token) iter.next();
++				Token tok = iter.next();
+String tokenID = tok.getText();
+if ( !grammar.composite.lexerRules.contains(tokenID) &&
+grammar.getTokenType(tokenID)!=Label.EOF )
+@@ -160,7 +160,7 @@ public class NameSpaceChecker {
+}
+// check scopes and scoped rule refs
+for (Iterator<GrammarAST> it = grammar.scopedRuleRefs.iterator(); it.hasNext();) {
+-			GrammarAST scopeAST = (GrammarAST)it.next(); // ^(DOT ID atom)
++			GrammarAST scopeAST = it.next(); // ^(DOT ID atom)
+Grammar scopeG = grammar.composite.getGrammar(scopeAST.getText());
+GrammarAST refAST = (GrammarAST)scopeAST.getChild(1);
+String ruleName = refAST.getText();
+@@ -249,7 +249,7 @@ public class NameSpaceChecker {
+*/
+public boolean checkForLabelTypeMismatch(Rule r, Token label, int type) {
+Grammar.LabelElementPair prevLabelPair =
+-			(Grammar.LabelElementPair)r.labelNameSpace.get(label.getText());
++			r.labelNameSpace.get(label.getText());
+if ( prevLabelPair!=null ) {
+// label already defined; if same type, no problem
+if ( prevLabelPair.type != type ) {
+diff --git a/tool/src/main/java/org/antlr/tool/RandomPhrase.java b/tool/src/main/java/org/antlr/tool/RandomPhrase.java
+index 8b60de2..c6095ea 100644
+--- a/tool/src/main/java/org/antlr/tool/RandomPhrase.java
++++ b/tool/src/main/java/org/antlr/tool/RandomPhrase.java
+@@ -83,7 +83,7 @@ public class RandomPhrase {
+}
+// end of rule node
+if ( state.isAcceptState() ) {
+-				NFAState invokingState = (NFAState)ruleInvocationStack.pop();
++				NFAState invokingState = ruleInvocationStack.pop();
+if ( debug ) System.out.println("pop invoking state "+invokingState);
+//System.out.println("leave "+state.enclosingRule.name);
+RuleClosureTransition invokingTransition =
+@@ -198,7 +198,7 @@ public class RandomPhrase {
+randomPhrase(parser, tokenTypes, startRule);
+System.out.println("token types="+tokenTypes);
+for (int i = 0; i < tokenTypes.size(); i++) {
+-				Integer ttypeI = (Integer) tokenTypes.get(i);
++				Integer ttypeI = tokenTypes.get(i);
+int ttype = ttypeI.intValue();
+String ttypeDisplayName = parser.getTokenDisplayName(ttype);
+if ( Character.isUpperCase(ttypeDisplayName.charAt(0)) ) {
+@@ -206,7 +206,7 @@ public class RandomPhrase {
+randomPhrase(lexer, charsInToken, ttypeDisplayName);
+System.out.print(" ");
+for (int j = 0; j < charsInToken.size(); j++) {
+-						java.lang.Integer cI = (java.lang.Integer) charsInToken.get(j);
++						Integer cI = charsInToken.get(j);
+System.out.print((char)cI.intValue());
+}
+}
+diff --git a/tool/src/main/java/org/antlr/tool/Rule.java b/tool/src/main/java/org/antlr/tool/Rule.java
+index 742c8d3..884e286 100644
+--- a/tool/src/main/java/org/antlr/tool/Rule.java
++++ b/tool/src/main/java/org/antlr/tool/Rule.java
+@@ -219,13 +219,13 @@ public class Rule {
+}
+
+public Grammar.LabelElementPair getLabel(String name) {
+-		return (Grammar.LabelElementPair)labelNameSpace.get(name);
++		return labelNameSpace.get(name);
+}
+
+public Grammar.LabelElementPair getTokenLabel(String name) {
+Grammar.LabelElementPair pair = null;
+if ( tokenLabels!=null ) {
+-			return (Grammar.LabelElementPair)tokenLabels.get(name);
++			return tokenLabels.get(name);
+}
+return pair;
+}
+@@ -241,7 +241,7 @@ public class Rule {
+public Grammar.LabelElementPair getRuleLabel(String name) {
+Grammar.LabelElementPair pair = null;
+if ( ruleLabels!=null ) {
+-			return (Grammar.LabelElementPair)ruleLabels.get(name);
++			return ruleLabels.get(name);
+}
+return pair;
+}
+@@ -249,7 +249,7 @@ public class Rule {
+public Grammar.LabelElementPair getTokenListLabel(String name) {
+Grammar.LabelElementPair pair = null;
+if ( tokenListLabels!=null ) {
+-			return (Grammar.LabelElementPair)tokenListLabels.get(name);
++			return tokenListLabels.get(name);
+}
+return pair;
+}
+@@ -257,7 +257,7 @@ public class Rule {
+public Grammar.LabelElementPair getRuleListLabel(String name) {
+Grammar.LabelElementPair pair = null;
+if ( ruleListLabels!=null ) {
+-			return (Grammar.LabelElementPair)ruleListLabels.get(name);
++			return ruleListLabels.get(name);
+}
+return pair;
+}
+@@ -359,7 +359,7 @@ public class Rule {
+public boolean hasRewrite(int i) {
+GrammarAST blk = tree.findFirstType(ANTLRParser.BLOCK);
+GrammarAST alt = blk.getBlockALT(i);
+-		GrammarAST rew = (GrammarAST)alt.getNextSibling();
++		GrammarAST rew = alt.getNextSibling();
+if ( rew!=null && rew.getType()==ANTLRParser.REWRITES ) return true;
+if ( alt.findFirstType(ANTLRParser.REWRITES)!=null ) return true;
+return false;
+@@ -410,12 +410,12 @@ public class Rule {
+{
+// symbol is a token
+List<GrammarAST> tokenRefs = getTokenRefsInAlt(refdSymbol, outerAltNum);
+-			uniqueRefAST = (GrammarAST)tokenRefs.get(0);
++			uniqueRefAST = tokenRefs.get(0);
+}
+else {
+// symbol is a rule
+List<GrammarAST> ruleRefs = getRuleRefsInAlt(refdSymbol, outerAltNum);
+-			uniqueRefAST = (GrammarAST)ruleRefs.get(0);
++			uniqueRefAST = ruleRefs.get(0);
+}
+if ( uniqueRefAST.code==null ) {
+// no code?  must not have gen'd yet; forward ref
+@@ -551,7 +551,7 @@ public class Rule {
+}
+Set<String> keys = options.keySet();
+for (Iterator<String> it = keys.iterator(); it.hasNext();) {
+-			String optionName = (String) it.next();
++			String optionName = it.next();
+Object optionValue = options.get(optionName);
+String stored=setOption(optionName, optionValue, optionsStartToken);
+if ( stored==null ) {
+diff --git a/tool/src/main/java/org/antlr/tool/Strip.java b/tool/src/main/java/org/antlr/tool/Strip.java
+index 1763eb5..ddda4ed 100644
+--- a/tool/src/main/java/org/antlr/tool/Strip.java
++++ b/tool/src/main/java/org/antlr/tool/Strip.java
+@@ -233,8 +233,8 @@ public class Strip {
+
+private static void killTrailingNewline(TokenRewriteStream tokens, int index) {
+List<? extends Token> all = tokens.getTokens();
+-        Token tok = (Token)all.get(index);
+-        Token after = (Token)all.get(index+1);
++        Token tok = all.get(index);
++        Token after = all.get(index+1);
+String ws = after.getText();
+if ( ws.startsWith("\n") ) {
+//System.out.println("killing WS after action");
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg b/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
+index d6b1e25..d37b82d 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
+@@ -141,7 +141,7 @@ filteringNextToken() ::= <<
+public Token nextToken() {
+while (true) {
+if ( input.LA(1)==CharStream.EOF ) {
+-            Token eof = new CommonToken((CharStream)input,Token.EOF,
++            Token eof = new CommonToken(input,Token.EOF,
+Token.DEFAULT_CHANNEL,
+input.index(),input.index());
+eof.setLine(getLine());
+diff --git a/tool/src/test/java/org/antlr/test/BaseTest.java b/tool/src/test/java/org/antlr/test/BaseTest.java
+index a4349ab..6964285 100644
+--- a/tool/src/test/java/org/antlr/test/BaseTest.java
++++ b/tool/src/test/java/org/antlr/test/BaseTest.java
+@@ -174,7 +174,7 @@ public abstract class BaseTest {
+allIsWell = false;
+System.err.println("antlr reports errors from "+options);
+for (int i = 0; i < equeue.errors.size(); i++) {
+-						Message msg = (Message) equeue.errors.get(i);
++						Message msg = equeue.errors.get(i);
+System.err.println(msg);
+}
+System.out.println("!!!\ngrammar:");
+@@ -440,7 +440,7 @@ public abstract class BaseTest {
+*/
+Message foundMsg = null;
+for (int i = 0; i < equeue.errors.size(); i++) {
+-			Message m = (Message)equeue.errors.get(i);
++			Message m = equeue.errors.get(i);
+if (m.msgID==expectedMessage.msgID ) {
+foundMsg = m;
+}
+@@ -460,7 +460,7 @@ public abstract class BaseTest {
+{
+Message foundMsg = null;
+for (int i = 0; i < equeue.warnings.size(); i++) {
+-			Message m = (Message)equeue.warnings.get(i);
++			Message m = equeue.warnings.get(i);
+if (m.msgID==expectedMessage.msgID ) {
+foundMsg = m;
+}
+@@ -478,7 +478,7 @@ public abstract class BaseTest {
+//System.out.println("errors="+equeue);
+Message foundMsg = null;
+for (int i = 0; i < equeue.errors.size(); i++) {
+-            Message m = (Message)equeue.errors.get(i);
++            Message m = equeue.errors.get(i);
+if (m.msgID==expectedMessage.msgID ) {
+foundMsg = m;
+}
+@@ -837,7 +837,7 @@ public abstract class BaseTest {
+List<String> n = new ArrayList<String>();
+Iterator<String> iterator = elements.keySet().iterator();
+while (iterator.hasNext()) {
+-			String tokenID = (String) iterator.next();
++			String tokenID = iterator.next();
+if ( elements.get(tokenID) >= Label.MIN_TOKEN_TYPE ) {
+n.add(tokenID+"="+elements.get(tokenID));
+}
+diff --git a/tool/src/test/java/org/antlr/test/TestAttributes.java b/tool/src/test/java/org/antlr/test/TestAttributes.java
+index b272237..cebd6b6 100644
+--- a/tool/src/test/java/org/antlr/test/TestAttributes.java
++++ b/tool/src/test/java/org/antlr/test/TestAttributes.java
+@@ -3078,7 +3078,7 @@ public class TestAttributes extends BaseTest {
+*/
+Message foundMsg = null;
+for (int i = 0; i < equeue.errors.size(); i++) {
+-			Message m = (Message)equeue.errors.get(i);
++			Message m = equeue.errors.get(i);
+if (m.msgID==expectedMessage.msgID ) {
+foundMsg = m;
+}
+@@ -3098,10 +3098,10 @@ public class TestAttributes extends BaseTest {
+{
+ArrayList<Boolean> messageExpected = new ArrayList<Boolean>(equeue.errors.size());
+for (int i = 0; i < equeue.errors.size(); i++) {
+-			Message m = (Message)equeue.errors.get(i);
++			Message m = equeue.errors.get(i);
+boolean foundMsg = false;
+for (int j = 0; j < expectedMessages.size(); j++) {
+-				Message em = (Message)expectedMessages.get(j);
++				Message em = expectedMessages.get(j);
+if (m.msgID==em.msgID && m.arg.equals(em.arg) && m.arg2.equals(em.arg2)) {
+foundMsg = true;
+}
+@@ -3112,7 +3112,7 @@ public class TestAttributes extends BaseTest {
+messageExpected.add(i, Boolean.FALSE);
+}
+for (int i = 0; i < equeue.errors.size(); i++) {
+-			assertTrue("unexpected error:" + equeue.errors.get(i), ((Boolean)messageExpected.get(i)).booleanValue());
++			assertTrue("unexpected error:" + equeue.errors.get(i), messageExpected.get(i).booleanValue());
+}
+}
+}
+diff --git a/tool/src/test/java/org/antlr/test/TestCharDFAConversion.java b/tool/src/test/java/org/antlr/test/TestCharDFAConversion.java
+index 3768a7d..ec45996 100644
+--- a/tool/src/test/java/org/antlr/test/TestCharDFAConversion.java
++++ b/tool/src/test/java/org/antlr/test/TestCharDFAConversion.java
+@@ -167,7 +167,7 @@ public class TestCharDFAConversion extends BaseTest {
+
+assertEquals("unexpected number of expected problems",
+1, equeue.size());
+-		Message msg = (Message)equeue.errors.get(0);
++		Message msg = equeue.errors.get(0);
+assertTrue("warning must be an unreachable alt",
+msg instanceof GrammarUnreachableAltsMessage);
+GrammarUnreachableAltsMessage u = (GrammarUnreachableAltsMessage)msg;
+@@ -347,7 +347,7 @@ public class TestCharDFAConversion extends BaseTest {
+
+assertEquals("unexpected number of expected problems",
+1, equeue.size());
+-		Message msg = (Message)equeue.errors.get(0);
++		Message msg = equeue.errors.get(0);
+assertTrue("warning must be an unreachable alt",
+msg instanceof GrammarUnreachableAltsMessage);
+GrammarUnreachableAltsMessage u = (GrammarUnreachableAltsMessage)msg;
+diff --git a/tool/src/test/java/org/antlr/test/TestDFAConversion.java b/tool/src/test/java/org/antlr/test/TestDFAConversion.java
+index ce3502f..e91ef06 100644
+--- a/tool/src/test/java/org/antlr/test/TestDFAConversion.java
++++ b/tool/src/test/java/org/antlr/test/TestDFAConversion.java
+@@ -556,7 +556,7 @@ public class TestDFAConversion extends BaseTest {
+assertEquals(expectedRules, ruleNames(leftRecursive));
+
+assertEquals(1, equeue.errors.size());
+-		Message msg = (Message)equeue.errors.get(0);
++		Message msg = equeue.errors.get(0);
+assertTrue("expecting left recursion cycles; found "+msg.getClass().getName(),
+msg instanceof LeftRecursionCyclesMessage);
+LeftRecursionCyclesMessage cyclesMsg = (LeftRecursionCyclesMessage)msg;
+@@ -585,7 +585,7 @@ public class TestDFAConversion extends BaseTest {
+assertEquals(expectedRules, ruleNames(leftRecursive));
+
+assertEquals(1, equeue.errors.size());
+-		Message msg = (Message)equeue.errors.get(0);
++		Message msg = equeue.errors.get(0);
+assertTrue("expecting left recursion cycles; found "+msg.getClass().getName(),
+msg instanceof LeftRecursionCyclesMessage);
+LeftRecursionCyclesMessage cyclesMsg = (LeftRecursionCyclesMessage)msg;
+@@ -616,7 +616,7 @@ public class TestDFAConversion extends BaseTest {
+assertEquals(expectedRules, ruleNames(leftRecursive));
+
+assertEquals(1, equeue.errors.size());
+-		Message msg = (Message)equeue.errors.get(0);
++		Message msg = equeue.errors.get(0);
+assertTrue("expecting left recursion cycles; found "+msg.getClass().getName(),
+msg instanceof LeftRecursionCyclesMessage);
+LeftRecursionCyclesMessage cyclesMsg = (LeftRecursionCyclesMessage)msg;
+@@ -759,7 +759,7 @@ public class TestDFAConversion extends BaseTest {
+g.setCodeGenerator(generator);
+generator.genRecognizer();
+
+-		Message msg = (Message)equeue.warnings.get(0);
++		Message msg = equeue.warnings.get(0);
+assertTrue("expecting no start rules; found "+msg.getClass().getName(),
+msg instanceof GrammarSemanticsMessage);
+}
+@@ -1661,7 +1661,7 @@ As a result, alternative(s) 2 were disabled for that input
+// check conflicting input
+if ( expectingAmbigInput!=null ) {
+// first, find nondet message
+-			Message msg = (Message)equeue.warnings.get(0);
++			Message msg = equeue.warnings.get(0);
+assertTrue("expecting nondeterminism; found "+msg.getClass().getName(),
+msg instanceof GrammarNonDeterminismMessage);
+GrammarNonDeterminismMessage nondetMsg =
+@@ -1710,7 +1710,7 @@ As a result, alternative(s) 2 were disabled for that input
+
+protected GrammarNonDeterminismMessage getNonDeterminismMessage(List<Message> warnings) {
+for (int i = 0; i < warnings.size(); i++) {
+-			Message m = (Message) warnings.get(i);
++			Message m = warnings.get(i);
+if ( m instanceof GrammarNonDeterminismMessage ) {
+return (GrammarNonDeterminismMessage)m;
+}
+@@ -1720,7 +1720,7 @@ As a result, alternative(s) 2 were disabled for that input
+
+protected NonRegularDecisionMessage getNonRegularDecisionMessage(List<Message> errors) {
+for (int i = 0; i < errors.size(); i++) {
+-			Message m = (Message) errors.get(i);
++			Message m = errors.get(i);
+if ( m instanceof NonRegularDecisionMessage ) {
+return (NonRegularDecisionMessage)m;
+}
+@@ -1730,7 +1730,7 @@ As a result, alternative(s) 2 were disabled for that input
+
+protected RecursionOverflowMessage getRecursionOverflowMessage(List<Message> warnings) {
+for (int i = 0; i < warnings.size(); i++) {
+-			Message m = (Message) warnings.get(i);
++			Message m = warnings.get(i);
+if ( m instanceof RecursionOverflowMessage ) {
+return (RecursionOverflowMessage)m;
+}
+@@ -1740,7 +1740,7 @@ As a result, alternative(s) 2 were disabled for that input
+
+protected LeftRecursionCyclesMessage getLeftRecursionCyclesMessage(List<Message> warnings) {
+for (int i = 0; i < warnings.size(); i++) {
+-			Message m = (Message) warnings.get(i);
++			Message m = warnings.get(i);
+if ( m instanceof LeftRecursionCyclesMessage ) {
+return (LeftRecursionCyclesMessage)m;
+}
+@@ -1750,7 +1750,7 @@ As a result, alternative(s) 2 were disabled for that input
+
+protected GrammarDanglingStateMessage getDanglingStateMessage(List<Message> warnings) {
+for (int i = 0; i < warnings.size(); i++) {
+-			Message m = (Message) warnings.get(i);
++			Message m = warnings.get(i);
+if ( m instanceof GrammarDanglingStateMessage ) {
+return (GrammarDanglingStateMessage)m;
+}
+diff --git a/tool/src/test/java/org/antlr/test/TestSemanticPredicates.java b/tool/src/test/java/org/antlr/test/TestSemanticPredicates.java
+index 707b99c..f84a0ec 100644
+--- a/tool/src/test/java/org/antlr/test/TestSemanticPredicates.java
++++ b/tool/src/test/java/org/antlr/test/TestSemanticPredicates.java
+@@ -269,7 +269,7 @@ public class TestSemanticPredicates extends BaseTest {
+*/
+
+assertEquals("unexpected number of expected problems", 1, equeue.size());
+-		Message msg = (Message)equeue.errors.get(0);
++		Message msg = equeue.errors.get(0);
+assertTrue("warning must be a left recursion msg",
+msg instanceof LeftRecursionCyclesMessage);
+}
+@@ -901,7 +901,7 @@ public class TestSemanticPredicates extends BaseTest {
+
+protected GrammarNonDeterminismMessage getNonDeterminismMessage(List<? extends Message> warnings) {
+for (int i = 0; i < warnings.size(); i++) {
+-			Message m = (Message) warnings.get(i);
++			Message m = warnings.get(i);
+if ( m instanceof GrammarNonDeterminismMessage ) {
+return (GrammarNonDeterminismMessage)m;
+}
+@@ -911,7 +911,7 @@ public class TestSemanticPredicates extends BaseTest {
+
+protected GrammarInsufficientPredicatesMessage getGrammarInsufficientPredicatesMessage(List<? extends Message> warnings) {
+for (int i = 0; i < warnings.size(); i++) {
+-			Message m = (Message) warnings.get(i);
++			Message m = warnings.get(i);
+if ( m instanceof GrammarInsufficientPredicatesMessage ) {
+return (GrammarInsufficientPredicatesMessage)m;
+}
+diff --git a/tool/src/test/java/org/antlr/test/TestSymbolDefinitions.java b/tool/src/test/java/org/antlr/test/TestSymbolDefinitions.java
+index ee5d3ed..96e187b 100644
+--- a/tool/src/test/java/org/antlr/test/TestSymbolDefinitions.java
++++ b/tool/src/test/java/org/antlr/test/TestSymbolDefinitions.java
+@@ -890,7 +890,7 @@ public class TestSymbolDefinitions extends BaseTest {
+}
+// make sure there are not any others (other than <EOF> etc...)
+for (Iterator<String> iter = tokens.iterator(); iter.hasNext();) {
+-			String tokenName = (String) iter.next();
++			String tokenName = iter.next();
+assertTrue("unexpected token name "+tokenName,
+g.getTokenType(tokenName)<Label.MIN_TOKEN_TYPE);
+}
+diff --git a/tool/src/test/java/org/antlr/test/TestTemplates.java b/tool/src/test/java/org/antlr/test/TestTemplates.java
+index 44bcc5e..cb8d0f3 100644
+--- a/tool/src/test/java/org/antlr/test/TestTemplates.java
++++ b/tool/src/test/java/org/antlr/test/TestTemplates.java
+@@ -353,7 +353,7 @@ public class TestTemplates extends BaseTest {
+*/
+Message foundMsg = null;
+for (int i = 0; i < equeue.errors.size(); i++) {
+-			Message m = (Message)equeue.errors.get(i);
++			Message m = equeue.errors.get(i);
+if (m.msgID==expectedMessage.msgID ) {
+foundMsg = m;
+}
+

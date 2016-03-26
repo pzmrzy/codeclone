@@ -1,0 +1,560 @@
+commit 7234de86c07145216616e3c1d355c6bd644bc572
+Author:     Benjamin Niemann <pink@odahoda.de>
+AuthorDate: Fri Mar 25 07:11:44 2011 -0800
+Commit:     Benjamin Niemann <pink@odahoda.de>
+CommitDate: Fri Mar 25 07:11:44 2011 -0800
+
+[Python] Get python ready for the left-recursion stuff. Allow empty actions.
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 7903]
+
+diff --git a/runtime/Python/tests/t060leftrecursion.py b/runtime/Python/tests/t060leftrecursion.py
+new file mode 100644
+index 0000000..ef85723
+--- /dev/null
++++ b/runtime/Python/tests/t060leftrecursion.py
+@@ -0,0 +1,466 @@
++import unittest
++import re
++import textwrap
++import antlr3
++import testbase
++
++
++class TestLeftRecursion(testbase.ANTLRTest):
++    def parserClass(self, base):
++        class TParser(base):
++            def __init__(self, *args, **kwargs):
++                base.__init__(self, *args, **kwargs)
++
++                self._output = ""
++
++
++            def capture(self, t):
++                self._output += str(t)
++
++
++            def recover(self, input, re):
++                # no error recovery yet, just crash!
++                raise
++
++        return TParser
++
++
++    def execParser(self, grammar, grammarEntry, input):
++        lexerCls, parserCls = self.compileInlineGrammar(grammar)
++
++        cStream = antlr3.StringStream(input)
++        lexer = lexerCls(cStream)
++        tStream = antlr3.CommonTokenStream(lexer)
++        parser = parserCls(tStream)
++        getattr(parser, grammarEntry)()
++        return parser._output
++
++
++    def runTests(self, grammar, tests, grammarEntry):
++        lexerCls, parserCls = self.compileInlineGrammar(grammar)
++
++        build_ast = re.search(r'output\s*=\s*AST', grammar)
++
++        for input, expecting in tests:
++            cStream = antlr3.StringStream(input)
++            lexer = lexerCls(cStream)
++            tStream = antlr3.CommonTokenStream(lexer)
++            parser = parserCls(tStream)
++            r = getattr(parser, grammarEntry)()
++            found = parser._output
++            if build_ast:
++              found += r.tree.toStringTree()
++
++            self.assertEquals(
++                expecting, found,
++                "%r != %r (for input %r)" % (expecting, found, input))
++
++
++    def testSimple(self):
++        grammar = textwrap.dedent(
++            r"""
++            grammar T;
++            options {
++                language=Python;
++            }
++            s : a { self.capture($a.text) } ;
++            a : a ID
++              | ID
++              ;
++            ID : 'a'..'z'+ ;
++            WS : (' '|'\n') {self.skip()} ;
++            """)
++
++        found = self.execParser(grammar, 's', 'a b c')
++        expecting = "abc"
++        self.assertEquals(expecting, found)
++
++
++    def testSemPred(self):
++        grammar = textwrap.dedent(
++            r"""
++            grammar T;
++            options {
++                language=Python;
++            }
++            s : a { self.capture($a.text) } ;
++            a : a {True}? ID
++              | ID
++              ;
++            ID : 'a'..'z'+ ;
++            WS : (' '|'\n') {self.skip()} ;
++            """)
++
++        found = self.execParser(grammar, "s", "a b c")
++        expecting = "abc"
++        self.assertEquals(expecting, found)
++
++    def testTernaryExpr(self):
++        grammar = textwrap.dedent(
++            r"""
++            grammar T;
++            options {
++                language=Python;
++                output=AST;
++            }
++            e : e '*'^ e
++              | e '+'^ e
++              | e '?'<assoc=right>^ e ':'! e
++              | e '='<assoc=right>^ e
++              | ID
++              ;
++            ID : 'a'..'z'+ ;
++            WS : (' '|'\n') {self.skip()} ;
++            """)
++
++        tests = [
++            ("a", "a"),
++            ("a+b", "(+ a b)"),
++            ("a*b", "(* a b)"),
++            ("a?b:c", "(? a b c)"),
++            ("a=b=c", "(= a (= b c))"),
++            ("a?b+c:d", "(? a (+ b c) d)"),
++            ("a?b=c:d", "(? a (= b c) d)"),
++            ("a? b?c:d : e", "(? a (? b c d) e)"),
++            ("a?b: c?d:e", "(? a b (? c d e))"),
++            ]
++        self.runTests(grammar, tests, "e")
++
++
++    def testDeclarationsUsingASTOperators(self):
++        grammar = textwrap.dedent(
++            r"""
++            grammar T;
++            options {
++                language=Python;
++                output=AST;
++            }
++            declarator
++                    : declarator '['^ e ']'!
++                    | declarator '['^ ']'!
++                    | declarator '('^ ')'!
++                    | '*'^ declarator // binds less tight than suffixes
++                    | '('! declarator ')'!
++                    | ID
++                    ;
++            e : INT ;
++            ID : 'a'..'z'+ ;
++            INT : '0'..'9'+ ;
++            WS : (' '|'\n') {self.skip()} ;
++            """)
++
++        tests = [
++            ("a", "a"),
++            ("*a", "(* a)"),
++            ("**a", "(* (* a))"),
++            ("a[3]", "([ a 3)"),
++            ("b[]", "([ b)"),
++            ("(a)", "a"),
++            ("a[]()", "(( ([ a))"),
++            ("a[][]", "([ ([ a))"),
++            ("*a[]", "(* ([ a))"),
++            ("(*a)[]", "([ (* a))"),
++            ]
++        self.runTests(grammar, tests, "declarator")
++
++
++    def testDeclarationsUsingRewriteOperators(self):
++        grammar = textwrap.dedent(
++            r"""
++            grammar T;
++            options {
++                language=Python;
++                output=AST;
++            }
++            declarator
++                    : declarator '[' e ']' -> ^('[' declarator e)
++                    | declarator '[' ']' -> ^('[' declarator)
++                    | declarator '(' ')' -> ^('(' declarator)
++                    | '*' declarator -> ^('*' declarator)  // binds less tight than suffixes
++                    | '(' declarator ')' -> declarator
++                    | ID -> ID
++                    ;
++            e : INT ;
++            ID : 'a'..'z'+ ;
++            INT : '0'..'9'+ ;
++            WS : (' '|'\n') {self.skip()} ;
++            """)
++
++        tests = [
++            ("a", "a"),
++            ("*a", "(* a)"),
++            ("**a", "(* (* a))"),
++            ("a[3]", "([ a 3)"),
++            ("b[]", "([ b)"),
++            ("(a)", "a"),
++            ("a[]()", "(( ([ a))"),
++            ("a[][]", "([ ([ a))"),
++            ("*a[]", "(* ([ a))"),
++            ("(*a)[]", "([ (* a))"),
++            ]
++        self.runTests(grammar, tests, "declarator")
++
++
++    def testExpressionsUsingASTOperators(self):
++        grammar = textwrap.dedent(
++            r"""
++            grammar T;
++            options {
++                language=Python;
++                output=AST;
++            }
++            e : e '.'^ ID
++              | e '.'^ 'this'
++              | '-'^ e
++              | e '*'^ e
++              | e ('+'^|'-'^) e
++              | INT
++              | ID
++              ;
++            ID : 'a'..'z'+ ;
++            INT : '0'..'9'+ ;
++            WS : (' '|'\n') {self.skip()} ;
++            """)
++
++        tests = [
++            ("a", "a"),
++            ("1", "1"),
++            ("a+1", "(+ a 1)"),
++            ("a*1", "(* a 1)"),
++            ("a.b", "(. a b)"),
++            ("a.this", "(. a this)"),
++            ("a-b+c", "(+ (- a b) c)"),
++            ("a+b*c", "(+ a (* b c))"),
++            ("a.b+1", "(+ (. a b) 1)"),
++            ("-a", "(- a)"),
++            ("-a+b", "(+ (- a) b)"),
++            ("-a.b", "(- (. a b))"),
++            ]
++        self.runTests(grammar, tests, "e")
++
++
++    @testbase.broken(
++        "Grammar compilation returns errors", testbase.GrammarCompileError)
++    def testExpressionsUsingRewriteOperators(self):
++        grammar = textwrap.dedent(
++            r"""
++            grammar T;
++            options {
++                language=Python;
++                output=AST;
++            }
++            e : e '.' ID                   -> ^('.' e ID)
++              | e '.' 'this'               -> ^('.' e 'this')
++              | '-' e                      -> ^('-' e)
++              | e '*' b=e                  -> ^('*' e $b)
++              | e (op='+'|op='-') b=e      -> ^($op e $b)
++              | INT                        -> INT
++              | ID                         -> ID
++              ;
++            ID : 'a'..'z'+ ;
++            INT : '0'..'9'+ ;
++            WS : (' '|'\n') {self.skip()} ;
++            """)
++
++        tests = [
++            ("a", "a"),
++            ("1", "1"),
++            ("a+1", "(+ a 1)"),
++            ("a*1", "(* a 1)"),
++            ("a.b", "(. a b)"),
++            ("a.this", "(. a this)"),
++            ("a+b*c", "(+ a (* b c))"),
++            ("a.b+1", "(+ (. a b) 1)"),
++            ("-a", "(- a)"),
++            ("-a+b", "(+ (- a) b)"),
++            ("-a.b", "(- (. a b))"),
++            ]
++        self.runTests(grammar, tests, "e")
++
++
++    def testExpressionAssociativity(self):
++        grammar = textwrap.dedent(
++            r"""
++            grammar T;
++            options {
++                language=Python;
++                output=AST;
++            }
++            e
++              : e '.'^ ID
++              | '-'^ e
++              | e '^'<assoc=right>^ e
++              | e '*'^ e
++              | e ('+'^|'-'^) e
++              | e ('='<assoc=right>^ |'+='<assoc=right>^) e
++              | INT
++              | ID
++              ;
++            ID : 'a'..'z'+ ;
++            INT : '0'..'9'+ ;
++            WS : (' '|'\n') {self.skip()} ;
++            """)
++
++        tests = [
++            ("a", "a"),
++            ("1", "1"),
++            ("a+1", "(+ a 1)"),
++            ("a*1", "(* a 1)"),
++            ("a.b", "(. a b)"),
++            ("a-b+c", "(+ (- a b) c)"),
++            ("a+b*c", "(+ a (* b c))"),
++            ("a.b+1", "(+ (. a b) 1)"),
++            ("-a", "(- a)"),
++            ("-a+b", "(+ (- a) b)"),
++            ("-a.b", "(- (. a b))"),
++            ("a^b^c", "(^ a (^ b c))"),
++            ("a=b=c", "(= a (= b c))"),
++            ("a=b=c+d.e", "(= a (= b (+ c (. d e))))"),
++            ]
++        self.runTests(grammar, tests, "e")
++
++
++    def testJavaExpressions(self):
++      grammar = textwrap.dedent(
++            r"""
++            grammar T;
++            options {
++                language=Python;
++                output=AST;
++            }
++            expressionList
++                :   e (','! e)*
++                ;
++            e   :   '('! e ')'!
++                |   'this'
++                |   'super'
++                |   INT
++                |   ID
++                |   type '.'^ 'class'
++                |   e '.'^ ID
++                |   e '.'^ 'this'
++                |   e '.'^ 'super' '('^ expressionList? ')'!
++                |   e '.'^ 'new'^ ID '('! expressionList? ')'!
++                    |       'new'^ type ( '(' expressionList? ')'! | (options {k=1;}:'[' e ']'!)+) // ugly; simplified
++                |   e '['^ e ']'!
++                |   '('^ type ')'! e
++                |   e ('++'^ | '--'^)
++                |   e '('^ expressionList? ')'!
++                |   ('+'^|'-'^|'++'^|'--'^) e
++                |   ('~'^|'!'^) e
++                |   e ('*'^|'/'^|'%'^) e
++                |   e ('+'^|'-'^) e
++                |   e ('<'^ '<' | '>'^ '>' '>' | '>'^ '>') e
++                |   e ('<='^ | '>='^ | '>'^ | '<'^) e
++                |   e 'instanceof'^ e
++                |   e ('=='^ | '!='^) e
++                |   e '&'^ e
++                |   e '^'<assoc=right>^ e
++                |   e '|'^ e
++                |   e '&&'^ e
++                |   e '||'^ e
++                |   e '?' e ':' e
++                |   e ('='<assoc=right>^
++                      |'+='<assoc=right>^
++                      |'-='<assoc=right>^
++                      |'*='<assoc=right>^
++                      |'/='<assoc=right>^
++                      |'&='<assoc=right>^
++                      |'|='<assoc=right>^
++                      |'^='<assoc=right>^
++                      |'>>='<assoc=right>^
++                      |'>>>='<assoc=right>^
++                      |'<<='<assoc=right>^
++                      |'%='<assoc=right>^) e
++                ;
++            type: ID
++                | ID '['^ ']'!
++                | 'int'
++                | 'int' '['^ ']'!
++                ;
++            ID : ('a'..'z'|'A'..'Z'|'_'|'$')+;
++            INT : '0'..'9'+ ;
++            WS : (' '|'\n') {self.skip()} ;
++            """)
++
++      tests = [
++          ("a", "a"),
++          ("1", "1"),
++          ("a+1", "(+ a 1)"),
++          ("a*1", "(* a 1)"),
++          ("a.b", "(. a b)"),
++          ("a-b+c", "(+ (- a b) c)"),
++          ("a+b*c", "(+ a (* b c))"),
++          ("a.b+1", "(+ (. a b) 1)"),
++          ("-a", "(- a)"),
++          ("-a+b", "(+ (- a) b)"),
++          ("-a.b", "(- (. a b))"),
++          ("a^b^c", "(^ a (^ b c))"),
++          ("a=b=c", "(= a (= b c))"),
++          ("a=b=c+d.e", "(= a (= b (+ c (. d e))))"),
++          ("a|b&c", "(| a (& b c))"),
++          ("(a|b)&c", "(& (| a b) c)"),
++          ("a > b", "(> a b)"),
++          ("a >> b", "(> a b)"),  # text is from one token
++          ("a < b", "(< a b)"),
++          ("(T)x", "(( T x)"),
++          ("new A().b", "(. (new A () b)"),
++          ("(T)t.f()", "(( (( T (. t f)))"),
++          ("a.f(x)==T.c", "(== (( (. a f) x) (. T c))"),
++          ("a.f().g(x,1)", "(( (. (( (. a f)) g) x 1)"),
++          ("new T[((n-1) * x) + 1]", "(new T [ (+ (* (- n 1) x) 1))"),
++          ]
++      self.runTests(grammar, tests, "e")
++
++
++    def testReturnValueAndActions(self):
++        grammar = textwrap.dedent(
++            r"""
++            grammar T;
++            options {
++                language=Python;
++            }
++            s : e { self.capture($e.v) } ;
++            e returns [v, ignored]
++              : e '*' b=e {$v *= $b.v;}
++              | e '+' b=e {$v += $b.v;}
++              | INT {$v = int($INT.text);}
++              ;
++            INT : '0'..'9'+ ;
++            WS : (' '|'\n') {self.skip()} ;
++            """)
++
++        tests = [
++            ("4", "4"),
++            ("1+2", "3")
++            ]
++        self.runTests(grammar, tests, "s")
++
++
++    def testReturnValueAndActionsAndASTs(self):
++        grammar = textwrap.dedent(
++            r"""
++            grammar T;
++            options {
++                language=Python;
++                output=AST;
++            }
++            s : e { self.capture("v=\%s, " \% $e.v) } ;
++            e returns [v, ignored]
++              : e '*'^ b=e {$v *= $b.v;}
++              | e '+'^ b=e {$v += $b.v;}
++              | INT {$v = int($INT.text);}
++              ;
++            INT : '0'..'9'+ ;
++            WS : (' '|'\n') {self.skip()} ;
++            """)
++
++        tests = [
++            ("4", "v=4, 4"),
++            ("1+2", "v=3, (+ 1 2)"),
++            ]
++        self.runTests(grammar, tests, "s")
++
++
++if __name__ == '__main__':
++    unittest.main()
+diff --git a/runtime/Python/tests/testbase.py b/runtime/Python/tests/testbase.py
+index 9aa7e64..acb41e7 100644
+--- a/runtime/Python/tests/testbase.py
++++ b/runtime/Python/tests/testbase.py
+@@ -19,6 +19,11 @@ def unlink(path):
+raise
+
+
++class GrammarCompileError(Exception):
++  """Grammar failed to compile."""
++  pass
++
++
+# At least on MacOSX tempdir (/tmp) is a symlink. It's sometimes dereferences,
+# sometimes not, breaking the inspect.getmodule() function.
+testbasedir = os.path.join(
+@@ -157,7 +162,7 @@ class ANTLRTest(unittest.TestCase):
+failed = True
+
+if failed:
+-            raise RuntimeError(
++            raise GrammarCompileError(
+"Failed to compile grammar '%s':\n%s\n\n" % (file, cmd)
++ output
+)
+@@ -225,7 +230,7 @@ class ANTLRTest(unittest.TestCase):
+failed = True
+
+if failed:
+-                    raise RuntimeError(
++                    raise GrammarCompileError(
+"antlr -depend failed with code %s on grammar '%s':\n\n"
+% (rc, grammarName)
++ cmd
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Python/Python.stg b/tool/src/main/resources/org/antlr/codegen/templates/Python/Python.stg
+index 6742996..b2234eb 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Python/Python.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Python/Python.stg
+@@ -905,11 +905,11 @@ self.match(EOF)
+>>
+
+// used for left-recursive rules
+-recRuleDefArg()                       ::= "FIXME(3)int <recRuleArg()>"
+-recRuleArg()                          ::= "FIXME(4)_p"
+-recRuleAltPredicate(ruleName,opPrec)  ::= "FIXME(5)<recRuleArg()> \<= <opPrec>"
+-recRuleSetResultAction()              ::= "FIXME(6)root_0=$<ruleName>_primary.tree;"
+-recRuleSetReturnAction(src,name)      ::= "FIXME(7)$<name>=$<src>.<name>;"
++recRuleDefArg()                       ::= "<recRuleArg()>"
++recRuleArg()                          ::= "_p"
++recRuleAltPredicate(ruleName,opPrec)  ::= "<recRuleArg()> \<= <opPrec>"
++recRuleSetResultAction()              ::= "root_0 = $<ruleName>_primary.tree"
++recRuleSetReturnAction(src, name)      ::= "$<name> = $<src>.<name>"
+
+/** match ^(root children) in tree parser */
+tree(root, actionsAfterRoot, children, nullableChildList,
+@@ -1115,7 +1115,7 @@ if s == <i0>: <! compressed special state numbers 0..n-1 !>
+<state>}; separator="\nel">
+
+<if(backtracking)>
+-        if self._state.backtracking >0:
++        if self._state.backtracking > 0:
+raise BacktrackingFailed
+
+<endif>
+@@ -1413,10 +1413,12 @@ execAction(action) ::= <<
+<if(backtracking)>
+<if(actions.(actionScope).synpredgate)>
+if <actions.(actionScope).synpredgate>:
++    pass
+<action>
+
+<else>
+if <actions.(actionScope).synpredgate>:
++    pass
+<action>
+
+<endif>
+

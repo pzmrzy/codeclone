@@ -1,0 +1,919 @@
+commit 7af1e204a1d27c6b7235537ef353094dc6fb7c15
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sun Dec 13 21:06:29 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sun Dec 13 21:06:29 2009 -0800
+
+C# Port:
+* Merge CL6389
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6499]
+
+diff --git a/Antlr3.Test/Antlr3.Test.csproj b/Antlr3.Test/Antlr3.Test.csproj
+index 011d358..f5f5264 100644
+--- a/Antlr3.Test/Antlr3.Test.csproj
++++ b/Antlr3.Test/Antlr3.Test.csproj
+@@ -49,6 +49,7 @@
+<Compile Include="ST4\StringTemplateTestBase.cs" />
+<Compile Include="ST4\TestCompiler.cs" />
+<Compile Include="ST4\TestCoreBasics.cs" />
++    <Compile Include="ST4\TestDebugEvents.cs" />
+<Compile Include="ST4\TestDictionaries.cs" />
+<Compile Include="ST4\TestDollarDelimiters.cs" />
+<Compile Include="ST4\TestFunctions.cs" />
+diff --git a/Antlr3.Test/ST4/TestDebugEvents.cs b/Antlr3.Test/ST4/TestDebugEvents.cs
+new file mode 100644
+index 0000000..bf9c13e
+--- /dev/null
++++ b/Antlr3.Test/ST4/TestDebugEvents.cs
+@@ -0,0 +1,89 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace AntlrUnitTests.ST4
++{
++    using System.Collections.Generic;
++    using Microsoft.VisualStudio.TestTools.UnitTesting;
++    using StringTemplate;
++    using Interpreter = StringTemplate.Interpreter;
++    using ST = StringTemplate.Template;
++    using STGroup = StringTemplate.TemplateGroup;
++    using STGroupFile = StringTemplate.TemplateGroupFile;
++    using String = System.String;
++    using StringWriter = System.IO.StringWriter;
++
++    [TestClass]
++    public class TestDebugEvents : StringTemplateTestBase
++    {
++        [TestMethod]
++        public void TestString()
++        {
++            string templates =
++                "t() ::= <<foo>>" + newline;
++
++            WriteFile(tmpdir, "t.stg", templates);
++            STGroup group = new STGroupFile(tmpdir + "/" + "t.stg");
++            ST st = group.GetInstanceOf("t");
++            st.code.Dump();
++            StringWriter sw = new StringWriter();
++            Interpreter interp = new Interpreter(group, new AutoIndentWriter(sw));
++            interp.Debug = true;
++            interp.Exec(st);
++            String expected = "";
++            IList<Interpreter.DebugEvent> events = interp.Events;
++            String result = events.ToString();
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
++        public void TestAttribute()
++        {
++            String templates =
++                "t(x) ::= << <x> >>" + newline;
++
++            WriteFile(tmpdir, "t.stg", templates);
++            STGroup group = new STGroupFile(tmpdir + "/" + "t.stg");
++            ST st = group.GetInstanceOf("t");
++            st.code.Dump();
++            st.Add("x", "foo");
++            StringWriter sw = new StringWriter();
++            Interpreter interp = new Interpreter(group, new AutoIndentWriter(sw));
++            interp.Debug = true;
++            interp.Exec(st);
++            String expected = "";
++            IList<Interpreter.DebugEvent> events = interp.Events;
++            String result = events.ToString();
++            Assert.AreEqual(expected, result);
++        }
++    }
++}
+diff --git a/StringTemplate4/AutoIndentWriter.cs b/StringTemplate4/AutoIndentWriter.cs
+index eefee1d..ba5907d 100644
+--- a/StringTemplate4/AutoIndentWriter.cs
++++ b/StringTemplate4/AutoIndentWriter.cs
+@@ -65,6 +65,12 @@ namespace StringTemplate
+*  last written to.
+*/
+protected int charPosition = 0;
++
++        /// <summary>
++        /// The absolute char index into the output of the last char written.
++        /// </summary>
++        protected int charIndex = -1;
++
+protected int lineWidth = NoWrap;
+
+protected int charPositionOfStartOfExpr = 0;
+@@ -81,36 +87,21 @@ namespace StringTemplate
+{
+}
+
++        public int Index
++        {
++            get
++            {
++                return charIndex;
++            }
++        }
++
+public virtual void SetLineWidth(int lineWidth)
+{
+this.lineWidth = lineWidth;
+}
+
+-        /** Push even blank (null) indents as they are like scopes; must
+-         *  be able to pop them back off stack.
+-         *
+-         *  To deal with combined anchors and indentation, force indents to
+-         *  include any current anchor point.  If current anchor is beyond
+-         *  current indent width, add the difference to the indent to be added.
+-         *
+-         *  This prevents a check later to deal with anchors when starting new line.
+-         */
+public virtual void PushIndentation(string indent)
+{
+-#if false
+-            int indentWidth = GetIndentationWidth();
+-            int lastAnchor = 0;
+-            // If current anchor is beyond current indent width, add in difference
+-            if (anchors_sp >= 0 && anchors[anchors_sp] > indentWidth)
+-            {
+-                lastAnchor = anchors[anchors_sp];
+-                StringBuilder buf = GetIndentString(lastAnchor - indentWidth);
+-                if (indent != null)
+-                    buf.Append(indent); // don't add if null
+-                indents.Add(buf.ToString());
+-                return;
+-            }
+-#endif
+indents.Add(indent);
+}
+
+@@ -170,6 +161,7 @@ namespace StringTemplate
+n += newline.Length;
+@out.Write(newline);
+charPosition += n; // wrote n more char
++                    charIndex += n;
+continue;
+}
+// normal character
+@@ -182,6 +174,7 @@ namespace StringTemplate
+n++;
+@out.Write(c);
+charPosition++;
++                charIndex++;
+}
+return n;
+}
+@@ -223,6 +216,7 @@ namespace StringTemplate
+@out.Write(newline);
+n += newline.Length;
+charPosition = 0;
++                        charIndex += newline.Length;
+n += Indent();
+// continue writing any chars out
+}
+@@ -231,6 +225,7 @@ namespace StringTemplate
+n++;
+@out.Write(c);
+charPosition++;
++                        charIndex++;
+}
+}
+}
+@@ -262,6 +257,7 @@ namespace StringTemplate
+}
+
+charPosition += n;
++            charIndex += n;
+return n;
+}
+
+diff --git a/StringTemplate4/Bytecode.cs b/StringTemplate4/Bytecode.cs
+index be2302e..a939ddc 100644
+--- a/StringTemplate4/Bytecode.cs
++++ b/StringTemplate4/Bytecode.cs
+@@ -34,6 +34,7 @@ namespace StringTemplate
+{
+public class Bytecode
+{
++        public const int MaxOperands = 3;
+public const int OPND_SIZE_IN_BYTES = 2;
+public const int STRING = 1;
+public const int ADDR = 2;
+@@ -42,7 +43,7 @@ namespace StringTemplate
+public class Instruction
+{
+internal string name; // E.g., "load_str", "new"
+-            internal int[] type = new int[3];
++            internal int[] type = new int[MaxOperands];
+internal int n = 0;
+
+public Instruction(string name)
+@@ -137,8 +138,8 @@ namespace StringTemplate
+new Instruction("new",STRING),
+new Instruction("new_ind"),
+new Instruction("super_new",STRING),
+-                new Instruction("write"),
+-                new Instruction("write_opt"),
++                new Instruction("write", INT, INT), // write delimiter-start-in-template, stop
++                new Instruction("write_opt", INT, INT),
+new Instruction("map"),
+new Instruction("rot_map", INT),
+new Instruction("par_map", INT),
+diff --git a/StringTemplate4/CompiledTemplate.cs b/StringTemplate4/CompiledTemplate.cs
+index ee8a6e1..5dbdf74 100644
+--- a/StringTemplate4/CompiledTemplate.cs
++++ b/StringTemplate4/CompiledTemplate.cs
+@@ -42,11 +42,11 @@ namespace StringTemplate
+/** The original, immutable pattern (not really used again after
+*  initial "compilation"). Useful for debugging.
+*/
+-        protected internal string template;
++        public string template;
+
+protected internal IDictionary<string, FormalArgument> formalArguments;
+
+-        internal List<CompiledTemplate> implicitlyDefinedTemplates;
++        protected internal List<CompiledTemplate> implicitlyDefinedTemplates;
+
+/** The group that holds this ST definition.  We use it to initiate
+*  interpretation via ST.toString().  From there, it becomes field 'group'
+diff --git a/StringTemplate4/Compiler.cs b/StringTemplate4/Compiler.cs
+index 026c14b..a044130 100644
+--- a/StringTemplate4/Compiler.cs
++++ b/StringTemplate4/Compiler.cs
+@@ -183,18 +183,26 @@ namespace StringTemplate
+
+public void Emit(short opcode)
+{
+-            EnsureCapacity();
++            EnsureCapacity(1);
+instrs[ip++] = (byte)opcode;
+}
+
+public void Emit(short opcode, int arg)
+{
+-            EnsureCapacity();
+-            instrs[ip++] = (byte)opcode;
++            Emit(opcode);
++            EnsureCapacity(2);
+WriteShort(instrs, ip, (short)arg);
+ip += 2;
+}
+
++        public void Emit(short opcode, int arg1, int arg2)
++        {
++            Emit(opcode, arg1);
++            EnsureCapacity(2);
++            WriteShort(instrs, ip, (short)arg2);
++            ip += 2;
++        }
++
+public void Emit(short opcode, string s)
+{
+int i = DefineString(s);
+@@ -269,10 +277,11 @@ namespace StringTemplate
+code.implicitlyDefinedTemplates.Add(blank);
+}
+
+-        protected void EnsureCapacity()
++        protected void EnsureCapacity(int n)
+{
+-            if ((ip + 3) >= instrs.Length)
+-            { // ensure room for full instruction
++            if ((ip + n) >= instrs.Length)
++            {
++                // ensure room for full instruction
+byte[] c = new byte[instrs.Length * 2];
+Array.Copy(instrs, 0, c, 0, instrs.Length);
+instrs = c;
+diff --git a/StringTemplate4/Debug/DebugTemplate.cs b/StringTemplate4/Debug/DebugTemplate.cs
+new file mode 100644
+index 0000000..57d9624
+--- /dev/null
++++ b/StringTemplate4/Debug/DebugTemplate.cs
+@@ -0,0 +1,74 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace StringTemplate
++{
++    using Exception = System.Exception;
++    using System.Collections.Generic;
++
++    public class DebugTemplate : Template
++    {
++        /// <summary>
++        /// Track add attribute "events"; used for ST user-level debugging;
++        /// Avoid polluting Template with this field when not debugging.
++        /// </summary>
++        IList<AddAttributeEvent> addEvents;
++
++        public override void Add(string name, object value)
++        {
++            if (name == null)
++                return; // allow null value
++
++            base.Add(name, value);
++
++            if (code.nativeGroup.Detects(ErrorTolerance.DETECT_ADD_ATTR))
++            {
++                if (addEvents == null)
++                    addEvents = new List<AddAttributeEvent>();
++
++                addEvents.Add(new AddAttributeEvent(name, value));
++            }
++        }
++
++        public class AddAttributeEvent : Event
++        {
++            string name;
++            object value;
++
++            public AddAttributeEvent(string name, object value)
++            {
++                this.name = name;
++                this.value = value;
++            }
++        }
++    }
++}
+diff --git a/StringTemplate4/Debug/Event.cs b/StringTemplate4/Debug/Event.cs
+new file mode 100644
+index 0000000..63d4da1
+--- /dev/null
++++ b/StringTemplate4/Debug/Event.cs
+@@ -0,0 +1,46 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace StringTemplate
++{
++    using System.Diagnostics;
++
++    public class Event
++    {
++        private StackTrace stack;
++
++        public Event()
++        {
++            this.stack = new StackTrace();
++        }
++    }
++}
+diff --git a/StringTemplate4/DebugTemplate.cs b/StringTemplate4/DebugTemplate.cs
+deleted file mode 100644
+index 5c19104..0000000
+--- a/StringTemplate4/DebugTemplate.cs
++++ /dev/null
+@@ -1,73 +0,0 @@
+-﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
+- * All rights reserved.
+- *
+- * Conversion to C#:
+- * Copyright (c) 2008-2009 Sam Harwell
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. Redistributions in binary form must reproduce the above copyright
+- *    notice, this list of conditions and the following disclaimer in the
+- *    documentation and/or other materials provided with the distribution.
+- * 3. The name of the author may not be used to endorse or promote products
+- *    derived from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- */
+-
+-namespace StringTemplate
+-{
+-    using Exception = System.Exception;
+-    using System.Collections.Generic;
+-
+-    public class DebugTemplate : Template
+-    {
+-        public class AddEvent
+-        {
+-            string name;
+-            object value;
+-            Exception source;
+-
+-            public AddEvent(string name, object value)
+-            {
+-                this.name = name;
+-                this.value = value;
+-                this.source = new Exception();
+-            }
+-        }
+-
+-        /** Track add attribute "events"; used for ST user-level debugging */
+-        IList<AddEvent> addEvents; // TODO: put this in a subclass; alter factor in STGroup
+-
+-        public override void Add(string name, object value)
+-        {
+-            if (name == null)
+-                return; // allow null value
+-
+-            base.Add(name, value);
+-
+-            if (code.nativeGroup.Detects(ErrorTolerance.DETECT_ADD_ATTR))
+-            {
+-                if (addEvents == null)
+-                    addEvents = new List<AddEvent>();
+-
+-                addEvents.Add(new AddEvent(name, value));
+-            }
+-        }
+-    }
+-}
+diff --git a/StringTemplate4/ICodeGenerator.cs b/StringTemplate4/ICodeGenerator.cs
+index 7b11bb4..dedd189 100644
+--- a/StringTemplate4/ICodeGenerator.cs
++++ b/StringTemplate4/ICodeGenerator.cs
+@@ -50,6 +50,7 @@ namespace StringTemplate
+
+void Emit(short opcode);
+void Emit(short opcode, int arg);
++        void Emit(short opcode, int arg1, int arg2);
+void Emit(short opcode, string s);
+void Write(int addr, short value);
+/** Return address where next instruction will be written */
+diff --git a/StringTemplate4/ITemplateWriter.cs b/StringTemplate4/ITemplateWriter.cs
+index fce049d..5b67d89 100644
+--- a/StringTemplate4/ITemplateWriter.cs
++++ b/StringTemplate4/ITemplateWriter.cs
+@@ -34,6 +34,14 @@ namespace StringTemplate
+{
+public interface ITemplateWriter
+{
++        /// <summary>
++        /// Get the absolute char index into the output of the last char we wrote. Returns -1 if no char written.
++        /// </summary>
++        int Index
++        {
++            get;
++        }
++
+void PushIndentation(string indent);
+
+string PopIndentation();
+diff --git a/StringTemplate4/Interpreter.cs b/StringTemplate4/Interpreter.cs
+index 1b57397..ab8eecd 100644
+--- a/StringTemplate4/Interpreter.cs
++++ b/StringTemplate4/Interpreter.cs
+@@ -53,12 +53,15 @@ namespace StringTemplate
+
+public class Interpreter
+{
++        // TODO: enum?
+public static readonly int OPTION_ANCHOR = 0;
+public static readonly int OPTION_FORMAT = 1;
+public static readonly int OPTION_NULL = 2;
+public static readonly int OPTION_SEPARATOR = 3;
+public static readonly int OPTION_WRAP = 4;
+
++        protected internal IList<DebugEvent> events;
++
+public static readonly int DEFAULT_OPERAND_STACK_SIZE = 100;
+
+public static readonly HashSet<string> predefinedAttributes =
+@@ -74,6 +77,8 @@ namespace StringTemplate
+int sp = -1;  // stack pointer register
+int nw = 0;   // how many char written on this template line so far? ("number written" register)
+
++        ITemplateWriter @out;
++
+/** Exec st with respect to this group. Once set in Template.toString(),
+*  it should be fixed.  Template has group also.
+*/
+@@ -82,20 +87,44 @@ namespace StringTemplate
+CultureInfo culture;
+
+public bool trace = false;
++        public bool debug = false;
+
+-        public Interpreter(TemplateGroup group)
+-            : this(group, CultureInfo.CurrentCulture)
++        public Interpreter(TemplateGroup group, ITemplateWriter @out)
++            : this(group, @out, CultureInfo.CurrentCulture)
+{
+}
+
+-        public Interpreter(TemplateGroup group, CultureInfo culture)
++        public Interpreter(TemplateGroup group, ITemplateWriter @out, CultureInfo culture)
+{
+this.group = group;
++            this.@out = @out;
+this.culture = culture;
+}
+
+-        public int Exec(ITemplateWriter @out, Template self)
++        public IList<DebugEvent> Events
++        {
++            get
++            {
++                return events;
++            }
++        }
++
++        public bool Debug
+{
++            get
++            {
++                return debug;
++            }
++            set
++            {
++                debug = value;
++                events = new List<DebugEvent>();
++            }
++        }
++
++        public int Exec(Template self)
++        {
++            int start = @out.Index + 1; // track char we're about to write
+int prevOpcode = 0;
+int n = 0; // how many char we write out
+int nameIndex = 0;
+@@ -217,14 +246,22 @@ namespace StringTemplate
+options[optionIndex] = o; // store value into options on stack
+break;
+case Bytecode.INSTR_WRITE:
++                    int exprStart = GetShort(code, ip);
++                    ip += 2;
++                    int exprStop = GetShort(code, ip);
++                    ip += 2;
+o = operands[sp--];
+-                    nw = WriteObjectNoOptions(@out, self, o);
++                    nw = WriteObjectNoOptions(self, o, exprStart, exprStop);
+n += nw;
+break;
+case Bytecode.INSTR_WRITE_OPT:
++                    exprStart = GetShort(code, ip);
++                    ip += 2;
++                    exprStop = GetShort(code, ip);
++                    ip += 2;
+options = (object[])operands[sp--]; // get options
+o = operands[sp--];                 // get option to write
+-                    nw = WriteObjectWithOptions(@out, self, o, options);
++                    nw = WriteObjectWithOptions(self, o, options, exprStart, exprStop);
+n += nw;
+break;
+case Bytecode.INSTR_MAP:
+@@ -361,12 +398,30 @@ namespace StringTemplate
+}
+prevOpcode = opcode;
+}
++
++            if (debug)
++            {
++                events.Add(new EvalTemplateEvent(self, start, @out.Index));
++            }
++
+return n;
+}
+
+-        protected int WriteObjectWithOptions(ITemplateWriter @out, Template self, object o, object[] options)
++        protected int WriteObjectNoOptions(Template self, object o, int exprStart, int exprStop)
+{
+-            // precompute all option values (render all the way to strings)
++            int start = @out.Index + 1; // track char we're about to write
++            int n = WriteObject(@out, self, o, (string[])null);
++
++            if (debug)
++                events.Add(new EvalExprEvent(self, start, @out.Index, exprStart, exprStop));
++
++            return n;
++        }
++
++        protected int WriteObjectWithOptions(Template self, object o, object[] options, int exprStart, int exprStop)
++        {
++            int start = @out.Index + 1; // track char we're about to write
++            // precompute all option values (render all the way to strings)
+string[] optionStrings = null;
+if (options != null)
+{
+@@ -385,12 +440,10 @@ namespace StringTemplate
+if (options != null && options[OPTION_ANCHOR] != null)
+@out.PopAnchorPoint();
+
+-            return n;
+-        }
++            if (debug)
++                events.Add(new EvalTemplateEvent(self, start, @out.Index));
+
+-        protected int WriteObjectNoOptions(ITemplateWriter @out, Template self, object o)
+-        {
+-            return WriteObject(@out, self, o, (string[])null);
++            return n;
+}
+
+protected int WriteObject(ITemplateWriter @out, Template self, object o, string[] options)
+@@ -423,7 +476,7 @@ namespace StringTemplate
+group.listener.Error("Can't write wrap string");
+}
+}
+-                n = Exec(@out, (Template)o);
++                n = Exec((Template)o);
+}
+else
+{
+@@ -854,21 +907,28 @@ namespace StringTemplate
+
+public object Strlen(object v)
+{
+-            return null;
++            //return null;
++            // TODO: impl
++            throw new System.NotImplementedException();
+}
+
+protected string ToString(Template self, object value)
+{
+if (value != null)
+{
+-                if (value.GetType() == typeof(string))
+-                    return (string)value;
++                string s = value as string;
++                if (s != null)
++                    return s;
++
+// if Template, make sure it evaluates with enclosing template as self
+-                if (value.GetType() == typeof(Template))
+-                    ((Template)value).enclosingInstance = self;
++                Template t = value as Template;
++                if (t != null)
++                    t.enclosingInstance = self;
++
+// if not string already, must evaluate it
+StringWriter sw = new StringWriter();
+-                WriteObject(new NoIndentWriter(sw), self, value, null);
++                Interpreter interp = new Interpreter(group, new NoIndentWriter(sw), culture);
++                interp.WriteObjectNoOptions(self, value, -1, -1);
+return sw.ToString();
+}
+return null;
+@@ -1096,5 +1156,54 @@ namespace StringTemplate
+int word = b1 << (8 * 1) | b2;
+return word;
+}
++
++        public class DebugEvent
++        {
++            protected Template self;
++            // output location
++            protected int start;
++            protected int stop;
++
++            public DebugEvent(Template self, int start, int stop)
++            {
++                this.self = self;
++                this.start = start;
++                this.stop = stop;
++            }
++
++            public override string ToString()
++            {
++                return string.Format("{0}{{self={1},attr={2},start={3},stop={4}}}", GetType().Name, self, self.attributes, start, stop);
++            }
++        }
++
++        public class EvalTemplateEvent : DebugEvent
++        {
++            public EvalTemplateEvent(Template self, int start, int stop)
++                : base(self, start, stop)
++            {
++            }
++        }
++
++        public class EvalExprEvent : DebugEvent
++        {
++            // template pattern location
++            protected int exprStart;
++            protected int exprStop;
++            protected string expr;
++
++            public EvalExprEvent(Template self, int start, int stop, int exprStart, int exprStop)
++                : base(self, start, stop)
++            {
++                this.exprStart = exprStart;
++                this.exprStop = exprStop;
++                this.expr = self.code.template.Substring(exprStart, exprStop - exprStart + 2);
++            }
++
++            public override string ToString()
++            {
++                return string.Format("{0}{{self={1},attr={2},start={3},stop={4},expr={5}}}", GetType().Name, self, self.attributes, start, stop, expr);
++            }
++        }
+}
+}
+diff --git a/StringTemplate4/StringTemplate4.csproj b/StringTemplate4/StringTemplate4.csproj
+index 0e8060a..04d3d78 100644
+--- a/StringTemplate4/StringTemplate4.csproj
++++ b/StringTemplate4/StringTemplate4.csproj
+@@ -52,7 +52,8 @@
+<Compile Include="CompiledTemplate.cs" />
+<Compile Include="Compiler.cs" />
+<Compile Include="DateTimeRenderer.cs" />
+-    <Compile Include="DebugTemplate.cs" />
++    <Compile Include="Debug\DebugTemplate.cs" />
++    <Compile Include="Debug\Event.cs" />
+<Compile Include="ErrorTolerance.cs" />
+<Compile Include="FormalArgument.cs" />
+<Compile Include="GroupLexerHelper.cs" />
+diff --git a/StringTemplate4/Template.cs b/StringTemplate4/Template.cs
+index 80d6954..a9d97c0 100644
+--- a/StringTemplate4/Template.cs
++++ b/StringTemplate4/Template.cs
+@@ -290,14 +290,14 @@ namespace StringTemplate
+
+public virtual int Write(ITemplateWriter @out)
+{
+-            Interpreter interp = new Interpreter(groupThatCreatedThisInstance);
+-            return interp.Exec(@out, this);
++            Interpreter interp = new Interpreter(groupThatCreatedThisInstance, @out);
++            return interp.Exec(this);
+}
+
+public virtual int Write(ITemplateWriter @out, CultureInfo culture)
+{
+-            Interpreter interp = new Interpreter(groupThatCreatedThisInstance, culture);
+-            return interp.Exec(@out, this);
++            Interpreter interp = new Interpreter(groupThatCreatedThisInstance, @out, culture);
++            return interp.Exec(this);
+}
+
+public string Render()
+@@ -323,11 +323,6 @@ namespace StringTemplate
+try
+{
+Write(wr, culture);
+-                /*
+-                System.err.println("template size = "+code.template.length()+
+-                                   ", code size = "+code.instrs.length+", ratio = "+
+-                                   ((float)code.instrs.length/code.template.length()));
+-                                   */
+}
+catch (IOException)
+{
+diff --git a/StringTemplate4/TemplateParser.g3 b/StringTemplate4/TemplateParser.g3
+index 9352790..e3606eb 100644
+--- a/StringTemplate4/TemplateParser.g3
++++ b/StringTemplate4/TemplateParser.g3
+@@ -32,6 +32,7 @@ parser grammar TemplateParser;
+options {
+language=CSharp3;
+tokenVocab=TemplateLexer;
++	TokenLabelType=CommonToken;
+}
+
+@namespace{StringTemplate}
+@@ -67,7 +68,7 @@ options {backtrack=true; k=2;}
+|   (i=INDENT {Indent($i.text);})? region
+{
+gen.Emit(Bytecode.INSTR_NEW, $region.name);
+-						 gen.Emit(Bytecode.INSTR_WRITE);
++						 gen.Emit(Bytecode.INSTR_WRITE, $region.start.StartIndex, $region.stop.StartIndex);
+}
+|	i=INDENT         {Indent($i.text);}
+NEWLINE          {gen.Emit(Bytecode.INSTR_NEWLINE);}
+@@ -80,15 +81,16 @@ text
+{
+if ( $TEXT.text.Length>0 ) {
+gen.Emit(Bytecode.INSTR_LOAD_STR, $TEXT.text);
+-			gen.Emit(Bytecode.INSTR_WRITE);
++			gen.Emit(Bytecode.INSTR_WRITE, $TEXT.StartIndex, $TEXT.StopIndex);
+}
+}
+;
+
+exprTag
+-	:	LDELIM expr
+-		(	';' exprOptions {gen.Emit(Bytecode.INSTR_WRITE_OPT);}
+-		|	                {gen.Emit(Bytecode.INSTR_WRITE);}
++	:	LDELIM
++		expr
++		(	';' exprOptions {gen.Emit(Bytecode.INSTR_WRITE_OPT,$LDELIM.StartIndex,input.LT(1).StartIndex);}
++		|	                {gen.Emit(Bytecode.INSTR_WRITE,$LDELIM.StartIndex,input.LT(1).StartIndex);}
+)
+RDELIM
+;
+diff --git a/StringTemplate4/TemplateParserHelper.cs b/StringTemplate4/TemplateParserHelper.cs
+index a0ac391..9140e26 100644
+--- a/StringTemplate4/TemplateParserHelper.cs
++++ b/StringTemplate4/TemplateParserHelper.cs
+@@ -151,6 +151,10 @@ namespace StringTemplate
+{
+}
+
++            public void Emit(short opcode, int arg1, int arg2)
++            {
++            }
++
+public void Emit(short opcode, string s)
+{
+}
+

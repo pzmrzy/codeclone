@@ -1,0 +1,440 @@
+commit 51803e5caa84ed42f9713a6111ab1185ad74513c
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Nov 2 08:43:48 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Nov 2 08:43:48 2009 -0800
+
+C# Port:
+* The CSharp target is no more
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6287]
+
+diff --git a/Antlr3.Targets/Antlr3.Targets.CSharp/Antlr3.Targets.CSharp.csproj b/Antlr3.Targets/Antlr3.Targets.CSharp/Antlr3.Targets.CSharp.csproj
+deleted file mode 100644
+index 8b43ac0..0000000
+--- a/Antlr3.Targets/Antlr3.Targets.CSharp/Antlr3.Targets.CSharp.csproj
++++ /dev/null
+@@ -1,69 +0,0 @@
+-﻿<?xml version="1.0" encoding="utf-8"?>
+-<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+-  <PropertyGroup>
+-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+-    <ProductVersion>9.0.30729</ProductVersion>
+-    <SchemaVersion>2.0</SchemaVersion>
+-    <ProjectGuid>{48A0E438-158B-4C9E-887D-350E67A8AA09}</ProjectGuid>
+-    <OutputType>Library</OutputType>
+-    <AppDesignerFolder>Properties</AppDesignerFolder>
+-    <RootNamespace>Antlr3.Targets</RootNamespace>
+-    <AssemblyName>Antlr3.Targets.CSharp</AssemblyName>
+-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+-    <FileAlignment>512</FileAlignment>
+-    <TargetFrameworkSubset>
+-    </TargetFrameworkSubset>
+-    <SccProjectName>SAK</SccProjectName>
+-    <SccLocalPath>SAK</SccLocalPath>
+-    <SccAuxPath>SAK</SccAuxPath>
+-    <SccProvider>SAK</SccProvider>
+-    <SignAssembly>true</SignAssembly>
+-    <AssemblyOriginatorKeyFile>..\..\Antlr3\Key.snk</AssemblyOriginatorKeyFile>
+-  </PropertyGroup>
+-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+-    <DebugSymbols>true</DebugSymbols>
+-    <DebugType>full</DebugType>
+-    <Optimize>false</Optimize>
+-    <OutputPath>..\..\bin\Debug\Targets\</OutputPath>
+-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+-    <ErrorReport>prompt</ErrorReport>
+-    <WarningLevel>4</WarningLevel>
+-  </PropertyGroup>
+-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+-    <DebugType>pdbonly</DebugType>
+-    <Optimize>true</Optimize>
+-    <OutputPath>..\..\bin\Release\Targets\</OutputPath>
+-    <DefineConstants>TRACE</DefineConstants>
+-    <ErrorReport>prompt</ErrorReport>
+-    <WarningLevel>4</WarningLevel>
+-  </PropertyGroup>
+-  <ItemGroup>
+-    <Reference Include="System" />
+-  </ItemGroup>
+-  <ItemGroup>
+-    <Compile Include="CSharpTarget.cs" />
+-    <Compile Include="Properties\AssemblyInfo.cs" />
+-  </ItemGroup>
+-  <ItemGroup>
+-    <ProjectReference Include="..\..\Antlr3\Antlr3.csproj">
+-      <Project>{2AB8CAED-C046-4F05-8B18-6948100D2FE7}</Project>
+-      <Name>Antlr3</Name>
+-      <Private>False</Private>
+-    </ProjectReference>
+-  </ItemGroup>
+-  <ItemGroup>
+-    <None Include="..\..\Antlr3\Key.snk">
+-      <Link>Key.snk</Link>
+-    </None>
+-    <None Include="app.config" />
+-  </ItemGroup>
+-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
+-       Other similar extension points exist, see Microsoft.Common.targets.
+-  <Target Name="BeforeBuild">
+-  </Target>
+-  <Target Name="AfterBuild">
+-  </Target>
+-  -->
+-</Project>
+\ No newline at end of file
+diff --git a/Antlr3.Targets/Antlr3.Targets.CSharp/Antlr3.Targets.CSharp.csproj.vspscc b/Antlr3.Targets/Antlr3.Targets.CSharp/Antlr3.Targets.CSharp.csproj.vspscc
+deleted file mode 100644
+index b6d3289..0000000
+--- a/Antlr3.Targets/Antlr3.Targets.CSharp/Antlr3.Targets.CSharp.csproj.vspscc
++++ /dev/null
+@@ -1,10 +0,0 @@
+-﻿""
+-{
+-"FILE_VERSION" = "9237"
+-"ENLISTMENT_CHOICE" = "NEVER"
+-"PROJECT_FILE_RELATIVE_PATH" = ""
+-"NUMBER_OF_EXCLUDED_FILES" = "0"
+-"ORIGINAL_PROJECT_FILE_PATH" = ""
+-"NUMBER_OF_NESTED_PROJECTS" = "0"
+-"SOURCE_CONTROL_SETTINGS_PROVIDER" = "PROVIDER"
+-}
+diff --git a/Antlr3.Targets/Antlr3.Targets.CSharp/CSharpTarget.cs b/Antlr3.Targets/Antlr3.Targets.CSharp/CSharpTarget.cs
+deleted file mode 100644
+index 57e35b6..0000000
+--- a/Antlr3.Targets/Antlr3.Targets.CSharp/CSharpTarget.cs
++++ /dev/null
+@@ -1,44 +0,0 @@
+-/*
+- * [The "BSD licence"]
+- * Copyright (c) 2006 Kunle Odutola
+- * Copyright (c) 2005-2008 Terence Parr
+- * All rights reserved.
+- *
+- * Conversion to C#:
+- * Copyright (c) 2008-2009 Sam Harwell, Pixel Mine, Inc.
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. Redistributions in binary form must reproduce the above copyright
+- *    notice, this list of conditions and the following disclaimer in the
+- *    documentation and/or other materials provided with the distribution.
+- * 3. The name of the author may not be used to endorse or promote products
+- *    derived from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- */
+-namespace Antlr3.Targets
+-{
+-    using Target = Antlr3.Codegen.Target;
+-
+-    public class CSharpTarget : Target
+-    {
+-        public override string EncodeIntAsCharEscape( int v )
+-        {
+-            return "\\x" + v.ToString( "X" );
+-        }
+-    }
+-}
+diff --git a/Antlr3.Targets/Antlr3.Targets.CSharp/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.CSharp/Properties/AssemblyInfo.cs
+deleted file mode 100644
+index 79d37e6..0000000
+--- a/Antlr3.Targets/Antlr3.Targets.CSharp/Properties/AssemblyInfo.cs
++++ /dev/null
+@@ -1,70 +0,0 @@
+-﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
+- * All rights reserved.
+- *
+- * Conversion to C#:
+- * Copyright (c) 2008-2009 Sam Harwell, Pixel Mine, Inc.
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. Redistributions in binary form must reproduce the above copyright
+- *    notice, this list of conditions and the following disclaimer in the
+- *    documentation and/or other materials provided with the distribution.
+- * 3. The name of the author may not be used to endorse or promote products
+- *    derived from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- */
+-
+-using System;
+-using System.Reflection;
+-using System.Runtime.CompilerServices;
+-using System.Runtime.InteropServices;
+-
+-// General Information about an assembly is controlled through the following
+-// set of attributes. Change these attribute values to modify the information
+-// associated with an assembly.
+-[assembly: AssemblyTitle( "Antlr3.Targets.CSharp" )]
+-[assembly: AssemblyDescription( "" )]
+-[assembly: AssemblyConfiguration( "" )]
+-[assembly: AssemblyCompany( "Pixel Mine, Inc." )]
+-[assembly: AssemblyProduct( "Antlr3.Targets.CSharp" )]
+-[assembly: AssemblyCopyright( "Copyright © Pixel Mine 2009" )]
+-[assembly: AssemblyTrademark( "" )]
+-[assembly: AssemblyCulture( "" )]
+-[assembly: CLSCompliant(true)]
+-
+-// Setting ComVisible to false makes the types in this assembly not visible
+-// to COM components.  If you need to access a type in this assembly from
+-// COM, set the ComVisible attribute to true on that type.
+-[assembly: ComVisible( false )]
+-
+-// The following GUID is for the ID of the typelib if this project is exposed to COM
+-[assembly: Guid( "11e2eab4-bee7-4cb9-9d97-57073f909c8a" )]
+-
+-// Version information for an assembly consists of the following four values:
+-//
+-//      Major Version
+-//      Minor Version
+-//      Build Number
+-//      Revision
+-//
+-// You can specify all the values or you can default the Build and Revision Numbers
+-// by using the '*' as shown below:
+-// [assembly: AssemblyVersion("1.0.*")]
+-[assembly: AssemblyVersion( "3.1.3.6002" )]
+-[assembly: AssemblyFileVersion( "3.1.0.0" )]
+diff --git a/Antlr3.Targets/Antlr3.Targets.CSharp/app.config b/Antlr3.Targets/Antlr3.Targets.CSharp/app.config
+deleted file mode 100644
+index df20690..0000000
+--- a/Antlr3.Targets/Antlr3.Targets.CSharp/app.config
++++ /dev/null
+@@ -1,3 +0,0 @@
+-﻿<?xml version="1.0"?>
+-<configuration>
+-<startup><supportedRuntime version="v2.0.50727"/></startup></configuration>
+diff --git a/Antlr3.sln b/Antlr3.sln
+index f8f8c3d..becff67 100644
+--- a/Antlr3.sln
++++ b/Antlr3.sln
+@@ -8,7 +8,6 @@ EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Test", "Antlr3.Test\Antlr3.Test.csproj", "{8B58597B-058E-4D7A-B83E-5269BDABBE2C}"
+ProjectSection(ProjectDependencies) = postProject
+{696F611F-003B-477D-AFA0-4F15478C9D32} = {696F611F-003B-477D-AFA0-4F15478C9D32}
+-		{48A0E438-158B-4C9E-887D-350E67A8AA09} = {48A0E438-158B-4C9E-887D-350E67A8AA09}
+{67012F41-94F9-48E6-9677-E3C56E42917F} = {67012F41-94F9-48E6-9677-E3C56E42917F}
+{8EFEA650-B9F6-498B-8865-A78103CCB590} = {8EFEA650-B9F6-498B-8865-A78103CCB590}
+{46171154-755A-4595-99AA-537D684BCA28} = {46171154-755A-4595-99AA-537D684BCA28}
+@@ -30,8 +29,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Targets.C", "Antlr3.
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Targets.Cpp", "Antlr3.Targets\Antlr3.Targets.Cpp\Antlr3.Targets.Cpp.csproj", "{46171154-755A-4595-99AA-537D684BCA28}"
+EndProject
+-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Targets.CSharp", "Antlr3.Targets\Antlr3.Targets.CSharp\Antlr3.Targets.CSharp.csproj", "{48A0E438-158B-4C9E-887D-350E67A8AA09}"
+-EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Targets.CSharp2", "Antlr3.Targets\Antlr3.Targets.CSharp2\Antlr3.Targets.CSharp2.csproj", "{5CBAC55A-A209-45CA-9F57-D0BFFFE2B7F9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3.Targets.CSharp3", "Antlr3.Targets\Antlr3.Targets.CSharp3\Antlr3.Targets.CSharp3.csproj", "{67012F41-94F9-48E6-9677-E3C56E42917F}"
+@@ -71,7 +68,7 @@ Global
+CategoryFile = Antlr3.vsmdi
+EndGlobalSection
+GlobalSection(SourceCodeControl) = preSolution
+-		SccNumberOfProjects = 22
++		SccNumberOfProjects = 21
+SccProjectName0 = Perforce\u0020Project
+SccLocalPath0 = ..\\..
+SccProvider0 = MSSCCI:Perforce\u0020SCM
+@@ -94,64 +91,60 @@ Global
+SccProjectTopLevelParentUniqueName5 = Antlr3.sln
+SccLocalPath5 = ..\\..
+SccProjectFilePathRelativizedFromConnection5 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.Cpp\\
+-		SccProjectUniqueName6 = Antlr3.Targets\\Antlr3.Targets.CSharp\\Antlr3.Targets.CSharp.csproj
++		SccProjectUniqueName6 = Antlr3.Targets\\Antlr3.Targets.CSharp2\\Antlr3.Targets.CSharp2.csproj
+SccProjectTopLevelParentUniqueName6 = Antlr3.sln
+SccLocalPath6 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection6 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.CSharp\\
+-		SccProjectUniqueName7 = Antlr3.Targets\\Antlr3.Targets.CSharp2\\Antlr3.Targets.CSharp2.csproj
++		SccProjectFilePathRelativizedFromConnection6 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.CSharp2\\
++		SccProjectUniqueName7 = Antlr3.Targets\\Antlr3.Targets.CSharp3\\Antlr3.Targets.CSharp3.csproj
+SccProjectTopLevelParentUniqueName7 = Antlr3.sln
+SccLocalPath7 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection7 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.CSharp2\\
+-		SccProjectUniqueName8 = Antlr3.Targets\\Antlr3.Targets.CSharp3\\Antlr3.Targets.CSharp3.csproj
++		SccProjectFilePathRelativizedFromConnection7 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.CSharp3\\
++		SccProjectUniqueName8 = Antlr3.Targets\\Antlr3.Targets.Delphi\\Antlr3.Targets.Delphi.csproj
+SccProjectTopLevelParentUniqueName8 = Antlr3.sln
+SccLocalPath8 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection8 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.CSharp3\\
+-		SccProjectUniqueName9 = Antlr3.Targets\\Antlr3.Targets.Delphi\\Antlr3.Targets.Delphi.csproj
++		SccProjectFilePathRelativizedFromConnection8 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.Delphi\\
++		SccProjectUniqueName9 = Antlr3.Targets\\Antlr3.Targets.Java\\Antlr3.Targets.Java.csproj
+SccProjectTopLevelParentUniqueName9 = Antlr3.sln
+SccLocalPath9 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection9 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.Delphi\\
+-		SccProjectUniqueName10 = Antlr3.Targets\\Antlr3.Targets.Java\\Antlr3.Targets.Java.csproj
++		SccProjectFilePathRelativizedFromConnection9 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.Java\\
++		SccProjectUniqueName10 = Antlr3.Targets\\Antlr3.Targets.JavaScript\\Antlr3.Targets.JavaScript.csproj
+SccProjectTopLevelParentUniqueName10 = Antlr3.sln
+SccLocalPath10 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection10 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.Java\\
+-		SccProjectUniqueName11 = Antlr3.Targets\\Antlr3.Targets.JavaScript\\Antlr3.Targets.JavaScript.csproj
++		SccProjectFilePathRelativizedFromConnection10 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.JavaScript\\
++		SccProjectUniqueName11 = Antlr3.Targets\\Antlr3.Targets.ObjC\\Antlr3.Targets.ObjC.csproj
+SccProjectTopLevelParentUniqueName11 = Antlr3.sln
+SccLocalPath11 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection11 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.JavaScript\\
+-		SccProjectUniqueName12 = Antlr3.Targets\\Antlr3.Targets.ObjC\\Antlr3.Targets.ObjC.csproj
++		SccProjectFilePathRelativizedFromConnection11 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.ObjC\\
++		SccProjectUniqueName12 = Antlr3.Targets\\Antlr3.Targets.Perl5\\Antlr3.Targets.Perl5.csproj
+SccProjectTopLevelParentUniqueName12 = Antlr3.sln
+SccLocalPath12 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection12 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.ObjC\\
+-		SccProjectUniqueName13 = Antlr3.Targets\\Antlr3.Targets.Perl5\\Antlr3.Targets.Perl5.csproj
++		SccProjectFilePathRelativizedFromConnection12 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.Perl5\\
++		SccProjectUniqueName13 = Antlr3.Targets\\Antlr3.Targets.Python\\Antlr3.Targets.Python.csproj
+SccProjectTopLevelParentUniqueName13 = Antlr3.sln
+SccLocalPath13 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection13 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.Perl5\\
+-		SccProjectUniqueName14 = Antlr3.Targets\\Antlr3.Targets.Python\\Antlr3.Targets.Python.csproj
++		SccProjectFilePathRelativizedFromConnection13 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.Python\\
++		SccProjectUniqueName14 = Antlr3.Targets\\Antlr3.Targets.Ruby\\Antlr3.Targets.Ruby.csproj
+SccProjectTopLevelParentUniqueName14 = Antlr3.sln
+SccLocalPath14 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection14 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.Python\\
+-		SccProjectUniqueName15 = Antlr3.Targets\\Antlr3.Targets.Ruby\\Antlr3.Targets.Ruby.csproj
+-		SccProjectTopLevelParentUniqueName15 = Antlr3.sln
++		SccProjectFilePathRelativizedFromConnection14 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.Ruby\\
++		SccProjectUniqueName15 = ..\\..\\antlr\\main\\runtime\\CSharp3\\Sources\\Antlr3.Runtime\\Antlr3.Runtime.csproj
+SccLocalPath15 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection15 = antlrcs\\main\\Antlr3.Targets\\Antlr3.Targets.Ruby\\
+-		SccProjectUniqueName16 = ..\\..\\antlr\\main\\runtime\\CSharp3\\Sources\\Antlr3.Runtime\\Antlr3.Runtime.csproj
++		SccProjectFilePathRelativizedFromConnection15 = antlr\\main\\runtime\\CSharp3\\Sources\\Antlr3.Runtime\\
++		SccProjectUniqueName16 = ..\\..\\antlr\\main\\runtime\\CSharp3\\Sources\\Antlr3.Runtime.Debug\\Antlr3.Runtime.Debug.csproj
+SccLocalPath16 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection16 = antlr\\main\\runtime\\CSharp3\\Sources\\Antlr3.Runtime\\
+-		SccProjectUniqueName17 = ..\\..\\antlr\\main\\runtime\\CSharp3\\Sources\\Antlr3.Runtime.Debug\\Antlr3.Runtime.Debug.csproj
++		SccProjectFilePathRelativizedFromConnection16 = antlr\\main\\runtime\\CSharp3\\Sources\\Antlr3.Runtime.Debug\\
++		SccProjectUniqueName17 = Antlr3.Test\\Antlr3.Test.csproj
+SccLocalPath17 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection17 = antlr\\main\\runtime\\CSharp3\\Sources\\Antlr3.Runtime.Debug\\
+-		SccProjectUniqueName18 = Antlr3.Test\\Antlr3.Test.csproj
++		SccProjectFilePathRelativizedFromConnection17 = antlrcs\\main\\Antlr3.Test\\
++		SccProjectUniqueName18 = ..\\..\\antlr\\main\\runtime\\CSharp3\\Sources\\Antlr3.Runtime.Test\\Antlr3.Runtime.Test.csproj
+SccLocalPath18 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection18 = antlrcs\\main\\Antlr3.Test\\
+-		SccProjectUniqueName19 = ..\\..\\antlr\\main\\runtime\\CSharp3\\Sources\\Antlr3.Runtime.Test\\Antlr3.Runtime.Test.csproj
++		SccProjectFilePathRelativizedFromConnection18 = antlr\\main\\runtime\\CSharp3\\Sources\\Antlr3.Runtime.Test\\
++		SccProjectUniqueName19 = ..\\..\\antlr\\main\\runtime\\CSharp3\\Sources\\Antlr3.Runtime.JavaExtensions\\Antlr3.Runtime.JavaExtensions.csproj
+SccLocalPath19 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection19 = antlr\\main\\runtime\\CSharp3\\Sources\\Antlr3.Runtime.Test\\
+-		SccProjectUniqueName20 = ..\\..\\antlr\\main\\runtime\\CSharp3\\Sources\\Antlr3.Runtime.JavaExtensions\\Antlr3.Runtime.JavaExtensions.csproj
++		SccProjectFilePathRelativizedFromConnection19 = antlr\\main\\runtime\\CSharp3\\Sources\\Antlr3.Runtime.JavaExtensions\\
++		SccProjectUniqueName20 = AntlrBuildTask\\AntlrBuildTask.csproj
+SccLocalPath20 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection20 = antlr\\main\\runtime\\CSharp3\\Sources\\Antlr3.Runtime.JavaExtensions\\
+-		SccProjectUniqueName21 = AntlrBuildTask\\AntlrBuildTask.csproj
+-		SccLocalPath21 = ..\\..
+-		SccProjectFilePathRelativizedFromConnection21 = antlrcs\\main\\AntlrBuildTask\\
++		SccProjectFilePathRelativizedFromConnection20 = antlrcs\\main\\AntlrBuildTask\\
+EndGlobalSection
+GlobalSection(SolutionConfigurationPlatforms) = preSolution
+Debug|Any CPU = Debug|Any CPU
+@@ -182,10 +175,6 @@ Global
+{46171154-755A-4595-99AA-537D684BCA28}.Debug|Any CPU.Build.0 = Debug|Any CPU
+{46171154-755A-4595-99AA-537D684BCA28}.Release|Any CPU.ActiveCfg = Release|Any CPU
+{46171154-755A-4595-99AA-537D684BCA28}.Release|Any CPU.Build.0 = Release|Any CPU
+-		{48A0E438-158B-4C9E-887D-350E67A8AA09}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+-		{48A0E438-158B-4C9E-887D-350E67A8AA09}.Debug|Any CPU.Build.0 = Debug|Any CPU
+-		{48A0E438-158B-4C9E-887D-350E67A8AA09}.Release|Any CPU.ActiveCfg = Release|Any CPU
+-		{48A0E438-158B-4C9E-887D-350E67A8AA09}.Release|Any CPU.Build.0 = Release|Any CPU
+{5CBAC55A-A209-45CA-9F57-D0BFFFE2B7F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+{5CBAC55A-A209-45CA-9F57-D0BFFFE2B7F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+{5CBAC55A-A209-45CA-9F57-D0BFFFE2B7F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+@@ -249,7 +238,6 @@ Global
+{2A03CB56-C3E2-4B65-92C0-004C9D78E2A4} = {3A92893D-7810-4D8B-80D8-E1E8D151FA73}
+{ABFF04E1-91CE-4F31-AAA0-0C70E3DBB4A6} = {3A92893D-7810-4D8B-80D8-E1E8D151FA73}
+{46171154-755A-4595-99AA-537D684BCA28} = {3A92893D-7810-4D8B-80D8-E1E8D151FA73}
+-		{48A0E438-158B-4C9E-887D-350E67A8AA09} = {3A92893D-7810-4D8B-80D8-E1E8D151FA73}
+{5CBAC55A-A209-45CA-9F57-D0BFFFE2B7F9} = {3A92893D-7810-4D8B-80D8-E1E8D151FA73}
+{67012F41-94F9-48E6-9677-E3C56E42917F} = {3A92893D-7810-4D8B-80D8-E1E8D151FA73}
+{6689F268-CE30-4CEC-AAD5-2DF72C43623C} = {3A92893D-7810-4D8B-80D8-E1E8D151FA73}
+diff --git a/Antlr3/Antlr3.csproj b/Antlr3/Antlr3.csproj
+index 8c36b96..1d8be7e 100644
+--- a/Antlr3/Antlr3.csproj
++++ b/Antlr3/Antlr3.csproj
+@@ -249,34 +249,6 @@
+<Link>Codegen\Templates\CSharp2\ST.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <Content Include="..\..\..\antlr\main\tool\src\main\resources\org\antlr\codegen\templates\CSharp\AST.stg">
+-      <Link>Codegen\Templates\CSharp\AST.stg</Link>
+-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+-    </Content>
+-    <Content Include="..\..\..\antlr\main\tool\src\main\resources\org\antlr\codegen\templates\CSharp\ASTDbg.stg">
+-      <Link>Codegen\Templates\CSharp\ASTDbg.stg</Link>
+-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+-    </Content>
+-    <Content Include="..\..\..\antlr\main\tool\src\main\resources\org\antlr\codegen\templates\CSharp\ASTParser.stg">
+-      <Link>Codegen\Templates\CSharp\ASTParser.stg</Link>
+-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+-    </Content>
+-    <Content Include="..\..\..\antlr\main\tool\src\main\resources\org\antlr\codegen\templates\CSharp\ASTTreeParser.stg">
+-      <Link>Codegen\Templates\CSharp\ASTTreeParser.stg</Link>
+-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+-    </Content>
+-    <Content Include="..\..\..\antlr\main\tool\src\main\resources\org\antlr\codegen\templates\CSharp\CSharp.stg">
+-      <Link>Codegen\Templates\CSharp\CSharp.stg</Link>
+-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+-    </Content>
+-    <Content Include="..\..\..\antlr\main\tool\src\main\resources\org\antlr\codegen\templates\CSharp\Dbg.stg">
+-      <Link>Codegen\Templates\CSharp\Dbg.stg</Link>
+-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+-    </Content>
+-    <Content Include="..\..\..\antlr\main\tool\src\main\resources\org\antlr\codegen\templates\CSharp\ST.stg">
+-      <Link>Codegen\Templates\CSharp\ST.stg</Link>
+-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+-    </Content>
+<Content Include="..\..\..\antlr\main\tool\src\main\resources\org\antlr\codegen\templates\C\AST.stg">
+<Link>Codegen\Templates\C\AST.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+@@ -499,17 +471,14 @@
+<Name>Antlr3.StringTemplate</Name>
+</ProjectReference>
+</ItemGroup>
+-
+<PropertyGroup>
+<!-- Folder containing AntlrBuildTask.dll -->
+<AntlrBuildTaskPath>$(SolutionDir)bin\Bootstrap</AntlrBuildTaskPath>
+<!-- Path to the ANTLR Tool itself. -->
+<AntlrToolPath>$(SolutionDir)bin\Bootstrap\Antlr3.exe</AntlrToolPath>
+</PropertyGroup>
+-
+<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+<Import Project="$(SolutionDir)bin\Bootstrap\Antlr3.targets" />
+-
+<!-- To modify your build process, add your task inside one of the targets below and uncomment it.
+Other similar extension points exist, see Microsoft.Common.targets.
+<Target Name="BeforeBuild">
+

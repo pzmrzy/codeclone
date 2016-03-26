@@ -1,0 +1,11 @@
+commit f9b709d428fe0426dbb4dfe9c6b9ebf2d0d80238
+Merge: c034866 1197512
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Sun Sep 8 16:13:39 2013 -0700
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Sun Sep 8 16:13:39 2013 -0700
+
+Merge pull request #112 from ibre5041/master
+
+C++ target fixes/changes/improvements
+

@@ -1,0 +1,22 @@
+commit 01fa1fbebcc122d6eb432331f6aac5b8763a25ad
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Fri Dec 7 11:39:43 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Fri Dec 7 11:39:43 2012 -0600
+
+Sign artifacts during the verify phase (breaks the repository:bundle-create goal, but it had other issue anyway)
+
+diff --git a/pom.xml b/pom.xml
+index c6e9fbe..c86888d 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -252,7 +252,7 @@
+<executions>
+<execution>
+<id>sign-artifacts</id>
+-                        <phase>package</phase>
++                        <phase>verify</phase>
+<goals>
+<goal>sign</goal>
+</goals>
+

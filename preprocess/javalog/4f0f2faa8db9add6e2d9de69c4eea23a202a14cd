@@ -1,0 +1,50 @@
+commit 4f0f2faa8db9add6e2d9de69c4eea23a202a14cd
+Author:     Jim Idle <jimi@temporal-wave.com>
+AuthorDate: Thu Jun 23 10:55:32 2011 -0800
+Commit:     Jim Idle <jimi@temporal-wave.com>
+CommitDate: Thu Jun 23 10:55:32 2011 -0800
+
+Ensure that the tokensource interface is completely initialized.
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8748]
+
+diff --git a/runtime/C/src/antlr3commontoken.c b/runtime/C/src/antlr3commontoken.c
+index e615861..2627431 100644
+--- a/runtime/C/src/antlr3commontoken.c
++++ b/runtime/C/src/antlr3commontoken.c
+@@ -545,7 +545,7 @@ static  pANTLR3_STRING    toString		(pANTLR3_COMMON_TOKEN token)
+
+if	(text->factory == NULL)
+{
+-		return text;		// This usall ymeans it is the EOF token
++		return text;		// This usally means it is the EOF token
+}
+
+/* A new empty string to assemble all the stuff in
+@@ -570,9 +570,9 @@ static  pANTLR3_STRING    toString		(pANTLR3_COMMON_TOKEN token)
+
+if	(token->getChannel(token) > ANTLR3_TOKEN_DEFAULT_CHANNEL)
+{
+-	outtext->append8(outtext, "(channel = ");
+-	outtext->addi	(outtext, (ANTLR3_INT32)token->getChannel(token));
+-	outtext->append8(outtext, ") ");
++		outtext->append8(outtext, "(channel = ");
++		outtext->addi	(outtext, (ANTLR3_INT32)token->getChannel(token));
++		outtext->append8(outtext, ") ");
+}
+
+outtext->append8(outtext, "Line: ");
+diff --git a/runtime/C/src/antlr3lexer.c b/runtime/C/src/antlr3lexer.c
+index fa8e7db..d981ab7 100644
+--- a/runtime/C/src/antlr3lexer.c
++++ b/runtime/C/src/antlr3lexer.c
+@@ -104,7 +104,7 @@ antlr3LexerNew(ANTLR3_UINT32 sizeHint, pANTLR3_RECOGNIZER_SHARED_STATE state)
+*/
+if	(lexer->rec->state->tokSource == NULL)
+{
+-		lexer->rec->state->tokSource	= (pANTLR3_TOKEN_SOURCE)ANTLR3_MALLOC(sizeof(ANTLR3_TOKEN_SOURCE));
++		lexer->rec->state->tokSource	= (pANTLR3_TOKEN_SOURCE)ANTLR3_CALLOC(1, sizeof(ANTLR3_TOKEN_SOURCE));
+
+if	(lexer->rec->state->tokSource == NULL)
+{
+

@@ -1,0 +1,63 @@
+commit 09c5fc79518d3f3aa3da39356266c87337b81f3b
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Tue Mar 17 01:24:26 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Tue Mar 17 01:24:26 2009 -0800
+
+C# Port:
+* Some easy optimizations after instrumented profiling
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 5897]
+
+diff --git a/Antlr3.StringTemplate/AutoIndentWriter.cs b/Antlr3.StringTemplate/AutoIndentWriter.cs
+index da10852..2016c53 100644
+--- a/Antlr3.StringTemplate/AutoIndentWriter.cs
++++ b/Antlr3.StringTemplate/AutoIndentWriter.cs
+@@ -201,18 +201,20 @@ namespace Antlr3.ST
+public virtual int Write( string str )
+{
+int n = 0;
+-            for ( int i = 0; i < str.Length; i++ )
++            int strLength = str.Length;
++            int newlineLength = _newline.Length;
++            for ( int i = 0; i < strLength; i++ )
+{
+char c = str[i];
+// found \n or \r\n newline?
+if ( c == '\r' || c == '\n' )
+{
+_atStartOfLine = true;
+-                    n += _newline.Length; // wrote n more char
++                    n += newlineLength; // wrote n more char
+_writer.Write( _newline );
+_charPosition = 0;
+// skip an extra char upon \r\n
+-                    if ( ( c == '\r' && ( i + 1 ) < str.Length && str[i+1] == '\n' ) )
++                    if ( ( c == '\r' && ( i + 1 ) < strLength && str[i+1] == '\n' ) )
+{
+i++; // loop iteration i++ takes care of skipping 2nd char
+}
+@@ -305,18 +307,17 @@ namespace Antlr3.ST
+/// <exception cref="System.IO.IOException" />
+public virtual int Indent()
+{
+-            int n = 0;
+-            for ( int i = 0; i < _indents.Count; i++ )
++            int count = _indents.Count;
++            for ( int i = 0; i < count; i++ )
+{
+string ind = _indents[i];
+if ( ind != null )
+{
+-                    n += ind.Length;
+_writer.Write( ind );
+}
+}
+-            _charPosition += n;
+-            return n;
++            _charPosition += IndentationWidth;
++            return IndentationWidth;
+}
+
+/// <exception cref="System.ArgumentException" />
+

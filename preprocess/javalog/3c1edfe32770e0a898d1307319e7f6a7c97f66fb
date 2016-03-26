@@ -1,0 +1,25 @@
+commit 3c1edfe32770e0a898d1307319e7f6a7c97f66fb
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Wed Dec 12 01:27:32 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Wed Dec 12 01:41:03 2012 -0600
+
+Fix StringTemplate warning: Java version of the tool does not support label optimization
+
+diff --git a/tool/src/main/java/org/antlr/tool/Rule.java b/tool/src/main/java/org/antlr/tool/Rule.java
+index 884e286..cf0bee4 100644
+--- a/tool/src/main/java/org/antlr/tool/Rule.java
++++ b/tool/src/main/java/org/antlr/tool/Rule.java
+@@ -37,6 +37,11 @@ import java.util.*;
+
+/** Combine the info associated with a rule. */
+public class Rule {
++	public static final boolean supportsLabelOptimization;
++	static {
++		supportsLabelOptimization = false;
++	}
++
+public String name;
+public int index;
+public String modifier;
+

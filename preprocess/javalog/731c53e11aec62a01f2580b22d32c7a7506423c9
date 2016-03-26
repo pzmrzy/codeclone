@@ -1,0 +1,11 @@
+commit 731c53e11aec62a01f2580b22d32c7a7506423c9
+Merge: 7d3d004 69688ee
+Author:     Terence Parr <parrt@cs.usfca.edu>
+AuthorDate: Sat Sep 15 15:37:33 2012 -0700
+Commit:     Terence Parr <parrt@cs.usfca.edu>
+CommitDate: Sat Sep 15 15:37:33 2012 -0700
+
+Merge pull request #25 from josephw/master
+
+Don't specify a repository in the pom. (just maven xml changes, not src)
+

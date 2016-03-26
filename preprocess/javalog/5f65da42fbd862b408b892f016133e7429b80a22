@@ -1,0 +1,365 @@
+commit 5f65da42fbd862b408b892f016133e7429b80a22
+Author:     Alan Condit <acondit@ipns.com>
+AuthorDate: Wed Apr 4 11:13:55 2012 -0700
+Commit:     Alan Condit <acondit@ipns.com>
+CommitDate: Wed Apr 4 11:13:55 2012 -0700
+
+Added ACNumber to source used in ST4 rather than NSNumber.
+It tests in toDescription to ensure number prints out as type entered.
+
+diff --git a/runtime/ObjC/Framework/ACNumber.h b/runtime/ObjC/Framework/ACNumber.h
+new file mode 100644
+index 0000000..7861b88
+--- /dev/null
++++ b/runtime/ObjC/Framework/ACNumber.h
+@@ -0,0 +1,47 @@
++//
++//  ACNumber.h
++//  ST4
++//
++//  Created by Alan Condit on 3/19/12.
++//  Copyright 2012 Alan Condit. All rights reserved.
++//
++
++#import <Foundation/Foundation.h>
++
++
++@interface ACNumber : NSObject {
++
++    union {
++        BOOL b;
++        char c;
++        double d;
++        NSInteger i;
++    } u;
++
++    BOOL fBOOL   :  1;
++    BOOL fChar   :  1;
++    BOOL fDouble :  1;
++    BOOL fNSInt  :  1;
++}
++
+++ (ACNumber *)numberWithBool:(BOOL)aBool;
+++ (ACNumber *)numberWithChar:(char)aChar;
+++ (ACNumber *)numberWithDouble:(double)aDouble;
+++ (ACNumber *)numberWithInt:(NSInteger)anInt;
+++ (ACNumber *)numberWithInteger:(NSInteger)anInt;
++
++- (ACNumber *)initWithBool:(BOOL)aBool;
++- (ACNumber *)initWithChar:(char)aChar;
++- (ACNumber *)initWithDouble:(double)aDouble;
++- (ACNumber *)initWithInteger:(NSInteger)anInt;
++
++- (BOOL)boolValue;
++- (char)charValue;
++- (double)doubleValue;
++- (NSInteger)intValue;
++- (NSInteger)integerValue;
++- (NSInteger)inc;
++- (NSInteger)add:(NSInteger)anInt;
++- (NSString *)description;
++
++@end
+diff --git a/runtime/ObjC/Framework/ACNumber.m b/runtime/ObjC/Framework/ACNumber.m
+new file mode 100644
+index 0000000..989f81a
+--- /dev/null
++++ b/runtime/ObjC/Framework/ACNumber.m
+@@ -0,0 +1,170 @@
++//
++//  ACNumber.m
++//  ST4
++//
++//  Created by Alan Condit on 3/19/12.
++//  Copyright 2012 Alan Condit. All rights reserved.
++//
++
++#import "ACNumber.h"
++
++
++@implementation ACNumber
++
+++ (ACNumber *)numberWithBool:(BOOL)aBool
++{
++    return [[ACNumber alloc] initWithBool:aBool];
++}
++
+++ (ACNumber *)numberWithChar:(char)aChar
++{
++    return [[ACNumber alloc] initWithChar:aChar];
++}
++
+++ (ACNumber *)numberWithDouble:(double)aDouble
++{
++    return [[ACNumber alloc] initWithDouble:aDouble];
++}
++
+++ (ACNumber *)numberWithInt:(NSInteger)anInt
++{
++    return [[ACNumber alloc] initWithInteger:anInt];
++}
++
+++ (ACNumber *)numberWithInteger:(NSInteger)anInt
++{
++    return [[ACNumber alloc] initWithInteger:anInt];
++}
++
++
++- (id)init
++{
++    self = [super init];
++    if (self) {
++        // Initialization code here.
++    }
++
++    return self;
++}
++
++- (ACNumber *)initWithBool:(BOOL)aBool
++{
++    self = [super init];
++    if ( self != nil ) {
++        fBOOL = YES;
++        fChar = NO;
++        fDouble = NO;
++        fNSInt = NO;
++        u.b = aBool;
++    }
++    return self;
++}
++
++- (ACNumber *)initWithChar:(char)aChar
++{
++    self = [super init];
++    if ( self != nil ) {
++        fBOOL = NO;
++        fChar = YES;
++        fDouble = NO;
++        fNSInt = NO;
++        u.c = aChar;
++    }
++    return self;
++}
++
++- (ACNumber *)initWithDouble:(double)aDouble
++{
++    self = [super init];
++    if ( self != nil ) {
++        fBOOL = NO;
++        fChar = NO;
++        fDouble = YES;
++        fNSInt = NO;
++        u.d = aDouble;
++    }
++    return self;
++}
++
++- (ACNumber *)initWithInteger:(NSInteger)anInt
++{
++    self = [super init];
++    if ( self != nil ) {
++        fBOOL = NO;
++        fChar = NO;
++        fDouble = NO;
++        fNSInt = YES;
++        u.i = anInt;
++    }
++    return self;
++}
++
++- (void)dealloc
++{
++    [super dealloc];
++}
++
++- (BOOL)boolValue
++{
++    if (fBOOL)
++        return u.b;
++    else
++        return NO;
++}
++
++- (char)charValue
++{
++    if (fChar)
++        return u.c;
++    else
++        return (char)-1;
++}
++
++- (double)doubleValue
++{
++    if (fDouble)
++        return u.d;
++    else
++        return 0.0;
++}
++
++- (NSInteger)intValue
++{
++    if (fNSInt)
++        return u.i;
++    else
++        return -1;
++}
++
++- (NSInteger)integerValue
++{
++    if (fNSInt)
++        return u.i;
++    else
++        return -1;
++}
++
++- (NSInteger)inc
++{
++    return (u.i+=1);
++}
++
++- (NSInteger)add:(NSInteger)anInt
++{
++    return (u.i+=anInt);
++}
++
++- (NSString *)description
++{
++    if (fBOOL)
++        return (u.b == YES) ? @"true" : @"false";
++    else if (fChar)
++        return [NSString stringWithFormat:@"%c", u.c];
++    else if (fNSInt)
++        return [NSString stringWithFormat:@"%Ld", u.i];
++    else if (fDouble)
++        return [NSString stringWithFormat:@"%Lf", u.d];
++    return @"ACNumber not valid";
++}
++
++@end
+diff --git a/runtime/ObjC/Framework/ANTLR.h b/runtime/ObjC/Framework/ANTLR.h
+index 61a730c..33b18b6 100644
+--- a/runtime/ObjC/Framework/ANTLR.h
++++ b/runtime/ObjC/Framework/ANTLR.h
+@@ -24,15 +24,22 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
++#import <ANTLR/ACNumber.h>
+#import <ANTLR/ACBTree.h>
+#import <ANTLR/AMutableArray.h>
+#import <ANTLR/AMutableDictionary.h>
++#import <ANTLR/ANTLRBitSet.h>
++#import <ANTLR/ANTLRError.h>
++#import <ANTLR/ANTLRFileStream.h>
++#import <ANTLR/ANTLRInputStream.h>
++#import <ANTLR/ANTLRReaderStream.h>
++#import <ANTLR/ANTLRStringStream.h>
++#import <ANTLR/ArrayIterator.h>
+#import <ANTLR/BaseMapElement.h>
+#import <ANTLR/BaseRecognizer.h>
+#import <ANTLR/BaseStack.h>
+#import <ANTLR/BaseTree.h>
+#import <ANTLR/BaseTreeAdaptor.h>
+-#import <ANTLR/ANTLRBitSet.h>
+#import <ANTLR/BufferedTokenStream.h>
+#import <ANTLR/BufferedTreeNodeStream.h>
+#import <ANTLR/CharStream.h>
+@@ -54,13 +61,10 @@
+#import <ANTLR/DebugTreeParser.h>
+#import <ANTLR/DoubleKeyMap.h>
+#import <ANTLR/EarlyExitException.h>
+-#import <ANTLR/ANTLRError.h>
+#import <ANTLR/FailedPredicateException.h>
+#import <ANTLR/FastQueue.h>
+-#import <ANTLR/ANTLRFileStream.h>
+#import <ANTLR/HashMap.h>
+#import <ANTLR/HashRule.h>
+-#import <ANTLR/ANTLRInputStream.h>
+#import <ANTLR/IntArray.h>
+#import <ANTLR/IntStream.h>
+#import <ANTLR/Lexer.h>
+@@ -80,7 +84,6 @@
+#import <ANTLR/Parser.h>
+#import <ANTLR/ParserRuleReturnScope.h>
+#import <ANTLR/PtrBuffer.h>
+-#import <ANTLR/ANTLRReaderStream.h>
+#import <ANTLR/RecognitionException.h>
+#import <ANTLR/RecognizerSharedState.h>
+#import <ANTLR/RewriteRuleElementStream.h>
+@@ -92,7 +95,6 @@
+#import <ANTLR/RuleReturnScope.h>
+#import <ANTLR/RuntimeException.h>
+#import <ANTLR/StreamEnumerator.h>
+-#import <ANTLR/ANTLRStringStream.h>
+#import <ANTLR/SymbolStack.h>
+#import <ANTLR/Token+DebuggerSupport.h>
+#import <ANTLR/Token.h>
+@@ -111,4 +113,3 @@
+//#import <ANTLR/UnbufferedCommonTreeNodeStreamState.h>
+#import <ANTLR/UniqueIDMap.h>
+#import <ANTLR/UnwantedTokenException.h>
+-#import <ANTLR/ArrayIterator.h>
+diff --git a/runtime/ObjC/Framework/antlr3.h b/runtime/ObjC/Framework/antlr3.h
+index 7063bdc..124ef63 100644
+--- a/runtime/ObjC/Framework/antlr3.h
++++ b/runtime/ObjC/Framework/antlr3.h
+@@ -24,15 +24,22 @@
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
++#import <ANTLR/ACNumber.h>
+#import <ANTLR/ACBTree.h>
+#import <ANTLR/AMutableArray.h>
+#import <ANTLR/AMutableDictionary.h>
++#import <ANTLR/ANTLRBitSet.h>
++#import <ANTLR/ANTLRError.h>
++#import <ANTLR/ANTLRFileStream.h>
++#import <ANTLR/ANTLRInputStream.h>
++#import <ANTLR/ANTLRReaderStream.h>
++#import <ANTLR/ANTLRStringStream.h>
++#import <ANTLR/ArrayIterator.h>
+#import <ANTLR/BaseMapElement.h>
+#import <ANTLR/BaseRecognizer.h>
+#import <ANTLR/BaseStack.h>
+#import <ANTLR/BaseTree.h>
+#import <ANTLR/BaseTreeAdaptor.h>
+-#import <ANTLR/ANTLRBitSet.h>
+#import <ANTLR/BufferedTokenStream.h>
+#import <ANTLR/BufferedTreeNodeStream.h>
+#import <ANTLR/CharStream.h>
+@@ -54,13 +61,10 @@
+#import <ANTLR/DebugTreeParser.h>
+#import <ANTLR/DoubleKeyMap.h>
+#import <ANTLR/EarlyExitException.h>
+-#import <ANTLR/ANTLRError.h>
+#import <ANTLR/FailedPredicateException.h>
+#import <ANTLR/FastQueue.h>
+-#import <ANTLR/ANTLRFileStream.h>
+#import <ANTLR/HashMap.h>
+#import <ANTLR/HashRule.h>
+-#import <ANTLR/ANTLRInputStream.h>
+#import <ANTLR/IntArray.h>
+#import <ANTLR/IntStream.h>
+#import <ANTLR/Lexer.h>
+@@ -80,7 +84,6 @@
+#import <ANTLR/Parser.h>
+#import <ANTLR/ParserRuleReturnScope.h>
+#import <ANTLR/PtrBuffer.h>
+-#import <ANTLR/ANTLRReaderStream.h>
+#import <ANTLR/RecognitionException.h>
+#import <ANTLR/RecognizerSharedState.h>
+#import <ANTLR/RewriteRuleElementStream.h>
+@@ -92,7 +95,6 @@
+#import <ANTLR/RuleReturnScope.h>
+#import <ANTLR/RuntimeException.h>
+#import <ANTLR/StreamEnumerator.h>
+-#import <ANTLR/ANTLRStringStream.h>
+#import <ANTLR/SymbolStack.h>
+#import <ANTLR/Token+DebuggerSupport.h>
+#import <ANTLR/Token.h>
+@@ -111,4 +113,3 @@
+//#import <ANTLR/UnbufferedCommonTreeNodeStreamState.h>
+#import <ANTLR/UniqueIDMap.h>
+#import <ANTLR/UnwantedTokenException.h>
+-#import <ANTLR/ArrayIterator.h>
+

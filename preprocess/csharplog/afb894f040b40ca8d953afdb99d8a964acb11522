@@ -1,0 +1,138 @@
+commit afb894f040b40ca8d953afdb99d8a964acb11522
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sat Jul 30 10:05:59 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sat Jul 30 10:05:59 2011 -0800
+
+(C# 3) Fix unit tests
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8948]
+
+diff --git a/Antlr3.Test/TestASTConstruction.cs b/Antlr3.Test/TestASTConstruction.cs
+index b3e2d0e..b1fe772 100644
+--- a/Antlr3.Test/TestASTConstruction.cs
++++ b/Antlr3.Test/TestASTConstruction.cs
+@@ -406,7 +406,7 @@ namespace AntlrUnitTests
+"options { backtrack=true; }\n" +
+"a : ({blort} 'x')* ;\n" );  // bug: the synpred had nothing in it
+string expecting =
+-                "(rule synpred1_Expr ARG RET scope (BLOCK (ALT blort 'x' <end-of-alt>) <end-of-block>) <end-of-rule>)";
++                "(rule synpred1_Expr ARG RET scope (BLOCK (ALT 'x' <end-of-alt>) <end-of-block>) <end-of-rule>)";
+string found = g.GetRule( "synpred1_Expr" ).Tree.ToStringTree();
+Assert.AreEqual( expecting, found );
+}
+diff --git a/Antlr3.Test/TestFastQueue.cs b/Antlr3.Test/TestFastQueue.cs
+index 80267f8..429441a 100644
+--- a/Antlr3.Test/TestFastQueue.cs
++++ b/Antlr3.Test/TestFastQueue.cs
+@@ -103,64 +103,34 @@ namespace AntlrUnitTests
+// E r r o r s
+
+[TestMethod]
++        [ExpectedException(typeof(InvalidOperationException))]
+public void TestGetFromEmptyQueue()
+{
+FastQueue<string> q = new FastQueue<string>();
+-            string msg = null;
+-            try
+-            {
+-                q.Dequeue();
+-            }
+-            catch (InvalidOperationException nsee)
+-            {
+-                msg = nsee.Message;
+-            }
+-            string expecting = "queue index 0 > last index -1";
+-            string found = msg;
+-            Assert.AreEqual( expecting, found );
++            q.Dequeue();
+}
+
+[TestMethod]
++        [ExpectedException(typeof(InvalidOperationException))]
+public void TestGetFromEmptyQueueAfterSomeAdds()
+{
+FastQueue<string> q = new FastQueue<string>();
+-            q.Enqueue( "a" );
+-            q.Enqueue( "b" );
++            q.Enqueue("a");
++            q.Enqueue("b");
++            q.Dequeue();
+q.Dequeue();
+q.Dequeue();
+-            string msg = null;
+-            try
+-            {
+-                q.Dequeue();
+-            }
+-            catch (InvalidOperationException nsee)
+-            {
+-                msg = nsee.Message;
+-            }
+-            string expecting = "queue index 0 > last index -1";
+-            string found = msg;
+-            Assert.AreEqual( expecting, found );
+}
+
+[TestMethod]
++        [ExpectedException(typeof(InvalidOperationException))]
+public void TestGetFromEmptyQueueAfterClear()
+{
+FastQueue<string> q = new FastQueue<string>();
+-            q.Enqueue( "a" );
+-            q.Enqueue( "b" );
++            q.Enqueue("a");
++            q.Enqueue("b");
+q.Clear();
+-            string msg = null;
+-            try
+-            {
+-                q.Dequeue();
+-            }
+-            catch ( InvalidOperationException nsee )
+-            {
+-                msg = nsee.Message;
+-            }
+-            string expecting = "queue index 0 > last index -1";
+-            string found = msg;
+-            Assert.AreEqual( expecting, found );
++            q.Dequeue();
+}
+}
+}
+diff --git a/Antlr3.Test/TestSemanticPredicates.cs b/Antlr3.Test/TestSemanticPredicates.cs
+index 44c53b2..c32e952 100644
+--- a/Antlr3.Test/TestSemanticPredicates.cs
++++ b/Antlr3.Test/TestSemanticPredicates.cs
+@@ -780,7 +780,7 @@ namespace AntlrUnitTests
+"  ;\n" );
+string expecting =
+".s0-X->.s1" + NewLine +
+-                ".s1-{((a&&c)||(b&&c))}?->:s2=>1" + NewLine +
++                ".s1-{(c&&(a||b))}?->:s2=>1" + NewLine +
+".s1-{c}?->:s3=>2" + NewLine;
+int[] unreachableAlts = null;
+int[] nonDetAlts = null;
+diff --git a/Antlr3.Test/TestTemplates.cs b/Antlr3.Test/TestTemplates.cs
+index 21767fc..ace0fd1 100644
+--- a/Antlr3.Test/TestTemplates.cs
++++ b/Antlr3.Test/TestTemplates.cs
+@@ -54,7 +54,7 @@ namespace AntlrUnitTests
+public void TestTemplateConstructor() /*throws Exception*/ {
+string action = "x = %foo(name={$ID.text});";
+string expecting = "x = templateLib.getInstanceOf(\"foo\"," +
+-                "  new STAttrMap().put(\"name\", (ID1!=null?ID1.getText():null)));";
++                "new STAttrMap().put(\"name\", (ID1!=null?ID1.getText():null)));";
+
+ErrorQueue equeue = new ErrorQueue();
+ErrorManager.SetErrorListener( equeue );
+@@ -129,7 +129,7 @@ namespace AntlrUnitTests
+public void TestIndirectTemplateConstructor() /*throws Exception*/ {
+string action = "x = %({\"foo\"})(name={$ID.text});";
+string expecting = "x = templateLib.getInstanceOf(\"foo\"," +
+-                "  new STAttrMap().put(\"name\", (ID1!=null?ID1.getText():null)));";
++                "new STAttrMap().put(\"name\", (ID1!=null?ID1.getText():null)));";
+
+ErrorQueue equeue = new ErrorQueue();
+ErrorManager.SetErrorListener( equeue );
+

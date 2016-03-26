@@ -1,0 +1,201 @@
+commit 70a60fb55830104ae4ad5f18a09b1b5c64f0abc1
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Thu Jun 23 13:42:48 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Thu Jun 23 13:42:48 2011 -0800
+
+(C# 3) Expose TemplateGroup._defaultGroup (private field) as TemplateGroup.DefaultGroup (public property).
+Ensure TemplateGroup.Encoding is never null (argument checks, default value Encoding.UTF8).
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8756]
+
+diff --git a/Antlr3.Test/BaseTest.cs b/Antlr3.Test/BaseTest.cs
+index f5ed5b6..be89dac 100644
+--- a/Antlr3.Test/BaseTest.cs
++++ b/Antlr3.Test/BaseTest.cs
+@@ -112,7 +112,7 @@ namespace AntlrUnitTests
+tmpdir = Path.GetFullPath( Path.Combine( Path.GetTempPath(), "antlr-" + currentTimeMillis() ) );
+
+ErrorManager.ResetErrorState();
+-            StringTemplateGroup.defaultGroup = new StringTemplateGroup();
++            StringTemplateGroup.DefaultGroup = new StringTemplateGroup();
+
+// verify token constants in StringTemplate
+VerifyImportedTokens( typeof( Antlr3.ST.Language.ActionParser ), typeof( Antlr3.ST.Language.ActionLexer ) );
+diff --git a/Antlr4.StringTemplate/Compiler/CompiledTemplate.cs b/Antlr4.StringTemplate/Compiler/CompiledTemplate.cs
+index 43ed85b..c62a91b 100644
+--- a/Antlr4.StringTemplate/Compiler/CompiledTemplate.cs
++++ b/Antlr4.StringTemplate/Compiler/CompiledTemplate.cs
+@@ -102,7 +102,7 @@ namespace Antlr4.StringTemplate.Compiler
+*  interpretation via Template.ToString().  From there, it becomes field 'group'
+*  in interpreter and is fixed until rendering completes.
+*/
+-        private TemplateGroup _nativeGroup = TemplateGroup.defaultGroup;
++        private TemplateGroup _nativeGroup = TemplateGroup.DefaultGroup;
+
+/** Does this template come from a &lt;@region&gt;...&lt;@end&gt; embedded in
+*  another template?
+diff --git a/Antlr4.StringTemplate/Template.cs b/Antlr4.StringTemplate/Template.cs
+index 5bf664b..425604a 100644
+--- a/Antlr4.StringTemplate/Template.cs
++++ b/Antlr4.StringTemplate/Template.cs
+@@ -150,7 +150,7 @@ namespace Antlr4.StringTemplate
+*  No formal args are set and there is no enclosing instance.
+*/
+public Template(string template)
+-            : this(TemplateGroup.defaultGroup, template)
++            : this(TemplateGroup.DefaultGroup, template)
+{
+}
+
+diff --git a/Antlr4.StringTemplate/TemplateGroup.cs b/Antlr4.StringTemplate/TemplateGroup.cs
+index 9e29dd5..5fe758a 100644
+--- a/Antlr4.StringTemplate/TemplateGroup.cs
++++ b/Antlr4.StringTemplate/TemplateGroup.cs
+@@ -70,7 +70,7 @@ namespace Antlr4.StringTemplate
+public static readonly string DefaultKey = "default";
+
+/** Load files using what encoding? */
+-        private Encoding _encoding;
++        private Encoding _encoding = Encoding.UTF8;
+
+/** Every group can import templates/dictionaries from other groups.
+*  The list must be synchronized (see ImportTemplates).
+@@ -150,7 +150,7 @@ namespace Antlr4.StringTemplate
+
+private static readonly ErrorManager _defaultErrorManager = new ErrorManager();
+
+-        public static TemplateGroup defaultGroup = new TemplateGroup();
++        private static TemplateGroup _defaultGroup = new TemplateGroup();
+
+/** The error manager for entire group; all compilations and executions.
+*  This gets copied to parsers, walkers, and interpreters.
+@@ -175,6 +175,22 @@ namespace Antlr4.StringTemplate
+}
+}
+
++        public static TemplateGroup DefaultGroup
++        {
++            get
++            {
++                return _defaultGroup;
++            }
++
++            set
++            {
++                if (value == null)
++                    throw new ArgumentNullException("value");
++
++                _defaultGroup = value;
++            }
++        }
++
+public ICollection<CompiledTemplate> CompiledTemplates
+{
+get
+@@ -192,6 +208,9 @@ namespace Antlr4.StringTemplate
+
+set
+{
++                if (value == null)
++                    throw new ArgumentNullException("value");
++
+_encoding = value;
+}
+}
+@@ -832,7 +851,7 @@ namespace Antlr4.StringTemplate
+try
+{
+Uri f = new Uri(fileName);
+-                ANTLRReaderStream fs = new ANTLRReaderStream(new System.IO.StreamReader(f.LocalPath, Encoding ?? Encoding.UTF8));
++                ANTLRReaderStream fs = new ANTLRReaderStream(new System.IO.StreamReader(f.LocalPath, Encoding));
+GroupLexer lexer = new GroupLexer(fs);
+fs.name = fileName;
+CommonTokenStream tokens = new CommonTokenStream(lexer);
+diff --git a/Antlr4.StringTemplate/TemplateGroupDirectory.cs b/Antlr4.StringTemplate/TemplateGroupDirectory.cs
+index 74086c0..e4bcc22 100644
+--- a/Antlr4.StringTemplate/TemplateGroupDirectory.cs
++++ b/Antlr4.StringTemplate/TemplateGroupDirectory.cs
+@@ -35,7 +35,9 @@ namespace Antlr4.StringTemplate
+using Antlr.Runtime;
+using Antlr4.StringTemplate.Compiler;
+using Antlr4.StringTemplate.Misc;
++
+using ArgumentException = System.ArgumentException;
++    using ArgumentNullException = System.ArgumentNullException;
+using Console = System.Console;
+using Directory = System.IO.Directory;
+using Encoding = System.Text.Encoding;
+@@ -110,12 +112,18 @@ namespace Antlr4.StringTemplate
+public TemplateGroupDirectory(string dirName, Encoding encoding, char delimiterStartChar, char delimiterStopChar)
+: this(dirName, delimiterStartChar, delimiterStopChar)
+{
++            if (encoding == null)
++                throw new ArgumentNullException("encoding");
++
+this.Encoding = encoding;
+}
+
+public TemplateGroupDirectory(Uri root, Encoding encoding, char delimiterStartChar, char delimiterStopChar)
+: base(delimiterStartChar, delimiterStopChar)
+{
++            if (encoding == null)
++                throw new ArgumentNullException("encoding");
++
+this.root = root;
+this.Encoding = encoding;
+}
+@@ -216,7 +224,7 @@ namespace Antlr4.StringTemplate
+ANTLRReaderStream fs = null;
+try
+{
+-                fs = new ANTLRReaderStream(new StreamReader(f.LocalPath, Encoding ?? Encoding.UTF8));
++                fs = new ANTLRReaderStream(new StreamReader(f.LocalPath, Encoding));
+fs.name = unqualifiedFileName;
+}
+catch (IOException)
+diff --git a/Antlr4.StringTemplate/TemplateGroupFile.cs b/Antlr4.StringTemplate/TemplateGroupFile.cs
+index b910257..fe42299 100644
+--- a/Antlr4.StringTemplate/TemplateGroupFile.cs
++++ b/Antlr4.StringTemplate/TemplateGroupFile.cs
+@@ -103,6 +103,9 @@ namespace Antlr4.StringTemplate
+public TemplateGroupFile(string fullyQualifiedFileName, Encoding encoding, char delimiterStartChar, char delimiterStopChar)
+: this(fullyQualifiedFileName, delimiterStartChar, delimiterStopChar)
+{
++            if (encoding == null)
++                throw new ArgumentNullException("encoding");
++
+this.Encoding = encoding;
+}
+
+@@ -111,6 +114,8 @@ namespace Antlr4.StringTemplate
+{
+if (url == null)
+throw new ArgumentNullException("url");
++            if (encoding == null)
++                throw new ArgumentNullException("encoding");
+
+this._url = url;
+this.Encoding = encoding;
+@@ -121,6 +126,7 @@ namespace Antlr4.StringTemplate
+{
+if (!_alreadyLoaded)
+Load();
++
+return base.IsDefined(name);
+}
+
+diff --git a/Antlr4.Test.StringTemplate/BaseTest.cs b/Antlr4.Test.StringTemplate/BaseTest.cs
+index c558e92..3527c0c 100644
+--- a/Antlr4.Test.StringTemplate/BaseTest.cs
++++ b/Antlr4.Test.StringTemplate/BaseTest.cs
+@@ -64,7 +64,7 @@ namespace Antlr4.Test.StringTemplate
+
+protected virtual void setUpImpl()
+{
+-            TemplateGroup.defaultGroup = new TemplateGroup();
++            TemplateGroup.DefaultGroup = new TemplateGroup();
+TemplateCompiler.subtemplateCount = 0;
+
+// new output dir for each test
+

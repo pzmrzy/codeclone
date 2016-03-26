@@ -1,0 +1,459 @@
+commit f2122d55022f5ebaa57fdedcf9413670bdbf262d
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon May 2 14:37:52 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon May 2 14:37:52 2011 -0800
+
+(C# 3) Use indexer property instead of Get() and Set() methods for OrderedHashSet<T>
+Use Count property instead of Size() method for OrderedHashSet<T>
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8374]
+
+diff --git a/Antlr3/Analysis/DFAState.cs b/Antlr3/Analysis/DFAState.cs
+index d9a56d2..d3a0de9 100644
+--- a/Antlr3/Analysis/DFAState.cs
++++ b/Antlr3/Analysis/DFAState.cs
+@@ -1,10 +1,10 @@
+﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+* Conversion to C#:
+- * Copyright (c) 2008-2009 Sam Harwell, Pixel Mine, Inc.
++ * Copyright (c) 2011 Sam Harwell, Pixel Mine, Inc.
+* All rights reserved.
+*
+* Redistribution and use in source and binary forms, with or without
+@@ -415,11 +415,11 @@ namespace Antlr3.Analysis
+}
+IIntSet t = label.Set;
+IIntSet remainder = t; // remainder starts out as whole set to add
+-            int n = _reachableLabels.Size(); // only look at initial elements
++            int n = _reachableLabels.Count; // only look at initial elements
+// walk the existing list looking for the collision
+for ( int i = 0; i < n; i++ )
+{
+-                Label rl = _reachableLabels.Get( i );
++                Label rl = _reachableLabels[i];
+/*
+JSystem.@out.println("comparing ["+i+"]: "+label.toString(dfa.nfa.grammar)+" & "+
+rl.toString(dfa.nfa.grammar)+"="+
+@@ -438,7 +438,7 @@ namespace Antlr3.Analysis
+// know that will always be a non nil character class
+IIntSet s_i = rl.Set;
+IIntSet intersection = s_i.And( t );
+-                _reachableLabels.Set( i, new Label( intersection ) );
++                _reachableLabels[i] = new Label( intersection );
+
+// Compute s_i-t to see what is in current set and not in incoming
+IIntSet existingMinusNewElements = s_i.Subtract( t );
+@@ -548,10 +548,10 @@ namespace Antlr3.Analysis
+return cachedUniquelyPredicatedAlt;
+}
+int alt = NFA.INVALID_ALT_NUMBER;
+-            int numConfigs = nfaConfigurations.Size();
++            int numConfigs = nfaConfigurations.Count;
+for ( int i = 0; i < numConfigs; i++ )
+{
+-                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations.Get( i );
++                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations[i];
+// ignore anything we resolved; predicates will still result
+// in transitions out of this state, so must count those
+// configurations; i.e., don't ignore resolveWithPredicate configs
+@@ -579,10 +579,10 @@ namespace Antlr3.Analysis
+public virtual int GetUniqueAlt()
+{
+int alt = NFA.INVALID_ALT_NUMBER;
+-            int numConfigs = nfaConfigurations.Size();
++            int numConfigs = nfaConfigurations.Count;
+for ( int i = 0; i < numConfigs; i++ )
+{
+-                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations.Get( i );
++                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations[i];
+if ( alt == NFA.INVALID_ALT_NUMBER )
+{
+alt = configuration.alt; // found first alt
+@@ -610,10 +610,10 @@ namespace Antlr3.Analysis
+public virtual ICollection<int> GetDisabledAlternatives()
+{
+HashSet<int> disabled = new HashSet<int>();
+-            int numConfigs = nfaConfigurations.Size();
++            int numConfigs = nfaConfigurations.Count;
+for ( int i = 0; i < numConfigs; i++ )
+{
+-                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations.Get( i );
++                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations[i];
+if ( configuration.resolved )
+{
+disabled.Add( configuration.alt );
+@@ -668,7 +668,7 @@ namespace Antlr3.Analysis
+// save the overhead.  There are many o-a->o NFA transitions
+// and so we save a hash map and iterator creation for each
+// state.
+-            int numConfigs = nfaConfigurations.Size();
++            int numConfigs = nfaConfigurations.Count;
+if ( numConfigs <= 1 )
+{
+return null;
+@@ -680,7 +680,7 @@ namespace Antlr3.Analysis
+new MultiMap<int, NFAConfiguration>();
+for ( int i = 0; i < numConfigs; i++ )
+{
+-                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations.Get( i );
++                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations[i];
+int stateI = configuration.state;
+stateToConfigListMap.Map( stateI, configuration );
+}
+@@ -794,11 +794,11 @@ namespace Antlr3.Analysis
+*/
+public virtual HashSet<int> GetAltSet()
+{
+-            int numConfigs = nfaConfigurations.Size();
++            int numConfigs = nfaConfigurations.Count;
+HashSet<int> alts = new HashSet<int>();
+for ( int i = 0; i < numConfigs; i++ )
+{
+-                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations.Get( i );
++                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations[i];
+alts.Add( configuration.alt );
+}
+if ( alts.Count == 0 )
+@@ -810,11 +810,11 @@ namespace Antlr3.Analysis
+
+public virtual HashSet<SemanticContext> GetGatedSyntacticPredicatesInNFAConfigurations()
+{
+-            int numConfigs = nfaConfigurations.Size();
++            int numConfigs = nfaConfigurations.Count;
+HashSet<SemanticContext> synpreds = new HashSet<SemanticContext>();
+for ( int i = 0; i < numConfigs; i++ )
+{
+-                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations.Get( i );
++                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations[i];
+SemanticContext gatedPredExpr =
+configuration.semanticContext.GatedPredicateContext;
+// if this is a manual syn pred (gated and syn pred), add
+@@ -860,10 +860,10 @@ namespace Antlr3.Analysis
+public virtual SemanticContext GetGatedPredicatesInNFAConfigurations()
+{
+SemanticContext unionOfPredicatesFromAllAlts = null;
+-            int numConfigs = nfaConfigurations.Size();
++            int numConfigs = nfaConfigurations.Count;
+for ( int i = 0; i < numConfigs; i++ )
+{
+-                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations.Get( i );
++                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations[i];
+SemanticContext gatedPredExpr =
+configuration.semanticContext.GatedPredicateContext;
+if ( gatedPredExpr == null )
+@@ -903,9 +903,9 @@ namespace Antlr3.Analysis
+{
+StringBuilder buf = new StringBuilder();
+buf.Append( StateNumber + ":{" );
+-            for ( int i = 0; i < nfaConfigurations.Size(); i++ )
++            for ( int i = 0; i < nfaConfigurations.Count; i++ )
+{
+-                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations.Get( i );
++                NFAConfiguration configuration = (NFAConfiguration)nfaConfigurations[i];
+if ( i > 0 )
+{
+buf.Append( ", " );
+diff --git a/Antlr3/Analysis/NFAtoDFAConverter.cs b/Antlr3/Analysis/NFAtoDFAConverter.cs
+index 33de3f5..90bbbfa 100644
+--- a/Antlr3/Analysis/NFAtoDFAConverter.cs
++++ b/Antlr3/Analysis/NFAtoDFAConverter.cs
+@@ -97,7 +97,7 @@ namespace Antlr3.Analysis
+if ( _dfa.nfa.grammar.composite.watchNFAConversion )
+{
+Console.Out.WriteLine( "convert DFA state " + d.StateNumber +
+-                                       " (" + d.nfaConfigurations.Size() + " nfa states)" );
++                                       " (" + d.nfaConfigurations.Count + " nfa states)" );
+}
+int k = _dfa.UserMaxLookahead;
+if ( k > 0 && k == d.LookaheadDepth )
+@@ -958,7 +958,7 @@ namespace Antlr3.Analysis
+c.semanticContext );
+}
+}
+-            if ( labelDFATarget.nfaConfigurations.Size() == 0 )
++            if ( labelDFATarget.nfaConfigurations.Count == 0 )
+{
+// kill; it's empty
+_dfa.SetState( labelDFATarget.StateNumber, null );
+@@ -981,10 +981,10 @@ namespace Antlr3.Analysis
+protected virtual void ConvertToEOTAcceptState( DFAState d )
+{
+Label eot = new Label( Label.EOT );
+-            int numConfigs = d.nfaConfigurations.Size();
++            int numConfigs = d.nfaConfigurations.Count;
+for ( int i = 0; i < numConfigs; i++ )
+{
+-                NFAConfiguration c = (NFAConfiguration)d.nfaConfigurations.Get( i );
++                NFAConfiguration c = (NFAConfiguration)d.nfaConfigurations[i];
+if ( c.resolved || c.resolveWithPredicate )
+{
+continue; // the conflict resolver indicates we must leave alone
+@@ -1259,7 +1259,7 @@ namespace Antlr3.Analysis
+// transition on EOT to get to this DFA state as well so all
+// states in d must be targets of EOT.  These are the end states
+// created in NFAFactory.build_EOFState
+-            NFAConfiguration anyConfig = d.nfaConfigurations.Get( 0 );
++            NFAConfiguration anyConfig = d.nfaConfigurations[0];
+NFAState anyState = _dfa.nfa.GetState( anyConfig.state );
+
+// if d is target of EOT and more than one predicted alt
+@@ -1393,10 +1393,10 @@ namespace Antlr3.Analysis
+*/
+protected static void TurnOffOtherAlts( DFAState d, int min, ICollection<int> nondeterministicAlts )
+{
+-            int numConfigs = d.nfaConfigurations.Size();
++            int numConfigs = d.nfaConfigurations.Count;
+for ( int i = 0; i < numConfigs; i++ )
+{
+-                NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations.Get( i );
++                NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations[i];
+if ( configuration.alt != min )
+{
+if ( nondeterministicAlts == null ||
+@@ -1522,12 +1522,12 @@ namespace Antlr3.Analysis
+
+altToPredMap[nakedAlt] = nakedAltPred;
+// set all config with alt=nakedAlt to have the computed predicate
+-                int numConfigs = d.nfaConfigurations.Size();
++                int numConfigs = d.nfaConfigurations.Count;
+for ( int i = 0; i < numConfigs; i++ )
+{
+// TODO: I don't think we need to do this; altToPredMap has it
+//7/27/10  theok, I removed it and it still seems to work with everything; leave in anyway just in case
+-                    NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations.Get( i );
++                    NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations[i];
+if ( configuration.alt == nakedAlt )
+{
+configuration.semanticContext = nakedAltPred;
+@@ -1545,11 +1545,11 @@ namespace Antlr3.Analysis
+{
+d.dfa.probe.RemoveRecursiveOverflowState( d );
+}
+-                int numConfigs = d.nfaConfigurations.Size();
++                int numConfigs = d.nfaConfigurations.Count;
+//System.out.println("pred map="+altToPredMap);
+for ( int i = 0; i < numConfigs; i++ )
+{
+-                    NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations.Get( i );
++                    NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations[i];
+SemanticContext semCtx;
+altToPredMap.TryGetValue(configuration.alt, out semCtx);
+if ( semCtx != null )
+@@ -1628,10 +1628,10 @@ namespace Antlr3.Analysis
+//JSystem.@out.println("configs="+d.nfaConfigurations);
+//JSystem.@out.println("configs with preds?"+d.atLeastOneConfigurationHasAPredicate);
+//JSystem.@out.println("configs with preds="+d.configurationsWithPredicateEdges);
+-            int numConfigs = d.nfaConfigurations.Size();
++            int numConfigs = d.nfaConfigurations.Count;
+for ( int i = 0; i < numConfigs; i++ )
+{
+-                NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations.Get( i );
++                NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations[i];
+int altI = configuration.alt;
+// if alt is nondeterministic, combine its predicates
+if ( nondeterministicAlts.Contains( altI ) )
+@@ -1714,7 +1714,7 @@ namespace Antlr3.Analysis
+*/
+for ( int i = 0; i < numConfigs; i++ )
+{
+-                    NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations.Get( i );
++                    NFAConfiguration configuration = (NFAConfiguration)d.nfaConfigurations[i];
+int altI = configuration.alt;
+if ( incompletelyCoveredAlts.Contains( altI ) &&
+configuration.semanticContext == SemanticContext.EmptySemanticContext )
+@@ -1803,10 +1803,10 @@ namespace Antlr3.Analysis
+{
+List<NFAConfiguration> configsWithPreds = new List<NFAConfiguration>();
+// get a list of all configs with predicates
+-            int numConfigs = d.nfaConfigurations.Size();
++            int numConfigs = d.nfaConfigurations.Count;
+for ( int i = 0; i < numConfigs; i++ )
+{
+-                NFAConfiguration c = (NFAConfiguration)d.nfaConfigurations.Get( i );
++                NFAConfiguration c = (NFAConfiguration)d.nfaConfigurations[i];
+if ( c.resolveWithPredicate )
+{
+configsWithPreds.Add( c );
+diff --git a/Antlr3/Misc/OrderedHashSet.cs b/Antlr3/Misc/OrderedHashSet.cs
+index cc7a2b8..17a11e0 100644
+--- a/Antlr3/Misc/OrderedHashSet.cs
++++ b/Antlr3/Misc/OrderedHashSet.cs
+@@ -1,10 +1,10 @@
+﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+* Conversion to C#:
+- * Copyright (c) 2008 Sam Harwell, Pixel Mine, Inc.
++ * Copyright (c) 2011 Sam Harwell, Pixel Mine, Inc.
+* All rights reserved.
+*
+* Redistribution and use in source and binary forms, with or without
+@@ -34,8 +34,8 @@ namespace Antlr3.Misc
+{
+using System.Collections.Generic;
+
+-    using CLSCompliant = System.CLSCompliantAttribute;
+-    using NotSupportedException = System.NotSupportedException;
++    using ArgumentException = System.ArgumentException;
++    using ArgumentNullException = System.ArgumentNullException;
+
+/** A HashMap that remembers the order that the elements were added.
+*  You can alter the ith element with this[i]=value too :)  Unique list.
+@@ -45,32 +45,33 @@ namespace Antlr3.Misc
+public class OrderedHashSet<T> : ICollection<T>
+{
+/** Track the elements as they are added to the set */
+-        [CLSCompliant(false)]
+-        protected IList<T> _elements = new List<T>();
++        private readonly List<T> _elements = new List<T>();
+
+-        [CLSCompliant(false)]
+-        protected HashSet<T> _elementSet = new HashSet<T>();
++        private readonly HashSet<T> _elementSet = new HashSet<T>();
+
+-        public T Get( int i )
++        public T this[int i]
+{
+-            return _elements[i];
+-        }
++            get
++            {
++                return _elements[i];
++            }
+
+-        /** Replace an existing value with a new value; updates the element
+-         *  list and the hash table, but not the key as that has not changed.
+-         */
+-        public T Set( int i, T value )
+-        {
+-            T oldElement = _elements[i];
+-            _elements[i] = value; // update list
++            /** Replace an existing value with a new value; updates the element
++             *  list and the hash table, but not the key as that has not changed.
++             */
++            set
++            {
++                if (value == null)
++                    throw new ArgumentNullException("value");
+
+-            _elementSet.Remove( oldElement );
+-            _elementSet.Add( value );
++                T oldElement = _elements[i];
++                if (_elementSet.Contains(value) && !_elementSet.Comparer.Equals(oldElement, value))
++                    throw new ArgumentException("The value already exists in this set.", "value");
+
+-            //throw new NotImplementedException();
+-            //base.Remove( oldElement ); // now update the set: remove/add
+-            //base.Add( value );
+-            return oldElement;
++                _elements[i] = value; // update list
++                _elementSet.Remove( oldElement );
++                _elementSet.Add( value );
++            }
+}
+
+/** Add a value to list; keep in hashtable for consistency also;
+@@ -86,22 +87,17 @@ namespace Antlr3.Misc
+}
+
+return false;
+-            //throw new NotImplementedException();
+-            //boolean result = base.add( value );
+-            //if ( result )
+-            //{  // only track if new element not in set
+-            //    elements.add( (T)value );
+-            //}
+-            //return result;
+}
+
+public bool Remove( T o )
+{
+-            throw new NotSupportedException();
+-            /*
+-            elements.remove(o);
+-            return super.remove(o);
+-            */
++            if (_elementSet.Remove(o))
++            {
++                _elements.Remove(o);
++                return true;
++            }
++
++            return false;
+}
+
+public void Clear()
+@@ -118,17 +114,6 @@ namespace Antlr3.Misc
+return _elements;
+}
+
+-        public int Size()
+-        {
+-            /*
+-            if ( elements.size()!=super.size() ) {
+-                ErrorManager.internalError("OrderedHashSet: elements and set size differs; "+
+-                                           elements.size()+"!="+super.size());
+-            }
+-            */
+-            return _elements.Count;
+-        }
+-
+public override string ToString()
+{
+return _elements.ToString();
+@@ -148,7 +133,7 @@ namespace Antlr3.Misc
+
+public void CopyTo( T[] array, int arrayIndex )
+{
+-            throw new System.NotImplementedException();
++            _elements.CopyTo(array, arrayIndex);
+}
+
+public int Count
+@@ -163,7 +148,7 @@ namespace Antlr3.Misc
+{
+get
+{
+-                throw new System.NotImplementedException();
++                return false;
+}
+}
+
+diff --git a/Antlr3/Tool/Grammar.cs b/Antlr3/Tool/Grammar.cs
+index 5b7f04f..6c41287 100644
+--- a/Antlr3/Tool/Grammar.cs
++++ b/Antlr3/Tool/Grammar.cs
+@@ -1787,10 +1787,10 @@ namespace Antlr3.Tool
+
+// compare t with set i for disjointness
+IntervalSet remainder = t; // remainder starts out as whole set to add
+-                int numDisjointElements = disjointSets.Size();
++                int numDisjointElements = disjointSets.Count;
+for ( int i = 0; i < numDisjointElements; i++ )
+{
+-                    IntervalSet s_i = (IntervalSet)disjointSets.Get( i );
++                    IntervalSet s_i = (IntervalSet)disjointSets[i];
+
+if ( t.And( s_i ).IsNil )
+{ // nothing in common
+@@ -1804,7 +1804,7 @@ namespace Antlr3.Tool
+// Replace existing s_i with intersection since we
+// know that will always be a non nil character class
+IntervalSet intersection = (IntervalSet)s_i.And( t );
+-                    disjointSets.Set( i, intersection );
++                    disjointSets[i] = intersection;
+
+// Compute s_i-t to see what is in current set and not in incoming
+IIntSet existingMinusNewElements = s_i.Subtract( t );
+

@@ -1,0 +1,22 @@
+commit 4ee419d9961c572fbcb6342b49e715c958b07540
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Sun Jul 22 17:34:43 2012 -0500
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Sun Jul 22 17:34:43 2012 -0500
+
+Fix build errors when compiling projects with XAML files
+
+diff --git a/AntlrBuildTask/Antlr3.targets b/AntlrBuildTask/Antlr3.targets
+index 98e5613..3925380 100644
+--- a/AntlrBuildTask/Antlr3.targets
++++ b/AntlrBuildTask/Antlr3.targets
+@@ -160,6 +160,8 @@
+
+<ItemGroup>
+<Compile Include="@(AntlrGeneratedCodeFiles)" />
++      <!-- The WinFX "GenerateTemporaryTargetAssembly" target requires generated code files be added here. -->
++      <_GeneratedCodeFiles Include="@(AntlrGeneratedCodeFiles)" />
+</ItemGroup>
+
+</Target>
+

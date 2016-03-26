@@ -1,0 +1,60 @@
+commit ff80cbb3e4b736d42c025f1898d366f2473d0c3d
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sun Nov 21 00:32:11 2010 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sun Nov 21 00:32:11 2010 -0800
+
+(C# 3) Fix tests (CL6907)
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7086]
+
+diff --git a/Antlr3.Test/TestCharDFAConversion.cs b/Antlr3.Test/TestCharDFAConversion.cs
+index 8e57894..869bd0c 100644
+--- a/Antlr3.Test/TestCharDFAConversion.cs
++++ b/Antlr3.Test/TestCharDFAConversion.cs
+@@ -551,11 +551,11 @@ namespace AntlrUnitTests
+int[] expectingUnreachableAlts )
+//throws Exception
+{
+-
++            Antlr3.AntlrTool tool = new Antlr3.AntlrTool();
+// mimic actions of org.antlr.Tool first time for grammar g
+if ( g.CodeGenerator == null )
+{
+-                CodeGenerator generator = new CodeGenerator( null, g, "Java" );
++                CodeGenerator generator = new CodeGenerator( tool, g, "Java" );
+g.CodeGenerator = generator;
+g.BuildNFA();
+g.CreateLookaheadDFAs( false );
+diff --git a/Antlr3.Test/TestDFAConversion.cs b/Antlr3.Test/TestDFAConversion.cs
+index 3ef706f..40a3110 100644
+--- a/Antlr3.Test/TestDFAConversion.cs
++++ b/Antlr3.Test/TestDFAConversion.cs
+@@ -552,7 +552,7 @@ namespace AntlrUnitTests
+
+g.CreateLookaheadDFAs( false );
+
+-            Message msg = (Message)equeue.warnings[0];
++            Message msg = (Message)equeue.errors[0];
+assertTrue( "expecting left recursion cycles; found " + msg.GetType().Name,
+msg is LeftRecursionCyclesMessage );
+LeftRecursionCyclesMessage cyclesMsg = (LeftRecursionCyclesMessage)msg;
+@@ -588,7 +588,7 @@ namespace AntlrUnitTests
+
+g.CreateLookaheadDFAs( false );
+
+-            Message msg = (Message)equeue.warnings[0];
++            Message msg = (Message)equeue.errors[0];
+assertTrue( "expecting left recursion cycles; found " + msg.GetType().Name,
+msg is LeftRecursionCyclesMessage );
+LeftRecursionCyclesMessage cyclesMsg = (LeftRecursionCyclesMessage)msg;
+@@ -623,7 +623,7 @@ namespace AntlrUnitTests
+
+assertTrue( expectedRules.SequenceEqual( ruleNames( leftRecursive ) ) );
+
+-            Message msg = (Message)equeue.warnings[0];
++            Message msg = (Message)equeue.errors[0];
+assertTrue( "expecting left recursion cycles; found " + msg.GetType().Name,
+msg is LeftRecursionCyclesMessage );
+LeftRecursionCyclesMessage cyclesMsg = (LeftRecursionCyclesMessage)msg;
+

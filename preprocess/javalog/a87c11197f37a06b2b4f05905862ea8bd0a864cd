@@ -1,0 +1,173 @@
+commit a87c11197f37a06b2b4f05905862ea8bd0a864cd
+Author:     Zannick <jokeserver@gmail.com>
+AuthorDate: Tue Dec 18 20:41:21 2012 -0800
+Commit:     Zannick <jokeserver@gmail.com>
+CommitDate: Tue Dec 18 20:41:21 2012 -0800
+
+Fix Python/Python3 warnings: null.attributes
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Python/Python.stg b/tool/src/main/resources/org/antlr/codegen/templates/Python/Python.stg
+index 8bacb82..cffdf86 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Python/Python.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Python/Python.stg
+@@ -297,7 +297,7 @@ class <grammar.recognizerName>(<@superClassName><superClass><@end>):
+
+delegateRule(ruleDescriptor) ::= <<
+def <ruleDescriptor.name>(self, <ruleDescriptor.parameterScope:parameterScope()>):
+-<\ >   <if(ruleDescriptor.hasReturnValue)>return <endif>self.<ruleDescriptor.grammar:delegateName()>.<ruleDescriptor.name>(<ruleDescriptor.parameterScope.attributes:{a|<a.name>}; separator=", ">)
++<\ >   <if(ruleDescriptor.hasReturnValue)>return <endif>self.<ruleDescriptor.grammar:delegateName()>.<ruleDescriptor.name>(<if(ruleDescriptor.parameterScope)><ruleDescriptor.parameterScope.attributes:{a|<a.name>}; separator=", "><endif>)
+
+
+>>
+@@ -480,7 +480,7 @@ ruleDeclarations() ::= <<
+<if(ruleDescriptor.hasMultipleReturnValues)>
+retval = self.<ruleDescriptor.name>_return()
+retval.start = self.input.LT(1)<\n>
+-<else>
++<elseif(ruleDescriptor.returnScope)>
+<ruleDescriptor.returnScope.attributes:{ a |
+<a.name> = <if(a.initValue)><a.initValue><else>None<endif>
+}>
+@@ -1236,33 +1236,41 @@ setTest(ranges) ::= "<ranges; separator=\" or \">"
+// A T T R I B U T E S
+
+globalAttributeScopeClass(scope) ::= <<
++<if(scope)>
+<if(scope.attributes)>
+class <scope.name>_scope(object):
+def __init__(self):
+<scope.attributes:{it | self.<it.decl> = None}; separator="\n">
+
+<endif>
++<endif>
+>>
+
+globalAttributeScopeStack(scope) ::= <<
++<if(scope)>
+<if(scope.attributes)>
+self.<scope.name>_stack = []<\n>
+<endif>
++<endif>
+>>
+
+ruleAttributeScopeClass(scope) ::= <<
++<if(scope)>
+<if(scope.attributes)>
+class <scope.name>_scope(object):
+def __init__(self):
+<scope.attributes:{it | self.<it.decl> = None}; separator="\n">
+
+<endif>
++<endif>
+>>
+
+ruleAttributeScopeStack(scope) ::= <<
++<if(scope)>
+<if(scope.attributes)>
+self.<scope.name>_stack = []<\n>
+<endif>
++<endif>
+>>
+
+delegateName(d) ::= <<
+@@ -1286,7 +1294,7 @@ class <ruleDescriptor:returnStructName()>(<if(TREE_PARSER)>Tree<else>Parser<endi
+def __init__(self):
+super(<grammar.recognizerName>.<ruleDescriptor:returnStructName()>, self).__init__()
+
+-        <scope.attributes:{it | self.<it.decl> = None}; separator="\n">
++        <if(scope)><scope.attributes:{it | self.<it.decl> = None}; separator="\n"><endif>
+<@ruleReturnInit()>
+
+
+@@ -1296,7 +1304,7 @@ class <ruleDescriptor:returnStructName()>(<if(TREE_PARSER)>Tree<else>Parser<endi
+>>
+
+parameterScope(scope) ::= <<
+-<scope.attributes:{it | <it.decl>}; separator=", ">
++<if(scope)><scope.attributes:{it | <it.decl>}; separator=", "><endif>
+>>
+
+parameterAttributeRef(attr) ::= "<attr.name>"
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Python3/Python3.stg b/tool/src/main/resources/org/antlr/codegen/templates/Python3/Python3.stg
+index 1dbe5a8..ad2e2ab 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Python3/Python3.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Python3/Python3.stg
+@@ -304,7 +304,7 @@ class <grammar.recognizerName>(<@superClassName><superClass><@end>):
+
+delegateRule(ruleDescriptor) ::= <<
+def <ruleDescriptor.name>(self, <ruleDescriptor.parameterScope:parameterScope()>):
+-<\ >   <if(ruleDescriptor.hasReturnValue)>return <endif>self.<ruleDescriptor.grammar:delegateName()>.<ruleDescriptor.name>(<ruleDescriptor.parameterScope.attributes:{a|<a.name>}; separator=", ">)
++<\ >   <if(ruleDescriptor.hasReturnValue)>return <endif>self.<ruleDescriptor.grammar:delegateName()>.<ruleDescriptor.name>(<if(ruleDescriptor.parameterScope)><ruleDescriptor.parameterScope.attributes:{a|<a.name>}; separator=", "><endif>)
+
+
+>>
+@@ -487,7 +487,7 @@ ruleDeclarations() ::= <<
+<if(ruleDescriptor.hasMultipleReturnValues)>
+retval = self.<ruleDescriptor.name>_return()
+retval.start = self.input.LT(1)<\n>
+-<else>
++<elseif(ruleDescriptor.returnScope)>
+<ruleDescriptor.returnScope.attributes:{ a |
+<a.name> = <if(a.initValue)><a.initValue><else>None<endif>
+}>
+@@ -1254,33 +1254,41 @@ setTest(ranges) ::= "<ranges; separator=\" or \">"
+// A T T R I B U T E S
+
+globalAttributeScopeClass(scope) ::= <<
++<if(scope)>
+<if(scope.attributes)>
+class <scope.name>_scope(object):
+def __init__(self):
+<scope.attributes:{it | self.<it.decl> = None}; separator="\n">
+
+<endif>
++<endif>
+>>
+
+globalAttributeScopeStack(scope) ::= <<
++<if(scope)>
+<if(scope.attributes)>
+self.<scope.name>_stack = []<\n>
+<endif>
++<endif>
+>>
+
+ruleAttributeScopeClass(scope) ::= <<
++<if(scope)>
+<if(scope.attributes)>
+class <scope.name>_scope(object):
+def __init__(self):
+<scope.attributes:{it | self.<it.decl> = None}; separator="\n">
+
+<endif>
++<endif>
+>>
+
+ruleAttributeScopeStack(scope) ::= <<
++<if(scope)>
+<if(scope.attributes)>
+self.<scope.name>_stack = []<\n>
+<endif>
++<endif>
+>>
+
+delegateName(d) ::= <<
+@@ -1304,7 +1312,7 @@ class <ruleDescriptor:returnStructName()>(<if(TREE_PARSER)>Tree<else>Parser<endi
+def __init__(self):
+super().__init__()
+
+-        <scope.attributes:{it | self.<it.decl> = None}; separator="\n">
++        <if(scope)><scope.attributes:{it | self.<it.decl> = None}; separator="\n"><endif>
+<@ruleReturnInit()>
+
+
+@@ -1314,7 +1322,7 @@ class <ruleDescriptor:returnStructName()>(<if(TREE_PARSER)>Tree<else>Parser<endi
+>>
+
+parameterScope(scope) ::= <<
+-<scope.attributes:{it | <it.decl>}; separator=", ">
++<if(scope)><scope.attributes:{it | <it.decl>}; separator=", "><endif>
+>>
+
+parameterAttributeRef(attr) ::= "<attr.name>"
+

@@ -1,0 +1,80 @@
+commit ff4a215ea9093c315e30c861916c3dd39d51c5b6
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Thu Oct 27 09:29:29 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Thu Oct 27 09:29:29 2011 -0800
+
+v3: Fix input index for NVA during inline prediction
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 9214]
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg b/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
+index 877ca6f..df6a9b8 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
+@@ -897,14 +897,45 @@ else {
+alt<decisionNumber>=<eotPredictsAlt>;
+<else>
+<ruleBacktrackFailure()>
+-    NoViableAltException nvae =
+-        new NoViableAltException("<description>", <decisionNumber>, <stateNumber>, input);<\n>
+-    <@noViableAltException()>
+-    throw nvae;<\n>
++	<(nvaExceptionWrapperMap.(k))({NoViableAltException nvae =
++	new NoViableAltException("<description>", <decisionNumber>, <stateNumber>, input);<\n>
++<@noViableAltException()>
++throw nvae;})>
+<endif>
+}
+>>
+
++nvaExceptionWrapperMap ::= [
++	"1":"wrapNvaExceptionForK1",
++	"2":"wrapNvaExceptionForK2",
++	default:"wrapNvaExceptionForKN"
++]
++
++wrapNvaExceptionForK1(exceptionCode) ::= <<
++<exceptionCode>
++>>
++
++wrapNvaExceptionForK2(exceptionCode) ::= <<
++int nvaeMark = input.mark();
++try {
++	input.consume();
++	<exceptionCode>
++} finally {
++	input.rewind(nvaeMark);
++}
++>>
++
++wrapNvaExceptionForKN(exceptionCode) ::= <<
++int nvaeMark = input.mark();
++try {
++	for (int nvaeConsume = 0; nvaeConsume \< <k> - 1; nvaeConsume++)
++		input.consume();
++	<exceptionCode>
++} finally {
++	input.rewind(nvaeMark);
++}
++>>
++
+/** Same as a normal DFA state except that we don't examine lookahead
+*  for the bypass alternative.  It delays error detection but this
+*  is faster, smaller, and more what people expect.  For (X)? people
+@@ -961,10 +992,10 @@ default:
+alt<decisionNumber>=<eotPredictsAlt>;
+<else>
+<ruleBacktrackFailure()>
+-    NoViableAltException nvae =
+-        new NoViableAltException("<description>", <decisionNumber>, <stateNumber>, input);<\n>
+-    <@noViableAltException()>
+-    throw nvae;<\n>
++	<(nvaExceptionWrapperMap.(k))({NoViableAltException nvae =
++	new NoViableAltException("<description>", <decisionNumber>, <stateNumber>, input);<\n>
++<@noViableAltException()>
++throw nvae;})>
+<endif>
+}<\n>
+>>
+

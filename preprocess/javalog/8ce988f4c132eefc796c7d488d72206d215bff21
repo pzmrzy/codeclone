@@ -1,0 +1,1848 @@
+commit 8ce988f4c132eefc796c7d488d72206d215bff21
+Author:     acondit <acondit@parrt.spork>
+AuthorDate: Sat May 7 08:16:37 2011 -0800
+Commit:     acondit <acondit@parrt.spork>
+CommitDate: Sat May 7 08:16:37 2011 -0800
+
+Add treeparser tests.
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8420]
+
+diff --git a/runtime/ObjC/Framework/examples/treeparser/Lang.g b/runtime/ObjC/Framework/examples/treeparser/Lang.g
+new file mode 100755
+index 0000000..90a2512
+--- /dev/null
++++ b/runtime/ObjC/Framework/examples/treeparser/Lang.g
+@@ -0,0 +1,22 @@
++grammar Lang;
++options {
++	output=AST;
++	language = ObjC;
++	ASTLabelType=ANTLRCommonTree;
++}
++
++tokens {DECL;} // an imaginary node
++
++start : decl ;
++
++decl : type ID ';' -> ^(DECL type ID)
++     ;
++type : INTTYPE  // automatic tree construction builds a node for this rule
++     | FLOATTYPE
++     ;
++
++INTTYPE : 'int' ;
++FLOATTYPE : 'float' ;
++ID : 'a'..'z'+ ;
++INT : '0'..'9'+ ;
++WS : (' '|'\n') {$channel=HIDDEN;} ;
+diff --git a/runtime/ObjC/Framework/examples/treeparser/Lang.tokens b/runtime/ObjC/Framework/examples/treeparser/Lang.tokens
+new file mode 100644
+index 0000000..195d148
+--- /dev/null
++++ b/runtime/ObjC/Framework/examples/treeparser/Lang.tokens
+@@ -0,0 +1,8 @@
++T__10=10
++DECL=4
++FLOATTYPE=5
++ID=6
++INT=7
++INTTYPE=8
++WS=9
++';'=10
+diff --git a/runtime/ObjC/Framework/examples/treeparser/LangDumpDecl.g b/runtime/ObjC/Framework/examples/treeparser/LangDumpDecl.g
+new file mode 100755
+index 0000000..07d3e39
+--- /dev/null
++++ b/runtime/ObjC/Framework/examples/treeparser/LangDumpDecl.g
+@@ -0,0 +1,17 @@
++tree grammar LangDumpDecl;
++options {
++    tokenVocab=Lang;
++	language = ObjC;
++    ASTLabelType = ANTLRCommonTree;
++}
++
++decl : ^(DECL type declarator)
++       // label.start, label.start, label.text
++       { NSLog(@"int \%@", $declarator.text);}
++     ;
++
++type : INTTYPE ;
++
++declarator
++     : ID
++     ;
+diff --git a/runtime/ObjC/Framework/examples/treeparser/LangDumpDecl.h b/runtime/ObjC/Framework/examples/treeparser/LangDumpDecl.h
+new file mode 100644
+index 0000000..daaa14d
+--- /dev/null
++++ b/runtime/ObjC/Framework/examples/treeparser/LangDumpDecl.h
+@@ -0,0 +1,89 @@
++// $ANTLR ${project.version} ${buildNumber} LangDumpDecl.g 2011-05-06 17:39:09
++
++/* =============================================================================
++ * Standard antlr3 OBJC runtime definitions
++ */
++#import <Cocoa/Cocoa.h>
++#import <ANTLR/ANTLR.h>
++/* End of standard antlr3 runtime definitions
++ * =============================================================================
++ */
++
++/* treeParserHeaderFile */
++#ifndef ANTLR3TokenTypeAlreadyDefined
++#define ANTLR3TokenTypeAlreadyDefined
++typedef enum {
++    ANTLR_EOF = -1,
++    INVALID,
++    EOR,
++    DOWN,
++    UP,
++    MIN
++} ANTLR3TokenType;
++#endif
++
++#pragma mark Tokens
++#ifdef EOF
++#undef EOF
++#endif
++#define EOF -1
++#define T__10 10
++#define DECL 4
++#define FLOATTYPE 5
++#define ID 6
++#define INT 7
++#define INTTYPE 8
++#define WS 9
++#pragma mark Dynamic Global Scopes
++#pragma mark Dynamic Rule Scopes
++#pragma mark Rule Return Scopes start
++/* returnScopeInterface LangDumpDecl_declarator_return */
++@interface LangDumpDecl_declarator_return :ANTLRTreeRuleReturnScope { /* returnScopeInterface line 1838 */
++ /* ObjC start of memVars() */
++}
++/* start properties */
+++ (LangDumpDecl_declarator_return *)newLangDumpDecl_declarator_return;
++/* this is start of set and get methods */
++  /* methodsDecl */
++@end /* end of returnScopeInterface interface */
++
++
++
++
++/* Interface grammar class */
++@interface LangDumpDecl : ANTLRTreeParser { /* line 572 */
++/* ObjC start of ruleAttributeScopeMemVar */
++
++
++/* ObjC end of ruleAttributeScopeMemVar */
++/* ObjC start of globalAttributeScopeMemVar */
++
++
++/* ObjC end of globalAttributeScopeMemVar */
++/* ObjC start of actions.(actionScope).memVars */
++/* ObjC end of actions.(actionScope).memVars */
++/* ObjC start of memVars */
++/* ObjC end of memVars */
++
++ }
++
++/* ObjC start of actions.(actionScope).properties */
++/* ObjC end of actions.(actionScope).properties */
++/* ObjC start of properties */
++/* ObjC end of properties */
++
+++ (void) initialize;
+++ (id) newLangDumpDecl:(id<ANTLRTreeNodeStream>)aStream;
++/* ObjC start of actions.(actionScope).methodsDecl */
++/* ObjC end of actions.(actionScope).methodsDecl */
++
++/* ObjC start of methodsDecl */
++/* ObjC end of methodsDecl */
++
++- (void)decl;
++- (void)type;
++- (LangDumpDecl_declarator_return *)declarator;
++
++
++@end /* end of LangDumpDecl interface */
++
+diff --git a/runtime/ObjC/Framework/examples/treeparser/LangDumpDecl.m b/runtime/ObjC/Framework/examples/treeparser/LangDumpDecl.m
+new file mode 100644
+index 0000000..72bd695
+--- /dev/null
++++ b/runtime/ObjC/Framework/examples/treeparser/LangDumpDecl.m
+@@ -0,0 +1,258 @@
++/** \file
++ *  This OBJC source file was generated by $ANTLR version ${project.version} ${buildNumber}
++ *
++ *     -  From the grammar source file : LangDumpDecl.g
++ *     -                            On : 2011-05-06 17:39:09
++ *     -           for the tree parser : LangDumpDeclTreeParser
++ *
++ * Editing it, at least manually, is not wise.
++ *
++ * ObjC language generator and runtime by Alan Condit, acondit|hereisanat|ipns|dotgoeshere|com.
++ *
++ *
++*/
++// $ANTLR ${project.version} ${buildNumber} LangDumpDecl.g 2011-05-06 17:39:09
++
++
++/* -----------------------------------------
++ * Include the ANTLR3 generated header file.
++ */
++#import "LangDumpDecl.h"
++/* ----------------------------------------- */
++
++
++/* ============================================================================= */
++/* =============================================================================
++ * Start of recognizer
++ */
++
++#pragma mark Bitsets
++static ANTLRBitSet *FOLLOW_DECL_in_decl45;
++static const unsigned long long FOLLOW_DECL_in_decl45_data[] = { 0x0000000000000004LL};
++static ANTLRBitSet *FOLLOW_type_in_decl47;
++static const unsigned long long FOLLOW_type_in_decl47_data[] = { 0x0000000000000040LL};
++static ANTLRBitSet *FOLLOW_declarator_in_decl49;
++static const unsigned long long FOLLOW_declarator_in_decl49_data[] = { 0x0000000000000008LL};
++static ANTLRBitSet *FOLLOW_INTTYPE_in_type81;
++static const unsigned long long FOLLOW_INTTYPE_in_type81_data[] = { 0x0000000000000002LL};
++static ANTLRBitSet *FOLLOW_ID_in_declarator95;
++static const unsigned long long FOLLOW_ID_in_declarator95_data[] = { 0x0000000000000002LL};
++
++
++#pragma mark Dynamic Global Scopes
++
++#pragma mark Dynamic Rule Scopes
++
++#pragma mark Rule Return Scopes start
++@implementation LangDumpDecl_declarator_return /* returnScope */
++ /* start of synthesize -- OBJC-Line 1837 */
+++ (LangDumpDecl_declarator_return *)newLangDumpDecl_declarator_return
++{
++    return [[[LangDumpDecl_declarator_return alloc] init] retain];
++}
++
++- (id) init
++{
++    self = [super init];
++    return self;
++}
++
++
++
++@end /* end of returnScope implementation */
++
++
++//#pragma mark Rule return scopes start
++//
++
++#pragma mark Rule return scopes start
++
++@implementation LangDumpDecl  // line 637
++
++/* ObjC start of ruleAttributeScope */
++#pragma mark Dynamic Rule Scopes
++/* ObjC end of ruleAttributeScope */
++#pragma mark global Attribute Scopes
++/* ObjC start globalAttributeScope */
++/* ObjC end globalAttributeScope */
++/* ObjC start actions.(actionScope).synthesize */
++/* ObjC end actions.(actionScope).synthesize */
++/* ObjC start synthesize() */
++/* ObjC end synthesize() */
++
+++ (void) initialize
++{
++    #pragma mark Bitsets
++    FOLLOW_DECL_in_decl45 = [[ANTLRBitSet newANTLRBitSetWithBits:(const unsigned long long *)FOLLOW_DECL_in_decl45_data Count:(NSUInteger)1] retain];
++    FOLLOW_type_in_decl47 = [[ANTLRBitSet newANTLRBitSetWithBits:(const unsigned long long *)FOLLOW_type_in_decl47_data Count:(NSUInteger)1] retain];
++    FOLLOW_declarator_in_decl49 = [[ANTLRBitSet newANTLRBitSetWithBits:(const unsigned long long *)FOLLOW_declarator_in_decl49_data Count:(NSUInteger)1] retain];
++    FOLLOW_INTTYPE_in_type81 = [[ANTLRBitSet newANTLRBitSetWithBits:(const unsigned long long *)FOLLOW_INTTYPE_in_type81_data Count:(NSUInteger)1] retain];
++    FOLLOW_ID_in_declarator95 = [[ANTLRBitSet newANTLRBitSetWithBits:(const unsigned long long *)FOLLOW_ID_in_declarator95_data Count:(NSUInteger)1] retain];
++
++    [ANTLRBaseRecognizer setTokenNames:[[AMutableArray arrayWithObjects:@"<invalid>", @"<EOR>", @"<DOWN>", @"<UP>",
++ @"DECL", @"FLOATTYPE", @"ID", @"INT", @"INTTYPE", @"WS", @"';'", nil] retain]];
++    [ANTLRBaseRecognizer setGrammarFileName:@"LangDumpDecl.g"];
++}
++
+++ (LangDumpDecl *)newLangDumpDecl:(id<ANTLRTreeNodeStream>)aStream
++{
++    return [[LangDumpDecl alloc] initWithStream:aStream];
++
++
++}
++
++- (id) initWithStream:(id<ANTLRTreeNodeStream>)aStream
++{
++    self = [super initWithStream:aStream State:[[ANTLRRecognizerSharedState newANTLRRecognizerSharedStateWithRuleLen:3+1] retain]];
++    if ( self != nil ) {
++
++
++        /* start of actions-actionScope-init */
++        /* start of init */
++    }
++    return self;
++}
++
++- (void) dealloc
++{
++    [super dealloc];
++}
++
++/* ObjC start members */
++/* ObjC end members */
++/* ObjC start actions.(actionScope).methods */
++/* ObjC end actions.(actionScope).methods */
++/* ObjC start methods() */
++/* ObjC end methods() */
++/* ObjC start rules */
++/*
++ * $ANTLR start decl
++ * LangDumpDecl.g:8:1: decl : ^( DECL type declarator ) ;
++ */
++- (void) decl
++{
++    /* my ruleScopeSetUp */
++    /* Terence's stuff */
++
++    @try {
++         LangDumpDecl_declarator_return * declarator1 = nil ;
++
++
++        // LangDumpDecl.g:8:6: ( ^( DECL type declarator ) ) // ruleBlockSingleAlt
++        // LangDumpDecl.g:8:8: ^( DECL type declarator ) // alt
++        {
++        [self match:input TokenType:DECL Follow:FOLLOW_DECL_in_decl45];
++
++            [self match:input TokenType:DOWN Follow:nil];
++            /* ruleRef */
++            [self pushFollow:FOLLOW_type_in_decl47];
++            [self type];
++
++            [self popFollow];
++
++
++
++            /* ruleRef */
++            [self pushFollow:FOLLOW_declarator_in_decl49];
++            declarator1 = [self declarator];
++
++            [self popFollow];
++
++
++
++            [self match:input TokenType:UP Follow:nil];
++
++
++         NSLog(@"int %@", (declarator1!=nil?[[input getTokenStream] toStringFromStart:[[input getTreeAdaptor] getTokenStartIndex:[declarator1 getStart]]ToEnd:[[input getTreeAdaptor] getTokenStopIndex:[declarator1 getStart]]]:0));
++
++
++        }
++
++        // token+rule list labels
++
++    }
++    @catch (ANTLRRecognitionException *re) {
++        [self reportError:re];
++        [self recover:input Exception:re];
++    }
++
++    @finally {
++        /* Terence's stuff */
++
++    }
++    return ;
++}
++/* $ANTLR end decl */
++
++/*
++ * $ANTLR start type
++ * LangDumpDecl.g:13:1: type : INTTYPE ;
++ */
++- (void) type
++{
++    /* my ruleScopeSetUp */
++    /* Terence's stuff */
++
++    @try {
++        // LangDumpDecl.g:13:6: ( INTTYPE ) // ruleBlockSingleAlt
++        // LangDumpDecl.g:13:8: INTTYPE // alt
++        {
++        [self match:input TokenType:INTTYPE Follow:FOLLOW_INTTYPE_in_type81];
++
++        }
++
++        // token+rule list labels
++
++    }
++    @catch (ANTLRRecognitionException *re) {
++        [self reportError:re];
++        [self recover:input Exception:re];
++    }
++
++    @finally {
++        /* Terence's stuff */
++
++    }
++    return ;
++}
++/* $ANTLR end type */
++
++/*
++ * $ANTLR start declarator
++ * LangDumpDecl.g:15:1: declarator : ID ;
++ */
++- (LangDumpDecl_declarator_return *) declarator
++{
++    /* my ruleScopeSetUp */
++    /* Terence's stuff */
++
++    LangDumpDecl_declarator_return * retval = [LangDumpDecl_declarator_return newLangDumpDecl_declarator_return];
++    [retval setStart:[input LT:1]];
++
++
++    @try {
++        // LangDumpDecl.g:16:6: ( ID ) // ruleBlockSingleAlt
++        // LangDumpDecl.g:16:8: ID // alt
++        {
++        [self match:input TokenType:ID Follow:FOLLOW_ID_in_declarator95];
++
++        }
++
++        // token+rule list labels
++
++    }
++    @catch (ANTLRRecognitionException *re) {
++        [self reportError:re];
++        [self recover:input Exception:re];
++    }
++
++    @finally {
++        /* Terence's stuff */
++
++    }
++    return retval;
++}
++/* $ANTLR end declarator */
++/* ObjC end rules */
++
++@end /* end of LangDumpDecl implementation line 692 */
+diff --git a/runtime/ObjC/Framework/examples/treeparser/LangDumpDecl.tokens b/runtime/ObjC/Framework/examples/treeparser/LangDumpDecl.tokens
+new file mode 100644
+index 0000000..195d148
+--- /dev/null
++++ b/runtime/ObjC/Framework/examples/treeparser/LangDumpDecl.tokens
+@@ -0,0 +1,8 @@
++T__10=10
++DECL=4
++FLOATTYPE=5
++ID=6
++INT=7
++INTTYPE=8
++WS=9
++';'=10
+diff --git a/runtime/ObjC/Framework/examples/treeparser/LangLexer.h b/runtime/ObjC/Framework/examples/treeparser/LangLexer.h
+new file mode 100644
+index 0000000..d647d13
+--- /dev/null
++++ b/runtime/ObjC/Framework/examples/treeparser/LangLexer.h
+@@ -0,0 +1,46 @@
++// $ANTLR ${project.version} ${buildNumber} Lang.g 2011-05-06 17:38:52
++
++/* =============================================================================
++ * Standard antlr3 OBJC runtime definitions
++ */
++#import <Cocoa/Cocoa.h>
++#import <ANTLR/ANTLR.h>
++/* End of standard antlr3 runtime definitions
++ * =============================================================================
++ */
++
++/* Start cyclicDFAInterface */
++
++#pragma mark Rule return scopes start
++#pragma mark Rule return scopes end
++#pragma mark Tokens
++#ifdef EOF
++#undef EOF
++#endif
++#define EOF -1
++#define T__10 10
++#define DECL 4
++#define FLOATTYPE 5
++#define ID 6
++#define INT 7
++#define INTTYPE 8
++#define WS 9
++/* interface lexer class */
++@interface LangLexer : ANTLRLexer { // line 283
++/* ObjC start of actions.lexer.memVars */
++/* ObjC end of actions.lexer.memVars */
++}
+++ (void) initialize;
+++ (LangLexer *)newLangLexerWithCharStream:(id<ANTLRCharStream>)anInput;
++/* ObjC start actions.lexer.methodsDecl */
++/* ObjC end actions.lexer.methodsDecl */
++- (void) mT__10 ;
++- (void) mINTTYPE ;
++- (void) mFLOATTYPE ;
++- (void) mID ;
++- (void) mINT ;
++- (void) mWS ;
++- (void) mTokens ;
++
++@end /* end of LangLexer interface */
++
+diff --git a/runtime/ObjC/Framework/examples/treeparser/LangLexer.m b/runtime/ObjC/Framework/examples/treeparser/LangLexer.m
+new file mode 100644
+index 0000000..12cf90c
+--- /dev/null
++++ b/runtime/ObjC/Framework/examples/treeparser/LangLexer.m
+@@ -0,0 +1,532 @@
++/** \file
++ *  This OBJC source file was generated by $ANTLR version ${project.version} ${buildNumber}
++ *
++ *     -  From the grammar source file : Lang.g
++ *     -                            On : 2011-05-06 17:38:52
++ *     -                 for the lexer : LangLexerLexer
++ *
++ * Editing it, at least manually, is not wise.
++ *
++ * ObjC language generator and runtime by Alan Condit, acondit|hereisanat|ipns|dotgoeshere|com.
++ *
++ *
++*/
++// $ANTLR ${project.version} ${buildNumber} Lang.g 2011-05-06 17:38:52
++
++
++/* -----------------------------------------
++ * Include the ANTLR3 generated header file.
++ */
++#import "LangLexer.h"
++/* ----------------------------------------- */
++
++
++/* ============================================================================= */
++/* =============================================================================
++ * Start of recognizer
++ */
++
++/** As per Terence: No returns for lexer rules! */
++@implementation LangLexer // line 330
++
+++ (void) initialize
++{
++    [ANTLRBaseRecognizer setGrammarFileName:@"Lang.g"];
++}
++
+++ (NSString *) tokenNameForType:(NSInteger)aTokenType
++{
++    return [[self getTokenNames] objectAtIndex:aTokenType];
++}
++
+++ (LangLexer *)newLangLexerWithCharStream:(id<ANTLRCharStream>)anInput
++{
++    return [[LangLexer alloc] initWithCharStream:anInput];
++}
++
++- (id) initWithCharStream:(id<ANTLRCharStream>)anInput
++{
++    self = [super initWithCharStream:anInput State:[[ANTLRRecognizerSharedState newANTLRRecognizerSharedStateWithRuleLen:7+1] retain]];
++    if ( self != nil ) {
++    }
++    return self;
++}
++
++- (void) dealloc
++{
++    [super dealloc];
++}
++
++/* ObjC Start of actions.lexer.methods */
++/* ObjC end of actions.lexer.methods */
++/* ObjC start methods() */
++/* ObjC end methods() */
++
++/* Start of Rules */
++// $ANTLR start "T__10"
++- (void) mT__10
++{
++    //
++    /* my ruleScopeSetUp */
++    /* Terence's stuff */
++
++    @try {
++        NSInteger _type = T__10;
++        NSInteger _channel = ANTLRTokenChannelDefault;
++        // Lang.g:7:7: ( ';' ) // ruleBlockSingleAlt
++        // Lang.g:7:9: ';' // alt
++        {
++        [self matchChar:';'];
++
++
++        }
++
++        // token+rule list labels
++
++        state.type = _type;
++        state.channel = _channel;
++    }
++    @finally {
++        //
++        /* Terence's stuff */
++
++    }
++    return;
++}
++/* $ANTLR end "T__10" */
++
++// $ANTLR start "INTTYPE"
++- (void) mINTTYPE
++{
++    //
++    /* my ruleScopeSetUp */
++    /* Terence's stuff */
++
++    @try {
++        NSInteger _type = INTTYPE;
++        NSInteger _channel = ANTLRTokenChannelDefault;
++        // Lang.g:18:9: ( 'int' ) // ruleBlockSingleAlt
++        // Lang.g:18:11: 'int' // alt
++        {
++        [self matchString:@"int"];
++
++
++
++        }
++
++        // token+rule list labels
++
++        state.type = _type;
++        state.channel = _channel;
++    }
++    @finally {
++        //
++        /* Terence's stuff */
++
++    }
++    return;
++}
++/* $ANTLR end "INTTYPE" */
++
++// $ANTLR start "FLOATTYPE"
++- (void) mFLOATTYPE
++{
++    //
++    /* my ruleScopeSetUp */
++    /* Terence's stuff */
++
++    @try {
++        NSInteger _type = FLOATTYPE;
++        NSInteger _channel = ANTLRTokenChannelDefault;
++        // Lang.g:19:11: ( 'float' ) // ruleBlockSingleAlt
++        // Lang.g:19:13: 'float' // alt
++        {
++        [self matchString:@"float"];
++
++
++
++        }
++
++        // token+rule list labels
++
++        state.type = _type;
++        state.channel = _channel;
++    }
++    @finally {
++        //
++        /* Terence's stuff */
++
++    }
++    return;
++}
++/* $ANTLR end "FLOATTYPE" */
++
++// $ANTLR start "ID"
++- (void) mID
++{
++    //
++    /* my ruleScopeSetUp */
++    /* Terence's stuff */
++
++    @try {
++        NSInteger _type = ID;
++        NSInteger _channel = ANTLRTokenChannelDefault;
++        // Lang.g:20:4: ( ( 'a' .. 'z' )+ ) // ruleBlockSingleAlt
++        // Lang.g:20:6: ( 'a' .. 'z' )+ // alt
++        {
++        // Lang.g:20:6: ( 'a' .. 'z' )+ // positiveClosureBlock
++        NSInteger cnt1 = 0;
++        do {
++            NSInteger alt1 = 2;
++            NSInteger LA1_0 = [input LA:1];
++            if ( ((LA1_0 >= 'a' && LA1_0 <= 'z')) ) {
++                alt1=1;
++            }
++
++
++            switch (alt1) {
++                case 1 : ;
++                    // Lang.g: // alt
++                    {
++                    if ((([input LA:1] >= 'a') && ([input LA:1] <= 'z'))) {
++                        [input consume];
++                    } else {
++                        ANTLRMismatchedSetException *mse = [ANTLRMismatchedSetException newException:nil stream:input];
++                        [self recover:mse];
++                        @throw mse;
++                    }
++
++
++                    }
++                    break;
++
++                default :
++                    if ( cnt1 >= 1 )
++                        goto loop1;
++                    ANTLREarlyExitException *eee =
++                        [ANTLREarlyExitException newException:input decisionNumber:1];
++                    @throw eee;
++            }
++            cnt1++;
++        } while (YES);
++        loop1: ;
++
++
++        }
++
++        // token+rule list labels
++
++        state.type = _type;
++        state.channel = _channel;
++    }
++    @finally {
++        //
++        /* Terence's stuff */
++
++    }
++    return;
++}
++/* $ANTLR end "ID" */
++
++// $ANTLR start "INT"
++- (void) mINT
++{
++    //
++    /* my ruleScopeSetUp */
++    /* Terence's stuff */
++
++    @try {
++        NSInteger _type = INT;
++        NSInteger _channel = ANTLRTokenChannelDefault;
++        // Lang.g:21:5: ( ( '0' .. '9' )+ ) // ruleBlockSingleAlt
++        // Lang.g:21:7: ( '0' .. '9' )+ // alt
++        {
++        // Lang.g:21:7: ( '0' .. '9' )+ // positiveClosureBlock
++        NSInteger cnt2 = 0;
++        do {
++            NSInteger alt2 = 2;
++            NSInteger LA2_0 = [input LA:1];
++            if ( ((LA2_0 >= '0' && LA2_0 <= '9')) ) {
++                alt2=1;
++            }
++
++
++            switch (alt2) {
++                case 1 : ;
++                    // Lang.g: // alt
++                    {
++                    if ((([input LA:1] >= '0') && ([input LA:1] <= '9'))) {
++                        [input consume];
++                    } else {
++                        ANTLRMismatchedSetException *mse = [ANTLRMismatchedSetException newException:nil stream:input];
++                        [self recover:mse];
++                        @throw mse;
++                    }
++
++
++                    }
++                    break;
++
++                default :
++                    if ( cnt2 >= 1 )
++                        goto loop2;
++                    ANTLREarlyExitException *eee =
++                        [ANTLREarlyExitException newException:input decisionNumber:2];
++                    @throw eee;
++            }
++            cnt2++;
++        } while (YES);
++        loop2: ;
++
++
++        }
++
++        // token+rule list labels
++
++        state.type = _type;
++        state.channel = _channel;
++    }
++    @finally {
++        //
++        /* Terence's stuff */
++
++    }
++    return;
++}
++/* $ANTLR end "INT" */
++
++// $ANTLR start "WS"
++- (void) mWS
++{
++    //
++    /* my ruleScopeSetUp */
++    /* Terence's stuff */
++
++    @try {
++        NSInteger _type = WS;
++        NSInteger _channel = ANTLRTokenChannelDefault;
++        // Lang.g:22:4: ( ( ' ' | '\\n' ) ) // ruleBlockSingleAlt
++        // Lang.g:22:6: ( ' ' | '\\n' ) // alt
++        {
++        if ([input LA:1] == '\n'||[input LA:1] == ' ') {
++            [input consume];
++        } else {
++            ANTLRMismatchedSetException *mse = [ANTLRMismatchedSetException newException:nil stream:input];
++            [self recover:mse];
++            @throw mse;
++        }
++
++
++        _channel=HIDDEN;
++
++
++        }
++
++        // token+rule list labels
++
++        state.type = _type;
++        state.channel = _channel;
++    }
++    @finally {
++        //
++        /* Terence's stuff */
++
++    }
++    return;
++}
++/* $ANTLR end "WS" */
++
++- (void) mTokens
++{
++    // Lang.g:1:8: ( T__10 | INTTYPE | FLOATTYPE | ID | INT | WS ) //ruleblock
++    NSInteger alt3=6;
++    unichar charLA3 = [input LA:1];
++    switch (charLA3) {
++        case ';': ;
++            {
++            alt3=1;
++            }
++            break;
++        case 'i': ;
++            {
++            NSInteger LA3_2 = [input LA:2];
++
++            if ( (LA3_2=='n') ) {
++                NSInteger LA3_7 = [input LA:3];
++
++                if ( (LA3_7=='t') ) {
++                    NSInteger LA3_9 = [input LA:4];
++
++                    if ( ((LA3_9 >= 'a' && LA3_9 <= 'z')) ) {
++                        alt3=4;
++                    }
++                    else {
++                        alt3 = 2;
++                    }
++                }
++                else {
++                    alt3 = 4;
++                }
++            }
++            else {
++                alt3 = 4;
++            }
++            }
++            break;
++        case 'f': ;
++            {
++            NSInteger LA3_3 = [input LA:2];
++
++            if ( (LA3_3=='l') ) {
++                NSInteger LA3_8 = [input LA:3];
++
++                if ( (LA3_8=='o') ) {
++                    NSInteger LA3_10 = [input LA:4];
++
++                    if ( (LA3_10=='a') ) {
++                        NSInteger LA3_12 = [input LA:5];
++
++                        if ( (LA3_12=='t') ) {
++                            NSInteger LA3_13 = [input LA:6];
++
++                            if ( ((LA3_13 >= 'a' && LA3_13 <= 'z')) ) {
++                                alt3=4;
++                            }
++                            else {
++                                alt3 = 3;
++                            }
++                        }
++                        else {
++                            alt3 = 4;
++                        }
++                    }
++                    else {
++                        alt3 = 4;
++                    }
++                }
++                else {
++                    alt3 = 4;
++                }
++            }
++            else {
++                alt3 = 4;
++            }
++            }
++            break;
++        case 'a': ;
++        case 'b': ;
++        case 'c': ;
++        case 'd': ;
++        case 'e': ;
++        case 'g': ;
++        case 'h': ;
++        case 'j': ;
++        case 'k': ;
++        case 'l': ;
++        case 'm': ;
++        case 'n': ;
++        case 'o': ;
++        case 'p': ;
++        case 'q': ;
++        case 'r': ;
++        case 's': ;
++        case 't': ;
++        case 'u': ;
++        case 'v': ;
++        case 'w': ;
++        case 'x': ;
++        case 'y': ;
++        case 'z': ;
++            {
++            alt3=4;
++            }
++            break;
++        case '0': ;
++        case '1': ;
++        case '2': ;
++        case '3': ;
++        case '4': ;
++        case '5': ;
++        case '6': ;
++        case '7': ;
++        case '8': ;
++        case '9': ;
++            {
++            alt3=5;
++            }
++            break;
++        case '\n': ;
++        case ' ': ;
++            {
++            alt3=6;
++            }
++            break;
++
++    default: ;
++        ANTLRNoViableAltException *nvae = [ANTLRNoViableAltException newException:3 state:0 stream:input];
++        nvae.c = charLA3;
++        @throw nvae;
++
++    }
++
++    switch (alt3) {
++        case 1 : ;
++            // Lang.g:1:10: T__10 // alt
++            {
++            [self mT__10];
++
++
++
++            }
++            break;
++        case 2 : ;
++            // Lang.g:1:16: INTTYPE // alt
++            {
++            [self mINTTYPE];
++
++
++
++            }
++            break;
++        case 3 : ;
++            // Lang.g:1:24: FLOATTYPE // alt
++            {
++            [self mFLOATTYPE];
++
++
++
++            }
++            break;
++        case 4 : ;
++            // Lang.g:1:34: ID // alt
++            {
++            [self mID];
++
++
++
++            }
++            break;
++        case 5 : ;
++            // Lang.g:1:37: INT // alt
++            {
++            [self mINT];
++
++
++
++            }
++            break;
++        case 6 : ;
++            // Lang.g:1:41: WS // alt
++            {
++            [self mWS];
++
++
++
++            }
++            break;
++
++    }
++
++}
++
++@end /* end of LangLexer implementation line 397 */
+\ No newline at end of file
+diff --git a/runtime/ObjC/Framework/examples/treeparser/LangParser.h b/runtime/ObjC/Framework/examples/treeparser/LangParser.h
+new file mode 100644
+index 0000000..ba51fba
+--- /dev/null
++++ b/runtime/ObjC/Framework/examples/treeparser/LangParser.h
+@@ -0,0 +1,149 @@
++// $ANTLR ${project.version} ${buildNumber} Lang.g 2011-05-06 17:38:52
++
++/* =============================================================================
++ * Standard antlr3 OBJC runtime definitions
++ */
++#import <Cocoa/Cocoa.h>
++#import <ANTLR/ANTLR.h>
++/* End of standard antlr3 runtime definitions
++ * =============================================================================
++ */
++
++/* parserHeaderFile */
++#ifndef ANTLR3TokenTypeAlreadyDefined
++#define ANTLR3TokenTypeAlreadyDefined
++typedef enum {
++    ANTLR_EOF = -1,
++    INVALID,
++    EOR,
++    DOWN,
++    UP,
++    MIN
++} ANTLR3TokenType;
++#endif
++
++#pragma mark Tokens
++#ifdef EOF
++#undef EOF
++#endif
++#define EOF -1
++#define T__10 10
++#define DECL 4
++#define FLOATTYPE 5
++#define ID 6
++#define INT 7
++#define INTTYPE 8
++#define WS 9
++#pragma mark Dynamic Global Scopes
++#pragma mark Dynamic Rule Scopes
++#pragma mark Rule Return Scopes start
++/* returnScopeInterface LangParser_start_return */
++@interface LangParser_start_return :ANTLRParserRuleReturnScope { /* returnScopeInterface line 1838 */
++/* AST returnScopeInterface.memVars */
++ANTLRCommonTree *tree; /* ObjC start of memVars() */
++}
++/* start properties */
++/* AST returnScopeInterface.properties */
++@property (retain, getter=getTree, setter=setTree:) ANTLRCommonTree *tree;
+++ (LangParser_start_return *)newLangParser_start_return;
++/* this is start of set and get methods */
++/* AST returnScopeInterface.methodsDecl */
++- (ANTLRCommonTree *)getTree;
++
++- (void) setTree:(ANTLRCommonTree *)aTree;
++  /* methodsDecl */
++@end /* end of returnScopeInterface interface */
++
++
++
++/* returnScopeInterface LangParser_decl_return */
++@interface LangParser_decl_return :ANTLRParserRuleReturnScope { /* returnScopeInterface line 1838 */
++/* AST returnScopeInterface.memVars */
++ANTLRCommonTree *tree; /* ObjC start of memVars() */
++}
++/* start properties */
++/* AST returnScopeInterface.properties */
++@property (retain, getter=getTree, setter=setTree:) ANTLRCommonTree *tree;
+++ (LangParser_decl_return *)newLangParser_decl_return;
++/* this is start of set and get methods */
++/* AST returnScopeInterface.methodsDecl */
++- (ANTLRCommonTree *)getTree;
++
++- (void) setTree:(ANTLRCommonTree *)aTree;
++  /* methodsDecl */
++@end /* end of returnScopeInterface interface */
++
++
++
++/* returnScopeInterface LangParser_type_return */
++@interface LangParser_type_return :ANTLRParserRuleReturnScope { /* returnScopeInterface line 1838 */
++/* AST returnScopeInterface.memVars */
++ANTLRCommonTree *tree; /* ObjC start of memVars() */
++}
++/* start properties */
++/* AST returnScopeInterface.properties */
++@property (retain, getter=getTree, setter=setTree:) ANTLRCommonTree *tree;
+++ (LangParser_type_return *)newLangParser_type_return;
++/* this is start of set and get methods */
++/* AST returnScopeInterface.methodsDecl */
++- (ANTLRCommonTree *)getTree;
++
++- (void) setTree:(ANTLRCommonTree *)aTree;
++  /* methodsDecl */
++@end /* end of returnScopeInterface interface */
++
++
++
++
++/* Interface grammar class */
++@interface LangParser : ANTLRParser { /* line 572 */
++/* ObjC start of ruleAttributeScopeMemVar */
++
++
++/* ObjC end of ruleAttributeScopeMemVar */
++/* ObjC start of globalAttributeScopeMemVar */
++
++
++/* ObjC end of globalAttributeScopeMemVar */
++/* ObjC start of actions.(actionScope).memVars */
++/* ObjC end of actions.(actionScope).memVars */
++/* ObjC start of memVars */
++/* AST parserHeaderFile.memVars */
++NSInteger ruleLevel;
++NSArray *ruleNames;
++  /* AST super.memVars */
++/* AST parserMemVars */
++id<ANTLRTreeAdaptor> treeAdaptor;   /* AST parserMemVars */
++/* ObjC end of memVars */
++
++ }
++
++/* ObjC start of actions.(actionScope).properties */
++/* ObjC end of actions.(actionScope).properties */
++/* ObjC start of properties */
++/* AST parserHeaderFile.properties */
++  /* AST super.properties */
++/* AST parserProperties */
++@property (retain, getter=getTreeAdaptor, setter=setTreeAdaptor:) id<ANTLRTreeAdaptor> treeAdaptor;   /* AST parserproperties */
++/* ObjC end of properties */
++
+++ (void) initialize;
+++ (id) newLangParser:(id<ANTLRTokenStream>)aStream;
++/* ObjC start of actions.(actionScope).methodsDecl */
++/* ObjC end of actions.(actionScope).methodsDecl */
++
++/* ObjC start of methodsDecl */
++/* AST parserHeaderFile.methodsDecl */
++  /* AST super.methodsDecl */
++/* AST parserMethodsDecl */
++- (id<ANTLRTreeAdaptor>) getTreeAdaptor;
++- (void) setTreeAdaptor:(id<ANTLRTreeAdaptor>)theTreeAdaptor;   /* AST parsermethodsDecl */
++/* ObjC end of methodsDecl */
++
++- (LangParser_start_return *)start;
++- (LangParser_decl_return *)decl;
++- (LangParser_type_return *)type;
++
++
++@end /* end of LangParser interface */
++
+diff --git a/runtime/ObjC/Framework/examples/treeparser/LangParser.m b/runtime/ObjC/Framework/examples/treeparser/LangParser.m
+new file mode 100644
+index 0000000..6c49d09
+--- /dev/null
++++ b/runtime/ObjC/Framework/examples/treeparser/LangParser.m
+@@ -0,0 +1,515 @@
++/** \file
++ *  This OBJC source file was generated by $ANTLR version ${project.version} ${buildNumber}
++ *
++ *     -  From the grammar source file : Lang.g
++ *     -                            On : 2011-05-06 17:38:52
++ *     -                for the parser : LangParserParser
++ *
++ * Editing it, at least manually, is not wise.
++ *
++ * ObjC language generator and runtime by Alan Condit, acondit|hereisanat|ipns|dotgoeshere|com.
++ *
++ *
++*/
++// $ANTLR ${project.version} ${buildNumber} Lang.g 2011-05-06 17:38:52
++
++
++/* -----------------------------------------
++ * Include the ANTLR3 generated header file.
++ */
++#import "LangParser.h"
++/* ----------------------------------------- */
++
++
++/* ============================================================================= */
++/* =============================================================================
++ * Start of recognizer
++ */
++
++#pragma mark Bitsets
++static ANTLRBitSet *FOLLOW_decl_in_start41;
++static const unsigned long long FOLLOW_decl_in_start41_data[] = { 0x0000000000000002LL};
++static ANTLRBitSet *FOLLOW_type_in_decl50;
++static const unsigned long long FOLLOW_type_in_decl50_data[] = { 0x0000000000000040LL};
++static ANTLRBitSet *FOLLOW_ID_in_decl52;
++static const unsigned long long FOLLOW_ID_in_decl52_data[] = { 0x0000000000000400LL};
++static ANTLRBitSet *FOLLOW_10_in_decl54;
++static const unsigned long long FOLLOW_10_in_decl54_data[] = { 0x0000000000000002LL};
++
++
++#pragma mark Dynamic Global Scopes
++
++#pragma mark Dynamic Rule Scopes
++
++#pragma mark Rule Return Scopes start
++@implementation LangParser_start_return /* returnScope */
++/* AST returnScope.synthesize */
++@synthesize tree; /* start of synthesize -- OBJC-Line 1837 */
+++ (LangParser_start_return *)newLangParser_start_return
++{
++    return [[[LangParser_start_return alloc] init] retain];
++}
++
++- (id) init
++{
++    self = [super init];
++    return self;
++}
++
++/* AST returnScope.methods */
++- (ANTLRCommonTree *)getTree
++{
++    return tree;
++}
++
++- (void) setTree:(ANTLRCommonTree *)aTree
++{
++    if (tree != aTree) {
++        if (tree != nil) [tree release];
++        if (aTree != nil) [aTree retain];
++        tree = aTree;
++    }
++}
++
++- (void) dealloc
++{
++    self.tree = nil;
++    [super dealloc];
++}
++
++
++
++@end /* end of returnScope implementation */
++
++
++@implementation LangParser_decl_return /* returnScope */
++/* AST returnScope.synthesize */
++@synthesize tree; /* start of synthesize -- OBJC-Line 1837 */
+++ (LangParser_decl_return *)newLangParser_decl_return
++{
++    return [[[LangParser_decl_return alloc] init] retain];
++}
++
++- (id) init
++{
++    self = [super init];
++    return self;
++}
++
++/* AST returnScope.methods */
++- (ANTLRCommonTree *)getTree
++{
++    return tree;
++}
++
++- (void) setTree:(ANTLRCommonTree *)aTree
++{
++    if (tree != aTree) {
++        if (tree != nil) [tree release];
++        if (aTree != nil) [aTree retain];
++        tree = aTree;
++    }
++}
++
++- (void) dealloc
++{
++    self.tree = nil;
++    [super dealloc];
++}
++
++
++
++@end /* end of returnScope implementation */
++
++
++@implementation LangParser_type_return /* returnScope */
++/* AST returnScope.synthesize */
++@synthesize tree; /* start of synthesize -- OBJC-Line 1837 */
+++ (LangParser_type_return *)newLangParser_type_return
++{
++    return [[[LangParser_type_return alloc] init] retain];
++}
++
++- (id) init
++{
++    self = [super init];
++    return self;
++}
++
++/* AST returnScope.methods */
++- (ANTLRCommonTree *)getTree
++{
++    return tree;
++}
++
++- (void) setTree:(ANTLRCommonTree *)aTree
++{
++    if (tree != aTree) {
++        if (tree != nil) [tree release];
++        if (aTree != nil) [aTree retain];
++        tree = aTree;
++    }
++}
++
++- (void) dealloc
++{
++    self.tree = nil;
++    [super dealloc];
++}
++
++
++
++@end /* end of returnScope implementation */
++
++
++//#pragma mark Rule return scopes start
++//
++
++#pragma mark Rule return scopes start
++
++@implementation LangParser  // line 637
++
++/* ObjC start of ruleAttributeScope */
++#pragma mark Dynamic Rule Scopes
++/* ObjC end of ruleAttributeScope */
++#pragma mark global Attribute Scopes
++/* ObjC start globalAttributeScope */
++/* ObjC end globalAttributeScope */
++/* ObjC start actions.(actionScope).synthesize */
++/* ObjC end actions.(actionScope).synthesize */
++/* ObjC start synthesize() */
++/* AST genericParser.synthesize */
++/* AST parserProperties */
++@synthesize treeAdaptor;
++/* ObjC end synthesize() */
++
+++ (void) initialize
++{
++    #pragma mark Bitsets
++    FOLLOW_decl_in_start41 = [[ANTLRBitSet newANTLRBitSetWithBits:(const unsigned long long *)FOLLOW_decl_in_start41_data Count:(NSUInteger)1] retain];
++    FOLLOW_type_in_decl50 = [[ANTLRBitSet newANTLRBitSetWithBits:(const unsigned long long *)FOLLOW_type_in_decl50_data Count:(NSUInteger)1] retain];
++    FOLLOW_ID_in_decl52 = [[ANTLRBitSet newANTLRBitSetWithBits:(const unsigned long long *)FOLLOW_ID_in_decl52_data Count:(NSUInteger)1] retain];
++    FOLLOW_10_in_decl54 = [[ANTLRBitSet newANTLRBitSetWithBits:(const unsigned long long *)FOLLOW_10_in_decl54_data Count:(NSUInteger)1] retain];
++
++    [ANTLRBaseRecognizer setTokenNames:[[AMutableArray arrayWithObjects:@"<invalid>", @"<EOR>", @"<DOWN>", @"<UP>",
++ @"DECL", @"FLOATTYPE", @"ID", @"INT", @"INTTYPE", @"WS", @"';'", nil] retain]];
++    [ANTLRBaseRecognizer setGrammarFileName:@"Lang.g"];
++}
++
+++ (LangParser *)newLangParser:(id<ANTLRTokenStream>)aStream
++{
++    return [[LangParser alloc] initWithTokenStream:aStream];
++
++
++}
++
++- (id) initWithTokenStream:(id<ANTLRTokenStream>)aStream
++{
++    self = [super initWithTokenStream:aStream State:[[ANTLRRecognizerSharedState newANTLRRecognizerSharedStateWithRuleLen:3+1] retain]];
++    if ( self != nil ) {
++
++
++        /* start of actions-actionScope-init */
++        /* start of init */
++        /* AST genericParser.init */
++        [self setTreeAdaptor:[[ANTLRCommonTreeAdaptor newTreeAdaptor] retain]];
++    }
++    return self;
++}
++
++- (void) dealloc
++{
++    /* AST genericParser.dealloc */
++    [self setTreeAdaptor:nil];
++
++    [super dealloc];
++}
++
++/* ObjC start members */
++/* ObjC end members */
++/* ObjC start actions.(actionScope).methods */
++/* ObjC end actions.(actionScope).methods */
++/* ObjC start methods() */
++/* AST genericParser.methods */
++/* AST parserMethods */
++- (id<ANTLRTreeAdaptor>) getTreeAdaptor
++{
++	return treeAdaptor;
++}
++
++- (void) setTreeAdaptor:(id<ANTLRTreeAdaptor>)aTreeAdaptor
++{
++	if (aTreeAdaptor != treeAdaptor) {
++		treeAdaptor = aTreeAdaptor;
++	}
++}
++/* ObjC end methods() */
++/* ObjC start rules */
++/*
++ * $ANTLR start start
++ * Lang.g:10:1: start : decl ;
++ */
++- (LangParser_start_return *) start
++{
++    /* my ruleScopeSetUp */
++    /* Terence's stuff */
++
++    /* AST ruleDeclarations */
++    LangParser_start_return * retval = [LangParser_start_return newLangParser_start_return];
++    [retval setStart:[input LT:1]];
++
++
++    ANTLRCommonTree *root_0 = nil;
++
++    @try {
++        /* AST ruleLabelDefs */
++         LangParser_decl_return * decl1 = nil ;
++
++
++
++        // Lang.g:10:7: ( decl ) // ruleBlockSingleAlt
++        // Lang.g:10:9: decl // alt
++        {
++        root_0 = (ANTLRCommonTree *)[[[treeAdaptor class] newEmptyTree] retain];
++
++
++        /* ASTParser ruleRef */
++        /* ruleRef */
++        [self pushFollow:FOLLOW_decl_in_start41];
++        decl1 = [self decl];
++
++        [self popFollow];
++
++
++        [treeAdaptor addChild:[decl1 getTree] toTree:root_0];
++
++        }
++
++        /* ASTParser ruleCleanUp */
++        /* AST ruleCleanUp */
++        // token+rule list labels
++        [retval setStop:[input LT:-1]];
++
++
++
++            retval.tree = (ANTLRCommonTree *)[treeAdaptor rulePostProcessing:root_0];
++            [treeAdaptor setTokenBoundaries:retval.tree From:retval.start To:retval.stopToken];
++
++    }
++    @catch (ANTLRRecognitionException *re) {
++        [self reportError:re];
++        [self recover:input Exception:re];
++        /* ASTParser rule.setErrorReturnValue */
++        retval.tree = (ANTLRCommonTree *)[treeAdaptor errorNode:input From:retval.start To:[input LT:-1] Exception:re];
++
++    }
++
++    @finally {
++        /* Terence's stuff */
++
++    }
++    return retval;
++}
++/* $ANTLR end start */
++
++/*
++ * $ANTLR start decl
++ * Lang.g:12:1: decl : type ID ';' -> ^( DECL type ID ) ;
++ */
++- (LangParser_decl_return *) decl
++{
++    /* my ruleScopeSetUp */
++    /* Terence's stuff */
++
++    /* AST ruleDeclarations */
++    LangParser_decl_return * retval = [LangParser_decl_return newLangParser_decl_return];
++    [retval setStart:[input LT:1]];
++
++
++    ANTLRCommonTree *root_0 = nil;
++
++    @try {
++        /* AST ruleLabelDefs */
++        ANTLRCommonToken *ID3 = nil;
++        ANTLRCommonToken *char_literal4 = nil;
++         LangParser_type_return * type2 = nil ;
++
++
++        ANTLRCommonTree *ID3_tree=nil;
++        ANTLRCommonTree *char_literal4_tree=nil;
++        ANTLRRewriteRuleTokenStream *stream_10 =
++            [[ANTLRRewriteRuleTokenStream newANTLRRewriteRuleTokenStream:treeAdaptor
++                                                             description:@"token 10"] retain];
++        ANTLRRewriteRuleTokenStream *stream_ID =
++            [[ANTLRRewriteRuleTokenStream newANTLRRewriteRuleTokenStream:treeAdaptor
++                                                             description:@"token ID"] retain];
++        ANTLRRewriteRuleSubtreeStream *stream_type =
++            [[ANTLRRewriteRuleSubtreeStream newANTLRRewriteRuleSubtreeStream:treeAdaptor
++                                                                description:@"rule type"] retain];
++        // Lang.g:12:6: ( type ID ';' -> ^( DECL type ID ) ) // ruleBlockSingleAlt
++        // Lang.g:12:8: type ID ';' // alt
++        {
++        /* ruleRef */
++        [self pushFollow:FOLLOW_type_in_decl50];
++        type2 = [self type];
++
++        [self popFollow];
++
++
++        [stream_type addElement:[type2 getTree]];
++
++        ID3=(ANTLRCommonToken *)[self match:input TokenType:ID Follow:FOLLOW_ID_in_decl52];
++            [stream_ID addElement:ID3];
++
++
++        char_literal4=(ANTLRCommonToken *)[self match:input TokenType:10 Follow:FOLLOW_10_in_decl54];
++            [stream_10 addElement:char_literal4];
++
++
++        // AST REWRITE
++        // elements: ID, type
++        // token labels:
++        // rule labels: retval
++        // token list labels:
++        // rule list labels:
++        // wildcard labels:
++        retval.tree = root_0;
++
++        ANTLRRewriteRuleSubtreeStream *stream_retval =
++            [[ANTLRRewriteRuleSubtreeStream newANTLRRewriteRuleSubtreeStream:treeAdaptor
++                description:@"token retval" element:retval!=nil?[retval getTree]:nil] retain];
++
++        root_0 = (ANTLRCommonTree *)[[[treeAdaptor class] newEmptyTree] retain];
++
++        // 12:20: -> ^( DECL type ID )
++        {
++            // Lang.g:12:23: ^( DECL type ID )
++            {
++                ANTLRCommonTree *root_1 = (ANTLRCommonTree *)[[[treeAdaptor class] newEmptyTree] retain];
++                root_1 = (ANTLRCommonTree *)[treeAdaptor becomeRoot:
++                        [treeAdaptor createTree:DECL Text:@"DECL"]
++                 old:root_1];
++
++                [treeAdaptor addChild:[stream_type nextTree] toTree:root_1];
++
++                 // TODO: args:
++                [treeAdaptor addChild:
++                            [stream_ID nextNode]
++                 toTree:root_1];
++
++                [treeAdaptor addChild:root_1 toTree:root_0];
++            }
++
++        }
++
++
++        retval.tree = root_0;
++
++
++        }
++
++        /* ASTParser ruleCleanUp */
++        /* AST ruleCleanUp */
++        // token+rule list labels
++        [retval setStop:[input LT:-1]];
++
++
++        [stream_10 release];
++        [stream_ID release];
++        [stream_type release];
++
++            retval.tree = (ANTLRCommonTree *)[treeAdaptor rulePostProcessing:root_0];
++            [treeAdaptor setTokenBoundaries:retval.tree From:retval.start To:retval.stopToken];
++
++    }
++    @catch (ANTLRRecognitionException *re) {
++        [self reportError:re];
++        [self recover:input Exception:re];
++        /* ASTParser rule.setErrorReturnValue */
++        retval.tree = (ANTLRCommonTree *)[treeAdaptor errorNode:input From:retval.start To:[input LT:-1] Exception:re];
++
++    }
++
++    @finally {
++        /* Terence's stuff */
++
++    }
++    return retval;
++}
++/* $ANTLR end decl */
++
++/*
++ * $ANTLR start type
++ * Lang.g:14:1: type : ( INTTYPE | FLOATTYPE );
++ */
++- (LangParser_type_return *) type
++{
++    /* my ruleScopeSetUp */
++    /* Terence's stuff */
++
++    /* AST ruleDeclarations */
++    LangParser_type_return * retval = [LangParser_type_return newLangParser_type_return];
++    [retval setStart:[input LT:1]];
++
++
++    ANTLRCommonTree *root_0 = nil;
++
++    @try {
++        /* AST ruleLabelDefs */
++        ANTLRCommonToken *set5 = nil;
++
++        ANTLRCommonTree *set5_tree=nil;
++
++        // Lang.g:14:6: ( INTTYPE | FLOATTYPE ) // ruleBlockSingleAlt
++        // Lang.g: // alt
++        {
++        root_0 = (ANTLRCommonTree *)[[[treeAdaptor class] newEmptyTree] retain];
++
++
++        /* ASTParser matchRuleBlockSet */
++        /* ASTParser matchSet */
++        set5 = (ANTLRCommonToken *)[input LT:1]; /* matchSet */
++
++        if ([input LA:1] == FLOATTYPE||[input LA:1] == INTTYPE) {
++            [input consume];
++            [treeAdaptor addChild:/* ASTParser createNodeFromToken */
++            (ANTLRCommonTree *)[[treeAdaptor create:set5] retain]
++             toTree:root_0 ];
++            [state setIsErrorRecovery:NO];
++        } else {
++            ANTLRMismatchedSetException *mse = [ANTLRMismatchedSetException newException:nil stream:input];
++            @throw mse;
++        }
++
++
++        }
++
++        /* ASTParser ruleCleanUp */
++        /* AST ruleCleanUp */
++        // token+rule list labels
++        [retval setStop:[input LT:-1]];
++
++
++
++            retval.tree = (ANTLRCommonTree *)[treeAdaptor rulePostProcessing:root_0];
++            [treeAdaptor setTokenBoundaries:retval.tree From:retval.start To:retval.stopToken];
++
++    }
++    @catch (ANTLRRecognitionException *re) {
++        [self reportError:re];
++        [self recover:input Exception:re];
++        /* ASTParser rule.setErrorReturnValue */
++        retval.tree = (ANTLRCommonTree *)[treeAdaptor errorNode:input From:retval.start To:[input LT:-1] Exception:re];
++
++    }
++
++    @finally {
++        /* Terence's stuff */
++
++    }
++    return retval;
++}
++/* $ANTLR end type */
++/* ObjC end rules */
++
++@end /* end of LangParser implementation line 692 */
+diff --git a/runtime/ObjC/Framework/examples/treeparser/Main.java b/runtime/ObjC/Framework/examples/treeparser/Main.java
+new file mode 100755
+index 0000000..10734e3
+--- /dev/null
++++ b/runtime/ObjC/Framework/examples/treeparser/Main.java
+@@ -0,0 +1,20 @@
++import org.antlr.runtime.*;
++import org.antlr.runtime.tree.*;
++
++public class Main {
++	public static void main(String[] args) throws Exception {
++		CharStream input = new ANTLRFileStream(args[0]);
++		LangLexer lex = new LangLexer(input);
++		CommonTokenStream tokens = new CommonTokenStream(lex);
++		LangParser parser = new LangParser(tokens);
++		//LangParser.decl_return r = parser.decl();
++		LangParser.start_return r = parser.start();
++		System.out.println("tree: "+((Tree)r.tree).toStringTree());
++		CommonTree r0 = ((CommonTree)r.tree);
++
++		CommonTreeNodeStream nodes = new CommonTreeNodeStream(r0);
++		nodes.setTokenStream(tokens);
++		LangDumpDecl walker = new LangDumpDecl(nodes);
++		walker.decl();
++	}
++}
+diff --git a/runtime/ObjC/Framework/examples/treeparser/README.txt b/runtime/ObjC/Framework/examples/treeparser/README.txt
+new file mode 100755
+index 0000000..a964e71
+--- /dev/null
++++ b/runtime/ObjC/Framework/examples/treeparser/README.txt
+@@ -0,0 +1,11 @@
++Hi.  This is a simple demo of tree construction and tree parsing with ANTLR
++v3.  Here's how to try it out.
++
++$ java org.antlr.Tool LangParser.g LangTreeParser.g
++$ javac *.java
++$ java Main input
++
++You should see out:
++
++tree: (DECL int a)
++int a
+diff --git a/runtime/ObjC/Framework/examples/treeparser/files b/runtime/ObjC/Framework/examples/treeparser/files
+new file mode 100755
+index 0000000..eeae6da
+--- /dev/null
++++ b/runtime/ObjC/Framework/examples/treeparser/files
+@@ -0,0 +1,6 @@
++README.txt
++Main.java
++Lang.g
++LangDumpDecl.g
++input
++output
+diff --git a/runtime/ObjC/Framework/examples/treeparser/input b/runtime/ObjC/Framework/examples/treeparser/input
+new file mode 100755
+index 0000000..4e610c0
+--- /dev/null
++++ b/runtime/ObjC/Framework/examples/treeparser/input
+@@ -0,0 +1 @@
++int a;
+diff --git a/runtime/ObjC/Framework/examples/treeparser/main.m b/runtime/ObjC/Framework/examples/treeparser/main.m
+new file mode 100644
+index 0000000..d1eeaf1
+--- /dev/null
++++ b/runtime/ObjC/Framework/examples/treeparser/main.m
+@@ -0,0 +1,55 @@
++#import <Cocoa/Cocoa.h>
++#import "antlr3.h"
++#import "LangLexer.h"
++#import "LangParser.h"
++#import "LangDumpDecl.h"
++#import "stdio.h"
++#include <unistd.h>
++
++/*
++import org.antlr.runtime.*;
++import org.antlr.runtime.tree.*;
++
++public class Main {
++	public static void main(String[] args) throws Exception {
++		CharStream input = new ANTLRFileStream(args[0]);
++		LangLexer lex = new LangLexer(input);
++		CommonTokenStream tokens = new CommonTokenStream(lex);
++		LangParser parser = new LangParser(tokens);
++		//LangParser.decl_return r = parser.decl();
++		LangParser.start_return r = parser.start();
++		System.out.println("tree: "+((Tree)r.tree).toStringTree());
++		CommonTree r0 = ((CommonTree)r.tree);
++
++		CommonTreeNodeStream nodes = new CommonTreeNodeStream(r0);
++		nodes.setTokenStream(tokens);
++		LangDumpDecl walker = new LangDumpDecl(nodes);
++		walker.decl();
++	}
++}
++*/
++
++int main(int argc, const char * argv[])
++{
++    NSError *error;
++    NSLog(@"starting treeparser\n");
++    NSString *dir = @"/Users/acondit/source/antlr3/acondit_localhost/code/antlr/main/runtime/ObjC/Framework/examples/treeparser/input";
++	NSString *string = [NSString stringWithContentsOfFile:dir  encoding:NSASCIIStringEncoding error:&error];
++	NSLog(@"input = %@", string);
++	ANTLRStringStream *stream = [ANTLRStringStream newANTLRStringStream:string];
++	LangLexer *lex = [LangLexer newLangLexerWithCharStream:stream];
++    ANTLRCommonTokenStream *tokens = [ANTLRCommonTokenStream newANTLRCommonTokenStreamWithTokenSource:lex];
++    LangParser *parser = [LangParser newLangParser:tokens];
++//    LangParser_decl_return *r = [parser decl];
++    LangParser_start_return *r = [parser start];
++    NSLog( @"tree: %@", [r.tree toStringTree]);
++    ANTLRCommonTree *r0 = [r getTree];
++
++    ANTLRCommonTreeNodeStream *nodes = [ANTLRCommonTreeNodeStream newANTLRCommonTreeNodeStream:r0];
++    [nodes setTokenStream:tokens];
++    LangDumpDecl *walker = [LangDumpDecl newLangDumpDecl:nodes];
++    [walker decl];
++
++    NSLog(@"exiting treeparser\n");
++	return 0;
++}
+\ No newline at end of file
+diff --git a/runtime/ObjC/Framework/examples/treeparser/output b/runtime/ObjC/Framework/examples/treeparser/output
+new file mode 100755
+index 0000000..64daa7f
+--- /dev/null
++++ b/runtime/ObjC/Framework/examples/treeparser/output
+@@ -0,0 +1,2 @@
++tree: (DECL int a)
++int a
+

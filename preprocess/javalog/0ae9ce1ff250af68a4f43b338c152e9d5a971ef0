@@ -1,0 +1,9 @@
+commit 0ae9ce1ff250af68a4f43b338c152e9d5a971ef0
+Merge: f4dd867 1d7c9a3
+Author:     Ivan Brezina <ibre5041@ibrezina.net>
+AuthorDate: Wed Oct 2 10:42:03 2013 +0200
+Commit:     Ivan Brezina <ibre5041@ibrezina.net>
+CommitDate: Wed Oct 2 10:42:03 2013 +0200
+
+Merge remote-tracking branch 'upstream/master'
+

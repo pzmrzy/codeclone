@@ -1,0 +1,11 @@
+commit 5534b163e1cf1300755527b53b327914ef7687c4
+Merge: a0583ba 21a54d7
+Author:     Terence Parr <parrt@cs.usfca.edu>
+AuthorDate: Mon Sep 17 17:50:39 2012 -0700
+Commit:     Terence Parr <parrt@cs.usfca.edu>
+CommitDate: Mon Sep 17 17:50:39 2012 -0700
+
+Merge pull request #39 from ksgokul/patch-1
+
+Update contributors.txt
+

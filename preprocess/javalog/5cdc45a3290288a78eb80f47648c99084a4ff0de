@@ -1,0 +1,50 @@
+commit 5cdc45a3290288a78eb80f47648c99084a4ff0de
+Author:     acondit <acondit@parrt.spork>
+AuthorDate: Wed May 11 09:41:24 2011 -0800
+Commit:     acondit <acondit@parrt.spork>
+CommitDate: Wed May 11 09:41:24 2011 -0800
+
+Trying to fix scope
+At the moment if you want to look at what is being pushed for scope,
+You must declare a "memvar" using the "rule name"_scope (without the quotes).
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8459]
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/ObjC/ObjC.stg b/tool/src/main/resources/org/antlr/codegen/templates/ObjC/ObjC.stg
+index 78aa960..b1aa869 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/ObjC/ObjC.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/ObjC/ObjC.stg
+@@ -568,7 +568,9 @@ typedef enum {
+
+/* Interface grammar class */
+@interface <className()> <@superClassName> : <superClass><@end> { /* line 572 */
+-<rules:{rule | <rule.ruleDescriptor.ruleScope:ruleAttributeScopeMemVar(scope=it)>}>
++#pragma mark Dynamic Rule Scopes ruleAttributeScopeDecl
++<rules:{rule | <rule.ruleDescriptor.ruleScope:ruleAttributeScopeDecl(scope=rule.ruleDescriptor.ruleScope)>}>
++#pragma mark Dynamic Global Rule Scopes globalAttributeScopeMemVar
+<scopes:{it | <if(it.isDynamicGlobalScope)><globalAttributeScopeMemVar(scope=it)><endif>}><\n>
+/* ObjC start of actions.(actionScope).memVars */
+<actions.(actionScope).memVars>
+@@ -1747,6 +1749,7 @@ globalAttributeScopeDealloc(scope) ::= << [<scope.name>_stack release];<\n> >>
+globalAttributeScope(scope) ::= << static <scope.name>_stack;<\n> >>
+
+ruleAttributeScopeMemVar(scope) ::= <<
++/* ObjC ruleAttributeScopeMemVar */
+<if(scope.attributes)>
+<scope.name>_Scope *<scope.name>_scope;<\n> /* ObjC ruleAttributeScopeMemVar */
+<endif>
+@@ -1809,6 +1812,13 @@ static ANTLRSymbolStack *<scope.name>_stack;<\n>
+<endif>
+>>
+
++ruleAttributeScopeDecl(scope) ::= <<
++/* ruleAttributeScopeDecl */
++<if(scope.attributes)>
++<scope.name>_Scope *<scope.name>_scope;<\n>
++<endif>
++>>
++
+returnStructName(r) ::= "<className()>_<r.name>_return"
+
+returnType() ::= <%
+

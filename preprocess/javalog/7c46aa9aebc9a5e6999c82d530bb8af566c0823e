@@ -1,0 +1,5146 @@
+commit 7c46aa9aebc9a5e6999c82d530bb8af566c0823e
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Tue Feb 21 17:33:04 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Wed Feb 22 12:25:36 2012 -0600
+
+Add missing @Override annotations
+
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/ANTLRFileStream.java b/runtime/Java/src/main/java/org/antlr/runtime/ANTLRFileStream.java
+index 27ef58b..1e2e698 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/ANTLRFileStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/ANTLRFileStream.java
+@@ -72,6 +72,7 @@ public class ANTLRFileStream extends ANTLRStringStream {
+}
+}
+
++	@Override
+public String getSourceName() {
+return fileName;
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/ANTLRStringStream.java b/runtime/Java/src/main/java/org/antlr/runtime/ANTLRStringStream.java
+index 17af23c..9a9bece 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/ANTLRStringStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/ANTLRStringStream.java
+@@ -94,6 +94,7 @@ public class ANTLRStringStream implements CharStream {
+markDepth = 0;
+}
+
++	@Override
+public void consume() {
+//System.out.println("prev p="+p+", c="+(char)data[p]);
+if ( p < n ) {
+@@ -111,6 +112,7 @@ public class ANTLRStringStream implements CharStream {
+}
+}
+
++	@Override
+public int LA(int i) {
+if ( i==0 ) {
+return 0; // undefined
+@@ -131,6 +133,7 @@ public class ANTLRStringStream implements CharStream {
+return data[p+i-1];
+}
+
++	@Override
+public int LT(int i) {
+return LA(i);
+}
+@@ -139,14 +142,17 @@ public class ANTLRStringStream implements CharStream {
+*  last symbol has been read.  The index is the index of char to
+*  be returned from LA(1).
+*/
++	@Override
+public int index() {
+return p;
+}
+
++	@Override
+public int size() {
+return n;
+}
+
++	@Override
+public int mark() {
+if ( markers==null ) {
+markers = new ArrayList();
+@@ -168,6 +174,7 @@ public class ANTLRStringStream implements CharStream {
+return markDepth;
+}
+
++	@Override
+public void rewind(int m) {
+CharStreamState state = (CharStreamState)markers.get(m);
+// restore stream state
+@@ -177,10 +184,12 @@ public class ANTLRStringStream implements CharStream {
+release(m);
+}
+
++	@Override
+public void rewind() {
+rewind(lastMarker);
+}
+
++	@Override
+public void release(int marker) {
+// unwind any other markers made after m and release m
+markDepth = marker;
+@@ -191,6 +200,7 @@ public class ANTLRStringStream implements CharStream {
+/** consume() ahead until p==index; can't just set p=index as we must
+*  update line and charPositionInLine.
+*/
++	@Override
+public void seek(int index) {
+if ( index<=p ) {
+p = index; // just jump; don't update stream state (line, ...)
+@@ -202,29 +212,36 @@ public class ANTLRStringStream implements CharStream {
+}
+}
+
++	@Override
+public String substring(int start, int stop) {
+return new String(data,start,stop-start+1);
+}
+
++	@Override
+public int getLine() {
+return line;
+}
+
++	@Override
+public int getCharPositionInLine() {
+return charPositionInLine;
+}
+
++	@Override
+public void setLine(int line) {
+this.line = line;
+}
+
++	@Override
+public void setCharPositionInLine(int pos) {
+this.charPositionInLine = pos;
+}
+
++	@Override
+public String getSourceName() {
+return name;
+}
+
++	@Override
+public String toString() { return new String(data); }
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/BitSet.java b/runtime/Java/src/main/java/org/antlr/runtime/BitSet.java
+index f013a26..a309b82 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/BitSet.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/BitSet.java
+@@ -163,6 +163,7 @@ public class BitSet implements Cloneable {
+return 1L << bitPosition;
+}
+
++	@Override
+public Object clone() {
+BitSet s;
+try {
+@@ -191,6 +192,7 @@ public class BitSet implements Cloneable {
+return deg;
+}
+
++	@Override
+public boolean equals(Object other) {
+if ( other == null || !(other instanceof BitSet) ) {
+return false;
+@@ -293,6 +295,7 @@ public class BitSet implements Cloneable {
+return bit >> LOG_BITS; // bit / BITS
+}
+
++	@Override
+public String toString() {
+return toString(null);
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/BufferedTokenStream.java b/runtime/Java/src/main/java/org/antlr/runtime/BufferedTokenStream.java
+index 7742d4f..a805de0 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/BufferedTokenStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/BufferedTokenStream.java
+@@ -74,26 +74,33 @@ public class BufferedTokenStream implements TokenStream {
+this.tokenSource = tokenSource;
+}
+
++	@Override
+public TokenSource getTokenSource() { return tokenSource; }
+
++	@Override
+public int index() { return p; }
+
++	@Override
+public int range() { return range; }
+
++	@Override
+public int mark() {
+if ( p == -1 ) setup();
+lastMarker = index();
+return lastMarker;
+}
+
++	@Override
+public void release(int marker) {
+// no resources to release
+}
+
++	@Override
+public void rewind(int marker) {
+seek(marker);
+}
+
++	@Override
+public void rewind() {
+seek(lastMarker);
+}
+@@ -103,8 +110,10 @@ public class BufferedTokenStream implements TokenStream {
+lastMarker = 0;
+}
+
++	@Override
+public void seek(int index) { p = index; }
+
++	@Override
+public int size() { return tokens.size(); }
+
+/** Move the input pointer to the next incoming token.  The stream
+@@ -114,6 +123,7 @@ public class BufferedTokenStream implements TokenStream {
+*
+*  Walk past any token not on the channel the parser is listening to.
+*/
++	@Override
+public void consume() {
+if ( p == -1 ) setup();
+p++;
+@@ -138,6 +148,7 @@ public class BufferedTokenStream implements TokenStream {
+}
+}
+
++	@Override
+public Token get(int i) {
+if ( i < 0 || i >= tokens.size() ) {
+throw new NoSuchElementException("token index "+i+" out of range 0.."+(tokens.size()-1));
+@@ -159,6 +170,7 @@ public class BufferedTokenStream implements TokenStream {
+return subset;
+}
+
++	@Override
+public int LA(int i) { return LT(i).getType(); }
+
+protected Token LB(int k) {
+@@ -166,6 +178,7 @@ public class BufferedTokenStream implements TokenStream {
+return tokens.get(p-k);
+}
+
++	@Override
+public Token LT(int k) {
+if ( p == -1 ) setup();
+if ( k==0 ) return null;
+@@ -228,15 +241,18 @@ public class BufferedTokenStream implements TokenStream {
+return getTokens(start,stop,BitSet.of(ttype));
+}
+
++	@Override
+public String getSourceName() {	return tokenSource.getSourceName();	}
+
+/** Grab *all* tokens from stream and return string */
++	@Override
+public String toString() {
+if ( p == -1 ) setup();
+fill();
+return toString(0, tokens.size()-1);
+}
+
++	@Override
+public String toString(int start, int stop) {
+if ( start<0 || stop<0 ) return null;
+if ( p == -1 ) setup();
+@@ -250,6 +266,7 @@ public class BufferedTokenStream implements TokenStream {
+return buf.toString();
+}
+
++	@Override
+public String toString(Token start, Token stop) {
+if ( start!=null && stop!=null ) {
+return toString(start.getTokenIndex(), stop.getTokenIndex());
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/ClassicToken.java b/runtime/Java/src/main/java/org/antlr/runtime/ClassicToken.java
+index 72c2bd9..b73734c 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/ClassicToken.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/ClassicToken.java
+@@ -67,61 +67,76 @@ public class ClassicToken implements Token {
+this.channel = channel;
+}
+
++	@Override
+public int getType() {
+return type;
+}
+
++	@Override
+public void setLine(int line) {
+this.line = line;
+}
+
++	@Override
+public String getText() {
+return text;
+}
+
++	@Override
+public void setText(String text) {
+this.text = text;
+}
+
++	@Override
+public int getLine() {
+return line;
+}
+
++	@Override
+public int getCharPositionInLine() {
+return charPositionInLine;
+}
+
++	@Override
+public void setCharPositionInLine(int charPositionInLine) {
+this.charPositionInLine = charPositionInLine;
+}
+
++	@Override
+public int getChannel() {
+return channel;
+}
+
++	@Override
+public void setChannel(int channel) {
+this.channel = channel;
+}
+
++	@Override
+public void setType(int type) {
+this.type = type;
+}
+
++	@Override
+public int getTokenIndex() {
+return index;
+}
+
++	@Override
+public void setTokenIndex(int index) {
+this.index = index;
+}
+
++	@Override
+public CharStream getInputStream() {
+return null;
+}
+
++	@Override
+public void setInputStream(CharStream input) {
+}
+
++	@Override
+public String toString() {
+String channelStr = "";
+if ( channel>0 ) {
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/CommonToken.java b/runtime/Java/src/main/java/org/antlr/runtime/CommonToken.java
+index 6bd9b89..325f63a 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/CommonToken.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/CommonToken.java
+@@ -83,14 +83,17 @@ public class CommonToken implements Token, Serializable {
+}
+}
+
++	@Override
+public int getType() {
+return type;
+}
+
++	@Override
+public void setLine(int line) {
+this.line = line;
+}
+
++	@Override
+public String getText() {
+if ( text!=null ) {
+return text;
+@@ -112,30 +115,37 @@ public class CommonToken implements Token, Serializable {
+*  that start/stop indexes are not valid.  It means that that input
+*  was converted to a new string in the token object.
+*/
++	@Override
+public void setText(String text) {
+this.text = text;
+}
+
++	@Override
+public int getLine() {
+return line;
+}
+
++	@Override
+public int getCharPositionInLine() {
+return charPositionInLine;
+}
+
++	@Override
+public void setCharPositionInLine(int charPositionInLine) {
+this.charPositionInLine = charPositionInLine;
+}
+
++	@Override
+public int getChannel() {
+return channel;
+}
+
++	@Override
+public void setChannel(int channel) {
+this.channel = channel;
+}
+
++	@Override
+public void setType(int type) {
+this.type = type;
+}
+@@ -156,22 +166,27 @@ public class CommonToken implements Token, Serializable {
+this.stop = stop;
+}
+
++	@Override
+public int getTokenIndex() {
+return index;
+}
+
++	@Override
+public void setTokenIndex(int index) {
+this.index = index;
+}
+
++	@Override
+public CharStream getInputStream() {
+return input;
+}
+
++	@Override
+public void setInputStream(CharStream input) {
+this.input = input;
+}
+
++	@Override
+public String toString() {
+String channelStr = "";
+if ( channel>0 ) {
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/CommonTokenStream.java b/runtime/Java/src/main/java/org/antlr/runtime/CommonTokenStream.java
+index 2bea7ec..c98be6c 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/CommonTokenStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/CommonTokenStream.java
+@@ -61,6 +61,7 @@ public class CommonTokenStream extends BufferedTokenStream {
+}
+
+/** Always leave p on an on-channel token. */
++	@Override
+public void consume() {
+if ( p == -1 ) setup();
+p++;
+@@ -71,6 +72,7 @@ public class CommonTokenStream extends BufferedTokenStream {
+}
+}
+
++	@Override
+protected Token LB(int k) {
+if ( k==0 || (p-k)<0 ) return null;
+
+@@ -86,6 +88,7 @@ public class CommonTokenStream extends BufferedTokenStream {
+return tokens.get(i);
+}
+
++	@Override
+public Token LT(int k) {
+//System.out.println("enter LT("+k+")");
+if ( p == -1 ) setup();
+@@ -122,11 +125,13 @@ public class CommonTokenStream extends BufferedTokenStream {
+return i;
+}
+
++	@Override
+public void reset() {
+super.reset();
+p = skipOffTokenChannels(0);
+}
+
++	@Override
+protected void setup() {
+p = 0;
+sync(0);
+@@ -151,6 +156,7 @@ public class CommonTokenStream extends BufferedTokenStream {
+}
+
+/** Reset this token stream by setting its token source. */
++	@Override
+public void setTokenSource(TokenSource tokenSource) {
+super.setTokenSource(tokenSource);
+channel = Token.DEFAULT_CHANNEL;
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/FailedPredicateException.java b/runtime/Java/src/main/java/org/antlr/runtime/FailedPredicateException.java
+index 5bef1bd..c072479 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/FailedPredicateException.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/FailedPredicateException.java
+@@ -48,6 +48,7 @@ public class FailedPredicateException extends RecognitionException {
+this.predicateText = predicateText;
+}
+
++	@Override
+public String toString() {
+return "FailedPredicateException("+ruleName+",{"+predicateText+"}?)";
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/LegacyCommonTokenStream.java b/runtime/Java/src/main/java/org/antlr/runtime/LegacyCommonTokenStream.java
+index f9c5e39..d2a63bf 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/LegacyCommonTokenStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/LegacyCommonTokenStream.java
+@@ -132,6 +132,7 @@ public class LegacyCommonTokenStream implements TokenStream {
+*
+*  Walk past any token not on the channel the parser is listening to.
+*/
++	@Override
+public void consume() {
+if ( p<tokens.size() ) {
+p++;
+@@ -235,6 +236,7 @@ public class LegacyCommonTokenStream implements TokenStream {
+/** Get the ith token from the current position 1..n where k=1 is the
+*  first symbol of lookahead.
+*/
++	@Override
+public Token LT(int k) {
+if ( p == -1 ) {
+fillBuffer();
+@@ -296,6 +298,7 @@ public class LegacyCommonTokenStream implements TokenStream {
+/** Return absolute token i; ignore which channel the tokens are on;
+*  that is, count all tokens not just on-channel tokens.
+*/
++	@Override
+public Token get(int i) {
+return (Token)tokens.get(i);
+}
+@@ -307,10 +310,12 @@ public class LegacyCommonTokenStream implements TokenStream {
+return tokens.subList(start, stop);
+}
+
++	@Override
+public int LA(int i) {
+return LT(i).getType();
+}
+
++	@Override
+public int mark() {
+if ( p == -1 ) {
+fillBuffer();
+@@ -319,26 +324,32 @@ public class LegacyCommonTokenStream implements TokenStream {
+return lastMarker;
+}
+
++	@Override
+public void release(int marker) {
+// no resources to release
+}
+
++	@Override
+public int size() {
+return tokens.size();
+}
+
++	@Override
+public int index() {
+return p;
+}
+
++	@Override
+public int range() {
+return range;
+}
+
++	@Override
+public void rewind(int marker) {
+seek(marker);
+}
+
++	@Override
+public void rewind() {
+seek(lastMarker);
+}
+@@ -348,18 +359,22 @@ public class LegacyCommonTokenStream implements TokenStream {
+lastMarker = 0;
+}
+
++	@Override
+public void seek(int index) {
+p = index;
+}
+
++	@Override
+public TokenSource getTokenSource() {
+return tokenSource;
+}
+
++	@Override
+public String getSourceName() {
+return getTokenSource().getSourceName();
+}
+
++	@Override
+public String toString() {
+if ( p == -1 ) {
+fillBuffer();
+@@ -367,6 +382,7 @@ public class LegacyCommonTokenStream implements TokenStream {
+return toString(0, tokens.size()-1);
+}
+
++	@Override
+public String toString(int start, int stop) {
+if ( start<0 || stop<0 ) {
+return null;
+@@ -385,6 +401,7 @@ public class LegacyCommonTokenStream implements TokenStream {
+return buf.toString();
+}
+
++	@Override
+public String toString(Token start, Token stop) {
+if ( start!=null && stop!=null ) {
+return toString(start.getTokenIndex(), stop.getTokenIndex());
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/Lexer.java b/runtime/Java/src/main/java/org/antlr/runtime/Lexer.java
+index a1a24e1..3f359d9 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/Lexer.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/Lexer.java
+@@ -48,6 +48,7 @@ public abstract class Lexer extends BaseRecognizer implements TokenSource {
+this.input = input;
+}
+
++	@Override
+public void reset() {
+super.reset(); // reset all recognizer state variables
+// wack Lexer state variables
+@@ -69,6 +70,7 @@ public abstract class Lexer extends BaseRecognizer implements TokenSource {
+/** Return a token from this source; i.e., match a token on the char
+*  stream.
+*/
++	@Override
+public Token nextToken() {
+while (true) {
+state.token = null;
+@@ -134,6 +136,7 @@ public abstract class Lexer extends BaseRecognizer implements TokenSource {
+return this.input;
+}
+
++	@Override
+public String getSourceName() {
+return input.getSourceName();
+}
+@@ -250,6 +253,7 @@ public abstract class Lexer extends BaseRecognizer implements TokenSource {
+state.text = text;
+}
+
++	@Override
+public void reportError(RecognitionException e) {
+/** TODO: not thought about recovery in lexer yet.
+*
+@@ -265,6 +269,7 @@ public abstract class Lexer extends BaseRecognizer implements TokenSource {
+displayRecognitionError(this.getTokenNames(), e);
+}
+
++	@Override
+public String getErrorMessage(RecognitionException e, String[] tokenNames) {
+String msg = null;
+if ( e instanceof MismatchedTokenException ) {
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/MismatchedNotSetException.java b/runtime/Java/src/main/java/org/antlr/runtime/MismatchedNotSetException.java
+index 49ceb27..62f14ba 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/MismatchedNotSetException.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/MismatchedNotSetException.java
+@@ -35,6 +35,7 @@ public class MismatchedNotSetException extends MismatchedSetException {
+super(expecting, input);
+}
+
++	@Override
+public String toString() {
+return "MismatchedNotSetException("+getUnexpectedType()+"!="+expecting+")";
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/MismatchedRangeException.java b/runtime/Java/src/main/java/org/antlr/runtime/MismatchedRangeException.java
+index 23b3d87..f6c02c6 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/MismatchedRangeException.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/MismatchedRangeException.java
+@@ -39,6 +39,7 @@ public class MismatchedRangeException extends RecognitionException {
+this.b = b;
+}
+
++	@Override
+public String toString() {
+return "MismatchedNotSetException("+getUnexpectedType()+" not in ["+a+","+b+"])";
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/MismatchedSetException.java b/runtime/Java/src/main/java/org/antlr/runtime/MismatchedSetException.java
+index 9bfa530..36bd47b 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/MismatchedSetException.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/MismatchedSetException.java
+@@ -38,6 +38,7 @@ public class MismatchedSetException extends RecognitionException {
+this.expecting = expecting;
+}
+
++	@Override
+public String toString() {
+return "MismatchedSetException("+getUnexpectedType()+"!="+expecting+")";
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/MismatchedTokenException.java b/runtime/Java/src/main/java/org/antlr/runtime/MismatchedTokenException.java
+index 07ae814..4af2269 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/MismatchedTokenException.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/MismatchedTokenException.java
+@@ -39,6 +39,7 @@ public class MismatchedTokenException extends RecognitionException {
+this.expecting = expecting;
+}
+
++	@Override
+public String toString() {
+return "MismatchedTokenException("+getUnexpectedType()+"!="+expecting+")";
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/MismatchedTreeNodeException.java b/runtime/Java/src/main/java/org/antlr/runtime/MismatchedTreeNodeException.java
+index 99c834d..399eb93 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/MismatchedTreeNodeException.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/MismatchedTreeNodeException.java
+@@ -43,6 +43,7 @@ public class MismatchedTreeNodeException extends RecognitionException {
+this.expecting = expecting;
+}
+
++	@Override
+public String toString() {
+return "MismatchedTreeNodeException("+getUnexpectedType()+"!="+expecting+")";
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/MissingTokenException.java b/runtime/Java/src/main/java/org/antlr/runtime/MissingTokenException.java
+index 9eda1f2..5b44e06 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/MissingTokenException.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/MissingTokenException.java
+@@ -44,6 +44,7 @@ public class MissingTokenException extends MismatchedTokenException {
+return expecting;
+}
+
++	@Override
+public String toString() {
+if ( inserted!=null && token!=null ) {
+return "MissingTokenException(inserted "+inserted+" at "+token.getText()+")";
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/NoViableAltException.java b/runtime/Java/src/main/java/org/antlr/runtime/NoViableAltException.java
+index 889045f..29513a3 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/NoViableAltException.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/NoViableAltException.java
+@@ -46,6 +46,7 @@ public class NoViableAltException extends RecognitionException {
+this.stateNumber = stateNumber;
+}
+
++	@Override
+public String toString() {
+if ( input instanceof CharStream ) {
+return "NoViableAltException('"+(char)getUnexpectedType()+"'@["+grammarDecisionDescription+"])";
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/Parser.java b/runtime/Java/src/main/java/org/antlr/runtime/Parser.java
+index 030cf72..aca0cce 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/Parser.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/Parser.java
+@@ -45,6 +45,7 @@ public class Parser extends BaseRecognizer {
+this.input = input;
+}
+
++	@Override
+public void reset() {
+super.reset(); // reset all recognizer state variables
+if ( input!=null ) {
+@@ -52,10 +53,12 @@ public class Parser extends BaseRecognizer {
+}
+}
+
++	@Override
+protected Object getCurrentInputSymbol(IntStream input) {
+return ((TokenStream)input).LT(1);
+}
+
++	@Override
+protected Object getMissingSymbol(IntStream input,
+RecognitionException e,
+int expectedTokenType,
+@@ -87,6 +90,7 @@ public class Parser extends BaseRecognizer {
+return input;
+}
+
++	@Override
+public String getSourceName() {
+return input.getSourceName();
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/ParserRuleReturnScope.java b/runtime/Java/src/main/java/org/antlr/runtime/ParserRuleReturnScope.java
+index e3e38ce..442fbcf 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/ParserRuleReturnScope.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/ParserRuleReturnScope.java
+@@ -49,9 +49,12 @@ import org.antlr.runtime.tree.CommonTree;
+*/
+public class ParserRuleReturnScope extends RuleReturnScope {
+public Token start, stop;
++	@Override
+public Object getStart() { return start; }
++	@Override
+public Object getStop() { return stop; }
+
+public Object tree; // only used when output=AST
++	@Override
+public Object getTree() { return tree; }
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/SerializedGrammar.java b/runtime/Java/src/main/java/org/antlr/runtime/SerializedGrammar.java
+index a609053..bb1bd9d 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/SerializedGrammar.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/SerializedGrammar.java
+@@ -51,6 +51,7 @@ public class SerializedGrammar {
+this.name = name;
+this.block = block;
+}
++		@Override
+public String toString() {
+return name+":"+block;
+}
+@@ -61,6 +62,7 @@ public class SerializedGrammar {
+public Block(List[] alts) {
+this.alts = alts;
+}
++		@Override
+public String toString() {
+StringBuffer buf = new StringBuffer();
+buf.append("(");
+@@ -77,12 +79,14 @@ public class SerializedGrammar {
+class TokenRef {
+int ttype;
+public TokenRef(int ttype) { this.ttype = ttype; }
++		@Override
+public String toString() { return String.valueOf(ttype); }
+}
+
+class RuleRef {
+int ruleIndex;
+public RuleRef(int ruleIndex) { this.ruleIndex = ruleIndex; }
++		@Override
+public String toString() { return String.valueOf(ruleIndex); }
+}
+
+@@ -189,6 +193,7 @@ public class SerializedGrammar {
+return buf.toString();
+}
+
++	@Override
+public String toString() {
+StringBuffer buf = new StringBuffer();
+buf.append(type+" grammar "+name);
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/TokenRewriteStream.java b/runtime/Java/src/main/java/org/antlr/runtime/TokenRewriteStream.java
+index 8437441..4e6a8a6 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/TokenRewriteStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/TokenRewriteStream.java
+@@ -108,6 +108,7 @@ public class TokenRewriteStream extends CommonTokenStream {
+public int execute(StringBuffer buf) {
+return index;
+}
++		@Override
+public String toString() {
+String opName = getClass().getName();
+int $index = opName.indexOf('$');
+@@ -121,6 +122,7 @@ public class TokenRewriteStream extends CommonTokenStream {
+public InsertBeforeOp(int index, Object text) {
+super(index,text);
+}
++		@Override
+public int execute(StringBuffer buf) {
+buf.append(text);
+if ( tokens.get(index).getType()!=Token.EOF ) {
+@@ -139,12 +141,14 @@ public class TokenRewriteStream extends CommonTokenStream {
+super(from,text);
+lastIndex = to;
+}
++		@Override
+public int execute(StringBuffer buf) {
+if ( text!=null ) {
+buf.append(text);
+}
+return lastIndex+1;
+}
++		@Override
+public String toString() {
+if ( text==null ) {
+return "<DeleteOp@"+tokens.get(index)+
+@@ -344,6 +348,7 @@ public class TokenRewriteStream extends CommonTokenStream {
+return buf.toString();
+}
+
++	@Override
+public String toString() {
+fill();
+return toString(MIN_TOKEN_INDEX, size()-1);
+@@ -354,6 +359,7 @@ public class TokenRewriteStream extends CommonTokenStream {
+return toString(programName, MIN_TOKEN_INDEX, size()-1);
+}
+
++	@Override
+public String toString(int start, int end) {
+return toString(DEFAULT_PROGRAM_NAME, start, end);
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/UnbufferedTokenStream.java b/runtime/Java/src/main/java/org/antlr/runtime/UnbufferedTokenStream.java
+index 0b0e979..c0b5330 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/UnbufferedTokenStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/UnbufferedTokenStream.java
+@@ -58,25 +58,33 @@ public class UnbufferedTokenStream extends LookaheadStream<Token> implements Tok
+this.tokenSource = tokenSource;
+}
+
++	@Override
+public Token nextElement() {
+Token t = tokenSource.nextToken();
+t.setTokenIndex(tokenIndex++);
+return t;
+}
+
++	@Override
+public boolean isEOF(Token o) { return o.getType() == Token.EOF; }
+
++	@Override
+public TokenSource getTokenSource() { return tokenSource; }
+
++	@Override
+public String toString(int start, int stop) { return "n/a"; }
+
++	@Override
+public String toString(Token start, Token stop) { return "n/a"; }
+
++	@Override
+public int LA(int i) { return LT(i).getType(); }
+
++	@Override
+public Token get(int i) {
+throw new UnsupportedOperationException("Absolute token indexes are meaningless in an unbuffered stream");
+}
+
++	@Override
+public String getSourceName() {	return tokenSource.getSourceName();	}
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/UnwantedTokenException.java b/runtime/Java/src/main/java/org/antlr/runtime/UnwantedTokenException.java
+index feb7445..62ccabc 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/UnwantedTokenException.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/UnwantedTokenException.java
+@@ -40,6 +40,7 @@ public class UnwantedTokenException extends MismatchedTokenException {
+return token;
+}
+
++	@Override
+public String toString() {
+String exp = ", expected "+expecting;
+if ( expecting==Token.INVALID_TOKEN_TYPE ) {
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/debug/BlankDebugEventListener.java b/runtime/Java/src/main/java/org/antlr/runtime/debug/BlankDebugEventListener.java
+index d70aa26..053f1d0 100755
+--- a/runtime/Java/src/main/java/org/antlr/runtime/debug/BlankDebugEventListener.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/debug/BlankDebugEventListener.java
+@@ -35,43 +35,43 @@ import org.antlr.runtime.Token;
+*  sensitive to updates to debug interface.
+*/
+public class BlankDebugEventListener implements DebugEventListener {
+-	public void enterRule(String grammarFileName, String ruleName) {}
+-	public void exitRule(String grammarFileName, String ruleName) {}
+-	public void enterAlt(int alt) {}
+-	public void enterSubRule(int decisionNumber) {}
+-	public void exitSubRule(int decisionNumber) {}
+-	public void enterDecision(int decisionNumber, boolean couldBacktrack) {}
+-	public void exitDecision(int decisionNumber) {}
+-	public void location(int line, int pos) {}
+-	public void consumeToken(Token token) {}
+-	public void consumeHiddenToken(Token token) {}
+-	public void LT(int i, Token t) {}
+-	public void mark(int i) {}
+-	public void rewind(int i) {}
+-	public void rewind() {}
+-	public void beginBacktrack(int level) {}
+-	public void endBacktrack(int level, boolean successful) {}
+-	public void recognitionException(RecognitionException e) {}
+-	public void beginResync() {}
+-	public void endResync() {}
+-	public void semanticPredicate(boolean result, String predicate) {}
+-	public void commence() {}
+-	public void terminate() {}
++	@Override public void enterRule(String grammarFileName, String ruleName) {}
++	@Override public void exitRule(String grammarFileName, String ruleName) {}
++	@Override public void enterAlt(int alt) {}
++	@Override public void enterSubRule(int decisionNumber) {}
++	@Override public void exitSubRule(int decisionNumber) {}
++	@Override public void enterDecision(int decisionNumber, boolean couldBacktrack) {}
++	@Override public void exitDecision(int decisionNumber) {}
++	@Override public void location(int line, int pos) {}
++	@Override public void consumeToken(Token token) {}
++	@Override public void consumeHiddenToken(Token token) {}
++	@Override public void LT(int i, Token t) {}
++	@Override public void mark(int i) {}
++	@Override public void rewind(int i) {}
++	@Override public void rewind() {}
++	@Override public void beginBacktrack(int level) {}
++	@Override public void endBacktrack(int level, boolean successful) {}
++	@Override public void recognitionException(RecognitionException e) {}
++	@Override public void beginResync() {}
++	@Override public void endResync() {}
++	@Override public void semanticPredicate(boolean result, String predicate) {}
++	@Override public void commence() {}
++	@Override public void terminate() {}
+
+// Tree parsing stuff
+
+-	public void consumeNode(Object t) {}
+-	public void LT(int i, Object t) {}
++	@Override public void consumeNode(Object t) {}
++	@Override public void LT(int i, Object t) {}
+
+// AST Stuff
+
+-	public void nilNode(Object t) {}
+-	public void errorNode(Object t) {}
+-	public void createNode(Object t) {}
+-	public void createNode(Object node, Token token) {}
+-	public void becomeRoot(Object newRoot, Object oldRoot) {}
+-	public void addChild(Object root, Object child) {}
+-	public void setTokenBoundaries(Object t, int tokenStartIndex, int tokenStopIndex) {}
++	@Override public void nilNode(Object t) {}
++	@Override public void errorNode(Object t) {}
++	@Override public void createNode(Object t) {}
++	@Override public void createNode(Object node, Token token) {}
++	@Override public void becomeRoot(Object newRoot, Object oldRoot) {}
++	@Override public void addChild(Object root, Object child) {}
++	@Override public void setTokenBoundaries(Object t, int tokenStartIndex, int tokenStopIndex) {}
+}
+
+
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugEventHub.java b/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugEventHub.java
+index 7bfe6a8..8cbb4bf 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugEventHub.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugEventHub.java
+@@ -67,6 +67,7 @@ public class DebugEventHub implements DebugEventListener {
+I am dup'ing the for-loop in each.  Where are Java closures!? blech!
+*/
+
++	@Override
+public void enterRule(String grammarFileName, String ruleName) {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -74,6 +75,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void exitRule(String grammarFileName, String ruleName) {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -81,6 +83,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void enterAlt(int alt) {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -88,6 +91,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void enterSubRule(int decisionNumber) {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -95,6 +99,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void exitSubRule(int decisionNumber) {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -102,6 +107,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void enterDecision(int decisionNumber, boolean couldBacktrack) {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -109,6 +115,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void exitDecision(int decisionNumber) {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -116,6 +123,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void location(int line, int pos) {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -123,6 +131,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void consumeToken(Token token) {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -130,6 +139,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void consumeHiddenToken(Token token) {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -137,6 +147,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void LT(int index, Token t) {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -144,6 +155,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void mark(int index) {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -151,6 +163,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void rewind(int index) {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -158,6 +171,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void rewind() {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -165,6 +179,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void beginBacktrack(int level) {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -172,6 +187,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void endBacktrack(int level, boolean successful) {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -179,6 +195,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void recognitionException(RecognitionException e) {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -186,6 +203,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void beginResync() {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -193,6 +211,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void endResync() {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -200,6 +219,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void semanticPredicate(boolean result, String predicate) {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -207,6 +227,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void commence() {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -214,6 +235,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void terminate() {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -224,6 +246,7 @@ public class DebugEventHub implements DebugEventListener {
+
+// Tree parsing stuff
+
++	@Override
+public void consumeNode(Object t) {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -231,6 +254,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void LT(int index, Object t) {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -241,6 +265,7 @@ public class DebugEventHub implements DebugEventListener {
+
+// AST Stuff
+
++	@Override
+public void nilNode(Object t) {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -248,6 +273,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void errorNode(Object t) {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -255,6 +281,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void createNode(Object t) {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -262,6 +289,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void createNode(Object node, Token token) {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -269,6 +297,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void becomeRoot(Object newRoot, Object oldRoot) {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -276,6 +305,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void addChild(Object root, Object child) {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+@@ -283,6 +313,7 @@ public class DebugEventHub implements DebugEventListener {
+}
+}
+
++	@Override
+public void setTokenBoundaries(Object t, int tokenStartIndex, int tokenStopIndex) {
+for (int i = 0; i < listeners.size(); i++) {
+DebugEventListener listener = (DebugEventListener)listeners.get(i);
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugEventRepeater.java b/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugEventRepeater.java
+index 8fb6b66..92af59b 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugEventRepeater.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugEventRepeater.java
+@@ -46,43 +46,43 @@ public class DebugEventRepeater implements DebugEventListener {
+this.listener = listener;
+}
+
+-	public void enterRule(String grammarFileName, String ruleName) { listener.enterRule(grammarFileName, ruleName); }
+-	public void exitRule(String grammarFileName, String ruleName) { listener.exitRule(grammarFileName, ruleName); }
+-	public void enterAlt(int alt) { listener.enterAlt(alt); }
+-	public void enterSubRule(int decisionNumber) { listener.enterSubRule(decisionNumber); }
+-	public void exitSubRule(int decisionNumber) { listener.exitSubRule(decisionNumber); }
+-	public void enterDecision(int decisionNumber, boolean couldBacktrack) { listener.enterDecision(decisionNumber, couldBacktrack); }
+-	public void exitDecision(int decisionNumber) { listener.exitDecision(decisionNumber); }
+-	public void location(int line, int pos) { listener.location(line, pos); }
+-	public void consumeToken(Token token) { listener.consumeToken(token); }
+-	public void consumeHiddenToken(Token token) { listener.consumeHiddenToken(token); }
+-	public void LT(int i, Token t) { listener.LT(i, t); }
+-	public void mark(int i) { listener.mark(i); }
+-	public void rewind(int i) { listener.rewind(i); }
+-	public void rewind() { listener.rewind(); }
+-	public void beginBacktrack(int level) { listener.beginBacktrack(level); }
+-	public void endBacktrack(int level, boolean successful) { listener.endBacktrack(level, successful); }
+-	public void recognitionException(RecognitionException e) { listener.recognitionException(e); }
+-	public void beginResync() { listener.beginResync(); }
+-	public void endResync() { listener.endResync(); }
+-	public void semanticPredicate(boolean result, String predicate) { listener.semanticPredicate(result, predicate); }
+-	public void commence() { listener.commence(); }
+-	public void terminate() { listener.terminate(); }
++	@Override public void enterRule(String grammarFileName, String ruleName) { listener.enterRule(grammarFileName, ruleName); }
++	@Override public void exitRule(String grammarFileName, String ruleName) { listener.exitRule(grammarFileName, ruleName); }
++	@Override public void enterAlt(int alt) { listener.enterAlt(alt); }
++	@Override public void enterSubRule(int decisionNumber) { listener.enterSubRule(decisionNumber); }
++	@Override public void exitSubRule(int decisionNumber) { listener.exitSubRule(decisionNumber); }
++	@Override public void enterDecision(int decisionNumber, boolean couldBacktrack) { listener.enterDecision(decisionNumber, couldBacktrack); }
++	@Override public void exitDecision(int decisionNumber) { listener.exitDecision(decisionNumber); }
++	@Override public void location(int line, int pos) { listener.location(line, pos); }
++	@Override public void consumeToken(Token token) { listener.consumeToken(token); }
++	@Override public void consumeHiddenToken(Token token) { listener.consumeHiddenToken(token); }
++	@Override public void LT(int i, Token t) { listener.LT(i, t); }
++	@Override public void mark(int i) { listener.mark(i); }
++	@Override public void rewind(int i) { listener.rewind(i); }
++	@Override public void rewind() { listener.rewind(); }
++	@Override public void beginBacktrack(int level) { listener.beginBacktrack(level); }
++	@Override public void endBacktrack(int level, boolean successful) { listener.endBacktrack(level, successful); }
++	@Override public void recognitionException(RecognitionException e) { listener.recognitionException(e); }
++	@Override public void beginResync() { listener.beginResync(); }
++	@Override public void endResync() { listener.endResync(); }
++	@Override public void semanticPredicate(boolean result, String predicate) { listener.semanticPredicate(result, predicate); }
++	@Override public void commence() { listener.commence(); }
++	@Override public void terminate() { listener.terminate(); }
+
+// Tree parsing stuff
+
+-	public void consumeNode(Object t) { listener.consumeNode(t); }
+-	public void LT(int i, Object t) { listener.LT(i, t); }
++	@Override public void consumeNode(Object t) { listener.consumeNode(t); }
++	@Override public void LT(int i, Object t) { listener.LT(i, t); }
+
+// AST Stuff
+
+-	public void nilNode(Object t) { listener.nilNode(t); }
+-	public void errorNode(Object t) { listener.errorNode(t); }
+-	public void createNode(Object t) { listener.createNode(t); }
+-	public void createNode(Object node, Token token) { listener.createNode(node, token); }
+-	public void becomeRoot(Object newRoot, Object oldRoot) { listener.becomeRoot(newRoot, oldRoot); }
+-	public void addChild(Object root, Object child) { listener.addChild(root, child); }
+-	public void setTokenBoundaries(Object t, int tokenStartIndex, int tokenStopIndex) {
++	@Override public void nilNode(Object t) { listener.nilNode(t); }
++	@Override public void errorNode(Object t) { listener.errorNode(t); }
++	@Override public void createNode(Object t) { listener.createNode(t); }
++	@Override public void createNode(Object node, Token token) { listener.createNode(node, token); }
++	@Override public void becomeRoot(Object newRoot, Object oldRoot) { listener.becomeRoot(newRoot, oldRoot); }
++	@Override public void addChild(Object root, Object child) { listener.addChild(root, child); }
++	@Override public void setTokenBoundaries(Object t, int tokenStartIndex, int tokenStopIndex) {
+listener.setTokenBoundaries(t, tokenStartIndex, tokenStopIndex);
+}
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugEventSocketProxy.java b/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugEventSocketProxy.java
+index 3b480ad..2d99e36 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugEventSocketProxy.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugEventSocketProxy.java
+@@ -88,10 +88,12 @@ public class DebugEventSocketProxy extends BlankDebugEventListener {
+}
+}
+
++	@Override
+public void commence() {
+// don't bother sending event; listener will trigger upon connection
+}
+
++	@Override
+public void terminate() {
+transmit("terminate");
+out.close();
+@@ -118,73 +120,90 @@ public class DebugEventSocketProxy extends BlankDebugEventListener {
+ack();
+}
+
++	@Override
+public void enterRule(String grammarFileName, String ruleName) {
+transmit("enterRule\t"+grammarFileName+"\t"+ruleName);
+}
+
++	@Override
+public void enterAlt(int alt) {
+transmit("enterAlt\t"+alt);
+}
+
++	@Override
+public void exitRule(String grammarFileName, String ruleName) {
+transmit("exitRule\t"+grammarFileName+"\t"+ruleName);
+}
+
++	@Override
+public void enterSubRule(int decisionNumber) {
+transmit("enterSubRule\t"+decisionNumber);
+}
+
++	@Override
+public void exitSubRule(int decisionNumber) {
+transmit("exitSubRule\t"+decisionNumber);
+}
+
++	@Override
+public void enterDecision(int decisionNumber, boolean couldBacktrack) {
+transmit("enterDecision\t"+decisionNumber+"\t"+couldBacktrack);
+}
+
++	@Override
+public void exitDecision(int decisionNumber) {
+transmit("exitDecision\t"+decisionNumber);
+}
+
++	@Override
+public void consumeToken(Token t) {
+String buf = serializeToken(t);
+transmit("consumeToken\t"+buf);
+}
+
++	@Override
+public void consumeHiddenToken(Token t) {
+String buf = serializeToken(t);
+transmit("consumeHiddenToken\t"+buf);
+}
+
++	@Override
+public void LT(int i, Token t) {
+if(t != null)
+transmit("LT\t"+i+"\t"+serializeToken(t));
+}
+
++	@Override
+public void mark(int i) {
+transmit("mark\t"+i);
+}
+
++	@Override
+public void rewind(int i) {
+transmit("rewind\t"+i);
+}
+
++	@Override
+public void rewind() {
+transmit("rewind");
+}
+
++	@Override
+public void beginBacktrack(int level) {
+transmit("beginBacktrack\t"+level);
+}
+
++	@Override
+public void endBacktrack(int level, boolean successful) {
+transmit("endBacktrack\t"+level+"\t"+(successful?TRUE:FALSE));
+}
+
++	@Override
+public void location(int line, int pos) {
+transmit("location\t"+line+"\t"+pos);
+}
+
++	@Override
+public void recognitionException(RecognitionException e) {
+StringBuffer buf = new StringBuffer(50);
+buf.append("exception\t");
+@@ -199,14 +218,17 @@ public class DebugEventSocketProxy extends BlankDebugEventListener {
+transmit(buf.toString());
+}
+
++	@Override
+public void beginResync() {
+transmit("beginResync");
+}
+
++	@Override
+public void endResync() {
+transmit("endResync");
+}
+
++	@Override
+public void semanticPredicate(boolean result, String predicate) {
+StringBuffer buf = new StringBuffer(50);
+buf.append("semanticPredicate\t");
+@@ -217,6 +239,7 @@ public class DebugEventSocketProxy extends BlankDebugEventListener {
+
+// A S T  P a r s i n g  E v e n t s
+
++	@Override
+public void consumeNode(Object t) {
+StringBuffer buf = new StringBuffer(50);
+buf.append("consumeNode");
+@@ -224,6 +247,7 @@ public class DebugEventSocketProxy extends BlankDebugEventListener {
+transmit(buf.toString());
+}
+
++	@Override
+public void LT(int i, Object t) {
+int ID = adaptor.getUniqueID(t);
+String text = adaptor.getText(t);
+@@ -263,11 +287,13 @@ public class DebugEventSocketProxy extends BlankDebugEventListener {
+
+// A S T  E v e n t s
+
++	@Override
+public void nilNode(Object t) {
+int ID = adaptor.getUniqueID(t);
+transmit("nilNode\t"+ID);
+}
+
++	@Override
+public void errorNode(Object t) {
+int ID = adaptor.getUniqueID(t);
+String text = t.toString();
+@@ -280,6 +306,7 @@ public class DebugEventSocketProxy extends BlankDebugEventListener {
+transmit(buf.toString());
+}
+
++	@Override
+public void createNode(Object t) {
+int ID = adaptor.getUniqueID(t);
+String text = adaptor.getText(t);
+@@ -293,24 +320,28 @@ public class DebugEventSocketProxy extends BlankDebugEventListener {
+transmit(buf.toString());
+}
+
++	@Override
+public void createNode(Object node, Token token) {
+int ID = adaptor.getUniqueID(node);
+int tokenIndex = token.getTokenIndex();
+transmit("createNode\t"+ID+"\t"+tokenIndex);
+}
+
++	@Override
+public void becomeRoot(Object newRoot, Object oldRoot) {
+int newRootID = adaptor.getUniqueID(newRoot);
+int oldRootID = adaptor.getUniqueID(oldRoot);
+transmit("becomeRoot\t"+newRootID+"\t"+oldRootID);
+}
+
++	@Override
+public void addChild(Object root, Object child) {
+int rootID = adaptor.getUniqueID(root);
+int childID = adaptor.getUniqueID(child);
+transmit("addChild\t"+rootID+"\t"+childID);
+}
+
++	@Override
+public void setTokenBoundaries(Object t, int tokenStartIndex, int tokenStopIndex) {
+int ID = adaptor.getUniqueID(t);
+transmit("setTokenBoundaries\t"+ID+"\t"+tokenStartIndex+"\t"+tokenStopIndex);
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugParser.java b/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugParser.java
+index 49d78e7..042609f 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugParser.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugParser.java
+@@ -75,10 +75,12 @@ public class DebugParser extends Parser {
+e.printStackTrace(System.err);
+}
+
++	@Override
+public void beginResync() {
+dbg.beginResync();
+}
+
++	@Override
+public void endResync() {
+dbg.endResync();
+}
+@@ -91,6 +93,7 @@ public class DebugParser extends Parser {
+dbg.endBacktrack(level,successful);
+}
+
++	@Override
+public void reportError(RecognitionException e) {
+super.reportError(e);
+dbg.recognitionException(e);
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugTokenStream.java b/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugTokenStream.java
+index 9a7a75f..affddc2 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugTokenStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugTokenStream.java
+@@ -51,6 +51,7 @@ public class DebugTokenStream implements TokenStream {
+this.dbg = dbg;
+}
+
++	@Override
+public void consume() {
+if ( initialStreamState ) {
+consumeInitialHiddenTokens();
+@@ -77,6 +78,7 @@ public class DebugTokenStream implements TokenStream {
+initialStreamState = false;
+}
+
++	@Override
+public Token LT(int i) {
+if ( initialStreamState ) {
+consumeInitialHiddenTokens();
+@@ -85,6 +87,7 @@ public class DebugTokenStream implements TokenStream {
+return input.LT(i);
+}
+
++	@Override
+public int LA(int i) {
+if ( initialStreamState ) {
+consumeInitialHiddenTokens();
+@@ -93,63 +96,77 @@ public class DebugTokenStream implements TokenStream {
+return input.LA(i);
+}
+
++	@Override
+public Token get(int i) {
+return input.get(i);
+}
+
++	@Override
+public int mark() {
+lastMarker = input.mark();
+dbg.mark(lastMarker);
+return lastMarker;
+}
+
++	@Override
+public int index() {
+return input.index();
+}
+
++	@Override
+public int range() {
+return input.range();
+}
+
++	@Override
+public void rewind(int marker) {
+dbg.rewind(marker);
+input.rewind(marker);
+}
+
++	@Override
+public void rewind() {
+dbg.rewind();
+input.rewind(lastMarker);
+}
+
++	@Override
+public void release(int marker) {
+}
+
++	@Override
+public void seek(int index) {
+// TODO: implement seek in dbg interface
+// db.seek(index);
+input.seek(index);
+}
+
++	@Override
+public int size() {
+return input.size();
+}
+
++	@Override
+public TokenSource getTokenSource() {
+return input.getTokenSource();
+}
+
++	@Override
+public String getSourceName() {
+return getTokenSource().getSourceName();
+}
+
++	@Override
+public String toString() {
+return input.toString();
+}
+
++	@Override
+public String toString(int start, int stop) {
+return input.toString(start,stop);
+}
+
++	@Override
+public String toString(Token start, Token stop) {
+return input.toString(start,stop);
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugTreeAdaptor.java b/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugTreeAdaptor.java
+index c72a2b6..3bc2d82 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugTreeAdaptor.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugTreeAdaptor.java
+@@ -53,6 +53,7 @@ public class DebugTreeAdaptor implements TreeAdaptor {
+this.adaptor = adaptor;
+}
+
++	@Override
+public Object create(Token payload) {
+if ( payload.getTokenIndex() < 0 ) {
+// could be token conjured up during error recovery
+@@ -63,6 +64,7 @@ public class DebugTreeAdaptor implements TreeAdaptor {
+return node;
+}
+
++	@Override
+public Object errorNode(TokenStream input, Token start, Token stop,
+RecognitionException e)
+{
+@@ -73,6 +75,7 @@ public class DebugTreeAdaptor implements TreeAdaptor {
+return node;
+}
+
++	@Override
+public Object dupTree(Object tree) {
+Object t = adaptor.dupTree(tree);
+// walk the tree and emit create and add child events
+@@ -93,22 +96,26 @@ public class DebugTreeAdaptor implements TreeAdaptor {
+}
+}
+
++	@Override
+public Object dupNode(Object treeNode) {
+Object d = adaptor.dupNode(treeNode);
+dbg.createNode(d);
+return d;
+}
+
++	@Override
+public Object nil() {
+Object node = adaptor.nil();
+dbg.nilNode(node);
+return node;
+}
+
++	@Override
+public boolean isNil(Object tree) {
+return adaptor.isNil(tree);
+}
+
++	@Override
+public void addChild(Object t, Object child) {
+if ( t==null || child==null ) {
+return;
+@@ -117,12 +124,14 @@ public class DebugTreeAdaptor implements TreeAdaptor {
+dbg.addChild(t, child);
+}
+
++	@Override
+public Object becomeRoot(Object newRoot, Object oldRoot) {
+Object n = adaptor.becomeRoot(newRoot, oldRoot);
+dbg.becomeRoot(newRoot, oldRoot);
+return n;
+}
+
++	@Override
+public Object rulePostProcessing(Object root) {
+return adaptor.rulePostProcessing(root);
+}
+@@ -132,6 +141,7 @@ public class DebugTreeAdaptor implements TreeAdaptor {
+this.addChild(t, n);
+}
+
++	@Override
+public Object becomeRoot(Token newRoot, Object oldRoot) {
+Object n = this.create(newRoot);
+adaptor.becomeRoot(n, oldRoot);
+@@ -139,44 +149,53 @@ public class DebugTreeAdaptor implements TreeAdaptor {
+return n;
+}
+
++	@Override
+public Object create(int tokenType, Token fromToken) {
+Object node = adaptor.create(tokenType, fromToken);
+dbg.createNode(node);
+return node;
+}
+
++	@Override
+public Object create(int tokenType, Token fromToken, String text) {
+Object node = adaptor.create(tokenType, fromToken, text);
+dbg.createNode(node);
+return node;
+}
+
++	@Override
+public Object create(int tokenType, String text) {
+Object node = adaptor.create(tokenType, text);
+dbg.createNode(node);
+return node;
+}
+
++	@Override
+public int getType(Object t) {
+return adaptor.getType(t);
+}
+
++	@Override
+public void setType(Object t, int type) {
+adaptor.setType(t, type);
+}
+
++	@Override
+public String getText(Object t) {
+return adaptor.getText(t);
+}
+
++	@Override
+public void setText(Object t, String text) {
+adaptor.setText(t, text);
+}
+
++	@Override
+public Token getToken(Object t) {
+return adaptor.getToken(t);
+}
+
++	@Override
+public void setTokenBoundaries(Object t, Token startToken, Token stopToken) {
+adaptor.setTokenBoundaries(t, startToken, stopToken);
+if ( t!=null && startToken!=null && stopToken!=null ) {
+@@ -186,50 +205,62 @@ public class DebugTreeAdaptor implements TreeAdaptor {
+}
+}
+
++	@Override
+public int getTokenStartIndex(Object t) {
+return adaptor.getTokenStartIndex(t);
+}
+
++	@Override
+public int getTokenStopIndex(Object t) {
+return adaptor.getTokenStopIndex(t);
+}
+
++	@Override
+public Object getChild(Object t, int i) {
+return adaptor.getChild(t, i);
+}
+
++	@Override
+public void setChild(Object t, int i, Object child) {
+adaptor.setChild(t, i, child);
+}
+
++	@Override
+public Object deleteChild(Object t, int i) {
+return deleteChild(t, i);
+}
+
++	@Override
+public int getChildCount(Object t) {
+return adaptor.getChildCount(t);
+}
+
++	@Override
+public int getUniqueID(Object node) {
+return adaptor.getUniqueID(node);
+}
+
++	@Override
+public Object getParent(Object t) {
+return adaptor.getParent(t);
+}
+
++	@Override
+public int getChildIndex(Object t) {
+return adaptor.getChildIndex(t);
+}
+
++	@Override
+public void setParent(Object t, Object parent) {
+adaptor.setParent(t, parent);
+}
+
++	@Override
+public void setChildIndex(Object t, int index) {
+adaptor.setChildIndex(t, index);
+}
+
++	@Override
+public void replaceChildren(Object parent, int startChildIndex, int stopChildIndex, Object t) {
+adaptor.replaceChildren(parent, startChildIndex, stopChildIndex, t);
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugTreeNodeStream.java b/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugTreeNodeStream.java
+index 92ff009..6b5f976 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugTreeNodeStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugTreeNodeStream.java
+@@ -57,20 +57,24 @@ public class DebugTreeNodeStream implements TreeNodeStream {
+this.dbg = dbg;
+}
+
++	@Override
+public TreeAdaptor getTreeAdaptor() {
+return adaptor;
+}
+
++	@Override
+public void consume() {
+Object node = input.LT(1);
+input.consume();
+dbg.consumeNode(node);
+}
+
++	@Override
+public Object get(int i) {
+return input.get(i);
+}
+
++	@Override
+public Object LT(int i) {
+Object node = input.LT(i);
+int ID = adaptor.getUniqueID(node);
+@@ -80,6 +84,7 @@ public class DebugTreeNodeStream implements TreeNodeStream {
+return node;
+}
+
++	@Override
+public int LA(int i) {
+Object node = input.LT(i);
+int ID = adaptor.getUniqueID(node);
+@@ -89,49 +94,60 @@ public class DebugTreeNodeStream implements TreeNodeStream {
+return type;
+}
+
++	@Override
+public int mark() {
+lastMarker = input.mark();
+dbg.mark(lastMarker);
+return lastMarker;
+}
+
++	@Override
+public int index() {
+return input.index();
+}
+
++	@Override
+public void rewind(int marker) {
+dbg.rewind(marker);
+input.rewind(marker);
+}
+
++	@Override
+public void rewind() {
+dbg.rewind();
+input.rewind(lastMarker);
+}
+
++	@Override
+public void release(int marker) {
+}
+
++	@Override
+public void seek(int index) {
+// TODO: implement seek in dbg interface
+// db.seek(index);
+input.seek(index);
+}
+
++	@Override
+public int size() {
+return input.size();
+}
+
++	@Override
+public void reset() { ; }
+
++	@Override
+public Object getTreeSource() {
+return input;
+}
+
++	@Override
+public String getSourceName() {
+return getTokenStream().getSourceName();
+}
+
++	@Override
+public TokenStream getTokenStream() {
+return input.getTokenStream();
+}
+@@ -141,14 +157,17 @@ public class DebugTreeNodeStream implements TreeNodeStream {
+*  define it.  It might be better to ignore the parameter but
+*  there might be a use for it later, so I'll leave.
+*/
++	@Override
+public void setUniqueNavigationNodes(boolean uniqueNavigationNodes) {
+input.setUniqueNavigationNodes(uniqueNavigationNodes);
+}
+
++	@Override
+public void replaceChildren(Object parent, int startChildIndex, int stopChildIndex, Object t) {
+input.replaceChildren(parent, startChildIndex, stopChildIndex, t);
+}
+
++	@Override
+public String toString(Object start, Object stop) {
+return input.toString(start,stop);
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugTreeParser.java b/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugTreeParser.java
+index 6e1ece8..f4445ac 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugTreeParser.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/debug/DebugTreeParser.java
+@@ -77,10 +77,12 @@ public class DebugTreeParser extends TreeParser {
+e.printStackTrace(System.err);
+}
+
++	@Override
+public void reportError(RecognitionException e) {
+dbg.recognitionException(e);
+}
+
++	@Override
+protected Object getMissingSymbol(IntStream input,
+RecognitionException e,
+int expectedTokenType,
+@@ -91,10 +93,12 @@ public class DebugTreeParser extends TreeParser {
+return o;
+}
+
++	@Override
+public void beginResync() {
+dbg.beginResync();
+}
+
++	@Override
+public void endResync() {
+dbg.endResync();
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/debug/ParseTreeBuilder.java b/runtime/Java/src/main/java/org/antlr/runtime/debug/ParseTreeBuilder.java
+index 13c6ed0..85b890a 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/debug/ParseTreeBuilder.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/debug/ParseTreeBuilder.java
+@@ -66,9 +66,12 @@ public class ParseTreeBuilder extends BlankDebugEventListener {
+}
+
+/** Backtracking or cyclic DFA, don't want to add nodes to tree */
++	@Override
+public void enterDecision(int d, boolean couldBacktrack) { backtracking++; }
++	@Override
+public void exitDecision(int i) { backtracking--; }
+
++	@Override
+public void enterRule(String filename, String ruleName) {
+if ( backtracking>0 ) return;
+ParseTree parentRuleNode = (ParseTree)callStack.peek();
+@@ -77,6 +80,7 @@ public class ParseTreeBuilder extends BlankDebugEventListener {
+callStack.push(ruleNode);
+}
+
++	@Override
+public void exitRule(String filename, String ruleName) {
+if ( backtracking>0 ) return;
+ParseTree ruleNode = (ParseTree)callStack.peek();
+@@ -86,6 +90,7 @@ public class ParseTreeBuilder extends BlankDebugEventListener {
+callStack.pop();
+}
+
++	@Override
+public void consumeToken(Token token) {
+if ( backtracking>0 ) return;
+ParseTree ruleNode = (ParseTree)callStack.peek();
+@@ -95,11 +100,13 @@ public class ParseTreeBuilder extends BlankDebugEventListener {
+ruleNode.addChild(elementNode);
+}
+
++	@Override
+public void consumeHiddenToken(Token token) {
+if ( backtracking>0 ) return;
+hiddenTokens.add(token);
+}
+
++	@Override
+public void recognitionException(RecognitionException e) {
+if ( backtracking>0 ) return;
+ParseTree ruleNode = (ParseTree)callStack.peek();
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/debug/Profiler.java b/runtime/Java/src/main/java/org/antlr/runtime/debug/Profiler.java
+index aea9a17..48da886 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/debug/Profiler.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/debug/Profiler.java
+@@ -152,6 +152,7 @@ public class Profiler extends BlankDebugEventListener {
+this.parser = parser;
+}
+
++	@Override
+public void enterRule(String grammarFileName, String ruleName) {
+//		System.out.println("enterRule "+grammarFileName+":"+ruleName);
+ruleLevel++;
+@@ -162,6 +163,7 @@ public class Profiler extends BlankDebugEventListener {
+currentRuleName.push( ruleName );
+}
+
++	@Override
+public void exitRule(String grammarFileName, String ruleName) {
+ruleLevel--;
+currentGrammarFileName.pop();
+@@ -210,6 +212,7 @@ public class Profiler extends BlankDebugEventListener {
+currentPos.push(pos);
+}
+
++	@Override
+public void enterDecision(int decisionNumber, boolean couldBacktrack) {
+lastRealTokenTouchedInDecision = null;
+stats.numDecisionEvents++;
+@@ -240,6 +243,7 @@ public class Profiler extends BlankDebugEventListener {
+d.startIndex = startingLookaheadIndex;
+}
+
++	@Override
+public void exitDecision(int decisionNumber) {
+DecisionEvent d = decisionStack.pop();
+d.stopTime = System.currentTimeMillis();
+@@ -255,6 +259,7 @@ public class Profiler extends BlankDebugEventListener {
+decisionEvents.add(d); // done with decision; track all
+}
+
++	@Override
+public void consumeToken(Token token) {
+if (dump) System.out.println("consume token "+token);
+if ( !inDecision() ) {
+@@ -283,6 +288,7 @@ public class Profiler extends BlankDebugEventListener {
+return decisionStack.size()>0;
+}
+
++	@Override
+public void consumeHiddenToken(Token token) {
+//System.out.println("consume hidden token "+token);
+if ( !inDecision() ) stats.numHiddenTokens++;
+@@ -290,6 +296,7 @@ public class Profiler extends BlankDebugEventListener {
+
+/** Track refs to lookahead if in a fixed/nonfixed decision.
+*/
++	@Override
+public void LT(int i, Token t) {
+if ( inDecision() && i>0 ) {
+DecisionEvent d = currentDecision();
+@@ -335,6 +342,7 @@ public class Profiler extends BlankDebugEventListener {
+* 		...
+* 		exit rule
+*/
++	@Override
+public void beginBacktrack(int level) {
+if (dump) System.out.println("enter backtrack "+level);
+backtrackDepth++;
+@@ -347,6 +355,7 @@ public class Profiler extends BlankDebugEventListener {
+}
+
+/** Successful or not, track how much lookahead synpreds use */
++	@Override
+public void endBacktrack(int level, boolean successful) {
+if (dump) System.out.println("exit backtrack "+level+": "+successful);
+backtrackDepth--;
+@@ -373,10 +382,12 @@ public class Profiler extends BlankDebugEventListener {
+return decisionStack.peek();
+}
+
++	@Override
+public void recognitionException(RecognitionException e) {
+stats.numReportedErrors++;
+}
+
++	@Override
+public void semanticPredicate(boolean result, String predicate) {
+stats.numSemanticPredicates++;
+if ( inDecision() ) {
+@@ -388,6 +399,7 @@ public class Profiler extends BlankDebugEventListener {
+}
+}
+
++	@Override
+public void terminate() {
+for (DecisionEvent e : decisionEvents) {
+//System.out.println("decision "+e.decision.decision+": k="+e.k);
+@@ -498,6 +510,7 @@ public class Profiler extends BlankDebugEventListener {
+return buf.toString();
+}
+
++	@Override
+public String toString() {
+return toString(getReport());
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/debug/RemoteDebugEventSocketListener.java b/runtime/Java/src/main/java/org/antlr/runtime/debug/RemoteDebugEventSocketListener.java
+index 933fdae..031e26b 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/debug/RemoteDebugEventSocketListener.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/debug/RemoteDebugEventSocketListener.java
+@@ -74,47 +74,77 @@ public class RemoteDebugEventSocketListener implements Runnable {
+this.charPos = charPos;
+this.text = text;
+}
++
++		@Override
+public String getText() {
+return text;
+}
++
++		@Override
+public void setText(String text) {
+this.text = text;
+}
++
++		@Override
+public int getType() {
+return type;
+}
++
++		@Override
+public void setType(int ttype) {
+this.type = ttype;
+}
++
++		@Override
+public int getLine() {
+return line;
+}
++
++		@Override
+public void setLine(int line) {
+this.line = line;
+}
++
++		@Override
+public int getCharPositionInLine() {
+return charPos;
+}
++
++		@Override
+public void setCharPositionInLine(int pos) {
+this.charPos = pos;
+}
++
++		@Override
+public int getChannel() {
+return channel;
+}
++
++		@Override
+public void setChannel(int channel) {
+this.channel = channel;
+}
++
++		@Override
+public int getTokenIndex() {
+return index;
+}
++
++		@Override
+public void setTokenIndex(int index) {
+this.index = index;
+}
++
++		@Override
+public CharStream getInputStream() {
+return null;
+}
++
++		@Override
+public void setInputStream(CharStream input) {
+}
++
++		@Override
+public String toString() {
+String channelStr = "";
+if ( channel!=Token.DEFAULT_CHANNEL ) {
+@@ -143,14 +173,14 @@ public class RemoteDebugEventSocketListener implements Runnable {
+
+public ProxyTree(int ID) { this.ID = ID; }
+
+-		public int getTokenStartIndex() { return tokenIndex; }
+-		public void setTokenStartIndex(int index) {	}
+-		public int getTokenStopIndex() { return 0; }
+-		public void setTokenStopIndex(int index) { }
+-		public Tree dupNode() {	return null; }
+-		public int getType() { return type; }
+-		public String getText() { return text; }
+-		public String toString() {
++		@Override public int getTokenStartIndex() { return tokenIndex; }
++		@Override public void setTokenStartIndex(int index) {	}
++		@Override public int getTokenStopIndex() { return 0; }
++		@Override public void setTokenStopIndex(int index) { }
++		@Override public Tree dupNode() {	return null; }
++		@Override public int getType() { return type; }
++		@Override public String getText() { return text; }
++		@Override public String toString() {
+return "fix this";
+}
+}
+@@ -468,6 +498,7 @@ public class RemoteDebugEventSocketListener implements Runnable {
+t.start();
+}
+
++	@Override
+public void run() {
+eventHandler();
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/debug/TraceDebugEventListener.java b/runtime/Java/src/main/java/org/antlr/runtime/debug/TraceDebugEventListener.java
+index de9366d..a405d35 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/debug/TraceDebugEventListener.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/debug/TraceDebugEventListener.java
+@@ -40,12 +40,16 @@ public class TraceDebugEventListener extends BlankDebugEventListener {
+
+public void enterRule(String ruleName) { System.out.println("enterRule "+ruleName); }
+public void exitRule(String ruleName) { System.out.println("exitRule "+ruleName); }
++	@Override
+public void enterSubRule(int decisionNumber) { System.out.println("enterSubRule"); }
++	@Override
+public void exitSubRule(int decisionNumber) { System.out.println("exitSubRule"); }
++	@Override
+public void location(int line, int pos) {System.out.println("location "+line+":"+pos);}
+
+// Tree parsing stuff
+
++	@Override
+public void consumeNode(Object t) {
+int ID = adaptor.getUniqueID(t);
+String text = adaptor.getText(t);
+@@ -53,6 +57,7 @@ public class TraceDebugEventListener extends BlankDebugEventListener {
+System.out.println("consumeNode "+ID+" "+text+" "+type);
+}
+
++	@Override
+public void LT(int i, Object t) {
+int ID = adaptor.getUniqueID(t);
+String text = adaptor.getText(t);
+@@ -62,8 +67,10 @@ public class TraceDebugEventListener extends BlankDebugEventListener {
+
+
+// AST stuff
++	@Override
+public void nilNode(Object t) {System.out.println("nilNode "+adaptor.getUniqueID(t));}
+
++	@Override
+public void createNode(Object t) {
+int ID = adaptor.getUniqueID(t);
+String text = adaptor.getText(t);
+@@ -71,6 +78,7 @@ public class TraceDebugEventListener extends BlankDebugEventListener {
+System.out.println("create "+ID+": "+text+", "+type);
+}
+
++	@Override
+public void createNode(Object node, Token token) {
+int ID = adaptor.getUniqueID(node);
+String text = adaptor.getText(node);
+@@ -78,16 +86,19 @@ public class TraceDebugEventListener extends BlankDebugEventListener {
+System.out.println("create "+ID+": "+tokenIndex);
+}
+
++	@Override
+public void becomeRoot(Object newRoot, Object oldRoot) {
+System.out.println("becomeRoot "+adaptor.getUniqueID(newRoot)+", "+
+adaptor.getUniqueID(oldRoot));
+}
+
++	@Override
+public void addChild(Object root, Object child) {
+System.out.println("addChild "+adaptor.getUniqueID(root)+", "+
+adaptor.getUniqueID(child));
+}
+
++	@Override
+public void setTokenBoundaries(Object t, int tokenStartIndex, int tokenStopIndex) {
+System.out.println("setTokenBoundaries "+adaptor.getUniqueID(t)+", "+
+tokenStartIndex+", "+tokenStopIndex);
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/misc/FastQueue.java b/runtime/Java/src/main/java/org/antlr/runtime/misc/FastQueue.java
+index 08843dd..a7737ce 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/misc/FastQueue.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/misc/FastQueue.java
+@@ -88,6 +88,7 @@ public class FastQueue<T> {
+}
+
+/** Return string of current buffer contents; non-destructive */
++	@Override
+public String toString() {
+StringBuffer buf = new StringBuffer();
+int n = size();
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/misc/LookaheadStream.java b/runtime/Java/src/main/java/org/antlr/runtime/misc/LookaheadStream.java
+index 6f19c44..c47e18a 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/misc/LookaheadStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/misc/LookaheadStream.java
+@@ -57,6 +57,7 @@ public abstract class LookaheadStream<T> extends FastQueue<T> {
+/** tracks how deep mark() calls are nested */
+protected int markDepth = 0;
+
++	@Override
+public void reset() {
+super.reset();
+currentElementIndex = 0;
+@@ -74,6 +75,7 @@ public abstract class LookaheadStream<T> extends FastQueue<T> {
+/** Get and remove first element in queue; override FastQueue.remove();
+*  it's the same, just checks for backtracking.
+*/
++	@Override
+public T remove() {
+T o = elementAt(0);
+p++;
+@@ -111,6 +113,7 @@ public abstract class LookaheadStream<T> extends FastQueue<T> {
+}
+
+/** Size of entire stream is unknown; we only know buffer size from FastQueue */
++	@Override
+public int size() { throw new UnsupportedOperationException("streams are of unknown size"); }
+
+public T LT(int k) {
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTree.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTree.java
+index 8b16f39..52f6e94 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTree.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTree.java
+@@ -49,6 +49,7 @@ public abstract class BaseTree implements Tree {
+public BaseTree(Tree node) {
+}
+
++	@Override
+public Tree getChild(int i) {
+if ( children==null || i>=children.size() ) {
+return null;
+@@ -73,6 +74,7 @@ public abstract class BaseTree implements Tree {
+return null;
+}
+
++	@Override
+public int getChildCount() {
+if ( children==null ) {
+return 0;
+@@ -86,6 +88,7 @@ public abstract class BaseTree implements Tree {
+*  and child isNil then this routine moves children to t via
+*  t.children = child.children; i.e., without copying the array.
+*/
++	@Override
+public void addChild(Tree t) {
+//System.out.println("add child "+t.toStringTree()+" "+this.toStringTree());
+//System.out.println("existing children: "+children);
+@@ -136,6 +139,7 @@ public abstract class BaseTree implements Tree {
+}
+}
+
++	@Override
+public void setChild(int i, Tree t) {
+if ( t==null ) {
+return;
+@@ -166,6 +170,7 @@ public abstract class BaseTree implements Tree {
+this.freshenParentAndChildIndexes(i);
+}
+
++	@Override
+public Object deleteChild(int i) {
+if ( children==null ) {
+return null;
+@@ -181,6 +186,7 @@ public abstract class BaseTree implements Tree {
+*  For huge child lists, inserting children can force walking rest of
+*  children to set their childindex; could be slow.
+*/
++	@Override
+public void replaceChildren(int startChildIndex, int stopChildIndex, Object t) {
+/*
+System.out.println("replaceChildren "+startChildIndex+", "+stopChildIndex+
+@@ -247,11 +253,13 @@ public abstract class BaseTree implements Tree {
+return new ArrayList();
+}
+
++	@Override
+public boolean isNil() {
+return false;
+}
+
+/** Set the parent and child index values for all child of t */
++	@Override
+public void freshenParentAndChildIndexes() {
+freshenParentAndChildIndexes(0);
+}
+@@ -298,24 +306,30 @@ public abstract class BaseTree implements Tree {
+}
+
+/** BaseTree doesn't track child indexes. */
++	@Override
+public int getChildIndex() {
+return 0;
+}
++	@Override
+public void setChildIndex(int index) {
+}
+
+/** BaseTree doesn't track parent pointers. */
++	@Override
+public Tree getParent() {
+return null;
+}
+
++	@Override
+public void setParent(Tree t) {
+}
+
+/** Walk upwards looking for ancestor with this token type. */
++	@Override
+public boolean hasAncestor(int ttype) { return getAncestor(ttype)!=null; }
+
+/** Walk upwards and get first ancestor with this token type. */
++	@Override
+public Tree getAncestor(int ttype) {
+Tree t = this;
+t = t.getParent();
+@@ -329,6 +343,7 @@ public abstract class BaseTree implements Tree {
+/** Return a list of all ancestors of this node.  The first node of
+*  list is the root and the last is the parent of this node.
+*/
++	@Override
+public List getAncestors() {
+if ( getParent()==null ) return null;
+List ancestors = new ArrayList();
+@@ -342,6 +357,7 @@ public abstract class BaseTree implements Tree {
+}
+
+/** Print out a whole tree not just a node */
++	@Override
+public String toStringTree() {
+if ( children==null || children.size()==0 ) {
+return this.toString();
+@@ -365,14 +381,17 @@ public abstract class BaseTree implements Tree {
+return buf.toString();
+}
+
++	@Override
+public int getLine() {
+return 0;
+}
+
++	@Override
+public int getCharPositionInLine() {
+return 0;
+}
+
+/** Override to say how a node (not a tree) should look as text */
++	@Override
+public abstract String toString();
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTreeAdaptor.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTreeAdaptor.java
+index 33140b1..ce5c5cf 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTreeAdaptor.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/BaseTreeAdaptor.java
+@@ -43,6 +43,7 @@ public abstract class BaseTreeAdaptor implements TreeAdaptor {
+protected Map treeToUniqueIDMap;
+protected int uniqueNodeID = 1;
+
++	@Override
+public Object nil() {
+return create(null);
+}
+@@ -58,6 +59,7 @@ public abstract class BaseTreeAdaptor implements TreeAdaptor {
+*  You don't have to subclass CommonErrorNode; you will likely need to
+*  subclass your own tree node class to avoid class cast exception.
+*/
++	@Override
+public Object errorNode(TokenStream input, Token start, Token stop,
+RecognitionException e)
+{
+@@ -66,10 +68,12 @@ public abstract class BaseTreeAdaptor implements TreeAdaptor {
+return t;
+}
+
++	@Override
+public boolean isNil(Object tree) {
+return ((Tree)tree).isNil();
+}
+
++	@Override
+public Object dupTree(Object tree) {
+return dupTree(tree, null);
+}
+@@ -102,6 +106,7 @@ public abstract class BaseTreeAdaptor implements TreeAdaptor {
+*  make sure that this is consistent with have the user will build
+*  ASTs.
+*/
++	@Override
+public void addChild(Object t, Object child) {
+if ( t!=null && child!=null ) {
+((Tree)t).addChild((Tree)child);
+@@ -134,6 +139,7 @@ public abstract class BaseTreeAdaptor implements TreeAdaptor {
+*  constructing these nodes so we should have this control for
+*  efficiency.
+*/
++	@Override
+public Object becomeRoot(Object newRoot, Object oldRoot) {
+//System.out.println("becomeroot new "+newRoot.toString()+" old "+oldRoot);
+Tree newRootTree = (Tree)newRoot;
+@@ -158,6 +164,7 @@ public abstract class BaseTreeAdaptor implements TreeAdaptor {
+}
+
+/** Transform ^(nil x) to x and nil to null */
++	@Override
+public Object rulePostProcessing(Object root) {
+//System.out.println("rulePostProcessing: "+((Tree)root).toStringTree());
+Tree r = (Tree)root;
+@@ -175,10 +182,12 @@ public abstract class BaseTreeAdaptor implements TreeAdaptor {
+return r;
+}
+
++	@Override
+public Object becomeRoot(Token newRoot, Object oldRoot) {
+return becomeRoot(create(newRoot), oldRoot);
+}
+
++	@Override
+public Object create(int tokenType, Token fromToken) {
+fromToken = createToken(fromToken);
+//((ClassicToken)fromToken).setType(tokenType);
+@@ -187,6 +196,7 @@ public abstract class BaseTreeAdaptor implements TreeAdaptor {
+return t;
+}
+
++	@Override
+public Object create(int tokenType, Token fromToken, String text) {
+if (fromToken == null) return create(tokenType, text);
+fromToken = createToken(fromToken);
+@@ -196,44 +206,54 @@ public abstract class BaseTreeAdaptor implements TreeAdaptor {
+return t;
+}
+
++	@Override
+public Object create(int tokenType, String text) {
+Token fromToken = createToken(tokenType, text);
+Tree t = (Tree)create(fromToken);
+return t;
+}
+
++	@Override
+public int getType(Object t) {
+return ((Tree)t).getType();
+}
+
++	@Override
+public void setType(Object t, int type) {
+throw new NoSuchMethodError("don't know enough about Tree node");
+}
+
++	@Override
+public String getText(Object t) {
+return ((Tree)t).getText();
+}
+
++	@Override
+public void setText(Object t, String text) {
+throw new NoSuchMethodError("don't know enough about Tree node");
+}
+
++	@Override
+public Object getChild(Object t, int i) {
+return ((Tree)t).getChild(i);
+}
+
++	@Override
+public void setChild(Object t, int i, Object child) {
+((Tree)t).setChild(i, (Tree)child);
+}
+
++	@Override
+public Object deleteChild(Object t, int i) {
+return ((Tree)t).deleteChild(i);
+}
+
++	@Override
+public int getChildCount(Object t) {
+return ((Tree)t).getChildCount();
+}
+
++	@Override
+public int getUniqueID(Object node) {
+if ( treeToUniqueIDMap==null ) {
+treeToUniqueIDMap = new HashMap();
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/BufferedTreeNodeStream.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/BufferedTreeNodeStream.java
+index d9a2a7e..80fb3d8 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/BufferedTreeNodeStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/BufferedTreeNodeStream.java
+@@ -60,10 +60,12 @@ public class BufferedTreeNodeStream implements TreeNodeStream {
+
+protected class StreamIterator implements Iterator {
+int i = 0;
++		@Override
+public boolean hasNext() {
+return i<nodes.size();
+}
+
++		@Override
+public Object next() {
+int current = i;
+i++;
+@@ -73,6 +75,7 @@ public class BufferedTreeNodeStream implements TreeNodeStream {
+return eof;
+}
+
++		@Override
+public void remove() {
+throw new RuntimeException("cannot remove nodes from stream");
+}
+@@ -207,6 +210,7 @@ public class BufferedTreeNodeStream implements TreeNodeStream {
+nodes.add(navNode);
+}
+
++	@Override
+public Object get(int i) {
+if ( p==-1 ) {
+fillBuffer();
+@@ -214,6 +218,7 @@ public class BufferedTreeNodeStream implements TreeNodeStream {
+return nodes.get(i);
+}
+
++	@Override
+public Object LT(int k) {
+if ( p==-1 ) {
+fillBuffer();
+@@ -263,14 +268,17 @@ public class BufferedTreeNodeStream implements TreeNodeStream {
+return nodes.get(p-k);
+}
+
++	@Override
+public Object getTreeSource() {
+return root;
+}
+
++	@Override
+public String getSourceName() {
+return getTokenStream().getSourceName();
+}
+
++	@Override
+public TokenStream getTokenStream() {
+return tokens;
+}
+@@ -279,6 +287,7 @@ public class BufferedTreeNodeStream implements TreeNodeStream {
+this.tokens = tokens;
+}
+
++	@Override
+public TreeAdaptor getTreeAdaptor() {
+return adaptor;
+}
+@@ -291,10 +300,12 @@ public class BufferedTreeNodeStream implements TreeNodeStream {
+return uniqueNavigationNodes;
+}
+
++	@Override
+public void setUniqueNavigationNodes(boolean uniqueNavigationNodes) {
+this.uniqueNavigationNodes = uniqueNavigationNodes;
+}
+
++	@Override
+public void consume() {
+if ( p==-1 ) {
+fillBuffer();
+@@ -302,10 +313,12 @@ public class BufferedTreeNodeStream implements TreeNodeStream {
+p++;
+}
+
++	@Override
+public int LA(int i) {
+return adaptor.getType(LT(i));
+}
+
++	@Override
+public int mark() {
+if ( p==-1 ) {
+fillBuffer();
+@@ -314,22 +327,27 @@ public class BufferedTreeNodeStream implements TreeNodeStream {
+return lastMarker;
+}
+
++	@Override
+public void release(int marker) {
+// no resources to release
+}
+
++	@Override
+public int index() {
+return p;
+}
+
++	@Override
+public void rewind(int marker) {
+seek(marker);
+}
+
++	@Override
+public void rewind() {
+seek(lastMarker);
+}
+
++	@Override
+public void seek(int index) {
+if ( p==-1 ) {
+fillBuffer();
+@@ -357,6 +375,7 @@ public class BufferedTreeNodeStream implements TreeNodeStream {
+return ret;
+}
+
++	@Override
+public void reset() {
+p = 0;
+lastMarker = 0;
+@@ -365,6 +384,7 @@ public class BufferedTreeNodeStream implements TreeNodeStream {
+}
+}
+
++	@Override
+public int size() {
+if ( p==-1 ) {
+fillBuffer();
+@@ -381,6 +401,7 @@ public class BufferedTreeNodeStream implements TreeNodeStream {
+
+// TREE REWRITE INTERFACE
+
++	@Override
+public void replaceChildren(Object parent, int startChildIndex, int stopChildIndex, Object t) {
+if ( parent!=null ) {
+adaptor.replaceChildren(parent, startChildIndex, stopChildIndex, t);
+@@ -415,6 +436,7 @@ public class BufferedTreeNodeStream implements TreeNodeStream {
+return buf.toString();
+}
+
++	@Override
+public String toString(Object start, Object stop) {
+System.out.println("toString");
+if ( start==null || stop==null ) {
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonErrorNode.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonErrorNode.java
+index 26b9933..4c27487 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonErrorNode.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonErrorNode.java
+@@ -56,14 +56,17 @@ public class CommonErrorNode extends CommonTree {
+this.trappedException = e;
+}
+
++	@Override
+public boolean isNil() {
+return false;
+}
+
++	@Override
+public int getType() {
+return Token.INVALID_TOKEN_TYPE;
+}
+
++	@Override
+public String getText() {
+String badText = null;
+if ( start instanceof Token ) {
+@@ -85,6 +88,7 @@ public class CommonErrorNode extends CommonTree {
+return badText;
+}
+
++	@Override
+public String toString() {
+if ( trappedException instanceof MissingTokenException ) {
+return "<missing type: "+
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonTree.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonTree.java
+index 91c59de..6a258d6 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonTree.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonTree.java
+@@ -67,14 +67,17 @@ public class CommonTree extends BaseTree {
+return token;
+}
+
++	@Override
+public Tree dupNode() {
+return new CommonTree(this);
+}
+
++	@Override
+public boolean isNil() {
+return token==null;
+}
+
++	@Override
+public int getType() {
+if ( token==null ) {
+return Token.INVALID_TOKEN_TYPE;
+@@ -82,6 +85,7 @@ public class CommonTree extends BaseTree {
+return token.getType();
+}
+
++	@Override
+public String getText() {
+if ( token==null ) {
+return null;
+@@ -89,6 +93,7 @@ public class CommonTree extends BaseTree {
+return token.getText();
+}
+
++	@Override
+public int getLine() {
+if ( token==null || token.getLine()==0 ) {
+if ( getChildCount()>0 ) {
+@@ -99,6 +104,7 @@ public class CommonTree extends BaseTree {
+return token.getLine();
+}
+
++	@Override
+public int getCharPositionInLine() {
+if ( token==null || token.getCharPositionInLine()==-1 ) {
+if ( getChildCount()>0 ) {
+@@ -109,6 +115,7 @@ public class CommonTree extends BaseTree {
+return token.getCharPositionInLine();
+}
+
++	@Override
+public int getTokenStartIndex() {
+if ( startIndex==-1 && token!=null ) {
+return token.getTokenIndex();
+@@ -116,10 +123,12 @@ public class CommonTree extends BaseTree {
+return startIndex;
+}
+
++	@Override
+public void setTokenStartIndex(int index) {
+startIndex = index;
+}
+
++	@Override
+public int getTokenStopIndex() {
+if ( stopIndex==-1 && token!=null ) {
+return token.getTokenIndex();
+@@ -127,6 +136,7 @@ public class CommonTree extends BaseTree {
+return stopIndex;
+}
+
++	@Override
+public void setTokenStopIndex(int index) {
+stopIndex = index;
+}
+@@ -154,22 +164,27 @@ public class CommonTree extends BaseTree {
+}
+}
+
++	@Override
+public int getChildIndex() {
+return childIndex;
+}
+
++	@Override
+public Tree getParent() {
+return parent;
+}
+
++	@Override
+public void setParent(Tree t) {
+this.parent = (CommonTree)t;
+}
+
++	@Override
+public void setChildIndex(int index) {
+this.childIndex = index;
+}
+
++	@Override
+public String toString() {
+if ( isNil() ) {
+return "nil";
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonTreeAdaptor.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonTreeAdaptor.java
+index ebf560b..417a554 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonTreeAdaptor.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonTreeAdaptor.java
+@@ -47,11 +47,13 @@ public class CommonTreeAdaptor extends BaseTreeAdaptor {
+*  I could use reflection to prevent having to override this
+*  but reflection is slow.
+*/
++	@Override
+public Object dupNode(Object t) {
+if ( t==null ) return null;
+return ((Tree)t).dupNode();
+}
+
++	@Override
+public Object create(Token payload) {
+return new CommonTree(payload);
+}
+@@ -64,6 +66,7 @@ public class CommonTreeAdaptor extends BaseTreeAdaptor {
+*  If you care what the token payload objects' type is, you should
+*  override this method and any other createToken variant.
+*/
++	@Override
+public Token createToken(int tokenType, String text) {
+return new CommonToken(tokenType, text);
+}
+@@ -82,6 +85,7 @@ public class CommonTreeAdaptor extends BaseTreeAdaptor {
+*  If you care what the token payload objects' type is, you should
+*  override this method and any other createToken variant.
+*/
++	@Override
+public Token createToken(Token fromToken) {
+return new CommonToken(fromToken);
+}
+@@ -91,6 +95,7 @@ public class CommonTreeAdaptor extends BaseTreeAdaptor {
+*  seems like this will yield start=i and stop=i-1 in a nil node.
+*  Might be useful info so I'll not force to be i..i.
+*/
++	@Override
+public void setTokenBoundaries(Object t, Token startToken, Token stopToken) {
+if ( t==null ) return;
+int start = 0;
+@@ -101,21 +106,25 @@ public class CommonTreeAdaptor extends BaseTreeAdaptor {
+((Tree)t).setTokenStopIndex(stop);
+}
+
++	@Override
+public int getTokenStartIndex(Object t) {
+if ( t==null ) return -1;
+return ((Tree)t).getTokenStartIndex();
+}
+
++	@Override
+public int getTokenStopIndex(Object t) {
+if ( t==null ) return -1;
+return ((Tree)t).getTokenStopIndex();
+}
+
++	@Override
+public String getText(Object t) {
+if ( t==null ) return null;
+return ((Tree)t).getText();
+}
+
++	@Override
+public int getType(Object t) {
+if ( t==null ) return Token.INVALID_TOKEN_TYPE;
+return ((Tree)t).getType();
+@@ -125,6 +134,7 @@ public class CommonTreeAdaptor extends BaseTreeAdaptor {
+*  you are not using CommonTree, then you must
+*  override this in your own adaptor.
+*/
++	@Override
+public Token getToken(Object t) {
+if ( t instanceof CommonTree ) {
+return ((CommonTree)t).getToken();
+@@ -132,34 +142,41 @@ public class CommonTreeAdaptor extends BaseTreeAdaptor {
+return null; // no idea what to do
+}
+
++	@Override
+public Object getChild(Object t, int i) {
+if ( t==null ) return null;
+return ((Tree)t).getChild(i);
+}
+
++	@Override
+public int getChildCount(Object t) {
+if ( t==null ) return 0;
+return ((Tree)t).getChildCount();
+}
+
++	@Override
+public Object getParent(Object t) {
+if ( t==null ) return null;
+return ((Tree)t).getParent();
+}
+
++	@Override
+public void setParent(Object t, Object parent) {
+if ( t!=null ) ((Tree)t).setParent((Tree)parent);
+}
+
++	@Override
+public int getChildIndex(Object t) {
+if ( t==null ) return 0;
+return ((Tree)t).getChildIndex();
+}
+
++	@Override
+public void setChildIndex(Object t, int index) {
+if ( t!=null ) ((Tree)t).setChildIndex(index);
+}
+
++	@Override
+public void replaceChildren(Object parent, int startChildIndex, int stopChildIndex, Object t) {
+if ( parent!=null ) {
+((Tree)parent).replaceChildren(startChildIndex, stopChildIndex, t);
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonTreeNodeStream.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonTreeNodeStream.java
+index dcdbdd5..9edf950 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonTreeNodeStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/CommonTreeNodeStream.java
+@@ -69,6 +69,7 @@ public class CommonTreeNodeStream extends LookaheadStream<Object> implements Tre
+it = new TreeIterator(adaptor,root);
+}
+
++	@Override
+public void reset() {
+super.reset();
+it.reset();
+@@ -80,6 +81,7 @@ public class CommonTreeNodeStream extends LookaheadStream<Object> implements Tre
+/** Pull elements from tree iterator.  Track tree level 0..max_level.
+*  If nil rooted tree, don't give initial nil and DOWN nor final UP.
+*/
++	@Override
+public Object nextElement() {
+Object t = it.next();
+//System.out.println("pulled "+adaptor.getType(t));
+@@ -97,26 +99,34 @@ public class CommonTreeNodeStream extends LookaheadStream<Object> implements Tre
+return t;
+}
+
++	@Override
+public boolean isEOF(Object o) { return adaptor.getType(o) == Token.EOF; }
+
++	@Override
+public void setUniqueNavigationNodes(boolean uniqueNavigationNodes) { }
+
++	@Override
+public Object getTreeSource() {	return root; }
+
++	@Override
+public String getSourceName() { return getTokenStream().getSourceName(); }
+
++	@Override
+public TokenStream getTokenStream() { return tokens; }
+
+public void setTokenStream(TokenStream tokens) { this.tokens = tokens; }
+
++	@Override
+public TreeAdaptor getTreeAdaptor() { return adaptor; }
+
+public void setTreeAdaptor(TreeAdaptor adaptor) { this.adaptor = adaptor; }
+
++	@Override
+public Object get(int i) {
+throw new UnsupportedOperationException("Absolute node indexes are meaningless in an unbuffered stream");
+}
+
++	@Override
+public int LA(int i) { return adaptor.getType(LT(i)); }
+
+/** Make stream jump to a new location, saving old location.
+@@ -141,12 +151,14 @@ public class CommonTreeNodeStream extends LookaheadStream<Object> implements Tre
+
+// TREE REWRITE INTERFACE
+
++	@Override
+public void replaceChildren(Object parent, int startChildIndex, int stopChildIndex, Object t) {
+if ( parent!=null ) {
+adaptor.replaceChildren(parent, startChildIndex, stopChildIndex, t);
+}
+}
+
++	@Override
+public String toString(Object start, Object stop) {
+// we'll have to walk from start to stop in tree; we're not keeping
+// a complete node stream buffer
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/ParseTree.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/ParseTree.java
+index 5811c55..72aad56 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/ParseTree.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/ParseTree.java
+@@ -44,32 +44,40 @@ public class ParseTree extends BaseTree {
+this.payload = label;
+}
+
++	@Override
+public Tree dupNode() {
+return null;
+}
+
++	@Override
+public int getType() {
+return 0;
+}
+
++	@Override
+public String getText() {
+return toString();
+}
+
++	@Override
+public int getTokenStartIndex() {
+return 0;
+}
+
++	@Override
+public void setTokenStartIndex(int index) {
+}
+
++	@Override
+public int getTokenStopIndex() {
+return 0;
+}
+
++	@Override
+public void setTokenStopIndex(int index) {
+}
+
++	@Override
+public String toString() {
+if ( payload instanceof Token ) {
+Token t = (Token)payload;
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/RewriteCardinalityException.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/RewriteCardinalityException.java
+index 7f909cd..3cd6c8e 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/RewriteCardinalityException.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/RewriteCardinalityException.java
+@@ -38,6 +38,7 @@ public class RewriteCardinalityException extends RuntimeException {
+this.elementDescription = elementDescription;
+}
+
++	@Override
+public String getMessage() {
+if ( elementDescription!=null ) {
+return elementDescription;
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/RewriteRuleNodeStream.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/RewriteRuleNodeStream.java
+index 713e9ff..5bbf4ad 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/RewriteRuleNodeStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/RewriteRuleNodeStream.java
+@@ -58,10 +58,12 @@ public class RewriteRuleNodeStream extends RewriteRuleElementStream {
+return _next();
+}
+
++	@Override
+protected Object toTree(Object el) {
+return adaptor.dupNode(el);
+}
+
++	@Override
+protected Object dup(Object el) {
+// we dup every node, so don't have to worry about calling dup; short-
+// circuited next() so it doesn't call.
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/RewriteRuleSubtreeStream.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/RewriteRuleSubtreeStream.java
+index 5189f21..32e5aee 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/RewriteRuleSubtreeStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/RewriteRuleSubtreeStream.java
+@@ -82,6 +82,7 @@ public class RewriteRuleSubtreeStream extends RewriteRuleElementStream {
+return el;
+}
+
++	@Override
+protected Object dup(Object el) {
+return adaptor.dupTree(el);
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/RewriteRuleTokenStream.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/RewriteRuleTokenStream.java
+index 4cd7b08..c59304f 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/RewriteRuleTokenStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/RewriteRuleTokenStream.java
+@@ -66,10 +66,12 @@ public class RewriteRuleTokenStream extends RewriteRuleElementStream {
+/** Don't convert to a tree unless they explicitly call nextTree.
+*  This way we can do hetero tree nodes in rewrite.
+*/
++	@Override
+protected Object toTree(Object el) {
+return el;
+}
+
++	@Override
+protected Object dup(Object el) {
+throw new UnsupportedOperationException("dup can't be called for a token stream.");
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/Tree.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/Tree.java
+index 7875be3..860c22e 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/Tree.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/Tree.java
+@@ -123,5 +123,6 @@ public interface Tree {
+
+String toStringTree();
+
++	@Override
+String toString();
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeFilter.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeFilter.java
+index b6a7e05..4699610 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeFilter.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeFilter.java
+@@ -109,19 +109,23 @@ public class TreeFilter extends TreeParser {
+public void downup(Object t) {
+TreeVisitor v = new TreeVisitor(new CommonTreeAdaptor());
+TreeVisitorAction actions = new TreeVisitorAction() {
++			@Override
+public Object pre(Object t)  { applyOnce(t, topdown_fptr); return t; }
++			@Override
+public Object post(Object t) { applyOnce(t, bottomup_fptr); return t; }
+};
+v.visit(t, actions);
+}
+
+fptr topdown_fptr = new fptr() {
++		@Override
+public void rule() throws RecognitionException {
+topdown();
+}
+};
+
+fptr bottomup_fptr = new fptr() {
++		@Override
+public void rule() throws RecognitionException {
+bottomup();
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeIterator.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeIterator.java
+index 43ead6d..f7162b5 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeIterator.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeIterator.java
+@@ -74,6 +74,7 @@ public class TreeIterator implements Iterator {
+nodes.clear();
+}
+
++	@Override
+public boolean hasNext() {
+if ( firstTime ) return root!=null;
+if ( nodes!=null && nodes.size()>0 ) return true;
+@@ -82,6 +83,7 @@ public class TreeIterator implements Iterator {
+return adaptor.getParent(tree)!=null; // back at root?
+}
+
++	@Override
+public Object next() {
+if ( firstTime ) { // initial condition
+firstTime = false;
+@@ -128,5 +130,6 @@ public class TreeIterator implements Iterator {
+return nodes.remove();
+}
+
++	@Override
+public void remove() { throw new UnsupportedOperationException(); }
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeParser.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeParser.java
+index c40f81f..0eaf954 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeParser.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeParser.java
+@@ -58,6 +58,7 @@ public class TreeParser extends BaseRecognizer {
+setTreeNodeStream(input);
+}
+
++	@Override
+public void reset() {
+super.reset(); // reset all recognizer state variables
+if ( input!=null ) {
+@@ -74,14 +75,17 @@ public class TreeParser extends BaseRecognizer {
+return input;
+}
+
++	@Override
+public String getSourceName() {
+return input.getSourceName();
+}
+
++	@Override
+protected Object getCurrentInputSymbol(IntStream input) {
+return ((TreeNodeStream)input).LT(1);
+}
+
++	@Override
+protected Object getMissingSymbol(IntStream input,
+RecognitionException e,
+int expectedTokenType,
+@@ -97,6 +101,7 @@ public class TreeParser extends BaseRecognizer {
+*  entire tree if node has children.  If children, scan until
+*  corresponding UP node.
+*/
++	@Override
+public void matchAny(IntStream ignore) { // ignore stream, copy of input
+state.errorRecovery = false;
+state.failed = false;
+@@ -127,6 +132,7 @@ public class TreeParser extends BaseRecognizer {
+*  plus we want to alter the exception type.  Don't try to recover
+*  from tree parser errors inline...
+*/
++	@Override
+protected Object recoverFromMismatchedToken(IntStream input,
+int ttype,
+BitSet follow)
+@@ -139,6 +145,7 @@ public class TreeParser extends BaseRecognizer {
+*  always intended for the programmer because the parser built
+*  the input tree not the user.
+*/
++	@Override
+public String getErrorHeader(RecognitionException e) {
+return getGrammarFileName()+": node from "+
+(e.approximateLineInfo?"after ":"")+"line "+e.line+":"+e.charPositionInLine;
+@@ -147,6 +154,7 @@ public class TreeParser extends BaseRecognizer {
+/** Tree parsers parse nodes they usually have a token object as
+*  payload. Set the exception token and do the default behavior.
+*/
++	@Override
+public String getErrorMessage(RecognitionException e, String[] tokenNames) {
+if ( this instanceof TreeParser ) {
+TreeAdaptor adaptor = ((TreeNodeStream)e.input).getTreeAdaptor();
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeRewriter.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeRewriter.java
+index 91aee93..f77bf23 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeRewriter.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeRewriter.java
+@@ -89,7 +89,9 @@ public class TreeRewriter extends TreeParser {
+this.showTransformations = showTransformations;
+TreeVisitor v = new TreeVisitor(new CommonTreeAdaptor());
+TreeVisitorAction actions = new TreeVisitorAction() {
++			@Override
+public Object pre(Object t)  { return applyOnce(t, topdown_fptr); }
++			@Override
+public Object post(Object t) { return applyRepeatedly(t, bottomup_ftpr); }
+};
+t = v.visit(t, actions);
+@@ -105,10 +107,12 @@ public class TreeRewriter extends TreeParser {
+}
+
+fptr topdown_fptr = new fptr() {
++		@Override
+public Object rule() throws RecognitionException { return topdown(); }
+};
+
+fptr bottomup_ftpr = new fptr() {
++		@Override
+public Object rule() throws RecognitionException { return bottomup(); }
+};
+
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeRuleReturnScope.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeRuleReturnScope.java
+index 4ea65c0..a8f05f2 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeRuleReturnScope.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeRuleReturnScope.java
+@@ -37,5 +37,6 @@ import org.antlr.runtime.RuleReturnScope;
+public class TreeRuleReturnScope extends RuleReturnScope {
+/** First node or root node of tree matched for this rule. */
+public Object start;
++	@Override
+public Object getStart() { return start; }
+}
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeWizard.java b/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeWizard.java
+index 666cfd6..201b45f 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeWizard.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/tree/TreeWizard.java
+@@ -60,6 +60,7 @@ public class TreeWizard {
+}
+
+public static abstract class Visitor implements ContextVisitor {
++		@Override
+public void visit(Object t, Object parent, int childIndex, Map labels) {
+visit(t);
+}
+@@ -75,6 +76,7 @@ public class TreeWizard {
+public TreePattern(Token payload) {
+super(payload);
+}
++		@Override
+public String toString() {
+if ( label!=null ) {
+return "%"+label+":"+super.toString();
+@@ -93,6 +95,7 @@ public class TreeWizard {
+
+/** This adaptor creates TreePattern objects for use during scan() */
+public static class TreePatternTreeAdaptor extends CommonTreeAdaptor {
++		@Override
+public Object create(Token payload) {
+return new TreePattern(payload);
+}
+@@ -200,6 +203,7 @@ public class TreeWizard {
+public List find(Object t, int ttype) {
+final List nodes = new ArrayList();
+visit(t, ttype, new TreeWizard.Visitor() {
++			@Override
+public void visit(Object t) {
+nodes.add(t);
+}
+@@ -224,6 +228,7 @@ public class TreeWizard {
+}
+int rootTokenType = tpattern.getType();
+visit(t, rootTokenType, new TreeWizard.ContextVisitor() {
++			@Override
+public void visit(Object t, Object parent, int childIndex, Map labels) {
+if ( _parse(t, tpattern, null) ) {
+subtrees.add(t);
+@@ -286,6 +291,7 @@ public class TreeWizard {
+final Map labels = new HashMap(); // reused for each _parse
+int rootTokenType = tpattern.getType();
+visit(t, rootTokenType, new TreeWizard.ContextVisitor() {
++			@Override
+public void visit(Object t, Object parent, int childIndex, Map unusedlabels) {
+// the unusedlabels arg is null as visit on token type doesn't set.
+labels.clear();
+diff --git a/tool/src/main/java/org/antlr/analysis/ActionLabel.java b/tool/src/main/java/org/antlr/analysis/ActionLabel.java
+index e39024c..884d8d5 100644
+--- a/tool/src/main/java/org/antlr/analysis/ActionLabel.java
++++ b/tool/src/main/java/org/antlr/analysis/ActionLabel.java
+@@ -38,18 +38,22 @@ public class ActionLabel extends Label {
+this.actionAST = actionAST;
+}
+
++	@Override
+public boolean isEpsilon() {
+return true; // we are to be ignored by analysis 'cept for predicates
+}
+
++	@Override
+public boolean isAction() {
+return true;
+}
+
++	@Override
+public String toString() {
+return "{"+actionAST+"}";
+}
+
++	@Override
+public String toString(Grammar g) {
+return toString();
+}
+diff --git a/tool/src/main/java/org/antlr/analysis/DFA.java b/tool/src/main/java/org/antlr/analysis/DFA.java
+index 896acc7..8440cd6 100644
+--- a/tool/src/main/java/org/antlr/analysis/DFA.java
++++ b/tool/src/main/java/org/antlr/analysis/DFA.java
+@@ -1102,6 +1102,7 @@ public class DFA {
+altToAcceptState = new DFAState[nAlts+1];
+}
+
++	@Override
+public String toString() {
+FASerializer serializer = new FASerializer(nfa.grammar);
+if ( startState==null ) {
+diff --git a/tool/src/main/java/org/antlr/analysis/DFAState.java b/tool/src/main/java/org/antlr/analysis/DFAState.java
+index ee1a703..3de1a6d 100644
+--- a/tool/src/main/java/org/antlr/analysis/DFAState.java
++++ b/tool/src/main/java/org/antlr/analysis/DFAState.java
+@@ -173,14 +173,17 @@ public class DFAState extends State {
+reachableLabels = null;
+}
+
++	@Override
+public Transition transition(int i) {
+return (Transition)transitions.get(i);
+}
+
++	@Override
+public int getNumberOfTransitions() {
+return transitions.size();
+}
+
++	@Override
+public void addTransition(Transition t) {
+transitions.add(t);
+}
+@@ -389,6 +392,7 @@ public class DFAState extends State {
+*  This is used when we add DFAState objects to the DFA.states Map and
+*  when we compare DFA states.  Computed in addNFAConfiguration()
+*/
++	@Override
+public int hashCode() {
+if ( cachedHashCode==0 ) {
+// LL(1) algorithm doesn't use NFA configurations, which
+@@ -409,6 +413,7 @@ public class DFAState extends State {
+*  to know if any other state exists that has this exact set of NFA
+*  configurations.  The DFAState state number is irrelevant.
+*/
++	@Override
+public boolean equals(Object o) {
+// compare set of NFA configurations in this set with other
+DFAState other = (DFAState)o;
+@@ -748,6 +753,7 @@ public class DFAState extends State {
+}
+
+/** Print all NFA states plus what alts they predict */
++	@Override
+public String toString() {
+StringBuffer buf = new StringBuffer();
+buf.append(stateNumber+":{");
+diff --git a/tool/src/main/java/org/antlr/analysis/Label.java b/tool/src/main/java/org/antlr/analysis/Label.java
+index 3a8a976..93d549f 100644
+--- a/tool/src/main/java/org/antlr/analysis/Label.java
++++ b/tool/src/main/java/org/antlr/analysis/Label.java
+@@ -142,6 +142,7 @@ public class Label implements Comparable, Cloneable {
+this.labelSet = labelSet;
+}
+
++	@Override
+public Object clone() {
+Label l;
+try {
+@@ -263,6 +264,7 @@ public class Label implements Comparable, Cloneable {
+return false;
+}
+
++	@Override
+public int hashCode() {
+if (label==SET) {
+return labelSet.hashCode();
+@@ -273,6 +275,7 @@ public class Label implements Comparable, Cloneable {
+}
+
+// TODO: do we care about comparing set {A} with atom A? Doesn't now.
++	@Override
+public boolean equals(Object o) {
+if ( o==null ) {
+return false;
+@@ -290,6 +293,7 @@ public class Label implements Comparable, Cloneable {
+return true;  // label values are same, so true
+}
+
++	@Override
+public int compareTo(Object o) {
+return this.label-((Label)o).label;
+}
+@@ -322,6 +326,7 @@ public class Label implements Comparable, Cloneable {
+}
+*/
+
++	@Override
+public String toString() {
+switch (label) {
+case SET :
+diff --git a/tool/src/main/java/org/antlr/analysis/LookaheadSet.java b/tool/src/main/java/org/antlr/analysis/LookaheadSet.java
+index 7325cc8..9d77567 100644
+--- a/tool/src/main/java/org/antlr/analysis/LookaheadSet.java
++++ b/tool/src/main/java/org/antlr/analysis/LookaheadSet.java
+@@ -87,10 +87,12 @@ public class LookaheadSet {
+tokenTypeSet = (IntervalSet)tokenTypeSet.subtract(IntervalSet.of(a));
+}
+
++	@Override
+public int hashCode() {
+return tokenTypeSet.hashCode();
+}
+
++	@Override
+public boolean equals(Object other) {
+return tokenTypeSet.equals(((LookaheadSet)other).tokenTypeSet);
+}
+@@ -103,6 +105,7 @@ public class LookaheadSet {
+return r;
+}
+
++	@Override
+public String toString() {
+return toString(null);
+}
+diff --git a/tool/src/main/java/org/antlr/analysis/NFAConfiguration.java b/tool/src/main/java/org/antlr/analysis/NFAConfiguration.java
+index 37f3d38..408830a 100644
+--- a/tool/src/main/java/org/antlr/analysis/NFAConfiguration.java
++++ b/tool/src/main/java/org/antlr/analysis/NFAConfiguration.java
+@@ -104,6 +104,7 @@ public class NFAConfiguration {
+*  semantic contexts, but might as well define equals to be
+*  everything.
+*/
++	@Override
+public boolean equals(Object o) {
+if ( o==null ) {
+return false;
+@@ -115,11 +116,13 @@ public class NFAConfiguration {
+this.semanticContext.equals(other.semanticContext);
+}
+
++	@Override
+public int hashCode() {
+int h = state + alt + context.hashCode();
+return h;
+}
+
++	@Override
+public String toString() {
+return toString(true);
+}
+diff --git a/tool/src/main/java/org/antlr/analysis/NFAContext.java b/tool/src/main/java/org/antlr/analysis/NFAContext.java
+index f56ec42..e7da251 100644
+--- a/tool/src/main/java/org/antlr/analysis/NFAContext.java
++++ b/tool/src/main/java/org/antlr/analysis/NFAContext.java
+@@ -135,6 +135,7 @@ public class NFAContext {
+*  The hashCode is now cheap as it's computed once upon each context
+*  push on the stack.  Use it to make equals() more efficient.
+*/
++	@Override
+public boolean equals(Object o) {
+NFAContext other = ((NFAContext)o);
+if ( this.cachedHashCode != other.cachedHashCode ) {
+@@ -259,6 +260,7 @@ public class NFAContext {
+return n;
+}
+
++	@Override
+public int hashCode() {
+return cachedHashCode;
+/*
+@@ -279,6 +281,7 @@ public class NFAContext {
+return parent==null;
+}
+
++	@Override
+public String toString() {
+StringBuffer buf = new StringBuffer();
+NFAContext sp = this;
+diff --git a/tool/src/main/java/org/antlr/analysis/NFAConversionThread.java b/tool/src/main/java/org/antlr/analysis/NFAConversionThread.java
+index 0966fda..3690c94 100644
+--- a/tool/src/main/java/org/antlr/analysis/NFAConversionThread.java
++++ b/tool/src/main/java/org/antlr/analysis/NFAConversionThread.java
+@@ -46,6 +46,7 @@ public class NFAConversionThread implements Runnable {
+this.i = i;
+this.j = j;
+}
++	@Override
+public void run() {
+for (int decision=i; decision<=j; decision++) {
+NFAState decisionStartState = grammar.getDecisionNFAStartState(decision);
+diff --git a/tool/src/main/java/org/antlr/analysis/NFAState.java b/tool/src/main/java/org/antlr/analysis/NFAState.java
+index 84e1365..9700d27 100644
+--- a/tool/src/main/java/org/antlr/analysis/NFAState.java
++++ b/tool/src/main/java/org/antlr/analysis/NFAState.java
+@@ -109,10 +109,12 @@ public class NFAState extends State {
+this.nfa = nfa;
+}
+
++	@Override
+public int getNumberOfTransitions() {
+return numTransitions;
+}
+
++	@Override
+public void addTransition(Transition e) {
+if ( e==null ) {
+throw new IllegalArgumentException("You can't add a null transition");
+@@ -147,6 +149,7 @@ public class NFAState extends State {
+numTransitions = 1;
+}
+
++	@Override
+public Transition transition(int i) {
+return transition[i];
+}
+@@ -251,6 +254,7 @@ public class NFAState extends State {
+return decisionStateType>0;
+}
+
++	@Override
+public String toString() {
+return String.valueOf(stateNumber);
+}
+diff --git a/tool/src/main/java/org/antlr/analysis/NFAToDFAConverter.java b/tool/src/main/java/org/antlr/analysis/NFAToDFAConverter.java
+index 543ab2b..e6d2050 100644
+--- a/tool/src/main/java/org/antlr/analysis/NFAToDFAConverter.java
++++ b/tool/src/main/java/org/antlr/analysis/NFAToDFAConverter.java
+@@ -1669,6 +1669,7 @@ public class NFAToDFAConverter {
+// Sort ascending according to alt; alt i has higher precedence than i+1
+Collections.sort(configsWithPreds,
+new Comparator() {
++			@Override
+public int compare(Object a, Object b) {
+NFAConfiguration ca = (NFAConfiguration)a;
+NFAConfiguration cb = (NFAConfiguration)b;
+diff --git a/tool/src/main/java/org/antlr/analysis/PredicateLabel.java b/tool/src/main/java/org/antlr/analysis/PredicateLabel.java
+index 7252f4f..1aae6c7 100644
+--- a/tool/src/main/java/org/antlr/analysis/PredicateLabel.java
++++ b/tool/src/main/java/org/antlr/analysis/PredicateLabel.java
+@@ -50,10 +50,12 @@ public class PredicateLabel extends Label {
+this.semanticContext = semCtx;
+}
+
++	@Override
+public int hashCode() {
+return semanticContext.hashCode();
+}
+
++	@Override
+public boolean equals(Object o) {
+if ( o==null ) {
+return false;
+@@ -67,18 +69,22 @@ public class PredicateLabel extends Label {
+return semanticContext.equals(((PredicateLabel)o).semanticContext);
+}
+
++	@Override
+public boolean isSemanticPredicate() {
+return true;
+}
+
++	@Override
+public SemanticContext getSemanticContext() {
+return semanticContext;
+}
+
++	@Override
+public String toString() {
+return "{"+semanticContext+"}?";
+}
+
++	@Override
+public String toString(Grammar g) {
+return toString();
+}
+diff --git a/tool/src/main/java/org/antlr/analysis/SemanticContext.java b/tool/src/main/java/org/antlr/analysis/SemanticContext.java
+index bcb8873..160a08e 100644
+--- a/tool/src/main/java/org/antlr/analysis/SemanticContext.java
++++ b/tool/src/main/java/org/antlr/analysis/SemanticContext.java
+@@ -139,6 +139,7 @@ public abstract class SemanticContext {
+*  Or, if they have the same constant value, return equal.
+*  As of July 2006 I'm not sure these are needed.
+*/
++		@Override
+public boolean equals(Object o) {
+if ( !(o instanceof Predicate) ) {
+return false;
+@@ -156,6 +157,7 @@ public abstract class SemanticContext {
+return predicateAST.getText().equals(other.predicateAST.getText());
+}
+
++		@Override
+public int hashCode() {
+if (constantValue != INVALID_PRED_VALUE){
+return constantValue;
+@@ -168,6 +170,7 @@ public abstract class SemanticContext {
+return predicateAST.getText().hashCode();
+}
+
++		@Override
+public ST genExpr(CodeGenerator generator,
+STGroup templates,
+DFA dfa)
+diff --git a/tool/src/main/java/org/antlr/analysis/Transition.java b/tool/src/main/java/org/antlr/analysis/Transition.java
+index 44df53e..86a29c1 100644
+--- a/tool/src/main/java/org/antlr/analysis/Transition.java
++++ b/tool/src/main/java/org/antlr/analysis/Transition.java
+@@ -63,21 +63,25 @@ public class Transition implements Comparable {
+return label.isSemanticPredicate();
+}
+
++	@Override
+public int hashCode() {
+return label.hashCode() + target.stateNumber;
+}
+
++	@Override
+public boolean equals(Object o) {
+Transition other = (Transition)o;
+return this.label.equals(other.label) &&
+this.target.equals(other.target);
+}
+
++	@Override
+public int compareTo(Object o) {
+Transition other = (Transition)o;
+return this.label.compareTo(other.label);
+}
+
++	@Override
+public String toString() {
+return label+"->"+target.stateNumber;
+}
+diff --git a/tool/src/main/java/org/antlr/codegen/ActionScriptTarget.java b/tool/src/main/java/org/antlr/codegen/ActionScriptTarget.java
+index 4e2943b..4cf4914 100644
+--- a/tool/src/main/java/org/antlr/codegen/ActionScriptTarget.java
++++ b/tool/src/main/java/org/antlr/codegen/ActionScriptTarget.java
+@@ -33,6 +33,7 @@ import org.antlr.tool.Grammar;
+
+public class ActionScriptTarget extends Target {
+
++	@Override
+public String getTargetCharLiteralFromANTLRCharLiteral(
+CodeGenerator generator,
+String literal) {
+@@ -41,6 +42,7 @@ public class ActionScriptTarget extends Target {
+return String.valueOf(c);
+}
+
++	@Override
+public String getTokenTypeAsTargetLabel(CodeGenerator generator,
+int ttype) {
+// use ints for predefined types;
+@@ -74,6 +76,7 @@ public class ActionScriptTarget extends Target {
+* @param v
+* @return
+*/
++	@Override
+public String encodeIntAsCharEscape(int v) {
+// encode as hex
+if ( v<=255 ) {
+@@ -103,6 +106,7 @@ public class ActionScriptTarget extends Target {
+*  This is to match how the BitSet constructor works, where the bits are
+*  passed in in 32-bit chunks with low-order bits coming first.
+*/
++	@Override
+public String getTarget64BitStringFromValue(long word) {
+StringBuffer buf = new StringBuffer(22); // enough for the two "0x", "," and " "
+buf.append("0x");
+diff --git a/tool/src/main/java/org/antlr/codegen/CPPTarget.java b/tool/src/main/java/org/antlr/codegen/CPPTarget.java
+index 22962e0..961d17d 100644
+--- a/tool/src/main/java/org/antlr/codegen/CPPTarget.java
++++ b/tool/src/main/java/org/antlr/codegen/CPPTarget.java
+@@ -83,6 +83,7 @@ public class CPPTarget extends Target {
+return retval.toString();
+}
+
++	@Override
+protected void genRecognizerHeaderFile(Tool tool,
+CodeGenerator generator,
+Grammar grammar,
+@@ -100,6 +101,7 @@ public class CPPTarget extends Target {
+*  around the incoming literal.
+*  Depending on the charvocabulary the charliteral should be prefixed with a 'L'
+*/
++	@Override
+public String getTargetCharLiteralFromANTLRCharLiteral( CodeGenerator codegen, String literal) {
+int c = Grammar.getCharValueFromGrammarCharLiteral(literal);
+String prefix = "'";
+@@ -117,6 +119,7 @@ public class CPPTarget extends Target {
+*  around the incoming literal.
+*  Depending on the charvocabulary the string should be prefixed with a 'L'
+*/
++	@Override
+public String getTargetStringLiteralFromANTLRStringLiteral( CodeGenerator codegen, String literal) {
+StringBuffer buf = Grammar.getUnescapedStringFromGrammarStringLiteral(literal);
+String prefix = "\"";
+@@ -129,6 +132,7 @@ public class CPPTarget extends Target {
+* being 255 or 0xFFFF the templates should generate normal character
+* constants or multibyte ones.
+*/
++	@Override
+public int getMaxCharValue( CodeGenerator codegen ) {
+int maxval = 255; // codegen.grammar.get????();
+if ( maxval <= 255 )
+diff --git a/tool/src/main/java/org/antlr/codegen/CSharp3Target.java b/tool/src/main/java/org/antlr/codegen/CSharp3Target.java
+index 9eea465..643a0e8 100644
+--- a/tool/src/main/java/org/antlr/codegen/CSharp3Target.java
++++ b/tool/src/main/java/org/antlr/codegen/CSharp3Target.java
+@@ -120,6 +120,7 @@ public class CSharp3Target extends Target {
+_target = target;
+}
+
++		@Override
+public String toString(Object obj, String formatName, Locale locale)
+{
+String value = (String)obj;
+diff --git a/tool/src/main/java/org/antlr/codegen/DelphiTarget.java b/tool/src/main/java/org/antlr/codegen/DelphiTarget.java
+index 24bb819..0f94274 100644
+--- a/tool/src/main/java/org/antlr/codegen/DelphiTarget.java
++++ b/tool/src/main/java/org/antlr/codegen/DelphiTarget.java
+@@ -55,6 +55,7 @@ public class DelphiTarget extends Target
+return recognizerST;
+}
+
++	@Override
+public String encodeIntAsCharEscape(int v)
+{
+if (v <= 127)
+@@ -66,6 +67,7 @@ public class DelphiTarget extends Target
+return "'#$" + hex + "'";
+}
+
++	@Override
+public String getTargetCharLiteralFromANTLRCharLiteral(
+CodeGenerator generator,
+String literal)
+@@ -81,6 +83,7 @@ public class DelphiTarget extends Target
+return buf.toString();
+}
+
++	@Override
+public String getTargetStringLiteralFromString(String s, boolean quoted) {
+if ( s==null ) {
+return null;
+@@ -113,6 +116,7 @@ public class DelphiTarget extends Target
+return buf.toString();
+}
+
++	@Override
+public String getTargetStringLiteralFromANTLRStringLiteral(
+CodeGenerator generator,
+String literal)
+@@ -127,6 +131,7 @@ public class DelphiTarget extends Target
+return buf.toString();
+}
+
++	@Override
+public String getTarget64BitStringFromValue(long word) {
+int numHexDigits = 8*2;
+StringBuffer buf = new StringBuffer(numHexDigits+2);
+diff --git a/tool/src/main/java/org/antlr/codegen/JavaScriptTarget.java b/tool/src/main/java/org/antlr/codegen/JavaScriptTarget.java
+index 31e4ea5..2b6c99e 100755
+--- a/tool/src/main/java/org/antlr/codegen/JavaScriptTarget.java
++++ b/tool/src/main/java/org/antlr/codegen/JavaScriptTarget.java
+@@ -36,6 +36,7 @@ public class JavaScriptTarget extends Target {
+*  This method overrides the parent class so that characters will always
+*  be encoded as Unicode literals (e.g. \u0011).
+*/
++	@Override
+public String encodeIntAsCharEscape(int v) {
+String hex = Integer.toHexString(v|0x10000).substring(1,5);
+return "\\u"+hex;
+@@ -52,6 +53,7 @@ public class JavaScriptTarget extends Target {
+*
+*  Note: stole the following two methods from the ActionScript target.
+*/
++	@Override
+public String getTarget64BitStringFromValue(long word) {
+StringBuffer buf = new StringBuffer(22); // enough for the two "0x", "," and " "
+buf.append("0x");
+diff --git a/tool/src/main/java/org/antlr/codegen/ObjCTarget.java b/tool/src/main/java/org/antlr/codegen/ObjCTarget.java
+index e4554e9..002ffbd 100644
+--- a/tool/src/main/java/org/antlr/codegen/ObjCTarget.java
++++ b/tool/src/main/java/org/antlr/codegen/ObjCTarget.java
+@@ -36,6 +36,7 @@ import org.antlr.tool.Grammar;
+import java.io.IOException;
+
+public class ObjCTarget extends Target {
++	@Override
+protected void genRecognizerHeaderFile(Tool tool,
+CodeGenerator generator,
+Grammar grammar,
+@@ -46,6 +47,7 @@ public class ObjCTarget extends Target {
+generator.write(headerFileST, grammar.name + Grammar.grammarTypeToFileNameSuffix[grammar.type] + extName);
+}
+
++	@Override
+public String getTargetCharLiteralFromANTLRCharLiteral(CodeGenerator generator,
+String literal)
+{
+@@ -67,6 +69,7 @@ public class ObjCTarget extends Target {
+*  around the incoming literal.  Just flip the quotes and replace
+*  double quotes with \"
+*/
++	@Override
+public String getTargetStringLiteralFromANTLRStringLiteral(CodeGenerator generator,
+String literal)
+{
+@@ -79,6 +82,7 @@ public class ObjCTarget extends Target {
+}
+
+/** If we have a label, prefix it with the recognizer's name */
++	@Override
+public String getTokenTypeAsTargetLabel(CodeGenerator generator, int ttype) {
+String name = generator.grammar.getTokenDisplayName(ttype);
+// If name is a literal, return the token type instead
+diff --git a/tool/src/main/java/org/antlr/codegen/Perl5Target.java b/tool/src/main/java/org/antlr/codegen/Perl5Target.java
+index dc16e39..6b9ba16 100644
+--- a/tool/src/main/java/org/antlr/codegen/Perl5Target.java
++++ b/tool/src/main/java/org/antlr/codegen/Perl5Target.java
+@@ -41,6 +41,7 @@ public class Perl5Target extends Target {
+RuleLabelScope.predefinedLexerRulePropertiesScope.addAttribute("self", null);
+}
+
++	@Override
+public String getTargetCharLiteralFromANTLRCharLiteral(final CodeGenerator generator,
+final String literal) {
+final StringBuffer buf = new StringBuffer(10);
+@@ -79,6 +80,7 @@ public class Perl5Target extends Target {
+return buf.toString();
+}
+
++	@Override
+public String encodeIntAsCharEscape(final int v) {
+final int intValue;
+if ((v & 0x8000) == 0) {
+diff --git a/tool/src/main/java/org/antlr/codegen/PythonTarget.java b/tool/src/main/java/org/antlr/codegen/PythonTarget.java
+index d087f4c..498db63 100644
+--- a/tool/src/main/java/org/antlr/codegen/PythonTarget.java
++++ b/tool/src/main/java/org/antlr/codegen/PythonTarget.java
+@@ -43,6 +43,7 @@ import java.util.List;
+
+public class PythonTarget extends Target {
+/** Target must be able to override the labels used for token types */
++	@Override
+public String getTokenTypeAsTargetLabel(CodeGenerator generator,
+int ttype) {
+// use ints for predefined types;
+@@ -61,6 +62,7 @@ public class PythonTarget extends Target {
+return name;
+}
+
++	@Override
+public String getTargetCharLiteralFromANTLRCharLiteral(
+CodeGenerator generator,
+String literal) {
+@@ -87,6 +89,7 @@ public class PythonTarget extends Target {
+return l;
+}
+
++	@Override
+public List postProcessAction(List chunks, Token actionToken) {
+/* TODO
+- check for and report TAB usage
+diff --git a/tool/src/main/java/org/antlr/codegen/RubyTarget.java b/tool/src/main/java/org/antlr/codegen/RubyTarget.java
+index 4506d01..0b63160 100644
+--- a/tool/src/main/java/org/antlr/codegen/RubyTarget.java
++++ b/tool/src/main/java/org/antlr/codegen/RubyTarget.java
+@@ -90,6 +90,7 @@ public class RubyTarget extends Target
+rubyCharValueEscape['"'] = "\\\"";
+}
+
++		@Override
+public String toString( Object o, String formatName, Locale locale ) {
+if ( formatName==null ) {
+return o.toString();
+@@ -300,6 +301,7 @@ public class RubyTarget extends Target
+}
+}
+
++	@Override
+protected void genRecognizerFile(
+Tool tool,
+CodeGenerator generator,
+@@ -364,6 +366,7 @@ public class RubyTarget extends Target
+generator.write( outputFileST, fileName );
+}
+
++	@Override
+public String getTargetCharLiteralFromANTLRCharLiteral(
+CodeGenerator generator,
+String literal
+@@ -410,12 +413,14 @@ public class RubyTarget extends Target
+return ( "0x" + Integer.toHexString( code_point ) );
+}
+
++	@Override
+public int getMaxCharValue( CodeGenerator generator )
+{
+// Versions before 1.9 do not support unicode
+return 0xFF;
+}
+
++	@Override
+public String getTokenTypeAsTargetLabel( CodeGenerator generator, int ttype )
+{
+String name = generator.grammar.getTokenDisplayName( ttype );
+@@ -426,6 +431,7 @@ public class RubyTarget extends Target
+return name;
+}
+
++	@Override
+public boolean isValidActionScope( int grammarType, String scope ) {
+if ( scope.equals( "all" ) )       {
+return true;
+@@ -468,6 +474,7 @@ public class RubyTarget extends Target
+return false;
+}
+
++	@Override
+public String encodeIntAsCharEscape( final int v ) {
+final int intValue;
+
+diff --git a/tool/src/main/java/org/antlr/misc/BitSet.java b/tool/src/main/java/org/antlr/misc/BitSet.java
+index ab2928e..b3636a2 100644
+--- a/tool/src/main/java/org/antlr/misc/BitSet.java
++++ b/tool/src/main/java/org/antlr/misc/BitSet.java
+@@ -82,6 +82,7 @@ public class BitSet implements IntSet, Cloneable {
+}
+
+/** or this element into this set (grow as necessary to accommodate) */
++	@Override
+public void add(int el) {
+//System.out.println("add("+el+")");
+int n = wordNumber(el);
+@@ -93,6 +94,7 @@ public class BitSet implements IntSet, Cloneable {
+bits[n] |= bitMask(el);
+}
+
++	@Override
+public void addAll(IntSet set) {
+if ( set instanceof BitSet ) {
+this.orInPlace((BitSet)set);
+@@ -148,6 +150,7 @@ public class BitSet implements IntSet, Cloneable {
+*/
+}
+
++	@Override
+public IntSet and(IntSet a) {
+BitSet s = (BitSet)this.clone();
+s.andInPlace((BitSet)a);
+@@ -184,6 +187,7 @@ public class BitSet implements IntSet, Cloneable {
+bits[n] &= ~bitMask(el);
+}
+
++	@Override
+public Object clone() {
+BitSet s;
+try {
+@@ -197,6 +201,7 @@ public class BitSet implements IntSet, Cloneable {
+return s;
+}
+
++	@Override
+public int size() {
+int deg = 0;
+for (int i = bits.length - 1; i >= 0; i--) {
+@@ -212,6 +217,7 @@ public class BitSet implements IntSet, Cloneable {
+return deg;
+}
+
++	@Override
+public boolean equals(Object other) {
+if ( other == null || !(other instanceof BitSet) ) {
+return false;
+@@ -259,6 +265,7 @@ public class BitSet implements IntSet, Cloneable {
+bits = newbits;
+}
+
++	@Override
+public boolean member(int el) {
+int n = wordNumber(el);
+if (n >= bits.length) return false;
+@@ -268,6 +275,7 @@ public class BitSet implements IntSet, Cloneable {
+/** Get the first element you find and return it.  Return Label.INVALID
+*  otherwise.
+*/
++	@Override
+public int getSingleElement() {
+for (int i = 0; i < (bits.length << LOG_BITS); i++) {
+if (member(i)) {
+@@ -277,6 +285,7 @@ public class BitSet implements IntSet, Cloneable {
+return Label.INVALID;
+}
+
++	@Override
+public boolean isNil() {
+for (int i = bits.length - 1; i >= 0; i--) {
+if (bits[i] != 0) return false;
+@@ -290,6 +299,7 @@ public class BitSet implements IntSet, Cloneable {
+return s;
+}
+
++	@Override
+public IntSet complement(IntSet set) {
+if ( set==null ) {
+return this.complement();
+@@ -368,6 +378,7 @@ public class BitSet implements IntSet, Cloneable {
+}
+
+/** return this | a in a new set */
++	@Override
+public IntSet or(IntSet a) {
+if ( a==null ) {
+return this;
+@@ -392,6 +403,7 @@ public class BitSet implements IntSet, Cloneable {
+}
+
+// remove this element from this set
++	@Override
+public void remove(int el) {
+int n = wordNumber(el);
+if (n >= bits.length) {
+@@ -439,6 +451,7 @@ public class BitSet implements IntSet, Cloneable {
+}
+}
+
++	@Override
+public IntSet subtract(IntSet a) {
+if (a == null || !(a instanceof BitSet)) return null;
+
+@@ -447,6 +460,7 @@ public class BitSet implements IntSet, Cloneable {
+return s;
+}
+
++	@Override
+public List toList() {
+throw new NoSuchMethodError("BitSet.toList() unimplemented");
+}
+@@ -466,6 +480,7 @@ public class BitSet implements IntSet, Cloneable {
+return bits;
+}
+
++	@Override
+public String toString() {
+return toString(null);
+}
+@@ -474,6 +489,7 @@ public class BitSet implements IntSet, Cloneable {
+* separator The string to put in between elements
+* @return A commma-separated list of values
+*/
++	@Override
+public String toString(Grammar g) {
+StringBuffer buf = new StringBuffer();
+String separator = ",";
+diff --git a/tool/src/main/java/org/antlr/misc/Graph.java b/tool/src/main/java/org/antlr/misc/Graph.java
+index 74962e5..cd821d1 100644
+--- a/tool/src/main/java/org/antlr/misc/Graph.java
++++ b/tool/src/main/java/org/antlr/misc/Graph.java
+@@ -46,6 +46,7 @@ public class Graph {
+if ( !edges.contains(n) ) edges.add(n);
+}
+
++		@Override
+public String toString() { return payload.toString(); }
+}
+
+diff --git a/tool/src/main/java/org/antlr/misc/IntArrayList.java b/tool/src/main/java/org/antlr/misc/IntArrayList.java
+index ab319dd..28e5d7d 100644
+--- a/tool/src/main/java/org/antlr/misc/IntArrayList.java
++++ b/tool/src/main/java/org/antlr/misc/IntArrayList.java
+@@ -95,6 +95,7 @@ public class IntArrayList extends AbstractList implements Cloneable {
+}
+}
+
++	@Override
+public Object get(int i) {
+return Utils.integer(element(i));
+}
+@@ -109,6 +110,7 @@ public class IntArrayList extends AbstractList implements Cloneable {
+return a;
+}
+
++	@Override
+public int size() {
+return n;
+}
+@@ -117,6 +119,7 @@ public class IntArrayList extends AbstractList implements Cloneable {
+return elements.length;
+}
+
++	@Override
+public boolean equals(Object o) {
+if ( o==null ) {
+return false;
+@@ -133,6 +136,7 @@ public class IntArrayList extends AbstractList implements Cloneable {
+return true;
+}
+
++	@Override
+public Object clone() throws CloneNotSupportedException {
+IntArrayList a = (IntArrayList)super.clone();
+a.n = this.n;
+@@ -140,6 +144,7 @@ public class IntArrayList extends AbstractList implements Cloneable {
+return a;
+}
+
++	@Override
+public String toString() {
+StringBuffer buf = new StringBuffer();
+for (int i = 0; i < n; i++) {
+diff --git a/tool/src/main/java/org/antlr/misc/IntSet.java b/tool/src/main/java/org/antlr/misc/IntSet.java
+index 3526f26..9858335 100644
+--- a/tool/src/main/java/org/antlr/misc/IntSet.java
++++ b/tool/src/main/java/org/antlr/misc/IntSet.java
+@@ -67,6 +67,7 @@ public interface IntSet {
+
+boolean isNil();
+
++	@Override
+boolean equals(Object obj);
+
+int getSingleElement();
+@@ -78,6 +79,7 @@ public interface IntSet {
+
+List toList();
+
++	@Override
+String toString();
+
+String toString(Grammar g);
+diff --git a/tool/src/main/java/org/antlr/misc/Interval.java b/tool/src/main/java/org/antlr/misc/Interval.java
+index 5b2410b..3671fee 100644
+--- a/tool/src/main/java/org/antlr/misc/Interval.java
++++ b/tool/src/main/java/org/antlr/misc/Interval.java
+@@ -61,6 +61,7 @@ public class Interval {
+return cache[a];
+}
+
++	@Override
+public boolean equals(Object o) {
+if ( o==null ) {
+return false;
+@@ -136,6 +137,7 @@ public class Interval {
+return diff;
+}
+
++	@Override
+public String toString() {
+return a+".."+b;
+}
+diff --git a/tool/src/main/java/org/antlr/misc/IntervalSet.java b/tool/src/main/java/org/antlr/misc/IntervalSet.java
+index dee54fe..53f2bf6 100644
+--- a/tool/src/main/java/org/antlr/misc/IntervalSet.java
++++ b/tool/src/main/java/org/antlr/misc/IntervalSet.java
+@@ -81,6 +81,7 @@ public class IntervalSet implements IntSet {
+/** Add a single element to the set.  An isolated element is stored
+*  as a range el..el.
+*/
++	@Override
+public void add(int el) {
+add(el,el);
+}
+@@ -184,6 +185,7 @@ public class IntervalSet implements IntSet {
+}
+*/
+
++	@Override
+public void addAll(IntSet set) {
+if ( set==null ) {
+return;
+@@ -212,6 +214,7 @@ public class IntervalSet implements IntSet {
+*
+*  'this' is assumed to be either a subset or equal to vocabulary.
+*/
++	@Override
+public IntSet complement(IntSet vocabulary) {
+if ( vocabulary==null ) {
+return null; // nothing in common with null set
+@@ -257,6 +260,7 @@ public class IntervalSet implements IntSet {
+*  other is assumed to be a subset of this;
+*  anything that is in other but not in this will be ignored.
+*/
++	@Override
+public IntSet subtract(IntSet other) {
+// assume the whole unicode range here for the complement
+// because it doesn't matter.  Anything beyond the max of this' set
+@@ -387,6 +391,7 @@ public class IntervalSet implements IntSet {
+*/
+
+/** TODO: implement this! */
++	@Override
+public IntSet or(IntSet a) {
+IntervalSet o = new IntervalSet();
+o.addAll(this);
+@@ -400,6 +405,7 @@ public class IntervalSet implements IntSet {
+*  just walk them together.  This is roughly O(min(n,m)) for interval
+*  list lengths n and m.
+*/
++	@Override
+public IntSet and(IntSet other) {
+if ( other==null ) { //|| !(other instanceof IntervalSet) ) {
+return null; // nothing in common with null set
+@@ -469,6 +475,7 @@ public class IntervalSet implements IntSet {
+}
+
+/** Is el in any range of this set? */
++	@Override
+public boolean member(int el) {
+int n = intervals.size();
+for (int i = 0; i < n; i++) {
+@@ -498,11 +505,13 @@ public class IntervalSet implements IntSet {
+}
+
+/** return true if this set has no members */
++	@Override
+public boolean isNil() {
+return intervals==null || intervals.size()==0;
+}
+
+/** If this set is a single integer, return it otherwise Label.INVALID */
++	@Override
+public int getSingleElement() {
+if ( intervals!=null && intervals.size()==1 ) {
+Interval I = (Interval)intervals.get(0);
+@@ -548,6 +557,7 @@ public class IntervalSet implements IntSet {
+*  to make sure they are the same.  Interval.equals() is used
+*  by the List.equals() method to check the ranges.
+*/
++	@Override
+public boolean equals(Object obj) {
+if ( obj==null || !(obj instanceof IntervalSet) ) {
+return false;
+@@ -556,10 +566,12 @@ public class IntervalSet implements IntSet {
+return this.intervals.equals(other.intervals);
+}
+
++	@Override
+public String toString() {
+return toString(null);
+}
+
++	@Override
+public String toString(Grammar g) {
+StringBuffer buf = new StringBuffer();
+if ( this.intervals==null || this.intervals.size()==0 ) {
+@@ -599,6 +611,7 @@ public class IntervalSet implements IntSet {
+return buf.toString();
+}
+
++	@Override
+public int size() {
+int n = 0;
+int numIntervals = intervals.size();
+@@ -613,6 +626,7 @@ public class IntervalSet implements IntSet {
+return n;
+}
+
++	@Override
+public List toList() {
+List values = new ArrayList();
+int n = intervals.size();
+@@ -679,6 +693,7 @@ public class IntervalSet implements IntSet {
+return s;
+}
+
++	@Override
+public void remove(int el) {
+throw new NoSuchMethodError("IntervalSet.remove() unimplemented");
+}
+diff --git a/tool/src/main/java/org/antlr/misc/OrderedHashSet.java b/tool/src/main/java/org/antlr/misc/OrderedHashSet.java
+index fa5e859..a66a25c 100644
+--- a/tool/src/main/java/org/antlr/misc/OrderedHashSet.java
++++ b/tool/src/main/java/org/antlr/misc/OrderedHashSet.java
+@@ -60,6 +60,7 @@ public class OrderedHashSet<T> extends LinkedHashSet {
+*  Key is object itself.  Good for say asking if a certain string is in
+*  a list of strings.
+*/
++	@Override
+public boolean add(Object value) {
+boolean result = super.add(value);
+if ( result ) {  // only track if new element not in set
+@@ -68,6 +69,7 @@ public class OrderedHashSet<T> extends LinkedHashSet {
+return result;
+}
+
++	@Override
+public boolean remove(Object o) {
+throw new UnsupportedOperationException();
+/*
+@@ -76,6 +78,7 @@ public class OrderedHashSet<T> extends LinkedHashSet {
+*/
+}
+
++	@Override
+public void clear() {
+elements.clear();
+super.clear();
+@@ -88,14 +91,17 @@ public class OrderedHashSet<T> extends LinkedHashSet {
+return elements;
+}
+
++	@Override
+public Iterator<T> iterator() {
+return elements.iterator();
+}
+
++	@Override
+public Object[] toArray() {
+return elements.toArray();
+}
+
++	@Override
+public int size() {
+/*
+if ( elements.size()!=super.size() ) {
+@@ -106,6 +112,7 @@ public class OrderedHashSet<T> extends LinkedHashSet {
+return elements.size();
+}
+
++	@Override
+public String toString() {
+return elements.toString();
+}
+diff --git a/tool/src/main/java/org/antlr/tool/Attribute.java b/tool/src/main/java/org/antlr/tool/Attribute.java
+index 9834ec8..f0432fa 100644
+--- a/tool/src/main/java/org/antlr/tool/Attribute.java
++++ b/tool/src/main/java/org/antlr/tool/Attribute.java
+@@ -124,6 +124,7 @@ public class Attribute {
+this.decl = decl;
+}
+
++	@Override
+public String toString() {
+if ( initValue!=null ) {
+return type+" "+name+"="+initValue;
+diff --git a/tool/src/main/java/org/antlr/tool/AttributeScope.java b/tool/src/main/java/org/antlr/tool/AttributeScope.java
+index c2641da..6339197 100644
+--- a/tool/src/main/java/org/antlr/tool/AttributeScope.java
++++ b/tool/src/main/java/org/antlr/tool/AttributeScope.java
+@@ -191,6 +191,7 @@ public class AttributeScope {
+return attributes==null?0:attributes.size();
+}
+
++	@Override
+public String toString() {
+return (isDynamicGlobalScope?"global ":"")+getName()+":"+attributes;
+}
+diff --git a/tool/src/main/java/org/antlr/tool/ErrorManager.java b/tool/src/main/java/org/antlr/tool/ErrorManager.java
+index 7baaf68..edea1c5 100644
+--- a/tool/src/main/java/org/antlr/tool/ErrorManager.java
++++ b/tool/src/main/java/org/antlr/tool/ErrorManager.java
+@@ -292,6 +292,7 @@ public class ErrorManager {
+private static String[] idToMessageTemplateName = new String[MAX_MESSAGE_NUMBER+1];
+
+static ANTLRErrorListener theDefaultErrorListener = new ANTLRErrorListener() {
++		@Override
+public void info(String msg) {
+if (formatWantsSingleLineMessage()) {
+msg = msg.replaceAll("\n", " ");
+@@ -299,6 +300,7 @@ public class ErrorManager {
+System.err.println(msg);
+}
+
++		@Override
+public void error(Message msg) {
+String outputMsg = msg.toString();
+if (formatWantsSingleLineMessage()) {
+@@ -307,6 +309,7 @@ public class ErrorManager {
+System.err.println(outputMsg);
+}
+
++		@Override
+public void warning(Message msg) {
+String outputMsg = msg.toString();
+if (formatWantsSingleLineMessage()) {
+@@ -315,6 +318,7 @@ public class ErrorManager {
+System.err.println(outputMsg);
+}
+
++		@Override
+public void error(ToolMessage msg) {
+String outputMsg = msg.toString();
+if (formatWantsSingleLineMessage()) {
+@@ -329,18 +333,22 @@ public class ErrorManager {
+*/
+static STErrorListener initSTListener =
+new STErrorListener() {
++		@Override
+public void compileTimeError(STMessage msg) {
+System.err.println("ErrorManager init error: "+msg);
+}
+
++		@Override
+public void runTimeError(STMessage msg) {
+System.err.println("ErrorManager init error: "+msg);
+}
+
++		@Override
+public void IOError(STMessage msg) {
+System.err.println("ErrorManager init error: "+msg);
+}
+
++		@Override
+public void internalError(STMessage msg) {
+System.err.println("ErrorManager init error: "+msg);
+}
+@@ -353,28 +361,32 @@ public class ErrorManager {
+*/
+static STErrorListener blankSTListener =
+new STErrorListener() {
+-			public void compileTimeError(STMessage msg) {			}
+-			public void runTimeError(STMessage msg) {			}
+-			public void IOError(STMessage msg) {			}
+-			public void internalError(STMessage msg) {			}
++			@Override public void compileTimeError(STMessage msg) {			}
++			@Override public void runTimeError(STMessage msg) {			}
++			@Override public void IOError(STMessage msg) {			}
++			@Override public void internalError(STMessage msg) {			}
+};
+
+/** Errors during initialization related to ST must all go to System.err.
+*/
+static STErrorListener theDefaultSTListener =
+new STErrorListener() {
++			@Override
+public void compileTimeError(STMessage msg) {
+ErrorManager.error(ErrorManager.MSG_INTERNAL_ERROR, msg.toString(), msg.cause);
+}
+
++			@Override
+public void runTimeError(STMessage msg) {
+ErrorManager.error(ErrorManager.MSG_INTERNAL_ERROR, msg.toString(), msg.cause);
+}
+
++			@Override
+public void IOError(STMessage msg) {
+ErrorManager.error(ErrorManager.MSG_INTERNAL_ERROR, msg.toString(), msg.cause);
+}
+
++			@Override
+public void internalError(STMessage msg) {
+ErrorManager.error(ErrorManager.MSG_INTERNAL_ERROR, msg.toString(), msg.cause);
+}
+diff --git a/tool/src/main/java/org/antlr/tool/Grammar.java b/tool/src/main/java/org/antlr/tool/Grammar.java
+index a88314d..fcb6ab3 100644
+--- a/tool/src/main/java/org/antlr/tool/Grammar.java
++++ b/tool/src/main/java/org/antlr/tool/Grammar.java
+@@ -176,6 +176,7 @@ public class Grammar {
+public Rule getReferencedRule() {
+return getRule(referencedRuleName);
+}
++		@Override
+public String toString() {
+return elementRef.toString();
+}
+@@ -3136,6 +3137,7 @@ outer:
+return AUTO_GENERATED_TOKEN_NAME_PREFIX +tokenType;
+}
+
++	@Override
+public String toString() {
+//	return "FFFFFFFFFFFFFF";
+return grammarTreeToString(grammarTree);
+diff --git a/tool/src/main/java/org/antlr/tool/GrammarAnalysisAbortedMessage.java b/tool/src/main/java/org/antlr/tool/GrammarAnalysisAbortedMessage.java
+index 95d1d17..55f5c91 100644
+--- a/tool/src/main/java/org/antlr/tool/GrammarAnalysisAbortedMessage.java
++++ b/tool/src/main/java/org/antlr/tool/GrammarAnalysisAbortedMessage.java
+@@ -41,6 +41,7 @@ public class GrammarAnalysisAbortedMessage extends Message {
+this.probe = probe;
+}
+
++	@Override
+public String toString() {
+GrammarAST decisionASTNode = probe.dfa.getDecisionASTNode();
+line = decisionASTNode.getLine();
+diff --git a/tool/src/main/java/org/antlr/tool/GrammarDanglingStateMessage.java b/tool/src/main/java/org/antlr/tool/GrammarDanglingStateMessage.java
+index e360dd7..431d16c 100644
+--- a/tool/src/main/java/org/antlr/tool/GrammarDanglingStateMessage.java
++++ b/tool/src/main/java/org/antlr/tool/GrammarDanglingStateMessage.java
+@@ -50,6 +50,7 @@ public class GrammarDanglingStateMessage extends Message {
+this.problemState = problemState;
+}
+
++	@Override
+public String toString() {
+GrammarAST decisionASTNode = probe.dfa.getDecisionASTNode();
+line = decisionASTNode.getLine();
+diff --git a/tool/src/main/java/org/antlr/tool/GrammarInsufficientPredicatesMessage.java b/tool/src/main/java/org/antlr/tool/GrammarInsufficientPredicatesMessage.java
+index 156bdc1..43a4518 100644
+--- a/tool/src/main/java/org/antlr/tool/GrammarInsufficientPredicatesMessage.java
++++ b/tool/src/main/java/org/antlr/tool/GrammarInsufficientPredicatesMessage.java
+@@ -50,6 +50,7 @@ public class GrammarInsufficientPredicatesMessage extends Message {
+this.altToLocations = altToLocations;
+}
+
++	@Override
+public String toString() {
+GrammarAST decisionASTNode = probe.dfa.getDecisionASTNode();
+line = decisionASTNode.getLine();
+diff --git a/tool/src/main/java/org/antlr/tool/GrammarNonDeterminismMessage.java b/tool/src/main/java/org/antlr/tool/GrammarNonDeterminismMessage.java
+index 8cd95ae..1857f2f 100644
+--- a/tool/src/main/java/org/antlr/tool/GrammarNonDeterminismMessage.java
++++ b/tool/src/main/java/org/antlr/tool/GrammarNonDeterminismMessage.java
+@@ -56,6 +56,7 @@ public class GrammarNonDeterminismMessage extends Message {
+}
+}
+
++	@Override
+public String toString() {
+GrammarAST decisionASTNode = probe.dfa.getDecisionASTNode();
+line = decisionASTNode.getLine();
+diff --git a/tool/src/main/java/org/antlr/tool/GrammarReport.java b/tool/src/main/java/org/antlr/tool/GrammarReport.java
+index e0462a3..aaa508d 100644
+--- a/tool/src/main/java/org/antlr/tool/GrammarReport.java
++++ b/tool/src/main/java/org/antlr/tool/GrammarReport.java
+@@ -317,6 +317,7 @@ public class GrammarReport {
+*  return a human-readable version.  Return null if there is a
+*  problem with the data.
+*/
++	@Override
+public String toString() {
+return toString(toNotifyString());
+}
+diff --git a/tool/src/main/java/org/antlr/tool/GrammarReport2.java b/tool/src/main/java/org/antlr/tool/GrammarReport2.java
+index bc57891..d068dfd 100644
+--- a/tool/src/main/java/org/antlr/tool/GrammarReport2.java
++++ b/tool/src/main/java/org/antlr/tool/GrammarReport2.java
+@@ -43,6 +43,7 @@ public class GrammarReport2 {
+this.root = rootGrammar;
+}
+
++	@Override
+public String toString() {
+StringBuilder buf = new StringBuilder();
+stats(root, buf);
+diff --git a/tool/src/main/java/org/antlr/tool/GrammarSemanticsMessage.java b/tool/src/main/java/org/antlr/tool/GrammarSemanticsMessage.java
+index 1027182..dc1ae63 100644
+--- a/tool/src/main/java/org/antlr/tool/GrammarSemanticsMessage.java
++++ b/tool/src/main/java/org/antlr/tool/GrammarSemanticsMessage.java
+@@ -66,6 +66,7 @@ public class GrammarSemanticsMessage extends Message {
+this.offendingToken = offendingToken;
+}
+
++	@Override
+public String toString() {
+line = 0;
+column = 0;
+diff --git a/tool/src/main/java/org/antlr/tool/GrammarSyntaxMessage.java b/tool/src/main/java/org/antlr/tool/GrammarSyntaxMessage.java
+index 290cb66..0950777 100644
+--- a/tool/src/main/java/org/antlr/tool/GrammarSyntaxMessage.java
++++ b/tool/src/main/java/org/antlr/tool/GrammarSyntaxMessage.java
+@@ -60,6 +60,7 @@ public class GrammarSyntaxMessage extends Message {
+this.g = grammar;
+}
+
++	@Override
+public String toString() {
+line = 0;
+column = 0;
+diff --git a/tool/src/main/java/org/antlr/tool/GrammarUnreachableAltsMessage.java b/tool/src/main/java/org/antlr/tool/GrammarUnreachableAltsMessage.java
+index 1c18cd5..61bfa99 100644
+--- a/tool/src/main/java/org/antlr/tool/GrammarUnreachableAltsMessage.java
++++ b/tool/src/main/java/org/antlr/tool/GrammarUnreachableAltsMessage.java
+@@ -52,6 +52,7 @@ public class GrammarUnreachableAltsMessage extends Message {
+}
+}
+
++	@Override
+public String toString() {
+GrammarAST decisionASTNode = probe.dfa.getDecisionASTNode();
+line = decisionASTNode.getLine();
+diff --git a/tool/src/main/java/org/antlr/tool/Interp.java b/tool/src/main/java/org/antlr/tool/Interp.java
+index 7ba49bd..7a7639d 100644
+--- a/tool/src/main/java/org/antlr/tool/Interp.java
++++ b/tool/src/main/java/org/antlr/tool/Interp.java
+@@ -51,6 +51,7 @@ public class Interp {
+public static class FilteringTokenStream extends CommonTokenStream {
+public FilteringTokenStream(TokenSource src) { super(src); }
+Set<Integer> hide = new HashSet<Integer>();
++		@Override
+protected void sync(int i) {
+super.sync(i);
+if ( hide.contains(get(i).getType()) ) get(i).setChannel(Token.HIDDEN_CHANNEL);
+diff --git a/tool/src/main/java/org/antlr/tool/Interpreter.java b/tool/src/main/java/org/antlr/tool/Interpreter.java
+index fe4e95c..526cafd 100644
+--- a/tool/src/main/java/org/antlr/tool/Interpreter.java
++++ b/tool/src/main/java/org/antlr/tool/Interpreter.java
+@@ -62,6 +62,7 @@ public class Interpreter implements TokenSource {
+this.g = g;
+}
+
++		@Override
+public void exitRule(String grammarFileName, String ruleName) {
+if ( !ruleName.equals(Grammar.ARTIFICIAL_TOKENS_RULENAME) ){
+int type = g.getTokenType(ruleName);
+@@ -76,6 +77,7 @@ public class Interpreter implements TokenSource {
+this.input = input;
+}
+
++	@Override
+public Token nextToken() {
+if ( grammar.type!=Grammar.LEXER ) {
+return null;
+@@ -446,6 +448,7 @@ public class Interpreter implements TokenSource {
+cs.getLine()+":"+cs.getCharPositionInLine()+" "+re);
+}
+
++	@Override
+public String getSourceName() {
+return input.getSourceName();
+}
+diff --git a/tool/src/main/java/org/antlr/tool/LeftRecursionCyclesMessage.java b/tool/src/main/java/org/antlr/tool/LeftRecursionCyclesMessage.java
+index 412978e..69fd0ea 100644
+--- a/tool/src/main/java/org/antlr/tool/LeftRecursionCyclesMessage.java
++++ b/tool/src/main/java/org/antlr/tool/LeftRecursionCyclesMessage.java
+@@ -43,6 +43,7 @@ public class LeftRecursionCyclesMessage extends Message {
+this.cycles = cycles;
+}
+
++	@Override
+public String toString() {
+ST st = getMessageTemplate();
+st.add("listOfCycles", cycles);
+diff --git a/tool/src/main/java/org/antlr/tool/NonRegularDecisionMessage.java b/tool/src/main/java/org/antlr/tool/NonRegularDecisionMessage.java
+index 169f99a..798a602 100644
+--- a/tool/src/main/java/org/antlr/tool/NonRegularDecisionMessage.java
++++ b/tool/src/main/java/org/antlr/tool/NonRegularDecisionMessage.java
+@@ -46,6 +46,7 @@ public class NonRegularDecisionMessage extends Message {
+this.altsWithRecursion = altsWithRecursion;
+}
+
++	@Override
+public String toString() {
+GrammarAST decisionASTNode = probe.dfa.getDecisionASTNode();
+line = decisionASTNode.getLine();
+diff --git a/tool/src/main/java/org/antlr/tool/RecursionOverflowMessage.java b/tool/src/main/java/org/antlr/tool/RecursionOverflowMessage.java
+index 50e72c6..a9378f5 100644
+--- a/tool/src/main/java/org/antlr/tool/RecursionOverflowMessage.java
++++ b/tool/src/main/java/org/antlr/tool/RecursionOverflowMessage.java
+@@ -58,6 +58,7 @@ public class RecursionOverflowMessage extends Message {
+this.callSiteStates = callSiteStates;
+}
+
++	@Override
+public String toString() {
+GrammarAST decisionASTNode = probe.dfa.getDecisionASTNode();
+line = decisionASTNode.getLine();
+diff --git a/tool/src/main/java/org/antlr/tool/Rule.java b/tool/src/main/java/org/antlr/tool/Rule.java
+index d9d6334..8dbe300 100644
+--- a/tool/src/main/java/org/antlr/tool/Rule.java
++++ b/tool/src/main/java/org/antlr/tool/Rule.java
+@@ -576,6 +576,7 @@ public class Rule {
+}
+* */
+
++	@Override
+public String toString() { // used for testing
+return "["+grammar.name+"."+name+",index="+index+",line="+tree.getToken().getLine()+"]";
+}
+diff --git a/tool/src/main/java/org/antlr/tool/RuleLabelScope.java b/tool/src/main/java/org/antlr/tool/RuleLabelScope.java
+index 265d245..ab45f8d 100644
+--- a/tool/src/main/java/org/antlr/tool/RuleLabelScope.java
++++ b/tool/src/main/java/org/antlr/tool/RuleLabelScope.java
+@@ -85,6 +85,7 @@ public class RuleLabelScope extends AttributeScope {
+/** If you label a rule reference, you can access that rule's
+*  return values as well as any predefined attributes.
+*/
++	@Override
+public Attribute getAttribute(String name) {
+AttributeScope rulePropertiesScope =
+RuleLabelScope.grammarTypeToRulePropertiesScope[grammar.type];
+diff --git a/tool/src/main/java/org/antlr/tool/Strip.java b/tool/src/main/java/org/antlr/tool/Strip.java
+index 50152ad..fcf7366 100644
+--- a/tool/src/main/java/org/antlr/tool/Strip.java
++++ b/tool/src/main/java/org/antlr/tool/Strip.java
+@@ -75,11 +75,13 @@ public class Strip {
+// ACTIONS STUFF
+wiz.visit(t, ANTLRv3Parser.ACTION,
+new TreeWizard.Visitor() {
++			@Override
+public void visit(Object t) { ACTION(tokens, (CommonTree)t); }
+});
+
+wiz.visit(t, ANTLRv3Parser.AT,  // ^('@' id ACTION) rule actions
+new TreeWizard.Visitor() {
++			@Override
+public void visit(Object t) {
+CommonTree a = (CommonTree)t;
+CommonTree action = null;
+@@ -94,6 +96,7 @@ public class Strip {
+});
+wiz.visit(t, ANTLRv3Parser.ARG, // wipe rule arguments
+new TreeWizard.Visitor() {
++			@Override
+public void visit(Object t) {
+CommonTree a = (CommonTree)t;
+a = (CommonTree)a.getChild(0);
+@@ -103,6 +106,7 @@ public class Strip {
+});
+wiz.visit(t, ANTLRv3Parser.RET, // wipe rule return declarations
+new TreeWizard.Visitor() {
++			@Override
+public void visit(Object t) {
+CommonTree a = (CommonTree)t;
+CommonTree ret = (CommonTree)a.getChild(0);
+@@ -112,6 +116,7 @@ public class Strip {
+});
+wiz.visit(t, ANTLRv3Parser.SEMPRED, // comment out semantic predicates
+new TreeWizard.Visitor() {
++			@Override
+public void visit(Object t) {
+CommonTree a = (CommonTree)t;
+tokens.replace(a.token.getTokenIndex(), "/*"+a.getText()+"*/");
+@@ -119,6 +124,7 @@ public class Strip {
+});
+wiz.visit(t, ANTLRv3Parser.GATED_SEMPRED, // comment out semantic predicates
+new TreeWizard.Visitor() {
++			@Override
+public void visit(Object t) {
+CommonTree a = (CommonTree)t;
+String text = tokens.toString(a.getTokenStartIndex(),
+@@ -130,6 +136,7 @@ public class Strip {
+});
+wiz.visit(t, ANTLRv3Parser.SCOPE, // comment scope specs
+new TreeWizard.Visitor() {
++			@Override
+public void visit(Object t) {
+CommonTree a = (CommonTree)t;
+tokens.delete(a.getTokenStartIndex(),
+@@ -139,6 +146,7 @@ public class Strip {
+});
+wiz.visit(t, ANTLRv3Parser.ARG_ACTION, // args r[x,y] -> ^(r [x,y])
+new TreeWizard.Visitor() {
++			@Override
+public void visit(Object t) {
+CommonTree a = (CommonTree)t;
+if ( a.getParent().getType()==ANTLRv3Parser.RULE_REF ) {
+@@ -149,6 +157,7 @@ public class Strip {
+});
+wiz.visit(t, ANTLRv3Parser.LABEL_ASSIGN, // ^('=' id ^(RULE_REF [arg])), ...
+new TreeWizard.Visitor() {
++			@Override
+public void visit(Object t) {
+CommonTree a = (CommonTree)t;
+if ( !a.hasAncestor(ANTLRv3Parser.OPTIONS) ) { // avoid options
+@@ -160,6 +169,7 @@ public class Strip {
+});
+wiz.visit(t, ANTLRv3Parser.LIST_LABEL_ASSIGN, // ^('+=' id ^(RULE_REF [arg])), ...
+new TreeWizard.Visitor() {
++			@Override
+public void visit(Object t) {
+CommonTree a = (CommonTree)t;
+CommonTree child = (CommonTree)a.getChild(0);
+@@ -172,6 +182,7 @@ public class Strip {
+// AST STUFF
+wiz.visit(t, ANTLRv3Parser.REWRITE,
+new TreeWizard.Visitor() {
++			@Override
+public void visit(Object t) {
+CommonTree a = (CommonTree)t;
+CommonTree child = (CommonTree)a.getChild(0);
+@@ -186,12 +197,14 @@ public class Strip {
+});
+wiz.visit(t, ANTLRv3Parser.ROOT,
+new TreeWizard.Visitor() {
++			@Override
+public void visit(Object t) {
+tokens.delete(((CommonTree)t).token.getTokenIndex());
+}
+});
+wiz.visit(t, ANTLRv3Parser.BANG,
+new TreeWizard.Visitor() {
++			@Override
+public void visit(Object t) {
+tokens.delete(((CommonTree)t).token.getTokenIndex());
+}
+diff --git a/tool/src/main/java/org/antlr/tool/ToolMessage.java b/tool/src/main/java/org/antlr/tool/ToolMessage.java
+index 6bbd5c0..070049d 100644
+--- a/tool/src/main/java/org/antlr/tool/ToolMessage.java
++++ b/tool/src/main/java/org/antlr/tool/ToolMessage.java
+@@ -58,6 +58,7 @@ public class ToolMessage extends Message {
+super(msgID,arg,null);
+this.e = e;
+}
++	@Override
+public String toString() {
+ST st = getMessageTemplate();
+if ( arg!=null ) {
+diff --git a/tool/src/test/java/org/antlr/test/BaseTest.java b/tool/src/test/java/org/antlr/test/BaseTest.java
+index aae0560..5725149 100644
+--- a/tool/src/test/java/org/antlr/test/BaseTest.java
++++ b/tool/src/test/java/org/antlr/test/BaseTest.java
+@@ -508,6 +508,7 @@ public abstract class BaseTest {
+sucker = new Thread(this);
+sucker.start();
+}
++		@Override
+public void run() {
+try {
+String line = in.readLine();
+@@ -527,6 +528,7 @@ public abstract class BaseTest {
+public void join() throws InterruptedException {
+sucker.join();
+}
++		@Override
+public String toString() {
+return buf.toString();
+}
+@@ -535,6 +537,7 @@ public abstract class BaseTest {
+public static class FilteringTokenStream extends CommonTokenStream {
+public FilteringTokenStream(TokenSource src) { super(src); }
+Set<Integer> hide = new HashSet<Integer>();
++		@Override
+protected void sync(int i) {
+super.sync(i);
+if ( hide.contains(get(i).getType()) ) get(i).setChannel(Token.HIDDEN_CHANNEL);
+diff --git a/tool/src/test/java/org/antlr/test/ErrorQueue.java b/tool/src/test/java/org/antlr/test/ErrorQueue.java
+index 90c7b65..380893a 100644
+--- a/tool/src/test/java/org/antlr/test/ErrorQueue.java
++++ b/tool/src/test/java/org/antlr/test/ErrorQueue.java
+@@ -39,18 +39,22 @@ public class ErrorQueue implements ANTLRErrorListener {
+List errors = new LinkedList();
+List warnings = new LinkedList();
+
++	@Override
+public void info(String msg) {
+infos.add(msg);
+}
+
++	@Override
+public void error(Message msg) {
+errors.add(msg);
+}
+
++	@Override
+public void warning(Message msg) {
+warnings.add(msg);
+}
+
++	@Override
+public void error(ToolMessage msg) {
+errors.add(msg);
+}
+@@ -59,6 +63,7 @@ public class ErrorQueue implements ANTLRErrorListener {
+return infos.size() + errors.size() + warnings.size();
+}
+
++	@Override
+public String toString() {
+return "infos: "+infos+
+"errors: "+errors+
+diff --git a/tool/src/test/java/org/antlr/test/TestBufferedTreeNodeStream.java b/tool/src/test/java/org/antlr/test/TestBufferedTreeNodeStream.java
+index 834a737..137bfb3 100644
+--- a/tool/src/test/java/org/antlr/test/TestBufferedTreeNodeStream.java
++++ b/tool/src/test/java/org/antlr/test/TestBufferedTreeNodeStream.java
+@@ -37,10 +37,12 @@ import org.junit.Test;
+public class TestBufferedTreeNodeStream extends TestTreeNodeStream {
+// inherits tests; these methods make it use a new buffer
+
++	@Override
+public TreeNodeStream newStream(Object t) {
+return new BufferedTreeNodeStream(t);
+}
+
++	@Override
+public String toTokenTypeString(TreeNodeStream stream) {
+return ((BufferedTreeNodeStream)stream).toTokenTypeString();
+}
+diff --git a/tool/src/test/java/org/antlr/test/TestCommonTokenStream.java b/tool/src/test/java/org/antlr/test/TestCommonTokenStream.java
+index 67b1fb8..863fa28 100644
+--- a/tool/src/test/java/org/antlr/test/TestCommonTokenStream.java
++++ b/tool/src/test/java/org/antlr/test/TestCommonTokenStream.java
+@@ -191,9 +191,11 @@ public class TestCommonTokenStream extends BaseTest {
+tokens[6].setChannel(Lexer.HIDDEN);
+tokens[8].setChannel(Lexer.HIDDEN);
+}
++			@Override
+public Token nextToken() {
+return tokens[i++];
+}
++			@Override
+public String getSourceName() { return "test"; }
+};
+
+diff --git a/tool/src/test/java/org/antlr/test/TestTreeWizard.java b/tool/src/test/java/org/antlr/test/TestTreeWizard.java
+index 3f2bd1b..50b3d62 100644
+--- a/tool/src/test/java/org/antlr/test/TestTreeWizard.java
++++ b/tool/src/test/java/org/antlr/test/TestTreeWizard.java
+@@ -130,6 +130,7 @@ public class TestTreeWizard extends BaseTest {
+CommonTree t = (CommonTree)wiz.create("(A B C D)");
+final List elements = new ArrayList();
+wiz.visit(t, wiz.getTokenType("B"), new TreeWizard.Visitor() {
++			@Override
+public void visit(Object t) {
+elements.add(t);
+}
+@@ -145,6 +146,7 @@ public class TestTreeWizard extends BaseTest {
+final List elements = new ArrayList();
+wiz.visit(t, wiz.getTokenType("C"),
+new TreeWizard.Visitor() {
++			@Override
+public void visit(Object t) {
+elements.add(t);
+}
+@@ -160,6 +162,7 @@ public class TestTreeWizard extends BaseTest {
+final List elements = new ArrayList();
+wiz.visit(t, wiz.getTokenType("B"),
+new TreeWizard.Visitor() {
++			@Override
+public void visit(Object t) {
+elements.add(t);
+}
+@@ -175,6 +178,7 @@ public class TestTreeWizard extends BaseTest {
+final List elements = new ArrayList();
+wiz.visit(t, wiz.getTokenType("A"),
+new TreeWizard.Visitor() {
++			@Override
+public void visit(Object t) {
+elements.add(t);
+}
+@@ -190,6 +194,7 @@ public class TestTreeWizard extends BaseTest {
+final List elements = new ArrayList();
+wiz.visit(t, wiz.getTokenType("B"),
+new TreeWizard.ContextVisitor() {
++			@Override
+public void visit(Object t, Object parent, int childIndex, Map labels) {
+elements.add(adaptor.getText(t)+"@"+
+(parent!=null?adaptor.getText(parent):"nil")+
+@@ -207,6 +212,7 @@ public class TestTreeWizard extends BaseTest {
+final List elements = new ArrayList();
+wiz.visit(t, wiz.getTokenType("A"),
+new TreeWizard.ContextVisitor() {
++			@Override
+public void visit(Object t, Object parent, int childIndex, Map labels) {
+elements.add(adaptor.getText(t)+"@"+
+(parent!=null?adaptor.getText(parent):"nil")+
+@@ -224,6 +230,7 @@ public class TestTreeWizard extends BaseTest {
+final List elements = new ArrayList();
+wiz.visit(t, "(A B)",
+new TreeWizard.Visitor() {
++			@Override
+public void visit(Object t) {
+elements.add(t);
+}
+@@ -239,6 +246,7 @@ public class TestTreeWizard extends BaseTest {
+final List elements = new ArrayList();
+wiz.visit(t, "(A B)",
+new TreeWizard.ContextVisitor() {
++			@Override
+public void visit(Object t, Object parent, int childIndex, Map labels) {
+elements.add(adaptor.getText(t)+"@"+
+(parent!=null?adaptor.getText(parent):"nil")+
+@@ -256,6 +264,7 @@ public class TestTreeWizard extends BaseTest {
+final List elements = new ArrayList();
+wiz.visit(t, "(%a:A %b:B)",
+new TreeWizard.ContextVisitor() {
++			@Override
+public void visit(Object t, Object parent, int childIndex, Map labels) {
+elements.add(adaptor.getText(t)+"@"+
+(parent!=null?adaptor.getText(parent):"nil")+
+diff --git a/tool/src/test/java/org/antlr/test/TestTrees.java b/tool/src/test/java/org/antlr/test/TestTrees.java
+index ad3e479..e9c79b2 100644
+--- a/tool/src/test/java/org/antlr/test/TestTrees.java
++++ b/tool/src/test/java/org/antlr/test/TestTrees.java
+@@ -44,6 +44,7 @@ public class TestTrees extends BaseTest {
+public V(Token t) { this.token = t;}
+public V(int ttype, int x) { this.x=x; token=new CommonToken(ttype); }
+public V(int ttype, Token t, int x) { token=t; this.x=x;}
++		@Override
+public String toString() { return (token!=null?token.getText():"")+"<V>";}
+}
+
+

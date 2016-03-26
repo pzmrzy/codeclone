@@ -1,0 +1,133 @@
+commit 4f8f6cd8b4dfffa0623d39c4629994e427cde670
+Author:     parrt <parrt@antlr.org>
+AuthorDate: Sun Jun 19 12:57:14 2011 -0800
+Commit:     parrt <parrt@antlr.org>
+CommitDate: Sun Jun 19 12:57:14 2011 -0800
+
+pom's again
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8675]
+
+diff --git a/antlr3-maven-archetype/pom.xml b/antlr3-maven-archetype/pom.xml
+index 2e59bad..b10196d 100644
+--- a/antlr3-maven-archetype/pom.xml
++++ b/antlr3-maven-archetype/pom.xml
+@@ -6,7 +6,7 @@
+<modelVersion>4.0.0</modelVersion>
+<groupId>org.antlr</groupId>
+<artifactId>antlr3-maven-archetype</artifactId>
+-    <version>3.3-SNAPSHOT</version>
++    <version>3.4.1-SNAPSHOT</version>
+<packaging>maven-archetype</packaging>
+<name>ANTLR3 Maven Archetype</name>
+
+diff --git a/antlr3-maven-archetype/src/main/resources/archetype-resources/pom.xml b/antlr3-maven-archetype/src/main/resources/archetype-resources/pom.xml
+index e416c1f..9da0ce0 100644
+--- a/antlr3-maven-archetype/src/main/resources/archetype-resources/pom.xml
++++ b/antlr3-maven-archetype/src/main/resources/archetype-resources/pom.xml
+@@ -58,7 +58,7 @@
+<dependency>
+<groupId>org.antlr</groupId>
+<artifactId>antlr-runtime</artifactId>
+-            <version>3.4-SNAPSHOT</version>
++            <version>3.4.1-SNAPSHOT</version>
+<scope>compile</scope>
+</dependency>
+
+@@ -84,7 +84,7 @@
+
+<groupId>org.antlr</groupId>
+<artifactId>antlr3-maven-plugin</artifactId>
+-                <version>3.4-SNAPSHOT</version>
++                <version>3.4.1-SNAPSHOT</version>
+<executions>
+<execution>
+<goals>
+diff --git a/antlr3-maven-plugin/pom.xml b/antlr3-maven-plugin/pom.xml
+index c030c45..b73c536 100644
+--- a/antlr3-maven-plugin/pom.xml
++++ b/antlr3-maven-plugin/pom.xml
+@@ -64,7 +64,7 @@
+we cannot use the paren pom to control the version number
+and MUST update <version> in this pom manually!
+-->
+-    <version>3.4-SNAPSHOT</version>
++    <version>3.4.1-SNAPSHOT</version>
+<name>Maven plugin for ANTLR V3</name>
+<prerequisites>
+<maven>2.0</maven>
+@@ -273,7 +273,7 @@ Jim Idle - March 2009
+<dependency>
+<groupId>org.antlr</groupId>
+<artifactId>antlr</artifactId>
+-            <version>3.4</version>
++            <version>3.4.1</version>
+</dependency>
+
+<!--
+diff --git a/gunit-maven-plugin/pom.xml b/gunit-maven-plugin/pom.xml
+index 71da265..f56e730 100644
+--- a/gunit-maven-plugin/pom.xml
++++ b/gunit-maven-plugin/pom.xml
+@@ -43,7 +43,7 @@
+<groupId>org.antlr</groupId>
+<artifactId>maven-gunit-plugin</artifactId>
+<packaging>maven-plugin</packaging>
+-    <version>3.4-SNAPSHOT</version>
++    <version>3.4.1-SNAPSHOT</version>
+
+<name>Maven plugin for gUnit ANTLR V3 </name>
+<description>A Maven plugin for incorporating gUnit testing of grammars</description>
+diff --git a/gunit/pom.xml b/gunit/pom.xml
+index be9a4f8..4fd6e9b 100644
+--- a/gunit/pom.xml
++++ b/gunit/pom.xml
+@@ -16,7 +16,7 @@
+<parent>
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+-        <version>3.4-SNAPSHOT</version>
++        <version>3.4.1-SNAPSHOT</version>
+</parent>
+
+<url>http://www.antlr.org/wiki/display/ANTLR3/gUnit+-+Grammar+Unit+Testing</url>
+diff --git a/pom.xml b/pom.xml
+index 642287c..0ed612a 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -4,7 +4,7 @@
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+<packaging>pom</packaging>
+-    <version>3.4-SNAPSHOT</version>
++    <version>3.4.1-SNAPSHOT</version>
+<name>ANTLR Master build control POM</name>
+<url>http://maven.apache.org</url>
+
+diff --git a/runtime/Java/pom.xml b/runtime/Java/pom.xml
+index 2231c4f..a8bbff2 100644
+--- a/runtime/Java/pom.xml
++++ b/runtime/Java/pom.xml
+@@ -15,7 +15,7 @@
+<parent>
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+-      <version>3.4-SNAPSHOT</version>
++      <version>3.4.1-SNAPSHOT</version>
+</parent>
+
+<name>Antlr 3 Runtime</name>
+diff --git a/tool/pom.xml b/tool/pom.xml
+index 228b64e..0c74d0b 100644
+--- a/tool/pom.xml
++++ b/tool/pom.xml
+@@ -18,7 +18,7 @@
+<parent>
+<groupId>org.antlr</groupId>
+<artifactId>antlr-master</artifactId>
+-        <version>3.4-SNAPSHOT</version>
++        <version>3.4.1-SNAPSHOT</version>
+</parent>
+<dependencies>
+<dependency>
+

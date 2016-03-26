@@ -1,0 +1,44 @@
+commit 733d23e9fa164b1f550fd3c98a7dfeeada2e6c6c
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Fri Oct 23 10:26:38 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Fri Oct 23 10:26:38 2009 -0800
+
+C# Port:
+* AntlrToolPath defaults to the location of the executable (which is normally what you want)
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6258]
+
+diff --git a/Antlr3/AntlrTool.cs b/Antlr3/AntlrTool.cs
+index 6a48a0d..c018882 100644
+--- a/Antlr3/AntlrTool.cs
++++ b/Antlr3/AntlrTool.cs
+@@ -115,16 +115,23 @@ namespace Antlr3
+}
+}
+
++        static AntlrTool()
++        {
++            ToolPathRoot = Path.GetDirectoryName(typeof(CodeGenerator).Assembly.Location);
++        }
++
+public AntlrTool()
+-            : this(Path.GetDirectoryName(typeof(CodeGenerator).Assembly.Location))
++            : this((string)null)
+{
+}
+
+public AntlrTool(string toolPathRoot)
+{
+-            ToolPathRoot = toolPathRoot;
+-            TargetsDirectory = Path.Combine(toolPathRoot, @"Targets");
+-            TemplatesDirectory = Path.Combine(toolPathRoot, @"Codegen\Templates");
++            if (!string.IsNullOrEmpty(toolPathRoot))
++                ToolPathRoot = toolPathRoot;
++
++            TargetsDirectory = Path.Combine(ToolPathRoot, @"Targets");
++            TemplatesDirectory = Path.Combine(ToolPathRoot, @"Codegen\Templates");
+}
+
+public AntlrTool( string[] args )
+

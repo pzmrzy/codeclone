@@ -1,0 +1,27 @@
+commit 624db5f19fc9d40fc92d5d3f3abcc35722319cc9
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Mon Dec 3 11:57:38 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Mon Dec 3 11:57:38 2012 -0600
+
+Fix use of range operator in lexer rules in combined grammars
+
+diff --git a/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLR.g b/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLR.g
+index 94fc10b..6939efc 100644
+--- a/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLR.g
++++ b/tool/src/main/antlr3/org/antlr/grammar/v3/ANTLR.g
+@@ -801,11 +801,10 @@ ebnf
+;
+
+range!
+-	:	{grammarType == Grammar.LEXER}?=>
++	:	{Rule.getRuleType(currentRuleName) == Grammar.LEXER}? =>
+c1=CHAR_LITERAL RANGE c2=CHAR_LITERAL
+-> ^(CHAR_RANGE[$c1,".."] $c1 $c2)
+-	|	{grammarType != Grammar.LEXER &&
+-	     Rule.getRuleType(currentRuleName) == Grammar.PARSER}?=> // range elsewhere is an error
++	|	// range elsewhere is an error
+(	t=TOKEN_REF r=RANGE TOKEN_REF
+|	t=STRING_LITERAL r=RANGE STRING_LITERAL
+|	t=CHAR_LITERAL r=RANGE CHAR_LITERAL
+

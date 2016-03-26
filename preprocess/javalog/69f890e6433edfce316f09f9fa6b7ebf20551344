@@ -1,0 +1,358 @@
+commit 69f890e6433edfce316f09f9fa6b7ebf20551344
+Author:     acondit <acondit@parrt.spork>
+AuthorDate: Fri Mar 11 11:31:19 2011 -0800
+Commit:     acondit <acondit@parrt.spork>
+CommitDate: Fri Mar 11 11:31:19 2011 -0800
+
+Changes working on ST4 Implementation
+changed newANTLRCommonToken to newToken to support user token types
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 7855]
+
+diff --git a/runtime/ObjC/Framework/ANTLRCommonToken.h b/runtime/ObjC/Framework/ANTLRCommonToken.h
+index 336e0d4..e478448 100644
+--- a/runtime/ObjC/Framework/ANTLRCommonToken.h
++++ b/runtime/ObjC/Framework/ANTLRCommonToken.h
+@@ -47,26 +47,18 @@
+id<ANTLRCharStream> input;
+}
+
+-@property (retain, getter=getText, setter=setText:) NSString *text;
+-@property (assign, getter=getType, setter=setType:) NSInteger type;
+-@property (assign, getter=getLine, setter=setLine:) NSUInteger line;
+-@property (assign, getter=getCharPositionInLine, setter=setCharPositionInLine:) NSUInteger charPositionInLine;
+-@property (assign, getter=getChannel, setter=setChannel:) NSUInteger channel;
+-@property (assign, getter=getTokenIndex, setter=setTokenIndex:) NSUInteger index;
+-@property (assign, getter=getStart, setter=setStart:) NSUInteger startIndex;
+-@property (assign, getter=getStop, setter=setStop:) NSUInteger stopIndex;
+-@property (retain, getter=getInput, setter=setInput:) id<ANTLRCharStream> input;
+-
++ (void) initialize;
+-+ (ANTLRCommonToken *) newANTLRCommonToken;
+-+ (ANTLRCommonToken *) newANTLRCommonToken:(id<ANTLRCharStream>)anInput
+++ (NSInteger) DEFAULT_CHANNEL;
+++ (NSInteger) INVALID_TOKEN_TYPE;
+++ (ANTLRCommonToken *) newToken;
+++ (ANTLRCommonToken *) newToken:(id<ANTLRCharStream>)anInput
+Type:(NSInteger)aTType
+Channel:(NSInteger)aChannel
+Start:(NSInteger)aStart
+Stop:(NSInteger)aStop;
+-+ (ANTLRCommonToken *) newANTLRCommonToken:(ANTLRTokenType)aType;
+-+ (id<ANTLRToken>) newANTLRCommonToken:(NSInteger)tokenType Text:(NSString *)tokenText;
+-+ (id<ANTLRToken>) newANTLRCommonTokenWithToken:(ANTLRCommonToken *)fromToken;
+++ (ANTLRCommonToken *) newToken:(ANTLRTokenType)aType;
+++ (id<ANTLRToken>) newToken:(NSInteger)tokenType Text:(NSString *)tokenText;
+++ (id<ANTLRToken>) newTokenWithToken:(ANTLRCommonToken *)fromToken;
++ (id<ANTLRToken>) eofToken;
++ (id<ANTLRToken>) skipToken;
++ (id<ANTLRToken>) invalidToken;
+@@ -135,4 +127,14 @@
+- (NSString *) description;
+- (NSString *) toString;
+
++@property (retain) NSString *text;
++@property (assign) NSInteger type;
++@property (assign) NSUInteger line;
++@property (assign) NSUInteger charPositionInLine;
++@property (assign) NSUInteger channel;
++@property (assign) NSUInteger index;
++@property (assign, getter=getStart, setter=setStart:) NSUInteger startIndex;
++@property (assign, getter=getStop, setter=setStop:) NSUInteger stopIndex;
++@property (retain) id<ANTLRCharStream> input;
++
+@end
+diff --git a/runtime/ObjC/Framework/ANTLRCommonToken.m b/runtime/ObjC/Framework/ANTLRCommonToken.m
+index 06af2e7..650ed6e 100644
+--- a/runtime/ObjC/Framework/ANTLRCommonToken.m
++++ b/runtime/ObjC/Framework/ANTLRCommonToken.m
+@@ -33,7 +33,11 @@ static ANTLRCommonToken *INVALID_TOKEN;
+
+@implementation ANTLRCommonToken
+
+-// @synthesize text;
++    static NSInteger DEFAULT_CHANNEL = ANTLRTokenChannelDefault;
++    static NSInteger INVALID_TOKEN_TYPE = ANTLRTokenTypeInvalid;
++
++
++@synthesize text;
+@synthesize type;
+@synthesize line;
+@synthesize charPositionInLine;
+@@ -41,39 +45,49 @@ static ANTLRCommonToken *INVALID_TOKEN;
+@synthesize index;
+@synthesize startIndex;
+@synthesize stopIndex;
+-// @synthesize input;
++@synthesize input;
+
++ (void) initialize
+{
+-    EOF_TOKEN = [ANTLRCommonToken newANTLRCommonToken:ANTLRTokenTypeEOF Text:@"EOF"];
+-    SKIP_TOKEN = [ANTLRCommonToken newANTLRCommonToken:ANTLRTokenTypeInvalid Text:@"Skip"];
+-    INVALID_TOKEN = [ANTLRCommonToken newANTLRCommonToken:ANTLRTokenTypeInvalid Text:@"Invalid"];
++    EOF_TOKEN = [ANTLRCommonToken newToken:ANTLRTokenTypeEOF Text:@"EOF"];
++    SKIP_TOKEN = [ANTLRCommonToken newToken:ANTLRTokenTypeInvalid Text:@"Skip"];
++    INVALID_TOKEN = [ANTLRCommonToken newToken:ANTLRTokenTypeInvalid Text:@"Invalid"];
+[EOF_TOKEN retain];
+[SKIP_TOKEN retain];
+[INVALID_TOKEN retain];
+}
+
+-+ (ANTLRCommonToken *) newANTLRCommonToken
+++ (NSInteger) DEFAULT_CHANNEL
++{
++    return DEFAULT_CHANNEL;
++}
++
+++ (NSInteger) INVALID_TOKEN_TYPE
++{
++    return INVALID_TOKEN_TYPE;
++}
++
+++ (ANTLRCommonToken *) newToken
+{
+return [[ANTLRCommonToken alloc] init];
+}
+
+-+ (ANTLRCommonToken *) newANTLRCommonToken:(id<ANTLRCharStream>)anInput Type:(NSInteger)aTType Channel:(NSInteger)aChannel Start:(NSInteger)aStart Stop:(NSInteger)aStop
+++ (ANTLRCommonToken *) newToken:(id<ANTLRCharStream>)anInput Type:(NSInteger)aTType Channel:(NSInteger)aChannel Start:(NSInteger)aStart Stop:(NSInteger)aStop
+{
+return [[ANTLRCommonToken alloc] initWithInput:(id<ANTLRCharStream>)anInput Type:(NSInteger)aTType Channel:(NSInteger)aChannel Start:(NSInteger)aStart Stop:(NSInteger)aStop];
+}
+
+-+ (ANTLRCommonToken *) newANTLRCommonToken:(ANTLRTokenType)tokenType
+++ (ANTLRCommonToken *) newToken:(ANTLRTokenType)tokenType
+{
+return( [[ANTLRCommonToken alloc] initWithType:tokenType] );
+}
+
+-+ (ANTLRCommonToken *) newANTLRCommonToken:(NSInteger)tokenType Text:(NSString *)tokenText
+++ (ANTLRCommonToken *) newToken:(NSInteger)tokenType Text:(NSString *)tokenText
+{
+return( [[ANTLRCommonToken alloc] initWithType:tokenType Text:tokenText] );
+}
+
+-+ (ANTLRCommonToken *) newANTLRCommonTokenWithToken:(ANTLRCommonToken *)fromToken
+++ (ANTLRCommonToken *) newTokenWithToken:(ANTLRCommonToken *)fromToken
+{
+return( [[ANTLRCommonToken alloc] initWithToken:fromToken] );
+}
+@@ -82,7 +96,7 @@ static ANTLRCommonToken *INVALID_TOKEN;
++ (id<ANTLRToken>) eofToken
+{
+if (EOF_TOKEN == nil) {
+-		EOF_TOKEN = [[ANTLRCommonToken newANTLRCommonToken:ANTLRTokenTypeEOF Text:@"EOF"] retain];
++		EOF_TOKEN = [[ANTLRCommonToken newToken:ANTLRTokenTypeEOF Text:@"EOF"] retain];
+}
+return EOF_TOKEN;
+}
+@@ -91,7 +105,7 @@ static ANTLRCommonToken *INVALID_TOKEN;
++ (id<ANTLRToken>) skipToken
+{
+if (SKIP_TOKEN == nil) {
+-		SKIP_TOKEN = [[ANTLRCommonToken newANTLRCommonToken:ANTLRTokenTypeInvalid Text:@"Skip"] retain];
++		SKIP_TOKEN = [[ANTLRCommonToken newToken:ANTLRTokenTypeInvalid Text:@"Skip"] retain];
+}
+return SKIP_TOKEN;
+}
+@@ -100,7 +114,7 @@ static ANTLRCommonToken *INVALID_TOKEN;
++ (id<ANTLRToken>) invalidToken
+{
+if (INVALID_TOKEN == nil) {
+-		INVALID_TOKEN = [[ANTLRCommonToken newANTLRCommonToken:ANTLRTokenTypeInvalid Text:@"Invalid"] retain];
++		INVALID_TOKEN = [[ANTLRCommonToken newToken:ANTLRTokenTypeInvalid Text:@"Invalid"] retain];
+}
+return SKIP_TOKEN;
+}
+@@ -136,6 +150,7 @@ static ANTLRCommonToken *INVALID_TOKEN;
+channel = aChannel;
+startIndex = aStart;
+stopIndex = aStop;
++        text = [input substringWithRange:NSMakeRange(startIndex, (stopIndex-startIndex)+1)];
+}
+return self;
+}
+@@ -143,7 +158,7 @@ static ANTLRCommonToken *INVALID_TOKEN;
+- (id) initWithToken:(ANTLRCommonToken *)oldToken
+{
+if ((self = [super init]) != nil) {
+-        text = oldToken.text;
++        text = [NSString stringWithString:oldToken.text];
+type = oldToken.type;
+line = oldToken.line;
+index = oldToken.index;
+diff --git a/runtime/ObjC/Framework/ANTLRCommonTreeAdaptor.m b/runtime/ObjC/Framework/ANTLRCommonTreeAdaptor.m
+index d45ec79..c29c149 100644
+--- a/runtime/ObjC/Framework/ANTLRCommonTreeAdaptor.m
++++ b/runtime/ObjC/Framework/ANTLRCommonTreeAdaptor.m
+@@ -93,13 +93,13 @@
+
+- (id<ANTLRToken>)createToken:(NSInteger)tokenType Text:(NSString *)text
+{
+-    id<ANTLRToken> fromToken = [ANTLRCommonToken newANTLRCommonToken:tokenType Text:text];
++    id<ANTLRToken> fromToken = [ANTLRCommonToken newToken:tokenType Text:text];
+return fromToken;
+}
+
+- (id<ANTLRToken>)createToken:(ANTLRCommonToken *)fromToken
+{
+-    return fromToken = [ANTLRCommonToken newANTLRCommonTokenWithToken:(ANTLRCommonToken *)fromToken];
++    return fromToken = [ANTLRCommonToken newTokenWithToken:(ANTLRCommonToken *)fromToken];
+}
+
+/** Track start/stop token for subtree root created for a rule.
+diff --git a/runtime/ObjC/Framework/ANTLRLexer.m b/runtime/ObjC/Framework/ANTLRLexer.m
+index 77a5d05..ba86f62 100644
+--- a/runtime/ObjC/Framework/ANTLRLexer.m
++++ b/runtime/ObjC/Framework/ANTLRLexer.m
+@@ -87,8 +87,8 @@
+return; // no shared state work to do
+}
+state.token = nil;
+-    state.type = ANTLRTokenTypeInvalid;
+-    state.channel = ANTLRTokenChannelDefault;
++    state.type = ANTLRCommonToken.INVALID_TOKEN_TYPE;
++    state.channel = ANTLRCommonToken.DEFAULT_CHANNEL;
+state.tokenStartCharIndex = -1;
+state.tokenStartCharPositionInLine = -1;
+state.tokenStartLine = -1;
+@@ -116,7 +116,7 @@
+{
+while (YES) {
+[self setToken:nil];
+-        state.channel = ANTLRTokenChannelDefault;
++        state.channel = ANTLRCommonToken.DEFAULT_CHANNEL;
+state.tokenStartCharIndex = [input getIndex];
+state.tokenStartCharPositionInLine = [input getCharPositionInLine];
+state.tokenStartLine = [input getLine];
+@@ -124,10 +124,11 @@
+
+// [self setText:[self getText]];
+if ([input LA:1] == ANTLRCharStreamEOF) {
+-            ANTLRCommonToken *eof = [ANTLRCommonToken eofToken];
+-            [eof setStart:[input getIndex]];
+-            [eof setStop:[input getIndex]];
+-            [eof setChannel:ANTLRTokenChannelDefault];
++            ANTLRCommonToken *eof = [ANTLRCommonToken newToken:input
++                                                          Type:ANTLRTokenTypeEOF
++                                                       Channel:ANTLRCommonToken.DEFAULT_CHANNEL
++                                                         Start:[input getIndex]
++                                                          Stop:[input getIndex]];
+[eof setLine:[self getLine]];
+[eof setCharPositionInLine:[self getCharPositionInLine]];
+return eof;
+@@ -143,9 +144,12 @@
+}
+return state.token;
+}
++		@catch (ANTLRNoViableAltException *nva) {
++			[self reportError:nva];
++			[self recover:nva];
++		}
+@catch (ANTLRRecognitionException *e) {
+[self reportError:e];
+-			[self recover:e];
+}
+}
+}
+@@ -167,11 +171,9 @@
+
+- (void) setInput:(id<ANTLRCharStream>) anInput
+{
+-    if (input != anInput) {
+-        input = nil;
+-        [self reset];
+-        input = anInput;
+-    }
++    input = nil;
++    [self reset];
++    input = anInput;
+}
+
+/** Currently does not support multiple emits per nextToken invocation
+@@ -195,13 +197,13 @@
+*/
+- (void) emit
+{
+-	id<ANTLRToken> aToken = [ANTLRCommonToken newANTLRCommonToken:input
+-                                                             Type:state.type
+-                                                          Channel:state.channel
+-                                                            Start:state.tokenStartCharIndex
+-                                                             Stop:[input getIndex]-1];
++	id<ANTLRToken> aToken = [ANTLRCommonToken newToken:input
++                                                  Type:state.type
++                                               Channel:state.channel
++                                                 Start:state.tokenStartCharIndex
++                                                  Stop:[input getIndex]-1];
+[aToken setLine:state.tokenStartLine];
+-    [aToken setText:[self getText]];
++    aToken.text = [self getText];
+[aToken setCharPositionInLine:[state getCharPositionInLine]];
+[aToken retain];
+[self emit:aToken];
+@@ -220,7 +222,7 @@
+state.failed = YES;
+return;
+}
+-			ANTLRMismatchedTokenException  *mte = [ANTLRMismatchedTokenException newANTLRMismatchedTokenExceptionChar:[aString characterAtIndex:i] Stream:input];
++			ANTLRMismatchedTokenException *mte = [ANTLRMismatchedTokenException newANTLRMismatchedTokenExceptionChar:[aString characterAtIndex:i] Stream:input];
+[self recover:mte];
+@throw mte;
+}
+diff --git a/runtime/ObjC/Framework/ANTLRParser.m b/runtime/ObjC/Framework/ANTLRParser.m
+index 0471fde..2bcb7c7 100644
+--- a/runtime/ObjC/Framework/ANTLRParser.m
++++ b/runtime/ObjC/Framework/ANTLRParser.m
+@@ -102,7 +102,7 @@
+tokenText = @"<missing EOF>";
+else
+tokenText = [NSString stringWithFormat:@"<missing %@>\n",[[ANTLRBaseRecognizer getTokenNames] objectAtIndex:expectedTokenType]];
+-    ANTLRCommonToken *t = [[ANTLRCommonToken newANTLRCommonToken:expectedTokenType Text:tokenText] retain];
++    ANTLRCommonToken *t = [[ANTLRCommonToken newToken:expectedTokenType Text:tokenText] retain];
+ANTLRCommonToken *current = [anInput LT:1];
+if ( [current getType] == ANTLRTokenTypeEOF ) {
+current = [anInput LT:-1];
+diff --git a/runtime/ObjC/Framework/ANTLRTreeParser.m b/runtime/ObjC/Framework/ANTLRTreeParser.m
+index dcf16c2..165aaa9 100644
+--- a/runtime/ObjC/Framework/ANTLRTreeParser.m
++++ b/runtime/ObjC/Framework/ANTLRTreeParser.m
+@@ -106,7 +106,7 @@
+NSString *tokenText =[NSString stringWithFormat:@"<missing %@ %d>", [self getTokenNames], expectedTokenType];
+//id<ANTLRTreeAdaptor> anAdaptor = (id<ANTLRTreeAdaptor>)[((id<ANTLRTreeNodeStream>)e.input) getTreeAdaptor];
+//return [anAdaptor createToken:expectedTokenType Text:tokenText];
+-    return [ANTLRCommonToken newANTLRCommonToken:expectedTokenType Text:tokenText];
++    return [ANTLRCommonToken newToken:expectedTokenType Text:tokenText];
+}
+
+/** Match '.' in tree parser has special meaning.  Skip node or
+@@ -162,13 +162,13 @@
+/** Tree parsers parse nodes they usually have a token object as
+*  payload. Set the exception token and do the default behavior.
+*/
+-- (NSString *)getErrorMessage:(ANTLRRecognitionException *)e  TokenNames:(NSArray *) theTokNams
++- (NSString *)getErrorMessage:(ANTLRRecognitionException *)e  TokenNames:(NSMutableArray *) theTokNams
+{
+if ( [self isKindOfClass:[ANTLRTreeParser class]] ) {
+id<ANTLRTreeAdaptor> adaptor = (id<ANTLRTreeAdaptor>)[((id<ANTLRTreeNodeStream>)e.input) getTreeAdaptor];
+e.token = [adaptor getToken:((id<ANTLRTree>)e.node)];
+if ( e.token == nil ) { // could be an UP/DOWN node
+-            e.token = [ANTLRCommonToken newANTLRCommonToken:[adaptor getType:e.node]
++            e.token = [ANTLRCommonToken newToken:[adaptor getType:e.node]
+Text:[adaptor getText:e.node]];
+}
+}
+diff --git a/runtime/ObjC/Framework/ANTLRTreePatternParser.m b/runtime/ObjC/Framework/ANTLRTreePatternParser.m
+index 0f45caa..41c693a 100644
+--- a/runtime/ObjC/Framework/ANTLRTreePatternParser.m
++++ b/runtime/ObjC/Framework/ANTLRTreePatternParser.m
+@@ -134,7 +134,7 @@
+// Wildcard?
+if ( ttype == ANTLRLexerTokenTypeDOT ) {
+ttype = [tokenizer nextToken];
+-        id<ANTLRToken> wildcardPayload = [ANTLRCommonToken newANTLRCommonToken:0 Text:@"."];
++        id<ANTLRToken> wildcardPayload = [ANTLRCommonToken newToken:0 Text:@"."];
+ANTLRTreePattern *node = [ANTLRWildcardTreePattern newANTLRWildcardTreePattern:wildcardPayload];
+if ( label != nil ) {
+node.label = label;
+

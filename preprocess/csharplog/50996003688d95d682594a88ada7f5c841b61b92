@@ -1,0 +1,112 @@
+commit 50996003688d95d682594a88ada7f5c841b61b92
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Sun Mar 17 18:27:36 2013 -0500
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Sun Mar 17 18:33:11 2013 -0500
+
+Update to latest reference commit of ANTLR 3
+
+diff --git a/Antlr3.Test/TestIntervalSet.cs b/Antlr3.Test/TestIntervalSet.cs
+index ae11060..58bb1e4 100644
+--- a/Antlr3.Test/TestIntervalSet.cs
++++ b/Antlr3.Test/TestIntervalSet.cs
+@@ -386,6 +386,25 @@ namespace AntlrUnitTests
+Assert.AreEqual( result, expecting );
+}
+
++        /**
++         * This case is responsible for antlr/antlr4#153.
++         * https://github.com/antlr/antlr4/issues/153
++         * <p/>
++         * Resolution back-ported from V4.
++         */
++        [TestMethod][TestCategory(TestCategories.Antlr3)]
++        public void TestMergeWhereAdditionMergesThreeExistingIntervals()
++        {
++            IntervalSet s = new IntervalSet();
++            s.Add(0);
++            s.Add(3);
++            s.Add(5);
++            s.Add(0, 7);
++            String expecting = "0..7";
++            String result = s.ToString();
++            Assert.AreEqual(expecting, result);
++        }
++
+[TestMethod][TestCategory(TestCategories.Antlr3)]
+public void TestMergeWithDoubleOverlap() /*throws Exception*/ {
+IntervalSet s = IntervalSet.Of( 1, 10 );
+diff --git a/Antlr3/Misc/IntervalSet.cs b/Antlr3/Misc/IntervalSet.cs
+index 6d4f45e..f5509d8 100644
+--- a/Antlr3/Misc/IntervalSet.cs
++++ b/Antlr3/Misc/IntervalSet.cs
+@@ -180,21 +180,21 @@ namespace Antlr3.Misc
+intervals[i] = bigger;
+// make sure we didn't just create an interval that
+// should be merged with next interval in list
+-                    if ( i < intervals.Count - 1 )
++                    while ( i < intervals.Count - 1 )
+{
+i++;
+Interval next = intervals[i];
+//Interval next = (Interval)iter.next();
+-                        if ( bigger.Adjacent( next ) || !bigger.Disjoint( next ) )
+-                        {
+-                            // if we bump up against or overlap next, merge
+-                            //iter.remove();   // remove this one
+-                            intervals.RemoveAt( i );
+-                            //iter.previous(); // move backwards to what we just set
+-                            i--;
+-                            //iter.set( bigger.union( next ) ); // set to 3 merged ones
+-                            intervals[i] = bigger.Union( next );
+-                        }
++                        if ( !bigger.Adjacent( next ) && bigger.Disjoint( next ) )
++                            break;
++
++                        // if we bump up against or overlap next, merge
++                        //iter.remove();   // remove this one
++                        intervals.RemoveAt( i );
++                        //iter.previous(); // move backwards to what we just set
++                        i--;
++                        //iter.set( bigger.union( next ) ); // set to 3 merged ones
++                        intervals[i] = bigger.Union( next );
+}
+return;
+}
+diff --git a/Antlr3/Tool/Grammar.cs b/Antlr3/Tool/Grammar.cs
+index 98a9f15..47c932f 100644
+--- a/Antlr3/Tool/Grammar.cs
++++ b/Antlr3/Tool/Grammar.cs
+@@ -1199,7 +1199,7 @@ namespace Antlr3.Tool
+{
+if ( Tool.internalOption_PrintGrammarTree )
+{
+-                Console.Out.WriteLine( grammarTree.ToStringList() );
++                Console.Out.WriteLine( grammarTree.ToStringTree() );
+}
+
+// DEFINE RULES
+diff --git a/Antlr3/Tool/GrammarAST.cs b/Antlr3/Tool/GrammarAST.cs
+index b610cf4..5b0a7bd 100644
+--- a/Antlr3/Tool/GrammarAST.cs
++++ b/Antlr3/Tool/GrammarAST.cs
+@@ -584,11 +584,6 @@ namespace Antlr3.Tool
+child.enclosingRuleName = rname;
+}
+
+-        internal string ToStringList()
+-        {
+-            throw new System.NotImplementedException();
+-        }
+-
+/** Track start/stop token for subtree root created for a rule.
+*  Only works with Tree nodes.  For rules that match nothing,
+*  seems like this will yield start=i and stop=i-1 in a nil node.
+diff --git a/Reference/antlr3 b/Reference/antlr3
+index 3c99d9a..69fb819 160000
+--- a/Reference/antlr3
++++ b/Reference/antlr3
+@@ -1 +1 @@
+-Subproject commit 3c99d9a5e8c59689dfa8f4fbcde9c4c614ca8e53
++Subproject commit 69fb819c6ab81f5520273e8bc2f378e67db6c61c
+

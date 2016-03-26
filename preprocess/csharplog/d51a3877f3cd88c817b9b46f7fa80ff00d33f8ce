@@ -1,0 +1,2363 @@
+commit d51a3877f3cd88c817b9b46f7fa80ff00d33f8ce
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Dec 14 15:15:00 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Dec 14 15:15:00 2009 -0800
+
+C# Port:
+* Fix template name/path issues
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6520]
+
+diff --git a/Antlr3.Test/ST4/TestCompiler.cs b/Antlr3.Test/ST4/TestCompiler.cs
+index ccdcc8b..2c51526 100644
+--- a/Antlr3.Test/ST4/TestCompiler.cs
++++ b/Antlr3.Test/ST4/TestCompiler.cs
+@@ -308,7 +308,7 @@
+{
+string template = "<@r>foo<@end>";
+// compile as if in root dir and in template 'a'
+-            CompiledTemplate code = new TemplateCompiler("/", "a").Compile(template);
++            CompiledTemplate code = new TemplateCompiler(TemplateName.Root, new TemplateName("a")).Compile(template);
+string asmExpected =
+"new 0, write 0 12";
+string asmResult = code.Instructions();
+@@ -323,7 +323,7 @@
+{
+string template = "x:<@r()>";
+// compile as if in root dir and in template 'a'
+-            CompiledTemplate code = new TemplateCompiler("/", "a").Compile(template);
++            CompiledTemplate code = new TemplateCompiler(TemplateName.Root, new TemplateName("a")).Compile(template);
+string asmExpected =
+"load_str 0, write 0 1, new 1, write 2 7";
+string asmResult = code.Instructions();
+diff --git a/Antlr3.Test/ST4/TestCoreBasics.cs b/Antlr3.Test/ST4/TestCoreBasics.cs
+index 7363b56..3f56f44 100644
+--- a/Antlr3.Test/ST4/TestCoreBasics.cs
++++ b/Antlr3.Test/ST4/TestCoreBasics.cs
+@@ -89,7 +89,7 @@
+{
+string template = "load <box()>;";
+Template st = new Template(template);
+-            st.code.nativeGroup.DefineTemplate("box",
++            st.code.nativeGroup.DefineTemplate(new TemplateName("box"),
+"kewl" + newline +
+"daddy"
+);
+@@ -106,7 +106,7 @@
+{
+string template = "load <box(x=\"arg\")>;";
+Template st = new Template(template);
+-            st.code.nativeGroup.DefineTemplate("box", "kewl <x> daddy");
++            st.code.nativeGroup.DefineTemplate(new TemplateName("box"), "kewl <x> daddy");
+st.Add("name", "Ter");
+string expected = "load kewl arg daddy;";
+string result = st.Render();
+@@ -118,7 +118,7 @@
+{
+string template = "load <box(\"arg\")>;";
+Template st = new Template(template);
+-            st.code.nativeGroup.DefineTemplate("box", new string[] { "x" }, "kewl <x> daddy");
++            st.code.nativeGroup.DefineTemplate(new TemplateName("box"), new string[] { "x" }, "kewl <x> daddy");
+st.Add("name", "Ter");
+string expected = "load kewl arg daddy;";
+string result = st.Render();
+@@ -130,8 +130,8 @@
+{
+string template = "load <box(x=\"arg\", y=foo())>;";
+Template st = new Template(template);
+-            st.code.nativeGroup.DefineTemplate("box", "kewl <x> <y> daddy");
+-            st.code.nativeGroup.DefineTemplate("foo", "blech");
++            st.code.nativeGroup.DefineTemplate(new TemplateName("box"), "kewl <x> <y> daddy");
++            st.code.nativeGroup.DefineTemplate(new TemplateName("foo"), "blech");
+st.Add("name", "Ter");
+string expected = "load kewl arg blech daddy;";
+string result = st.Render();
+@@ -143,8 +143,8 @@
+{
+string template = "load <box(y=foo(x=\"arg\"))>;";
+Template st = new Template(template);
+-            st.code.nativeGroup.DefineTemplate("box", "kewl <y> daddy");
+-            st.code.nativeGroup.DefineTemplate("foo", "blech <x>");
++            st.code.nativeGroup.DefineTemplate(new TemplateName("box"), "kewl <y> daddy");
++            st.code.nativeGroup.DefineTemplate(new TemplateName("foo"), "blech <x>");
+st.Add("name", "Ter");
+string expected = "load kewl blech arg daddy;";
+string result = st.Render();
+@@ -155,8 +155,8 @@
+public void TestDefineTemplate()
+{
+TemplateGroup group = new TemplateGroup();
+-            group.DefineTemplate("inc", "<it>+1");
+-            group.DefineTemplate("test", "hi <name>!");
++            group.DefineTemplate(new TemplateName("inc"), "<it>+1");
++            group.DefineTemplate(new TemplateName("test"), "hi <name>!");
+Template st = group.GetInstanceOf("test");
+st.Add("name", "Ter");
+st.Add("name", "Tom");
+@@ -171,8 +171,8 @@
+public void TestMap()
+{
+TemplateGroup group = new TemplateGroup();
+-            group.DefineTemplate("inc", "[<it>]");
+-            group.DefineTemplate("test", "hi <name:inc>!");
++            group.DefineTemplate(new TemplateName("inc"), "[<it>]");
++            group.DefineTemplate(new TemplateName("test"), "hi <name:inc>!");
+Template st = group.GetInstanceOf("test");
+st.Add("name", "Ter");
+st.Add("name", "Tom");
+@@ -187,7 +187,7 @@
+public void TestParallelMap()
+{
+TemplateGroup group = new TemplateGroup();
+-            group.DefineTemplate("test", "hi <names,phones:{n,p | <n>:<p>;}>");
++            group.DefineTemplate(new TemplateName("test"), "hi <names,phones:{n,p | <n>:<p>;}>");
+Template st = group.GetInstanceOf("test");
+st.Add("names", "Ter");
+st.Add("names", "Tom");
+@@ -205,7 +205,7 @@
+public void TestParallelMapWith3Versus2Elements()
+{
+TemplateGroup group = new TemplateGroup();
+-            group.DefineTemplate("test", "hi <names,phones:{n,p | <n>:<p>;}>");
++            group.DefineTemplate(new TemplateName("test"), "hi <names,phones:{n,p | <n>:<p>;}>");
+Template st = group.GetInstanceOf("test");
+st.Add("names", "Ter");
+st.Add("names", "Tom");
+@@ -222,8 +222,8 @@
+public void TestMapIndexes()
+{
+TemplateGroup group = new TemplateGroup();
+-            group.DefineTemplate("inc", "<i>:<it>");
+-            group.DefineTemplate("test", "<name:inc; separator=\", \">");
++            group.DefineTemplate(new TemplateName("inc"), "<i>:<it>");
++            group.DefineTemplate(new TemplateName("test"), "<name:inc; separator=\", \">");
+Template st = group.GetInstanceOf("test");
+st.Add("name", "Ter");
+st.Add("name", "Tom");
+@@ -239,8 +239,8 @@
+public void TestMapSingleValue()
+{
+TemplateGroup group = new TemplateGroup();
+-            group.DefineTemplate("a", "[<it>]");
+-            group.DefineTemplate("test", "hi <name:a>!");
++            group.DefineTemplate(new TemplateName("a"), "[<it>]");
++            group.DefineTemplate(new TemplateName("test"), "hi <name:a>!");
+Template st = group.GetInstanceOf("test");
+st.Add("name", "Ter");
+string expected = "hi [Ter]!";
+@@ -252,9 +252,9 @@
+public void TestRepeatedMap()
+{
+TemplateGroup group = new TemplateGroup();
+-            group.DefineTemplate("a", "[<it>]");
+-            group.DefineTemplate("b", "(<it>)");
+-            group.DefineTemplate("test", "hi <name:a:b>!");
++            group.DefineTemplate(new TemplateName("a"), "[<it>]");
++            group.DefineTemplate(new TemplateName("b"), "(<it>)");
++            group.DefineTemplate(new TemplateName("test"), "hi <name:a:b>!");
+Template st = group.GetInstanceOf("test");
+st.Add("name", "Ter");
+st.Add("name", "Tom");
+@@ -269,9 +269,9 @@
+public void TestRoundRobinMap()
+{
+TemplateGroup group = new TemplateGroup();
+-            group.DefineTemplate("a", "[<it>]");
+-            group.DefineTemplate("b", "(<it>)");
+-            group.DefineTemplate("test", "hi <name:a,b>!");
++            group.DefineTemplate(new TemplateName("a"), "[<it>]");
++            group.DefineTemplate(new TemplateName("b"), "(<it>)");
++            group.DefineTemplate(new TemplateName("test"), "hi <name:a,b>!");
+Template st = group.GetInstanceOf("test");
+st.Add("name", "Ter");
+st.Add("name", "Tom");
+@@ -413,9 +413,9 @@
+public void TestITDoesntPropagate()
+{
+TemplateGroup group = new TemplateGroup();
+-            group.DefineTemplate("foo", "<it>");   // <it> not visible
++            group.DefineTemplate(new TemplateName("foo"), "<it>");   // <it> not visible
+string template = "<names:{<foo()>}>"; // <it> visible only to {...} here
+-            group.DefineTemplate("test", template);
++            group.DefineTemplate(new TemplateName("test"), template);
+Template st = group.GetInstanceOf("test");
+st.Add("names", "Ter");
+st.Add("names", "Tom");
+diff --git a/Antlr3.Test/ST4/TestDictionaries.cs b/Antlr3.Test/ST4/TestDictionaries.cs
+index 95063be..0533e4b 100644
+--- a/Antlr3.Test/ST4/TestDictionaries.cs
++++ b/Antlr3.Test/ST4/TestDictionaries.cs
+@@ -181,7 +181,7 @@
+Template st = group.GetInstanceOf("var");
+st.Add("type", "UserRecord");
+st.Add("name", "x");
+-            string expecting = "UserRecord x = UserRecord;";
++            string expecting = "UserRecord x = key;";
+string result = st.Render();
+Assert.AreEqual(expecting, result);
+}
+diff --git a/Antlr3.Test/ST4/TestGroups.cs b/Antlr3.Test/ST4/TestGroups.cs
+index 43b96f7..6a836b8 100644
+--- a/Antlr3.Test/ST4/TestGroups.cs
++++ b/Antlr3.Test/ST4/TestGroups.cs
+@@ -36,6 +36,12 @@ namespace AntlrUnitTests.ST4
+using StringTemplate;
+using ArgumentException = System.ArgumentException;
+using Path = System.IO.Path;
++    using ST = StringTemplate.Template;
++    using STErrorListener = StringTemplate.ITemplateErrorListener;
++    using STGroup = StringTemplate.TemplateGroup;
++    using STGroupDir = StringTemplate.TemplateGroupDirectory;
++    using STGroupFile = StringTemplate.TemplateGroupFile;
++    using String = System.String;
+
+[TestClass]
+public class TestGroups : StringTemplateTestBase
+@@ -226,5 +232,213 @@ namespace AntlrUnitTests.ST4
+TemplateGroup group = new TemplateGroupFile(dir + "/group.stg");
+group.Load();
+}
++
++        [TestMethod]
++        public void TestSimpleDefaultArg()
++        {
++            string dir = GetRandomDir();
++            string a = "a() ::= << <b()> >>\n";
++            string b = "b(x=\"foo\") ::= \"<x>\"\n";
++            WriteFile(dir, "a.st", a);
++            WriteFile(dir, "b.st", b);
++            STGroup group = new STGroupDir(dir);
++            ST st = group.GetInstanceOf("a");
++            string expected = " foo ";
++            string result = st.Render();
++            Assert.AreEqual(expected, result);
++        }
++
++        [TestMethod]
++        public void TestDefaultArgument()
++        {
++            string templates =
++                    "method(name) ::= <<" + newline +
++                    "<stat(...)>" + newline +
++                    ">>" + newline +
++                    "stat(name,value=\"99\") ::= \"x=<value>; // <name>\"" + newline
++                    ;
++            WriteFile(tmpdir, "group.stg", templates);
++            STGroup group = new STGroupFile(tmpdir + "/group.stg");
++            ST b = group.GetInstanceOf("method");
++            b.Add("name", "foo");
++            string expecting = "x=99; // foo" + newline;
++            string result = b.Render();
++            Assert.AreEqual(expecting, result);
++        }
++
++        [TestMethod]
++        public void TestDefaultArgument2()
++        {
++            String templates =
++                    "stat(name,value=\"99\") ::= \"x=<value>; // <name>\"" + newline
++                    ;
++            WriteFile(tmpdir, "group.stg", templates);
++            STGroup group = new STGroupFile(tmpdir + "/group.stg");
++            ST b = group.GetInstanceOf("stat");
++            b.Add("name", "foo");
++            String expecting = "x=99; // foo";
++            String result = b.Render();
++            Assert.AreEqual(expecting, result);
++        }
++
++        [TestMethod]
++        public void TestDefaultArgumentManuallySet()
++        {
++            String templates =
++                    "method(fields) ::= <<" + newline +
++                    "<fields:{f | <stat(f=f)>}>" + newline +
++                    ">>" + newline +
++                    "stat(f,value={<f.name>}) ::= \"x=<value>; // <f.name>\"" + newline
++                    ;
++            WriteFile(tmpdir, "group.stg", templates);
++            STGroup group = new STGroupFile(tmpdir + "/group.stg");
++            ST m = group.GetInstanceOf("method");
++            m.Add("fields", new Field());
++            String expecting = "x=parrt; // parrt" + newline;
++            String result = m.Render();
++            Assert.AreEqual(expecting, result);
++        }
++
++        /** This fails because checkNullAttributeAgainstFormalArguments looks
++         *  for a formal argument at the current level not of the original embedded
++         *  template. We have defined it all the way in the embedded, but there is
++         *  no value so we try to look upwards ala dynamic scoping. When it reaches
++         *  the top, it doesn't find a value but it will miss the
++         *  formal argument down in the embedded.
++         *
++         *  By definition, though, the formal parameter exists if we have
++         *  a default value. look up the value to see if it's null without
++         *  checking checkNullAttributeAgainstFormalArguments.
++         */
++        [TestMethod]
++        public void TestDefaultArgumentImplicitlySet()
++        {
++            String templates =
++                    "method(fields) ::= <<" + newline +
++                    "<fields:{f | <stat(...)>}>" + newline +
++                    ">>" + newline +
++                    "stat(f,value={<f.name>}) ::= \"x=<value>; // <f.name>\"" + newline
++                    ;
++            WriteFile(tmpdir, "group.stg", templates);
++            STGroup group = new STGroupFile(tmpdir + "/group.stg");
++            ST m = group.GetInstanceOf("method");
++            m.Add("fields", new Field());
++            String expecting = "x=parrt; // parrt" + newline;
++            String result = m.Render();
++            Assert.AreEqual(expecting, result);
++        }
++
++        [TestMethod]
++        public void TestDefaultArgumentImplicitlySet2()
++        {
++            String templates =
++                    "method(fields) ::= <<" + newline +
++                    "<fields:{f | <f:stat>}>" + newline +  // THIS SHOULD BE ERROR; >1 arg?
++                    ">>" + newline +
++                    "stat(f,value={<f.name>}) ::= \"x=<value>; // <f.name>\"" + newline
++                    ;
++            WriteFile(tmpdir, "group.stg", templates);
++            STGroup group = new STGroupFile(tmpdir + "/group.stg");
++            ST m = group.GetInstanceOf("method");
++            m.Add("fields", new Field());
++            String expecting = "x=parrt; // parrt" + newline;
++            String result = m.Render();
++            Assert.AreEqual(expecting, result);
++        }
++
++        [TestMethod]
++        public void TestDefaultArgumentAsTemplate()
++        {
++            String templates =
++                    "method(name,size) ::= <<" + newline +
++                    "<stat(...)>" + newline +
++                    ">>" + newline +
++                    "stat(name,value={<name>}) ::= \"x=<value>; // <name>\"" + newline
++                    ;
++            WriteFile(tmpdir, "group.stg", templates);
++            STGroup group = new STGroupFile(tmpdir + "/group.stg");
++            ST b = group.GetInstanceOf("method");
++            b.Add("name", "foo");
++            b.Add("size", "2");
++            String expecting = "x=foo; // foo" + newline;
++            String result = b.Render();
++            //System.err.println("result='"+result+"'");
++            Assert.AreEqual(expecting, result);
++        }
++
++        [TestMethod]
++        public void TestDefaultArgumentAsTemplate2()
++        {
++            String templates =
++                    "method(name,size) ::= <<" + newline +
++                    "<stat(...)>" + newline +
++                    ">>" + newline +
++                    "stat(name,value={ [<name>] }) ::= \"x=<value>; // <name>\"" + newline
++                    ;
++            WriteFile(tmpdir, "group.stg", templates);
++            STGroup group = new STGroupFile(tmpdir + "/group.stg");
++            ST b = group.GetInstanceOf("method");
++            b.Add("name", "foo");
++            b.Add("size", "2");
++            String expecting = "x=[foo] ; // foo" + newline; // won't see ' ' after '=' since it's an indent not simple string
++            String result = b.Render();
++            //System.err.println("result='"+result+"'");
++            Assert.AreEqual(expecting, result);
++        }
++
++        [TestMethod]
++        public void TestDoNotUseDefaultArgument()
++        {
++            String templates =
++                    "method(name) ::= <<" + newline +
++                    "<stat(value=\"34\",...)>" + newline +
++                    ">>" + newline +
++                    "stat(name,value=\"99\") ::= \"x=<value>; // <name>\"" + newline
++                    ;
++            WriteFile(tmpdir, "group.stg", templates);
++            STGroup group = new STGroupFile(tmpdir + "/group.stg");
++            ST b = group.GetInstanceOf("method");
++            b.Add("name", "foo");
++            String expecting = "x=34; // foo" + newline;
++            String result = b.Render();
++            Assert.AreEqual(expecting, result);
++        }
++
++        [TestMethod]
++        public void TestDefaultArgumentInParensToEvalEarly()
++        {
++            String templates =
++                    "A(x) ::= \"<B()>\"" + newline +
++                    "B(y={<(x)>}) ::= \"<y> <x> <x> <y>\"" + newline
++                    ;
++            WriteFile(tmpdir, "group.stg", templates);
++            STGroup group = new STGroupFile(tmpdir + "/group.stg");
++            ST b = group.GetInstanceOf("A");
++            b.Add("x", new Counter());
++            String expecting = "0 1 2 0"; // trace must be false to get these numbers
++            String result = b.Render();
++            //System.err.println("result='"+result+"'");
++            Assert.AreEqual(expecting, result);
++        }
++
++        private class Field
++        {
++            public string name = "parrt";
++            public int n = 0;
++
++            public override string ToString()
++            {
++                return "Field";
++            }
++        }
++
++        private class Counter
++        {
++            int n = 0;
++            public override string ToString()
++            {
++                return (n++).ToString();
++            }
++        }
+}
+}
+diff --git a/Antlr3.Test/ST4/TestIndirectionAndEarlyEvaluation.cs b/Antlr3.Test/ST4/TestIndirectionAndEarlyEvaluation.cs
+index 3bcea7e..05a0379 100644
+--- a/Antlr3.Test/ST4/TestIndirectionAndEarlyEvaluation.cs
++++ b/Antlr3.Test/ST4/TestIndirectionAndEarlyEvaluation.cs
+@@ -37,6 +37,7 @@ namespace AntlrUnitTests.ST4
+using ST = StringTemplate.Template;
+using STGroup = StringTemplate.TemplateGroup;
+using String = System.String;
++    using StringTemplate;
+
+[TestClass]
+public class TestIndirectionAndEarlyEvaluation : StringTemplateTestBase
+@@ -56,9 +57,9 @@ namespace AntlrUnitTests.ST4
+public void TestIndirectTemplateInclude()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("foo", "bar");
++            group.DefineTemplate(new TemplateName("foo"), "bar");
+String template = "<(name)()>";
+-            group.DefineTemplate("test", template);
++            group.DefineTemplate(new TemplateName("test"), template);
+ST st = group.GetInstanceOf("test");
+st.Add("name", "foo");
+String expected = "bar";
+@@ -70,10 +71,10 @@ namespace AntlrUnitTests.ST4
+public void TestIndirectTemplateIncludeViaTemplate()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("foo", "bar");
+-            group.DefineTemplate("tname", "foo");
++            group.DefineTemplate(new TemplateName("foo"), "bar");
++            group.DefineTemplate(new TemplateName("tname"), "foo");
+String template = "<(tname())()>";
+-            group.DefineTemplate("test", template);
++            group.DefineTemplate(new TemplateName("test"), template);
+ST st = group.GetInstanceOf("test");
+String expected = "bar";
+String result = st.Render();
+@@ -96,8 +97,8 @@ namespace AntlrUnitTests.ST4
+public void TestIndirectMap()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("a", "[<it>]");
+-            group.DefineTemplate("test", "hi <names:(templateName)>!");
++            group.DefineTemplate(new TemplateName("a"), "[<it>]");
++            group.DefineTemplate(new TemplateName("test"), "hi <names:(templateName)>!");
+ST st = group.GetInstanceOf("test");
+st.Add("names", "Ter");
+st.Add("names", "Tom");
+diff --git a/Antlr3.Test/ST4/TestNullAndEmptyValues.cs b/Antlr3.Test/ST4/TestNullAndEmptyValues.cs
+index 8962123..f578d17 100644
+--- a/Antlr3.Test/ST4/TestNullAndEmptyValues.cs
++++ b/Antlr3.Test/ST4/TestNullAndEmptyValues.cs
+@@ -38,6 +38,7 @@ namespace AntlrUnitTests.ST4
+using STErrorListener = StringTemplate.ITemplateErrorListener;
+using STGroup = StringTemplate.TemplateGroup;
+using String = System.String;
++    using StringTemplate;
+
+[TestClass]
+public class TestNullAndEmptyValues : StringTemplateTestBase
+@@ -46,7 +47,7 @@ namespace AntlrUnitTests.ST4
+public void TestSeparatorWithNullFirstValue()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("test", "hi <name; separator=\", \">!");
++            group.DefineTemplate(new TemplateName("test"), "hi <name; separator=\", \">!");
+ST st = group.GetInstanceOf("test");
+st.Add("name", null); // null is added to list, but ignored in iteration
+st.Add("name", "Tom");
+@@ -60,7 +61,7 @@ namespace AntlrUnitTests.ST4
+public void TestSeparatorWithNull2ndValue()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("test", "hi <name; separator=\", \">!");
++            group.DefineTemplate(new TemplateName("test"), "hi <name; separator=\", \">!");
+ST st = group.GetInstanceOf("test");
+st.Add("name", "Ter");
+st.Add("name", null);
+@@ -74,7 +75,7 @@ namespace AntlrUnitTests.ST4
+public void TestSeparatorWithNullLastValue()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("test", "hi <name; separator=\", \">!");
++            group.DefineTemplate(new TemplateName("test"), "hi <name; separator=\", \">!");
+ST st = group.GetInstanceOf("test");
+st.Add("name", "Ter");
+st.Add("name", "Tom");
+@@ -88,7 +89,7 @@ namespace AntlrUnitTests.ST4
+public void TestSeparatorWithTwoNullValuesInRow()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("test", "hi <name; separator=\", \">!");
++            group.DefineTemplate(new TemplateName("test"), "hi <name; separator=\", \">!");
+ST st = group.GetInstanceOf("test");
+st.Add("name", "Ter");
+st.Add("name", "Tom");
+@@ -104,7 +105,7 @@ namespace AntlrUnitTests.ST4
+public void TestSizeZeroButNonNullListGetsNoOutput()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("test",
++            group.DefineTemplate(new TemplateName("test"),
+"begin\n" +
+"<users>\n" +
+"end\n");
+@@ -119,7 +120,7 @@ namespace AntlrUnitTests.ST4
+public void TestNullListGetsNoOutput()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("test",
++            group.DefineTemplate(new TemplateName("test"),
+"begin\n" +
+"<users:{name: <it>}; separator=\", \">\n" +
+"end\n");
+@@ -134,7 +135,7 @@ namespace AntlrUnitTests.ST4
+public void TestEmptyListGetsNoOutput()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("test",
++            group.DefineTemplate(new TemplateName("test"),
+"begin\n" +
+"<users:{name: <it>}; separator=\", \">\n" +
+"end\n");
+diff --git a/Antlr3.Test/ST4/TestOptions.cs b/Antlr3.Test/ST4/TestOptions.cs
+index e7df321..6aa53ab 100644
+--- a/Antlr3.Test/ST4/TestOptions.cs
++++ b/Antlr3.Test/ST4/TestOptions.cs
+@@ -36,6 +36,7 @@ namespace AntlrUnitTests.ST4
+using ST = StringTemplate.Template;
+using STGroup = StringTemplate.TemplateGroup;
+using String = System.String;
++    using StringTemplate;
+
+[TestClass]
+public class TestOptions : StringTemplateTestBase
+@@ -44,7 +45,7 @@ namespace AntlrUnitTests.ST4
+public void TestSeparator()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("test", "hi <name; separator=\", \">!");
++            group.DefineTemplate(new TemplateName("test"), "hi <name; separator=\", \">!");
+ST st = group.GetInstanceOf("test");
+st.Add("name", "Ter");
+st.Add("name", "Tom");
+@@ -58,7 +59,7 @@ namespace AntlrUnitTests.ST4
+public void TestAttrSeparator()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("test", "hi <name; separator=sep>!");
++            group.DefineTemplate(new TemplateName("test"), "hi <name; separator=sep>!");
+ST st = group.GetInstanceOf("test");
+st.Add("sep", ", ");
+st.Add("name", "Ter");
+@@ -73,8 +74,8 @@ namespace AntlrUnitTests.ST4
+public void TestIncludeSeparator()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("foo", "|");
+-            group.DefineTemplate("test", "hi <name; separator=foo()>!");
++            group.DefineTemplate(new TemplateName("foo"), "|");
++            group.DefineTemplate(new TemplateName("test"), "hi <name; separator=foo()>!");
+ST st = group.GetInstanceOf("test");
+st.Add("sep", ", ");
+st.Add("name", "Ter");
+@@ -89,7 +90,7 @@ namespace AntlrUnitTests.ST4
+public void TestSubtemplateSeparator()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("test", "hi <name; separator={<sep> _}>!");
++            group.DefineTemplate(new TemplateName("test"), "hi <name; separator={<sep> _}>!");
+ST st = group.GetInstanceOf("test");
+st.Add("sep", ",");
+st.Add("name", "Ter");
+@@ -104,7 +105,7 @@ namespace AntlrUnitTests.ST4
+public void TestSeparatorWithNullFirstValueAndNullOption()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("test", "hi <name; null=\"n/a\", separator=\", \">!");
++            group.DefineTemplate(new TemplateName("test"), "hi <name; null=\"n/a\", separator=\", \">!");
+ST st = group.GetInstanceOf("test");
+st.Add("name", null);
+st.Add("name", "Tom");
+@@ -118,7 +119,7 @@ namespace AntlrUnitTests.ST4
+public void TestSeparatorWithNull2ndValueAndNullOption()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("test", "hi <name; null=\"n/a\", separator=\", \">!");
++            group.DefineTemplate(new TemplateName("test"), "hi <name; null=\"n/a\", separator=\", \">!");
+ST st = group.GetInstanceOf("test");
+st.Add("name", "Ter");
+st.Add("name", null);
+@@ -132,7 +133,7 @@ namespace AntlrUnitTests.ST4
+public void TestNullValueAndNullOption()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("test", "<name; null=\"n/a\">");
++            group.DefineTemplate(new TemplateName("test"), "<name; null=\"n/a\">");
+ST st = group.GetInstanceOf("test");
+st.Add("name", null);
+String expected = "n/a";
+@@ -144,7 +145,7 @@ namespace AntlrUnitTests.ST4
+public void TestMissingValueAndNullOption()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("test", "<name; null=\"n/a\">");
++            group.DefineTemplate(new TemplateName("test"), "<name; null=\"n/a\">");
+ST st = group.GetInstanceOf("test");
+String expected = "n/a";
+String result = st.Render();
+@@ -155,8 +156,8 @@ namespace AntlrUnitTests.ST4
+public void TestOptionDoesntApplyToNestedTemplate()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("foo", "<zippo>");
+-            group.DefineTemplate("test", "<foo(); null=\"n/a\">");
++            group.DefineTemplate(new TemplateName("foo"), "<zippo>");
++            group.DefineTemplate(new TemplateName("test"), "<foo(); null=\"n/a\">");
+ST st = group.GetInstanceOf("test");
+st.Add("zippo", null);
+String expected = "";
+diff --git a/Antlr3.Test/ST4/TestSubtemplates.cs b/Antlr3.Test/ST4/TestSubtemplates.cs
+index 4dce4dc..0279a12 100644
+--- a/Antlr3.Test/ST4/TestSubtemplates.cs
++++ b/Antlr3.Test/ST4/TestSubtemplates.cs
+@@ -34,8 +34,12 @@ namespace AntlrUnitTests.ST4
+{
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using ST = StringTemplate.Template;
++    using STErrorListener = StringTemplate.ITemplateErrorListener;
+using STGroup = StringTemplate.TemplateGroup;
++    using STGroupDir = StringTemplate.TemplateGroupDirectory;
++    using STGroupFile = StringTemplate.TemplateGroupFile;
+using String = System.String;
++    using StringTemplate;
+
+[TestClass]
+public class TestSubtemplates : StringTemplateTestBase
+@@ -44,7 +48,7 @@ namespace AntlrUnitTests.ST4
+public void TestSimpleIteration()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("test", "<names:{<it>}>!");
++            group.DefineTemplate(new TemplateName("test"), "<names:{<it>}>!");
+ST st = group.GetInstanceOf("test");
+st.Add("names", "Ter");
+st.Add("names", "Tom");
+@@ -58,7 +62,7 @@ namespace AntlrUnitTests.ST4
+public void TestSimpleIterationWithArg()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("test", "<names:{n | <n>}>!");
++            group.DefineTemplate(new TemplateName("test"), "<names:{n | <n>}>!");
+ST st = group.GetInstanceOf("test");
+st.Add("names", "Ter");
+st.Add("names", "Tom");
+@@ -72,7 +76,7 @@ namespace AntlrUnitTests.ST4
+public void Test_it_NotDefinedWithArg()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("test", "<names:{n | <it>}>!");
++            group.DefineTemplate(new TemplateName("test"), "<names:{n | <it>}>!");
+ST st = group.GetInstanceOf("test");
+st.Add("names", "Ter");
+st.Add("names", "Tom");
+@@ -86,7 +90,7 @@ namespace AntlrUnitTests.ST4
+public void Test_it_NotDefinedWithArgSingleValue()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("test", "<names:{n | <it>}>!");
++            group.DefineTemplate(new TemplateName("test"), "<names:{n | <it>}>!");
+ST st = group.GetInstanceOf("test");
+st.Add("names", "Ter");
+String expected = "!";
+@@ -98,7 +102,7 @@ namespace AntlrUnitTests.ST4
+public void TestNestedIterationWithArg()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("test", "<users:{u | <u.id:{id | <id>=}><u.name>}>!");
++            group.DefineTemplate(new TemplateName("test"), "<users:{u | <u.id:{id | <id>=}><u.name>}>!");
+ST st = group.GetInstanceOf("test");
+st.Add("users", new TestCoreBasics.User(1, "parrt"));
+st.Add("users", new TestCoreBasics.User(2, "tombu"));
+@@ -107,5 +111,140 @@ namespace AntlrUnitTests.ST4
+String result = st.Render();
+Assert.AreEqual(expected, result);
+}
++
++        [TestMethod]
++        public void TestParallelAttributeIteration()
++        {
++            ST e = new ST(
++                    "<names,phones,salaries:{n,p,s | <n>@<p>: <s>\n}>"
++                );
++            e.Add("names", "Ter");
++            e.Add("names", "Tom");
++            e.Add("phones", "1");
++            e.Add("phones", "2");
++            e.Add("salaries", "big");
++            e.Add("salaries", "huge");
++            String expecting = "Ter@1: big" + newline + "Tom@2: huge" + newline;
++            Assert.AreEqual(expecting, e.Render());
++        }
++
++        [TestMethod]
++        public void TestParallelAttributeIterationWithNullValue(){
++        ST e = new ST(
++                "<names,phones,salaries:{n,p,s | <n>@<p>: <s>\n}>"
++            );
++        e.Add("names", "Ter");
++        e.Add("names", "Tom");
++        e.Add("names", "Sriram");
++        e.Add("phones", new object[] { "1", null, "3" });
++        e.Add("salaries", "big");
++        e.Add("salaries", "huge");
++        e.Add("salaries", "enormous");
++        String expecting = "Ter@1: big"+newline+
++                           "Tom@: huge"+newline+
++                           "Sriram@3: enormous"+newline;
++        Assert.AreEqual(expecting, e.Render());
++    }
++
++        [TestMethod]
++        public void TestParallelAttributeIterationHasI()
++        {
++            ST e = new ST(
++                    "<names,phones,salaries:{n,p,s | <i0>. <n>@<p>: <s>\n}>"
++                );
++            e.Add("names", "Ter");
++            e.Add("names", "Tom");
++            e.Add("phones", "1");
++            e.Add("phones", "2");
++            e.Add("salaries", "big");
++            e.Add("salaries", "huge");
++            String expecting = "0. Ter@1: big" + newline + "1. Tom@2: huge" + newline;
++            Assert.AreEqual(expecting, e.Render());
++        }
++
++        [TestMethod]
++        public void TestParallelAttributeIterationWithDifferentSizes()
++        {
++            ST e = new ST(
++                    "<names,phones,salaries:{n,p,s | <n>@<p>: <s>}; separator=\", \">"
++                );
++            e.Add("names", "Ter");
++            e.Add("names", "Tom");
++            e.Add("names", "Sriram");
++            e.Add("phones", "1");
++            e.Add("phones", "2");
++            e.Add("salaries", "big");
++            String expecting = "Ter@1: big, Tom@2: , Sriram@: ";
++            Assert.AreEqual(expecting, e.Render());
++        }
++
++        [TestMethod]
++        public void TestParallelAttributeIterationWithSingletons()
++        {
++            ST e = new ST(
++                    "<names,phones,salaries:{n,p,s | <n>@<p>: <s>}; separator=\", \">"
++                );
++            e.Add("names", "Ter");
++            e.Add("phones", "1");
++            e.Add("salaries", "big");
++            String expecting = "Ter@1: big";
++            Assert.AreEqual(expecting, e.Render());
++        }
++
++        [TestMethod]
++        public void TestParallelAttributeIterationWithMismatchArgListSizes()
++        {
++            ErrorBuffer errors = new ErrorBuffer();
++            ErrorManager.ErrorListener = errors;
++            ST e = new ST(
++                    "<names,phones,salaries:{n,p | <n>@<p>}; separator=\", \">"
++                );
++            e.Add("names", "Ter");
++            e.Add("names", "Tom");
++            e.Add("phones", "1");
++            e.Add("phones", "2");
++            e.Add("salaries", "big");
++            String expecting = "Ter@1, Tom@2";
++            Assert.AreEqual(expecting, e.Render());
++            String errorExpecting = "template _sub13's actual and formal argument count does not match in context anonymous" + newline;
++            Assert.AreEqual(errorExpecting, errors.ToString());
++        }
++
++        [TestMethod]
++        public void TestParallelAttributeIterationWithMissingArgs()
++        {
++            ErrorBuffer errors = new ErrorBuffer();
++            ErrorManager.ErrorListener = errors;
++            ST e = new ST(
++                    "<names,phones,salaries:{<n>@<p>}; separator=\", \">"
++                );
++            e.Add("names", "Tom");
++            e.Add("phones", "2");
++            e.Add("salaries", "big");
++            e.Render(); // generate the error
++            String errorExpecting = "missing argument definitions in context anonymous" + newline;
++            Assert.AreEqual(errorExpecting, errors.ToString());
++        }
++
++        [TestMethod]
++        public void TestParallelAttributeIterationWithDifferentSizesTemplateRefInsideToo()
++        {
++            String templates =
++                    "page(names,phones,salaries) ::= " + newline +
++                    "	<< <names,phones,salaries:{n,p,s | <value(n)>@<value(p)>: <value(s)>}; separator=\", \"> >>" + newline +
++                    "value(x=\"n/a\") ::= \"<x>\"" + newline;
++            WriteFile(tmpdir, "g.stg", templates);
++
++            STGroup group = new STGroupFile(tmpdir + "/g.stg");
++            ST p = group.GetInstanceOf("page");
++            p.Add("names", "Ter");
++            p.Add("names", "Tom");
++            p.Add("names", "Sriram");
++            p.Add("phones", "1");
++            p.Add("phones", "2");
++            p.Add("salaries", "big");
++            String expecting = "Ter@1: big, Tom@2: n/a, Sriram@n/a: n/a";
++            Assert.AreEqual(expecting, p.Render());
++        }
+}
+}
+diff --git a/Antlr3.Test/ST4/TestSyntaxErrors.cs b/Antlr3.Test/ST4/TestSyntaxErrors.cs
+index 619ef26..5c3cee0 100644
+--- a/Antlr3.Test/ST4/TestSyntaxErrors.cs
++++ b/Antlr3.Test/ST4/TestSyntaxErrors.cs
+@@ -50,7 +50,7 @@ namespace AntlrUnitTests.ST4
+string result = null;
+try
+{
+-                group.DefineTemplate("test", template);
++                group.DefineTemplate(new TemplateName("test"), template);
+}
+catch (TemplateException se)
+{
+@@ -69,7 +69,7 @@ namespace AntlrUnitTests.ST4
+string result = null;
+try
+{
+-                group.DefineTemplate("test", template);
++                group.DefineTemplate(new TemplateName("test"), template);
+}
+catch (TemplateException se)
+{
+diff --git a/Antlr3.Test/ST4/TestWhitespace.cs b/Antlr3.Test/ST4/TestWhitespace.cs
+index 6421641..91d24f7 100644
+--- a/Antlr3.Test/ST4/TestWhitespace.cs
++++ b/Antlr3.Test/ST4/TestWhitespace.cs
+@@ -47,7 +47,7 @@ namespace AntlrUnitTests.ST4
+public void TestTrimmedSubtemplates()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("test", "<names:{n | <n>}>!");
++            group.DefineTemplate(new TemplateName("test"), "<names:{n | <n>}>!");
+ST st = group.GetInstanceOf("test");
+st.Add("names", "Ter");
+st.Add("names", "Tom");
+@@ -61,7 +61,7 @@ namespace AntlrUnitTests.ST4
+public void TestTrimJustOneWSInSubtemplates()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("test", "<names:{n |  <n> }>!");
++            group.DefineTemplate(new TemplateName("test"), "<names:{n |  <n> }>!");
+ST st = group.GetInstanceOf("test");
+st.Add("names", "Ter");
+st.Add("names", "Tom");
+@@ -75,7 +75,7 @@ namespace AntlrUnitTests.ST4
+public void TestTrimNewlineInSubtemplates()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("test", "<names:{n |\n" +
++            group.DefineTemplate(new TemplateName("test"), "<names:{n |\n" +
+"<n>}>!");
+ST st = group.GetInstanceOf("test");
+st.Add("names", "Ter");
+@@ -90,7 +90,7 @@ namespace AntlrUnitTests.ST4
+public void TestLeaveNewlineOnEndInSubtemplates()
+{
+STGroup group = new STGroup();
+-            group.DefineTemplate("test", "<names:{n |\n" +
++            group.DefineTemplate(new TemplateName("test"), "<names:{n |\n" +
+"<n>\n" +
+"}>!");
+ST st = group.GetInstanceOf("test");
+diff --git a/Antlr3.vsmdi b/Antlr3.vsmdi
+index d5d4c54..15ac83e 100644
+--- a/Antlr3.vsmdi
++++ b/Antlr3.vsmdi
+@@ -330,16 +330,26 @@
+</TestList>
+<TestList name="Groups" id="2b84a5ba-a6b2-44f6-842f-39aeaec2d3f0" parentListId="4adbb104-d28d-4362-8420-a9fefe69c167">
+<TestLinks>
+-      <TestLink id="c6270e4e-41cf-69d0-0dd6-ed68cdb24ff4" name="TestSubdir" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="7b00b426-de9c-96ee-c01a-5fac492b9305" name="TestSimpleGroup" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="2910a436-3fff-7b54-bc05-d4b4df0420b2" name="TestDefaultArgument" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="8fc16409-96aa-fb00-adff-9bc430d640b7" name="TestDefaultArgumentAsTemplate2" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="c393b543-c4f8-80cf-21ea-682b87b460ec" name="TestGroupFileInDir" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="3ae1d2cf-fde7-2481-69a0-41ffdfc7c448" name="TestDefaultArgumentImplicitlySet2" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="08e0d019-b06b-0380-a8b7-e7a0d2997e53" name="TestRefToAnotherTemplateInSameGroup" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="91232c3c-282a-b92f-715d-352b8c9b2366" name="TestDupDef" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="48162e6d-8cdc-6ad7-8a8a-9471ed22f7e5" name="TestRefToAnotherTemplateInSameSubdir" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="025a8e9f-cd8c-bab3-2caa-577684b0b1ce" name="TestDefaultArgumentManuallySet" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="d7ae5148-b6ff-0dda-0a0a-22e47f699358" name="TestSimpleDefaultArg" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="c6270e4e-41cf-69d0-0dd6-ed68cdb24ff4" name="TestSubdir" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="83755c9e-9b90-08d7-9366-f2c9808659cd" name="TestDefaultArgumentImplicitlySet" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="d12a6648-2bc5-99df-5126-bd7375cd095b" name="TestAbsoluteTemplateRef" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="fbc52c3e-b252-7a44-8373-828d34f8579f" name="TestSubSubdir" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="abe7d041-f0a5-435e-7a11-f89e8b4428f2" name="TestGroupWithTwoTemplates" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="c393b543-c4f8-80cf-21ea-682b87b460ec" name="TestGroupFileInDir" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="5e2cf420-fb5d-aeab-d8e2-068774d47bbb" name="TestDefaultArgumentInParensToEvalEarly" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="25e2e99b-34a0-2711-9c7a-78fe1b024c5e" name="TestDoNotUseDefaultArgument" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="bef674e7-8127-6dc8-5100-b99c9dad46c2" name="TestDefaultArgument2" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="1b8ffefd-d094-896e-1275-b11bcf4ea1c2" name="TestGroupFileInSubDir" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="7b00b426-de9c-96ee-c01a-5fac492b9305" name="TestSimpleGroup" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="d12a6648-2bc5-99df-5126-bd7375cd095b" name="TestAbsoluteTemplateRef" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="48162e6d-8cdc-6ad7-8a8a-9471ed22f7e5" name="TestRefToAnotherTemplateInSameSubdir" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="08e0d019-b06b-0380-a8b7-e7a0d2997e53" name="TestRefToAnotherTemplateInSameGroup" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="abe7d041-f0a5-435e-7a11-f89e8b4428f2" name="TestGroupWithTwoTemplates" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="7ae34e78-1829-98c0-25c1-d38e7af79513" name="TestDefaultArgumentAsTemplate" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+</TestLinks>
+</TestList>
+<TestList name="Rewrite templates" id="2dbc20ec-9234-470e-a9b4-82226d3db427" parentListId="8c43106b-9dc1-4907-a29f-aa66a61bf5b6">
+@@ -1069,11 +1079,19 @@
+</TestList>
+<TestList name="Subtemplates" id="c068d150-8506-4339-a463-a78bf2ce4e9e" parentListId="4adbb104-d28d-4362-8420-a9fefe69c167">
+<TestLinks>
+-      <TestLink id="fe2e15cd-0628-da35-0597-0bba9a39812b" name="TestSimpleIterationWithArg" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="4e9041c6-1ce0-5802-a42c-1b68c5c4925f" name="TestNestedIterationWithArg" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+-      <TestLink id="57e5b3f6-5e68-3c76-fa1a-1cc002b8a54d" name="TestSimpleIteration" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="98435153-120c-d5f8-c5c3-7c229b17639f" name="Test_it_NotDefinedWithArgSingleValue" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="25ecc632-3ec4-c493-36d3-b270b93765b2" name="TestParallelAttributeIterationWithSingletons" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="e37b3466-3288-275a-1ecf-3cde29206683" name="TestParallelAttributeIterationWithMismatchArgListSizes" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="ac3832dd-1288-c921-ff33-004b53b05024" name="TestParallelAttributeIteration" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="8c55bd03-7032-f048-2784-e4eb80de5c55" name="TestParallelAttributeIterationWithDifferentSizesTemplateRefInsideToo" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="0b486139-d3ff-8228-19e0-a8fcc54d4007" name="TestParallelAttributeIterationWithMissingArgs" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+<TestLink id="e8cbc8aa-efbe-461f-1b88-3f9dc79fb8b9" name="Test_it_NotDefinedWithArg" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="4e9041c6-1ce0-5802-a42c-1b68c5c4925f" name="TestNestedIterationWithArg" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="970648e6-20c1-4cfe-423d-83bd585c7ce6" name="TestParallelAttributeIterationWithNullValue" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="900db937-5cdd-5d73-2d02-05c8eaa7a382" name="TestParallelAttributeIterationHasI" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="57e5b3f6-5e68-3c76-fa1a-1cc002b8a54d" name="TestSimpleIteration" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="b25c8397-f34d-b0f1-b715-34e915aa4501" name="TestParallelAttributeIterationWithDifferentSizes" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
++      <TestLink id="fe2e15cd-0628-da35-0597-0bba9a39812b" name="TestSimpleIterationWithArg" storage="antlr3.test\bin\debug\antlrunittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+</TestLinks>
+</TestList>
+<TestList name="Tree grammar rewrite AST" id="c07b8a15-6914-4452-992f-7741e4abfb96" parentListId="8c43106b-9dc1-4907-a29f-aa66a61bf5b6">
+diff --git a/StringTemplate4/Compiler/CompiledTemplate.cs b/StringTemplate4/Compiler/CompiledTemplate.cs
+index eda42f4..67abc8b 100644
+--- a/StringTemplate4/Compiler/CompiledTemplate.cs
++++ b/StringTemplate4/Compiler/CompiledTemplate.cs
+@@ -39,8 +39,6 @@ namespace StringTemplate.Compiler
+
+public class CompiledTemplate
+{
+-        protected internal string name;
+-
+/** The original, immutable pattern (not really used again after
+*  initial "compilation"). Useful for debugging.
+*/
+@@ -93,6 +91,12 @@ namespace StringTemplate.Compiler
+}
+}
+
++        public TemplateName Name
++        {
++            get;
++            internal set;
++        }
++
+public string Template
+{
+get
+@@ -105,7 +109,7 @@ namespace StringTemplate.Compiler
+{
+get
+{
+-                return name.StartsWith("/" + StringTemplate.Template.SubtemplatePrefix);
++                return Name.FullName.StartsWith(TemplateName.TemplateDirectorySeparator + StringTemplate.Template.SubtemplatePrefix);
+}
+}
+
+diff --git a/StringTemplate4/Compiler/Group.g3 b/StringTemplate4/Compiler/Group.g3
+index b830fe7..56abf6e 100644
+--- a/StringTemplate4/Compiler/Group.g3
++++ b/StringTemplate4/Compiler/Group.g3
+@@ -62,7 +62,7 @@ using Console = System.Console;
+}
+
+public
+-group[TemplateGroup group, string prefix]
++group[TemplateGroup group, TemplateName prefix]
+@init {
+GroupLexer lexer = (GroupLexer)input.TokenSource;
+this._group = lexer._group = $group;
+@@ -71,15 +71,15 @@ this._group = lexer._group = $group;
+;
+
+public
+-templateDef[string prefix]
++templateDef[TemplateName prefix]
+@init {
+string template=null;
+-    string fullName = null;
++    TemplateName fullName = null;
+int n=0; // num char to strip from left, right of template def
+}
+:	(	'@' enclosing=ID '.' region=ID '(' ')'
+-			{fullName = TemplateGroup.GetMangledRegionName($enclosing.text, $region.text);}
+-		|	name=ID '(' formalArgs? ')' {fullName = $name.text;}
++			{fullName = TemplateGroup.GetMangledRegionName(new TemplateName($enclosing.text), $region.text);}
++		|	name=ID '(' formalArgs? ')' {fullName = new TemplateName($name.text);}
+)
+'::='
+{IToken templateToken = input.LT(1);}
+@@ -93,9 +93,9 @@ templateDef[string prefix]
+}
+try {
+if ($enclosing != null)
+-				this._group.DefineRegion(prefix, $enclosing.text, $region.text, template);
++				this._group.DefineRegion(prefix, new TemplateName($enclosing.text), $region.text, template);
+else
+-				this._group.DefineTemplate(prefix, $name.text, $formalArgs.args, template);
++				this._group.DefineTemplate(prefix, new TemplateName($name.text), $formalArgs.args, template);
+}
+catch (TemplateRecognitionException e) {
+RecognitionException re = (RecognitionException)e.InnerException;
+@@ -135,7 +135,7 @@ dictDef
+if ( this._group.dictionaries.ContainsKey($ID.text) ) {
+ErrorManager.CompileTimeError(ErrorType.MapRedefinition, "redefinition of map: "+$ID.text);
+}
+-        else if ( this._group.templates.ContainsKey($ID.text) ) {
++        else if ( this._group.templates.ContainsKey(new TemplateName($ID.text)) ) {
+ErrorManager.CompileTimeError(ErrorType.TemplateRedefinitionAsMap, "redefinition of template as map: "+$ID.text);
+}
+else {
+diff --git a/StringTemplate4/Compiler/ICodeGenerator.cs b/StringTemplate4/Compiler/ICodeGenerator.cs
+index bdf7b02..eabdd45 100644
+--- a/StringTemplate4/Compiler/ICodeGenerator.cs
++++ b/StringTemplate4/Compiler/ICodeGenerator.cs
+@@ -42,7 +42,7 @@ namespace StringTemplate.Compiler
+/// If we're compiling templates in subdir or group file under root,
+/// what's the templatePathPrefix to add?
+/// </summary>
+-        string TemplateReferencePrefix
++        TemplateName TemplateReferencePrefix
+{
+get;
+}
+@@ -56,13 +56,13 @@ namespace StringTemplate.Compiler
+int Address();
+
+/** Compile a subtemplate. It's the '...' in this &lt;names:{p | ...}&gt; */
+-        string CompileAnonTemplate(string enclosingTemplateName,
++        TemplateName CompileAnonTemplate(TemplateName enclosingTemplateName,
+ITokenStream input,
+IList<IToken> ids,
+RecognizerSharedState state);
+
+-        string CompileRegion(string enclosingTemplateName, string regionName, ITokenStream input, RecognizerSharedState state);
++        TemplateName CompileRegion(TemplateName enclosingTemplateName, string regionName, ITokenStream input, RecognizerSharedState state);
+
+-        void DefineBlankRegion(string fullyQualifiedName);
++        void DefineBlankRegion(TemplateName name);
+}
+}
+diff --git a/StringTemplate4/Compiler/TemplateCompiler.cs b/StringTemplate4/Compiler/TemplateCompiler.cs
+index e9d389a..14b5d1a 100644
+--- a/StringTemplate4/Compiler/TemplateCompiler.cs
++++ b/StringTemplate4/Compiler/TemplateCompiler.cs
+@@ -37,6 +37,8 @@ namespace StringTemplate.Compiler
+using Array = System.Array;
+using Console = System.Console;
+using Math = System.Math;
++    using ArgumentException = System.ArgumentException;
++    using ArgumentNullException = System.ArgumentNullException;
+
+/// <summary>
+/// A compiler for a single template
+@@ -91,24 +93,24 @@ namespace StringTemplate.Compiler
+*  /a/b/c is the path prefix to add to all ID refs; it fully qualifies them.
+*  It's like resolving x to this.x in Java for field x.
+*/
+-        private string templatePathPrefix;
++        private TemplateName templatePathPrefix;
+
+-        private string enclosingTemplateName;
++        private TemplateName enclosingTemplateName;
+
+public static int subtemplateCount = 0; // public for testing access
+
+public TemplateCompiler()
+-            : this("/", "<unknown>")
++            : this(TemplateName.Root, new TemplateName("unknown"))
+{
+}
+
+-        public TemplateCompiler(string templatePathPrefix, string enclosingTemplateName)
++        public TemplateCompiler(TemplateName templatePathPrefix, TemplateName enclosingTemplateName)
+{
+this.templatePathPrefix = templatePathPrefix;
+this.enclosingTemplateName = enclosingTemplateName;
+}
+
+-        public string TemplateReferencePrefix
++        public TemplateName TemplateReferencePrefix
+{
+get
+{
+@@ -217,13 +219,13 @@ namespace StringTemplate.Compiler
+return ip;
+}
+
+-        public string CompileAnonTemplate(string enclosingTemplateName,
++        public TemplateName CompileAnonTemplate(TemplateName enclosingTemplateName,
+ITokenStream input,
+IList<IToken> argIDs,
+RecognizerSharedState state)
+{
+subtemplateCount++;
+-            string name = templatePathPrefix + Template.SubtemplatePrefix + subtemplateCount;
++            TemplateName name = TemplateName.Combine(templatePathPrefix, Template.SubtemplatePrefix + subtemplateCount);
+ITokenSource tokenSource = input.TokenSource;
+TemplateLexer lexer = tokenSource as TemplateLexer;
+int start = -1;
+@@ -232,7 +234,7 @@ namespace StringTemplate.Compiler
+start = lexer.input.Index;
+TemplateCompiler c = new TemplateCompiler(templatePathPrefix, enclosingTemplateName);
+CompiledTemplate sub = c.Compile(input, state);
+-            sub.name = name;
++            sub.Name = name;
+if (lexer != null)
+{
+stop = lexer.input.Index;
+@@ -257,15 +259,15 @@ namespace StringTemplate.Compiler
+return name;
+}
+
+-        public string CompileRegion(string enclosingTemplateName,
++        public TemplateName CompileRegion(TemplateName enclosingTemplateName,
+string regionName,
+ITokenStream input,
+RecognizerSharedState state)
+{
+TemplateCompiler c = new TemplateCompiler(templatePathPrefix, enclosingTemplateName);
+CompiledTemplate sub = c.Compile(input, state);
+-            string fullName = templatePathPrefix + TemplateGroup.GetMangledRegionName(enclosingTemplateName, regionName);
+-            sub.name = fullName;
++            TemplateName fullName = TemplateName.Combine(templatePathPrefix, TemplateGroup.GetMangledRegionName(enclosingTemplateName, regionName));
++            sub.Name = fullName;
+if (code.implicitlyDefinedTemplates == null)
+{
+code.implicitlyDefinedTemplates = new List<CompiledTemplate>();
+@@ -274,14 +276,19 @@ namespace StringTemplate.Compiler
+return fullName;
+}
+
+-        public void DefineBlankRegion(string fullyQualifiedName)
++        public void DefineBlankRegion(TemplateName name)
+{
++            if (name == null)
++                throw new ArgumentNullException();
++            if (!name.IsRooted)
++                throw new ArgumentException();
++
+// TODO: combine with CompileRegion
+CompiledTemplate blank = new CompiledTemplate()
+{
+isRegion = true,
+regionDefType = Template.RegionType.Implicit,
+-                name = fullyQualifiedName
++                Name = name
+};
+
+if (code.implicitlyDefinedTemplates == null)
+diff --git a/StringTemplate4/Compiler/TemplateParser.g3 b/StringTemplate4/Compiler/TemplateParser.g3
+index 6656ea0..3902cc5 100644
+--- a/StringTemplate4/Compiler/TemplateParser.g3
++++ b/StringTemplate4/Compiler/TemplateParser.g3
+@@ -67,7 +67,7 @@ options {backtrack=true; k=2;}
+|	text
+|   (i=INDENT {Indent($i.text);})? region
+{
+-						 gen.Emit(Bytecode.INSTR_NEW, $region.name);
++						 gen.Emit(Bytecode.INSTR_NEW, $region.name.FullName);
+gen.Emit(Bytecode.INSTR_WRITE, $region.start.StartIndex, $region.stop.StartIndex);
+}
+|	i=INDENT         {Indent($i.text);}
+@@ -95,7 +95,7 @@ exprTag
+RDELIM
+;
+
+-region returns [string name] // match $@foo$...$@end$
++region returns [TemplateName name] // match $@foo$...$@end$
+:	LDELIM '@' ID RDELIM
+{{ // force exec even when backtracking
+if (state.backtracking == 0)
+@@ -107,7 +107,7 @@ region returns [string name] // match $@foo$...$@end$
+LDELIM '@end' RDELIM
+;
+
+-subtemplate returns [string name]
++subtemplate returns [TemplateName name]
+:	'{' ( ids+=ID (',' ids+=ID)* '|' )?
+{{ // force exec even when backtracking
+List<IToken> idTokens = null;
+@@ -262,14 +262,16 @@ option
+
+exprNoComma
+:	memberExpr ( ':' templateRef {gen.Emit(Bytecode.INSTR_MAP);} )?
+-	|	subtemplate {gen.Emit(Bytecode.INSTR_NEW, $subtemplate.name);}
++	|	subtemplate {gen.Emit(Bytecode.INSTR_NEW, $subtemplate.name.FullName);}
+;
+
+expr
+:	mapExpr
+|	// <{...}>
+subtemplate
+-		{gen.Emit(Bytecode.INSTR_NEW, PrefixedName($subtemplate.name));}
++		{
++		var prefixed = PrefixedName($subtemplate.name);
++		gen.Emit(Bytecode.INSTR_NEW, prefixed != null ? prefixed.FullName : null);}
+;
+
+mapExpr
+@@ -295,13 +297,17 @@ options {k=2;} // prevent full LL(*), which fails, falling back on k=1; need k=2
+:	{TemplateCompiler.funcs.ContainsKey(input.LT(1).Text)}?
+ID '(' expr ')' {Func($ID);}
+|	(s='super' '.')? ID
+-		{gen.Emit($s!=null?Bytecode.INSTR_SUPER_NEW:Bytecode.INSTR_NEW, PrefixedName($ID.text));}
++		{
++		var prefixed = PrefixedName(new TemplateName($ID.text));
++		gen.Emit($s!=null?Bytecode.INSTR_SUPER_NEW:Bytecode.INSTR_NEW, prefixed != null ? prefixed.FullName : null);
++		}
+'(' args? ')'
+|	'@' (s='super' '.')? ID '(' ')'	// convert <@r()> to <region__enclosingTemplate__r()>
+{
+-		string mangled = TemplateGroup.GetMangledRegionName(_enclosingTemplateName, $ID.text);
++		TemplateName mangled = TemplateGroup.GetMangledRegionName(_enclosingTemplateName, $ID.text);
+gen.DefineBlankRegion(PrefixedName(mangled));
+-		gen.Emit($s!=null?Bytecode.INSTR_SUPER_NEW:Bytecode.INSTR_NEW, PrefixedName(mangled));
++		var prefixed = PrefixedName(mangled);
++		gen.Emit($s!=null?Bytecode.INSTR_SUPER_NEW:Bytecode.INSTR_NEW, prefixed != null ? prefixed.FullName : null);
+}
+|	primary
+;
+@@ -322,8 +328,14 @@ arg :	ID '=' exprNoComma {gen.Emit(Bytecode.INSTR_STORE_ATTR, $ID.text);}
+;
+
+templateRef
+-	:	ID			{gen.Emit(Bytecode.INSTR_LOAD_STR, PrefixedName($ID.text));}
+-	|	subtemplate {gen.Emit(Bytecode.INSTR_LOAD_STR, PrefixedName($subtemplate.name));}
++	:	ID			{
++					var prefixed = PrefixedName(new TemplateName($ID.text));
++					gen.Emit(Bytecode.INSTR_LOAD_STR, prefixed != null ? prefixed.FullName : null);
++					}
++	|	subtemplate {
++					var prefixed = PrefixedName($subtemplate.name);
++					gen.Emit(Bytecode.INSTR_LOAD_STR, prefixed != null ? prefixed.FullName : null);
++					}
+|	'(' mapExpr ')' {gen.Emit(Bytecode.INSTR_TOSTR);}
+;
+
+diff --git a/StringTemplate4/Compiler/TemplateParserHelper.cs b/StringTemplate4/Compiler/TemplateParserHelper.cs
+index 8e84264..fdb27cd 100644
+--- a/StringTemplate4/Compiler/TemplateParserHelper.cs
++++ b/StringTemplate4/Compiler/TemplateParserHelper.cs
+@@ -35,6 +35,7 @@ namespace StringTemplate.Compiler
+using System.Collections.Generic;
+using Antlr.Runtime;
+using Console = System.Console;
++    using ArgumentNullException = System.ArgumentNullException;
+
+partial class TemplateParser
+{
+@@ -42,17 +43,17 @@ namespace StringTemplate.Compiler
+*  enclosing template.  This template could be a subtemplate or region of
+*  an enclosing template.
+*/
+-        private string _enclosingTemplateName;
++        private TemplateName _enclosingTemplateName;
+
+private static ICodeGenerator NoopGen = new CodeGenerator();
+private ICodeGenerator gen = NoopGen;
+
+-        public TemplateParser(ITokenStream input, ICodeGenerator gen, string enclosingTemplateName)
++        public TemplateParser(ITokenStream input, ICodeGenerator gen, TemplateName enclosingTemplateName)
+: this(input, new RecognizerSharedState(), gen, enclosingTemplateName)
+{
+}
+
+-        public TemplateParser(ITokenStream input, RecognizerSharedState state, ICodeGenerator gen, string enclosingTemplateName)
++        public TemplateParser(ITokenStream input, RecognizerSharedState state, ICodeGenerator gen, TemplateName enclosingTemplateName)
+: base(null, null) // overcome bug in ANTLR 3.2
+{
+this.input = input;
+@@ -66,12 +67,12 @@ namespace StringTemplate.Compiler
+throw new MismatchedTokenException(ttype, input);
+}
+
+-        public string PrefixedName(string t)
++        public TemplateName PrefixedName(TemplateName t)
+{
+-            if (t != null && t[0] == '/')
+-                return gen.TemplateReferencePrefix + t.Substring(1);
++            if (t == null)
++                return null;
+
+-            return gen.TemplateReferencePrefix + t;
++            return TemplateName.Combine(gen.TemplateReferencePrefix, t);
+}
+
+public void RefAttr(IToken id)
+@@ -134,7 +135,7 @@ namespace StringTemplate.Compiler
+/// </summary>
+private sealed class CodeGenerator : ICodeGenerator
+{
+-            public string TemplateReferencePrefix
++            public TemplateName TemplateReferencePrefix
+{
+get
+{
+@@ -167,21 +168,21 @@ namespace StringTemplate.Compiler
+return 0;
+}
+
+-            public string CompileAnonTemplate(string enclosingTemplateName, ITokenStream input, IList<IToken> ids, RecognizerSharedState state)
++            public TemplateName CompileAnonTemplate(TemplateName enclosingTemplateName, ITokenStream input, IList<IToken> ids, RecognizerSharedState state)
+{
+TemplateCompiler c = new TemplateCompiler();
+c.Compile(input, state);
+return null;
+}
+
+-            public string CompileRegion(string enclosingTemplateName, string regionName, ITokenStream input, RecognizerSharedState state)
++            public TemplateName CompileRegion(TemplateName enclosingTemplateName, string regionName, ITokenStream input, RecognizerSharedState state)
+{
+TemplateCompiler c = new TemplateCompiler();
+c.Compile(input, state);
+return null;
+}
+
+-            public void DefineBlankRegion(string fullyQualifiedName)
++            public void DefineBlankRegion(TemplateName fullyQualifiedName)
+{
+}
+}
+diff --git a/StringTemplate4/ErrorManager.cs b/StringTemplate4/ErrorManager.cs
+index c0256e4..b736acf 100644
+--- a/StringTemplate4/ErrorManager.cs
++++ b/StringTemplate4/ErrorManager.cs
+@@ -37,19 +37,20 @@ namespace StringTemplate
+using IOException = System.IO.IOException;
+using ThreadStatic = System.ThreadStaticAttribute;
+using StringTemplate.Compiler;
++    using Type = System.Type;
+
+public static class ErrorManager
+{
+public static readonly ITemplateErrorListener DefaultErrorListener = new DefaultErrorListenerImpl();
+
+[ThreadStatic]
+-        private static ITemplateErrorListener listener = DefaultErrorListener;
++        private static ITemplateErrorListener listener;
+
+public static ITemplateErrorListener ErrorListener
+{
+get
+{
+-                return listener;
++                return listener ?? DefaultErrorListener;
+}
+set
+{
+@@ -57,59 +58,87 @@ namespace StringTemplate
+}
+}
+
++        private static Type[] CriticalExceptions =
++            {
++                typeof(System.StackOverflowException),
++                typeof(System.OutOfMemoryException),
++                typeof(System.Threading.ThreadAbortException),
++                typeof(System.Runtime.InteropServices.SEHException),
++                typeof(System.Security.SecurityException),
++                typeof(System.ExecutionEngineException),
++                typeof(System.AccessViolationException),
++                typeof(System.BadImageFormatException),
++                typeof(System.AppDomainUnloadedException),
++            };
++
++        public static bool IsCriticalException(Exception ex)
++        {
++            if (ex == null)
++                return false;
++
++            var exceptionType = ex.GetType();
++            foreach (Type t in CriticalExceptions)
++            {
++                if (t.IsAssignableFrom(exceptionType))
++                    return true;
++            }
++
++            return false;
++        }
++
+public static void CompileTimeError(ErrorType error, object arg)
+{
+-            listener.CompileTimeError(new TemplateMessage(error, null, null, arg));
++            ErrorListener.CompileTimeError(new TemplateMessage(error, null, null, arg));
+}
+
+public static void CompileTimeError(ErrorType error, object arg1, object arg2)
+{
+-            listener.CompileTimeError(new TemplateMessage(error, null, null, arg1, arg2));
++            ErrorListener.CompileTimeError(new TemplateMessage(error, null, null, arg1, arg2));
+}
+
+public static void RuntimeError(Template template, ErrorType error)
+{
+-            listener.RuntimeError(new TemplateMessage(error, template));
++            ErrorListener.RuntimeError(new TemplateMessage(error, template));
+}
+
+public static void RuntimeError(Template template, ErrorType error, object arg)
+{
+-            listener.RuntimeError(new TemplateMessage(error, template, null, arg));
++            ErrorListener.RuntimeError(new TemplateMessage(error, template, null, arg));
+}
+
+public static void RuntimeError(Template template, ErrorType error, Exception source, object arg)
+{
+-            listener.RuntimeError(new TemplateMessage(error, template, source, arg));
++            ErrorListener.RuntimeError(new TemplateMessage(error, template, source, arg));
+}
+
+public static void RuntimeError(Template template, ErrorType error, object arg1, object arg2)
+{
+-            listener.RuntimeError(new TemplateMessage(error, template, null, arg1, arg2));
++            ErrorListener.RuntimeError(new TemplateMessage(error, template, null, arg1, arg2));
+}
+
+public static void IOError(Template template, ErrorType error, Exception source)
+{
+-            listener.IOError(new TemplateMessage(error, template, source));
++            ErrorListener.IOError(new TemplateMessage(error, template, source));
+}
+
+public static void IOError(Template template, ErrorType error, Exception source, object arg)
+{
+-            listener.IOError(new TemplateMessage(error, template, source, arg));
++            ErrorListener.IOError(new TemplateMessage(error, template, source, arg));
+}
+
+public static void InternalError(Template template, ErrorType error, Exception source)
+{
+-            listener.InternalError(new TemplateMessage(error, template, source));
++            ErrorListener.InternalError(new TemplateMessage(error, template, source));
+}
+
+public static void InternalError(Template template, ErrorType error, Exception source, object arg)
+{
+-            listener.InternalError(new TemplateMessage(error, template, source, arg));
++            ErrorListener.InternalError(new TemplateMessage(error, template, source, arg));
+}
+
+public static void InternalError(Template template, ErrorType error, Exception source, object arg1, object arg2)
+{
+-            listener.InternalError(new TemplateMessage(error, template, source, arg1, arg2));
++            ErrorListener.InternalError(new TemplateMessage(error, template, source, arg1, arg2));
+}
+
+private class DefaultErrorListenerImpl : ITemplateErrorListener
+diff --git a/StringTemplate4/ErrorType.cs b/StringTemplate4/ErrorType.cs
+index ec265e9..07ff4a6 100644
+--- a/StringTemplate4/ErrorType.cs
++++ b/StringTemplate4/ErrorType.cs
+@@ -37,10 +37,8 @@ namespace StringTemplate
+// RUNTIME SEMANTIC ERRORS
+public static readonly ErrorType NoSuchTemplate = new ErrorType("no such template: {0}");
+public static readonly ErrorType NoImportedTemplate = new ErrorType("no such template: super.{0}");
+-        public static readonly ErrorType CantAccessPropertyMethod = new ErrorType("can't access property {0} via method");
+-        public static readonly ErrorType CantAccessPropertyField = new ErrorType("can't access property {0} as field");
+-        public static readonly ErrorType NoSuchProperty = new ErrorType("{0} doesn't have a {1} property");
+-        public static readonly ErrorType ExpectingSingleArgument = new ErrorType("expecting single arg in template {0}, not {1} args");
++        //public static readonly ErrorType NoSuchProperty = new ErrorType("{0} doesn't have a {1} property");
++        public static readonly ErrorType ExpectingSingleArgument = new ErrorType("expecting single arg in template reference {0} (not {1})");
+public static readonly ErrorType MissingFormalArguments = new ErrorType("missing argument definitions");
+public static readonly ErrorType ArgumentCountMismatch = new ErrorType("template {0}'s actual and formal argument count does not match");
+public static readonly ErrorType ExpectingString = new ErrorType("function {0} expects a string not {1}");
+diff --git a/StringTemplate4/Interpreter.cs b/StringTemplate4/Interpreter.cs
+index 5dfcce5..57cb402 100644
+--- a/StringTemplate4/Interpreter.cs
++++ b/StringTemplate4/Interpreter.cs
+@@ -172,20 +172,20 @@ namespace StringTemplate
+nameIndex = GetShort(code, ip);
+ip += 2;
+name = self.code.strings[nameIndex];
+-                    st = group.GetEmbeddedInstanceOf(self, name);
++                    st = group.GetEmbeddedInstanceOf(self, new TemplateName(name));
+if (st == null)
+{
+-                        ErrorManager.RuntimeError(self, ErrorType.NoSuchTemplate, name);
++                        ErrorManager.RuntimeError(self, ErrorType.NoSuchTemplate, new TemplateName(name).Name);
+st = Template.Blank;
+}
+operands[++sp] = st;
+break;
+case Bytecode.INSTR_NEW_IND:
+name = (string)operands[sp--];
+-                    st = group.GetEmbeddedInstanceOf(self, name);
++                    st = group.GetEmbeddedInstanceOf(self, new TemplateName(name));
+if (st == null)
+{
+-                        ErrorManager.RuntimeError(self, ErrorType.NoSuchTemplate, name);
++                        ErrorManager.RuntimeError(self, ErrorType.NoSuchTemplate, new TemplateName(name).Name);
+st = Template.Blank;
+}
+operands[++sp] = st;
+@@ -194,10 +194,10 @@ namespace StringTemplate
+nameIndex = GetShort(code, ip);
+ip += 2;
+name = self.code.strings[nameIndex];
+-                    CompiledTemplate imported = group.LookupImportedTemplate(name);
++                    CompiledTemplate imported = group.LookupImportedTemplate(new TemplateName(name));
+if (imported == null)
+{
+-                        ErrorManager.RuntimeError(self, ErrorType.NoImportedTemplate, name);
++                        ErrorManager.RuntimeError(self, ErrorType.NoImportedTemplate, new TemplateName(name).Name);
+operands[++sp] = Template.Blank;
+break;
+}
+@@ -267,14 +267,14 @@ namespace StringTemplate
+case Bytecode.INSTR_MAP:
+name = (string)operands[sp--];
+o = operands[sp--];
+-                    Map(self, o, name);
++                    Map(self, o, new TemplateName(name));
+break;
+case Bytecode.INSTR_ROT_MAP:
+int nmaps = GetShort(code, ip);
+ip += 2;
+-                    List<string> templates = new List<string>();
++                    List<TemplateName> templates = new List<TemplateName>();
+for (int i = nmaps - 1; i >= 0; i--)
+-                        templates.Add((string)operands[sp - i]);
++                        templates.Add(new TemplateName((string)operands[sp - i]));
+sp -= nmaps;
+o = operands[sp--];
+if (o != null)
+@@ -288,7 +288,7 @@ namespace StringTemplate
+for (int i = nmaps - 1; i >= 0; i--)
+exprs.Add(operands[sp - i]);
+sp -= nmaps;
+-                    operands[++sp] = Par_map(self, exprs, name);
++                    operands[++sp] = Par_map(self, exprs, new TemplateName(name));
+break;
+case Bytecode.INSTR_BR:
+ip = GetShort(code, ip);
+@@ -481,6 +481,7 @@ namespace StringTemplate
+if (o is Template)
+{
+((Template)o).enclosingInstance = self;
++                SetDefaultArguments((Template)o);
+if (options != null && options[OPTION_WRAP] != null)
+{
+// if we have a wrap string, then inform writer it might need to wrap
+@@ -567,13 +568,13 @@ namespace StringTemplate
+return n;
+}
+
+-        protected void Map(Template self, object attr, string name)
++        protected void Map(Template self, object attr, TemplateName name)
+{
+-            Rot_map(self, attr, new List<string>() { name });
++            Rot_map(self, attr, new TemplateName[] { name });
+}
+
+// <names:a,b>
+-        protected void Rot_map(Template self, object attr, List<string> templates)
++        protected void Rot_map(Template self, object attr, IList<TemplateName> templates)
+{
+if (attr == null)
+{
+@@ -595,7 +596,7 @@ namespace StringTemplate
+continue;
+int templateIndex = ti % templates.Count; // rotate through
+ti++;
+-                    string name = templates[templateIndex];
++                    TemplateName name = templates[templateIndex];
+Template st = group.GetEmbeddedInstanceOf(self, name);
+SetSoleArgument(st, iterValue);
+st.RawSetAttribute("i0", i0);
+@@ -619,7 +620,7 @@ namespace StringTemplate
+}
+
+// <names,phones:{n,p | ...}>
+-        protected Template.AttributeList Par_map(Template self, List<object> exprs, string template)
++        protected Template.AttributeList Par_map(Template self, List<object> exprs, TemplateName template)
+{
+if (exprs == null || template == null || exprs.Count == 0)
+{
+@@ -646,7 +647,7 @@ namespace StringTemplate
+object[] formalArgumentNames = formalArguments.Keys.ToArray();
+if (formalArgumentNames.Length != numAttributes)
+{
+-                ErrorManager.RuntimeError(self, ErrorType.ArgumentCountMismatch, template);
++                ErrorManager.RuntimeError(self, ErrorType.ArgumentCountMismatch, template.Name);
+// truncate arg list to match smaller size
+int shorterSize = Math.Min(formalArgumentNames.Length, numAttributes);
+numAttributes = shorterSize;
+@@ -1050,7 +1051,10 @@ namespace StringTemplate
+}
+catch (Exception e)
+{
+-                    ErrorManager.RuntimeError(self, ErrorType.CantAccessPropertyMethod, e, m);
++                    if (ErrorManager.IsCriticalException(e))
++                        throw;
++
++                    //ErrorManager.RuntimeError(self, ErrorType.CantAccessPropertyMethod, e, m);
+}
+}
+else
+@@ -1066,12 +1070,18 @@ namespace StringTemplate
+}
+catch (Exception e)
+{
+-                        ErrorManager.RuntimeError(self, ErrorType.CantAccessPropertyField, e, m);
++                        if (ErrorManager.IsCriticalException(e))
++                            throw;
++
++                        //ErrorManager.RuntimeError(self, ErrorType.CantAccessPropertyField, e, m);
+}
+}
+-                catch
++                catch (Exception e)
+{
+-                    ErrorManager.RuntimeError(self, ErrorType.NoSuchProperty, c, propertyName);
++                    if (ErrorManager.IsCriticalException(e))
++                        throw;
++
++                    //ErrorManager.RuntimeError(self, ErrorType.NoSuchProperty, c, propertyName);
+}
+}
+
+@@ -1097,13 +1107,55 @@ namespace StringTemplate
+{
+m = c.GetMethod(methodName, (Type[])null);
+}
+-            catch
++            catch (Exception e)
+{
++                if (ErrorManager.IsCriticalException(e))
++                    throw;
++
+m = null;
+}
+return m;
+}
+
++        /** Set any default argument values that were not set by the
++         *  invoking template or by setAttribute directly.  Note
++         *  that the default values may be templates.  Their evaluation
++         *  context is the template itself and, hence, can see attributes
++         *  within the template, any arguments, and any values inherited
++         *  by the template.
++         */
++        public void SetDefaultArguments(Template invokedST)
++        {
++            if (invokedST.code.formalArguments == null || invokedST.code.formalArguments.Count == 0)
++                return;
++
++            foreach (FormalArgument arg in invokedST.code.formalArguments.Values)
++            {
++                // if no value for attribute and default arg, inject default arg into self
++                object attributeValue;
++                if ((invokedST.attributes == null || !invokedST.attributes.TryGetValue(arg.name, out attributeValue) || attributeValue == null) && arg.compiledDefaultValue != null)
++                {
++                    Template defaultArgST = group.CreateStringTemplate();
++                    defaultArgST.groupThatCreatedThisInstance = group;
++                    defaultArgST.code = arg.compiledDefaultValue;
++                    Console.WriteLine("setting def arg " + arg.name + " to " + defaultArgST);
++                    // If default arg is template with single expression
++                    // wrapped in parens, x={<(...)>}, then eval to string
++                    // rather than setting x to the template for later
++                    // eval.
++                    string defArgTemplate = arg.defaultValueToken.Text;
++                    if (defArgTemplate.StartsWith("{<(") && defArgTemplate.EndsWith(")>}"))
++                    {
++                        invokedST.RawSetAttribute(arg.name, ToString(invokedST, defaultArgST));
++                    }
++                    else
++                    {
++                        invokedST.RawSetAttribute(arg.name, defaultArgST);
++                    }
++                }
++            }
++        }
++
+protected void Trace(Template self, int ip)
+{
+BytecodeDisassembler dis = new BytecodeDisassembler(self.code.instrs,
+@@ -1111,8 +1163,8 @@ namespace StringTemplate
+self.code.strings);
+StringBuilder buf = new StringBuilder();
+dis.DisassembleInstruction(buf, ip);
+-            string name = self.code.name + ":";
+-            if (self.code.name == Template.UnknownName)
++            string name = self.code.Name + ":";
++            if (self.code.Name == Template.UnknownName)
+name = "";
+Console.Write(string.Format("{0:-40s}", name + buf));
+Console.Write("\tstack=[");
+@@ -1131,7 +1183,10 @@ namespace StringTemplate
+{
+if (o is Template)
+{
+-                Console.Write(" " + ((Template)o).code.name + "()");
++                if (((Template)o).code == null)
++                    Console.Write("bad-template()");
++                else
++                    Console.Write(" " + ((Template)o).code.Name + "()");
+return;
+}
+o = ConvertAnythingIteratableToIterator(o);
+diff --git a/StringTemplate4/StringTemplate4.csproj b/StringTemplate4/StringTemplate4.csproj
+index 9cacc6a..e34a292 100644
+--- a/StringTemplate4/StringTemplate4.csproj
++++ b/StringTemplate4/StringTemplate4.csproj
+@@ -89,6 +89,7 @@
+<DependentUpon>TemplateParser.g3</DependentUpon>
+</Compile>
+<Compile Include="TemplateMessage.cs" />
++    <Compile Include="TemplateName.cs" />
+</ItemGroup>
+<ItemGroup>
+<None Include="..\Antlr3\Key.snk">
+diff --git a/StringTemplate4/Template.cs b/StringTemplate4/Template.cs
+index c6ca9de..0724dc5 100644
+--- a/StringTemplate4/Template.cs
++++ b/StringTemplate4/Template.cs
+@@ -45,7 +45,7 @@ namespace StringTemplate
+public class Template
+{
+public const string SubtemplatePrefix = "_sub";
+-        public const string UnknownName = "unknown";
++        public static readonly TemplateName UnknownName = new TemplateName("anonymous");
+public static readonly Template Blank = new BlankTemplate();
+
+/** The code to interpret; it pulls from attributes and this template's
+@@ -141,11 +141,11 @@ namespace StringTemplate
+}
+}
+
+-        public string Name
++        public TemplateName Name
+{
+get
+{
+-                return code.name;
++                return code.Name;
+}
+}
+
+@@ -318,12 +318,14 @@ namespace StringTemplate
+public virtual int Write(ITemplateWriter @out)
+{
+Interpreter interp = new Interpreter(groupThatCreatedThisInstance);
++            interp.SetDefaultArguments(this);
+return interp.Exec(@out, this);
+}
+
+public virtual int Write(ITemplateWriter @out, CultureInfo culture)
+{
+Interpreter interp = new Interpreter(groupThatCreatedThisInstance, culture);
++            interp.SetDefaultArguments(this);
+return interp.Exec(@out, this);
+}
+
+@@ -353,7 +355,10 @@ namespace StringTemplate
+
+public override string ToString()
+{
+-            return code.name + "()";
++            if (code == null)
++                return "bad-template()";
++
++            return code.Name + "()";
+}
+
+/** &lt;@r()&gt;, &lt;@r&gt;...&lt;@end&gt;, and @t.r() ::= "..." defined manually by coder */
+diff --git a/StringTemplate4/TemplateGroup.cs b/StringTemplate4/TemplateGroup.cs
+index 6315e4b..b1dc26b 100644
+--- a/StringTemplate4/TemplateGroup.cs
++++ b/StringTemplate4/TemplateGroup.cs
+@@ -44,6 +44,7 @@ namespace StringTemplate
+using Path = System.IO.Path;
+using StringBuilder = System.Text.StringBuilder;
+using Type = System.Type;
++    using ArgumentNullException = System.ArgumentNullException;
+
+/** A directory or directory tree of .st template files and/or group files.
+*  Individual template files contain formal template definitions. In a sense,
+@@ -73,8 +74,8 @@ namespace StringTemplate
+public char delimiterStopChar = '>';
+
+/** Maps template name to StringTemplate object */
+-        protected internal IDictionary<string, CompiledTemplate> templates =
+-            new Dictionary<string, CompiledTemplate>();
++        protected internal IDictionary<TemplateName, CompiledTemplate> templates =
++            new Dictionary<TemplateName, CompiledTemplate>();
+
+/** Maps dict names to HashMap objects.  This is the list of dictionaries
+*  defined by the user like typeInitMap ::= ["int":"0"]
+@@ -114,7 +115,7 @@ namespace StringTemplate
+}
+}
+
+-        public IDictionary<string, CompiledTemplate> Templates
++        public IDictionary<TemplateName, CompiledTemplate> Templates
+{
+get
+{
+@@ -122,13 +123,18 @@ namespace StringTemplate
+}
+}
+
++        public Template GetInstanceOf(string name)
++        {
++            return GetInstanceOf(new TemplateName(name));
++        }
++
+/** The primary means of getting an instance of a template from this
+*  group. Must be absolute name like /a/b
+*/
+-        public virtual Template GetInstanceOf(string name)
++        public virtual Template GetInstanceOf(TemplateName name)
+{
+-            if (name[0] != '/')
+-                name = '/' + name;
++            if (!name.IsRooted)
++                name = TemplateName.Combine(TemplateName.Root, name);
+
+//Console.WriteLine("GetInstanceOf(" + name + ")");
+CompiledTemplate c = LookupTemplate(name);
+@@ -142,19 +148,19 @@ namespace StringTemplate
+return null;
+}
+
+-        public virtual Template GetEmbeddedInstanceOf(Template enclosingInstance, string name)
++        public virtual Template GetEmbeddedInstanceOf(Template enclosingInstance, TemplateName name)
+{
+Template st = GetInstanceOf(name);
+if (st == null)
+{
+-                ErrorManager.RuntimeError(enclosingInstance, ErrorType.NoSuchTemplate, name);
++                ErrorManager.RuntimeError(enclosingInstance, ErrorType.NoSuchTemplate, name.Name);
+return Template.Blank;
+}
+st.enclosingInstance = enclosingInstance;
+return st;
+}
+
+-        public virtual CompiledTemplate LookupTemplate(string name)
++        public virtual CompiledTemplate LookupTemplate(TemplateName name)
+{
+if (!alreadyLoaded)
+Load();
+@@ -168,7 +174,7 @@ namespace StringTemplate
+return code;
+}
+
+-        protected internal CompiledTemplate LookupImportedTemplate(string name)
++        protected internal CompiledTemplate LookupImportedTemplate(TemplateName name)
+{
+//Console.WriteLine("look for " + name + " in " + imports);
+
+@@ -185,7 +191,7 @@ namespace StringTemplate
+return null;
+}
+
+-        public CompiledTemplate RawGetTemplate(string name)
++        public CompiledTemplate RawGetTemplate(TemplateName name)
+{
+CompiledTemplate template;
+if (!templates.TryGetValue(name, out template))
+@@ -204,12 +210,12 @@ namespace StringTemplate
+}
+
+// TODO: send in start/stop char or line/col so errors can be relative
+-        public CompiledTemplate DefineTemplate(string name, string template)
++        public CompiledTemplate DefineTemplate(TemplateName name, string template)
+{
+-            return DefineTemplate("/", name, null, template);
++            return DefineTemplate(TemplateName.Root, name, null, template);
+}
+
+-        public virtual CompiledTemplate DefineTemplate(string name,
++        public virtual CompiledTemplate DefineTemplate(TemplateName name,
+List<string> args,
+string template)
+{
+@@ -217,10 +223,10 @@ namespace StringTemplate
+new Dictionary<string, FormalArgument>();
+foreach (string a in args)
+margs[a] = new FormalArgument(a);
+-            return DefineTemplate("/", name, margs, template);
++            return DefineTemplate(TemplateName.Root, name, margs, template);
+}
+
+-        public virtual CompiledTemplate DefineTemplate(string name,
++        public virtual CompiledTemplate DefineTemplate(TemplateName name,
+string[] args,
+string template)
+{
+@@ -228,21 +234,19 @@ namespace StringTemplate
+new Dictionary<string, FormalArgument>();
+foreach (string a in args)
+margs[a] = new FormalArgument(a);
+-            return DefineTemplate("/", name, margs, template);
++            return DefineTemplate(TemplateName.Root, name, margs, template);
+}
+
+// can't trap recog errors here; don't know where in file template is defined
+-        public virtual CompiledTemplate DefineTemplate(string prefix, string name, IDictionary<string, FormalArgument> args, string template)
++        public virtual CompiledTemplate DefineTemplate(TemplateName prefix, TemplateName name, IDictionary<string, FormalArgument> args, string template)
+{
+-            if (name != null && (name.Length == 0 || name.IndexOf('.') >= 0))
+-            {
+-                throw new ArgumentException("cannot have '.' in template names");
+-            }
++            if (name == null)
++                throw new ArgumentNullException("name");
+
+CompiledTemplate code = Compile(prefix, name, template);
+-            code.name = name;
++            code.Name = name;
+code.formalArguments = args;
+-            RawDefineTemplate(prefix + name, code);
++            RawDefineTemplate(TemplateName.Combine(prefix, name), code);
+if (args != null)
+{ // compile any default args
+foreach (string a in args.Keys)
+@@ -251,7 +255,9 @@ namespace StringTemplate
+if (fa.defaultValueToken != null)
+{
+TemplateCompiler c2 = new TemplateCompiler(prefix, name);
+-                        fa.compiledDefaultValue = c2.Compile(template);
++                        string defArgTemplate = Misc.Strip(fa.defaultValueToken.Text, 1);
++                        fa.compiledDefaultValue = c2.Compile(defArgTemplate);
++                        fa.compiledDefaultValue.Name = new TemplateName(fa.name + "-default-value");
+}
+}
+}
+@@ -262,16 +268,16 @@ namespace StringTemplate
+return code;
+}
+
+-        public CompiledTemplate DefineRegion(string prefix,
+-                                             string enclosingTemplateName,
++        public CompiledTemplate DefineRegion(TemplateName prefix,
++                                             TemplateName enclosingTemplateName,
+string name,
+string template)
+{
+CompiledTemplate code = Compile(prefix, enclosingTemplateName, template);
+-            code.name = prefix + GetMangledRegionName(enclosingTemplateName, name);
++            code.Name = TemplateName.Combine(prefix, GetMangledRegionName(enclosingTemplateName, name));
+code.isRegion = true;
+code.regionDefType = Template.RegionType.Explicit;
+-            RawDefineTemplate(code.name, code);
++            RawDefineTemplate(code.Name, code);
+return code;
+}
+
+@@ -281,13 +287,13 @@ namespace StringTemplate
+{
+foreach (CompiledTemplate sub in code.implicitlyDefinedTemplates)
+{
+-                    RawDefineTemplate(sub.name, sub);
++                    RawDefineTemplate(sub.Name, sub);
+DefineImplicitlyDefinedTemplates(sub);
+}
+}
+}
+
+-        protected void RawDefineTemplate(string name, CompiledTemplate code)
++        protected void RawDefineTemplate(TemplateName name, CompiledTemplate code)
+{
+CompiledTemplate prev;
+if (templates.TryGetValue(name, out prev))
+@@ -311,7 +317,7 @@ namespace StringTemplate
+templates[name] = code;
+}
+
+-        protected CompiledTemplate Compile(string prefix, string enclosingTemplateName, string template)
++        protected CompiledTemplate Compile(TemplateName prefix, TemplateName enclosingTemplateName, string template)
+{
+TemplateCompiler c = new TemplateCompiler(prefix, enclosingTemplateName);
+CompiledTemplate code = c.Compile(template);
+@@ -321,19 +327,20 @@ namespace StringTemplate
+}
+
+/** The "foo" of t() ::= "&lt;@foo()&gt;" is mangled to "region#t#foo" */
+-        public static string GetMangledRegionName(string enclosingTemplateName,
++        public static TemplateName GetMangledRegionName(TemplateName enclosingTemplateName,
+string name)
+{
+-            return "region__" + enclosingTemplateName + "__" + name;
++            return new TemplateName("region__" + enclosingTemplateName + "__" + name);
+}
+
+/// <summary>
+/// Return "t.foo" from "region__t__foo"
+/// </summary>
+-        public static string GetUnmangledTemplateName(string mangledName)
++        public static string GetUnmangledTemplateName(TemplateName mangledName)
+{
+-            string t = mangledName.Substring("region__".Length, mangledName.LastIndexOf("__") - "region__".Length + 1);
+-            string r = mangledName.Substring(mangledName.LastIndexOf("__") + 2, mangledName.Length - mangledName.LastIndexOf("__") + 2 + 1);
++            string name = mangledName.Name;
++            string t = name.Substring("region__".Length, name.LastIndexOf("__") - "region__".Length + 1);
++            string r = name.Substring(name.LastIndexOf("__") + 2, name.Length - name.LastIndexOf("__") + 2 + 1);
+return t + '.' + r;
+}
+
+@@ -364,7 +371,7 @@ namespace StringTemplate
+}
+
+// TODO: make this happen in background then flip ptr to new list of templates/dictionaries?
+-        public virtual void LoadGroupFile(string prefix, string fileName)
++        public virtual void LoadGroupFile(TemplateName prefix, string fileName)
+{
+string absoluteFileName = Path.Combine(fullyQualifiedRootDirName, fileName);
+//Console.WriteLine("load group file " + absoluteFileName);
+@@ -378,6 +385,9 @@ namespace StringTemplate
+}
+catch (Exception e)
+{
++                if (ErrorManager.IsCriticalException(e))
++                    throw;
++
+ErrorManager.IOError(null, ErrorType.CantLoadGroupFile, e, absoluteFileName);
+}
+}
+@@ -430,15 +440,13 @@ namespace StringTemplate
+StringBuilder buf = new StringBuilder();
+if (imports != null)
+buf.Append(" : " + imports);
+-            foreach (string name in templates.Keys)
++            foreach (TemplateName name in templates.Keys)
+{
+CompiledTemplate c = templates[name];
+if (c.IsSubtemplate)
+continue;
+
+-                int slash = name.LastIndexOfAny(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+-                string effectiveName = name.Substring(slash + 1);
+-                buf.Append(effectiveName);
++                buf.Append(name.Name);
+buf.Append('(');
+if (c.formalArguments != null)
+{
+diff --git a/StringTemplate4/TemplateGroupDirectory.cs b/StringTemplate4/TemplateGroupDirectory.cs
+index 05223c3..516c657 100644
+--- a/StringTemplate4/TemplateGroupDirectory.cs
++++ b/StringTemplate4/TemplateGroupDirectory.cs
+@@ -41,6 +41,7 @@ namespace StringTemplate
+using Exception = System.Exception;
+using File = System.IO.File;
+using Path = System.IO.Path;
++    using ArgumentNullException = System.ArgumentNullException;
+
+public class TemplateGroupDirectory : TemplateGroup
+{
+@@ -75,18 +76,25 @@ namespace StringTemplate
+/// </summary>
+public override void Load()
+{
+-            _Load("/");
++            _Load(TemplateName.Root);
+alreadyLoaded = true;
+}
+
+-        protected void _Load(string prefix)
++        protected void _Load(TemplateName prefix)
+{
+-            string dir = Path.Combine(fullyQualifiedRootDirName, prefix);
++            if (prefix == null)
++                throw new ArgumentNullException("prefix");
++            if (!prefix.IsRooted)
++                throw new ArgumentException();
++
++            string relativePrefix = prefix.FullName.Substring(1);
++
++            string dir = Path.Combine(fullyQualifiedRootDirName, relativePrefix);
+//Console.WriteLine("load dir '" + prefix + "' under " + fullyQualifiedRootDirName);
+
+foreach (var d in Directory.GetDirectories(dir))
+{
+-                _Load(Path.Combine(prefix, Path.GetFileName(d)) + "/");
++                _Load(TemplateName.Combine(prefix, Path.GetFileName(d)));
+}
+
+foreach (var f in Directory.GetFiles(dir))
+@@ -94,14 +102,24 @@ namespace StringTemplate
+if (Path.GetExtension(f).Equals(".st", System.StringComparison.OrdinalIgnoreCase))
+LoadTemplateFile(prefix, Path.GetFileName(f));
+else if (Path.GetExtension(f).Equals(".stg", System.StringComparison.OrdinalIgnoreCase))
+-                    LoadGroupFile(Path.Combine(prefix, Path.GetFileNameWithoutExtension(f)) + "/", Path.Combine(prefix, Path.GetFileName(f)));
++                    LoadGroupFile(TemplateName.Combine(prefix, Path.GetFileNameWithoutExtension(f)), Path.Combine(relativePrefix, Path.GetFileName(f)));
+}
+}
+
+-        public virtual CompiledTemplate LoadTemplateFile(string prefix, string fileName)
++        public CompiledTemplate LoadTemplateFile(TemplateName prefix, string fileName)
+{
++            if (prefix == null)
++                throw new ArgumentNullException("prefix");
++            if (fileName == null)
++                throw new ArgumentNullException("fileName");
++            if (!prefix.IsRooted)
++                throw new ArgumentException("Expected the prefix to be a rooted name.", "prefix");
++
++            TemplateName templateName = TemplateName.Combine(prefix, new TemplateName(Path.GetFileNameWithoutExtension(fileName)));
++
+// load from disk
+-            string absoluteFileName = Path.Combine(Path.Combine(fullyQualifiedRootDirName, prefix), fileName);
++            string absoluteFileName = Path.Combine(Path.Combine(fullyQualifiedRootDirName, prefix.FullName.Substring(1)), fileName);
++
+//Console.WriteLine("load " + absoluteFileName);
+if (!File.Exists(absoluteFileName))
+{
+@@ -118,13 +136,16 @@ namespace StringTemplate
+parser.templateDef(prefix);
+
+CompiledTemplate code;
+-                if (!templates.TryGetValue("/" + Path.Combine(prefix, Path.GetFileNameWithoutExtension(fileName)), out code))
++                if (!templates.TryGetValue(templateName, out code))
+return null;
+
+return code;
+}
+catch (Exception e)
+{
++                if (ErrorManager.IsCriticalException(e))
++                    throw;
++
+ErrorManager.IOError(null, ErrorType.CantLoadTemplateFile, e, absoluteFileName);
+Console.Error.WriteLine(e.StackTrace);
+}
+diff --git a/StringTemplate4/TemplateGroupFile.cs b/StringTemplate4/TemplateGroupFile.cs
+index 7f0ab8b..94ba3bc 100644
+--- a/StringTemplate4/TemplateGroupFile.cs
++++ b/StringTemplate4/TemplateGroupFile.cs
+@@ -71,7 +71,7 @@ namespace StringTemplate
+
+public override void Load()
+{
+-            LoadGroupFile("/", fileName);
++            LoadGroupFile(TemplateName.Root, fileName);
+alreadyLoaded = true;
+}
+}
+diff --git a/StringTemplate4/TemplateMessage.cs b/StringTemplate4/TemplateMessage.cs
+index 09097b5..97374e0 100644
+--- a/StringTemplate4/TemplateMessage.cs
++++ b/StringTemplate4/TemplateMessage.cs
+@@ -95,12 +95,15 @@ namespace StringTemplate
+
+public override string ToString()
+{
+-            StringBuilder builder = new StringBuilder();
++            StringBuilder builder = new StringBuilder(Message);
+
+if (Template != null)
+-                builder.Append(Template.GetEnclosingInstanceStackString() + " ");
++            {
++                builder.Append(" in context ");
++                builder.Append(Template.GetEnclosingInstanceStackString());
++            }
+
+-            builder.AppendLine(Message);
++            builder.AppendLine();
+
+if (Source != null)
+{
+diff --git a/StringTemplate4/TemplateName.cs b/StringTemplate4/TemplateName.cs
+new file mode 100644
+index 0000000..98decfd
+--- /dev/null
++++ b/StringTemplate4/TemplateName.cs
+@@ -0,0 +1,139 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2005-2008 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2008-2009 Sam Harwell
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace StringTemplate
++{
++    using ArgumentException = System.ArgumentException;
++    using ArgumentNullException = System.ArgumentNullException;
++    using System.Text.RegularExpressions;
++
++    public sealed class TemplateName
++    {
++        public const char TemplateDirectorySeparator = '/';
++        public static readonly TemplateName Root = new TemplateName("/");
++
++        private static readonly Regex FullNameValidator = new Regex(@"^(?:[a-z_][a-z0-9_\-]*)?(?:/[a-z_][a-z0-9_\-]*)*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
++
++        private string _name;
++
++        public TemplateName(string name)
++        {
++            if (name == null)
++                throw new ArgumentNullException("name");
++            if (name.Length == 0 || (name != TemplateDirectorySeparator.ToString() && !FullNameValidator.IsMatch(name)))
++                throw new ArgumentException("name is not in the correct format", "name");
++
++            this._name = name;
++        }
++
++        public string FullName
++        {
++            get
++            {
++                return _name;
++            }
++        }
++
++        public bool IsRooted
++        {
++            get
++            {
++                return _name[0] == TemplateDirectorySeparator;
++            }
++        }
++
++        public string Name
++        {
++            get
++            {
++                int lastSeparator = _name.LastIndexOf(TemplateDirectorySeparator);
++                if (lastSeparator < 0)
++                    return _name;
++
++                return _name.Substring(lastSeparator + 1);
++            }
++        }
++
++        public static TemplateName Combine(TemplateName left, string right)
++        {
++            return Combine(left, new TemplateName(right));
++        }
++
++        public static TemplateName Combine(TemplateName left, TemplateName right)
++        {
++            if (left == null)
++                throw new ArgumentNullException("left");
++            if (right == null)
++                throw new ArgumentNullException("right");
++
++            if (left == Root)
++                return right.IsRooted ? right : new TemplateName(TemplateDirectorySeparator + right.FullName);
++
++            if (right.IsRooted)
++                return new TemplateName(left.FullName + right.FullName);
++            else
++                return new TemplateName(left.FullName + TemplateDirectorySeparator + right.FullName);
++        }
++
++        public static bool operator ==(TemplateName left, TemplateName right)
++        {
++            if (object.ReferenceEquals(left, null))
++                return object.ReferenceEquals(right, null);
++
++            return left.Equals(right);
++        }
++
++        public static bool operator !=(TemplateName left, TemplateName right)
++        {
++            return !(left == right);
++        }
++
++        public override bool Equals(object obj)
++        {
++            TemplateName other = obj as TemplateName;
++            if (other == null)
++                return false;
++
++            return other._name == _name;
++        }
++
++        public override int GetHashCode()
++        {
++            return _name.GetHashCode();
++        }
++
++        public override string ToString()
++        {
++            return _name;
++        }
++    }
++}
+

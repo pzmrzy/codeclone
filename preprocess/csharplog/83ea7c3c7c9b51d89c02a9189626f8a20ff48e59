@@ -1,0 +1,45 @@
+commit 83ea7c3c7c9b51d89c02a9189626f8a20ff48e59
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon May 2 13:20:27 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon May 2 13:20:27 2011 -0800
+
+(C# 3) Add ctor to TypeRegistry<T> for passing in an existing collection
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8364]
+
+diff --git a/Antlr4.StringTemplate/Misc/TypeRegistry`1.cs b/Antlr4.StringTemplate/Misc/TypeRegistry`1.cs
+index b2e6571..24e791a 100644
+--- a/Antlr4.StringTemplate/Misc/TypeRegistry`1.cs
++++ b/Antlr4.StringTemplate/Misc/TypeRegistry`1.cs
+@@ -34,7 +34,9 @@ namespace Antlr4.StringTemplate.Misc
+{
+using System.Collections.Generic;
+using System.Linq;
++
+using AmbiguousMatchException = System.Reflection.AmbiguousMatchException;
++    using ArgumentNullException = System.ArgumentNullException;
+using Array = System.Array;
+using ICollection = System.Collections.ICollection;
+using IDictionary = System.Collections.IDictionary;
+@@ -50,6 +52,19 @@ namespace Antlr4.StringTemplate.Misc
+private readonly Dictionary<Type, T> _backingStore = new Dictionary<Type, T>();
+private readonly Dictionary<Type, Type> _cache = new Dictionary<Type, Type>();
+
++        public TypeRegistry()
++        {
++        }
++
++        public TypeRegistry(IEnumerable<KeyValuePair<Type, T>> collection)
++        {
++            if (collection == null)
++                throw new ArgumentNullException("collection");
++
++            foreach (var type in collection)
++                this.Add(type.Key, type.Value);
++        }
++
+ICollection<Type> IDictionary<Type, T>.Keys
+{
+get
+

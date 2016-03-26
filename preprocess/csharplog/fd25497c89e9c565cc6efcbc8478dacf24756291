@@ -1,0 +1,56 @@
+commit fd25497c89e9c565cc6efcbc8478dacf24756291
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Nov 2 07:58:39 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Nov 2 07:58:39 2009 -0800
+
+CSharp3 target:
+* Small code cleanup
+* Send output to BaseRecognizer.TraceDestination instead of hard coding Console.Out and Console.Error
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6284]
+
+diff --git a/Antlr3/Tool/Strip.cs b/Antlr3/Tool/Strip.cs
+index 5799e63..a34e361 100644
+--- a/Antlr3/Tool/Strip.cs
++++ b/Antlr3/Tool/Strip.cs
+@@ -35,7 +35,7 @@ namespace Antlr3.Tool
+using System.Collections.Generic;
+
+using ANTLRFileStream = Antlr.Runtime.ANTLRFileStream;
+-    using ANTLRInputStream = Antlr.Runtime.ANTLRInputStream;
++    using ANTLRReaderStream = Antlr.Runtime.ANTLRReaderStream;
+using ANTLRLexer = Antlr3.Grammars.ANTLRLexer;
+using ANTLRParser = Antlr3.Grammars.ANTLRParser;
+using ICharStream = Antlr.Runtime.ICharStream;
+@@ -83,8 +83,7 @@ namespace Antlr3.Tool
+}
+else
+{
+-                input = new ANTLRInputStream();
+-                ( (ANTLRInputStream)input ).Load( Console.In, ANTLRInputStream.INITIAL_BUFFER_SIZE, ANTLRInputStream.READ_BUFFER_SIZE );
++                input = new ANTLRReaderStream( Console.In, ANTLRReaderStream.InitialBufferSize, ANTLRReaderStream.ReadBufferSize );
+}
+// BUILD AST
+ANTLRLexer lex = new ANTLRLexer( input );
+@@ -113,10 +112,15 @@ namespace Antlr3.Tool
+{
+CommonTree a = (CommonTree)t;
+CommonTree action = null;
+-                if ( a.ChildCount == 2 )
+-                    action = (CommonTree)a.GetChild( 1 );
+-                else if ( a.ChildCount == 3 )
+-                    action = (CommonTree)a.GetChild( 2 );
++                if (a.ChildCount == 2)
++                {
++                    action = (CommonTree)a.GetChild(1);
++                }
++                else if (a.ChildCount == 3)
++                {
++                    action = (CommonTree)a.GetChild(2);
++                }
++
+if ( action.Type == ANTLRParser.ACTION )
+{
+tokens.Delete( a.TokenStartIndex, a.TokenStopIndex );
+

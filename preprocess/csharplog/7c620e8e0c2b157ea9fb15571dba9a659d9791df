@@ -1,0 +1,161 @@
+commit 7c620e8e0c2b157ea9fb15571dba9a659d9791df
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Jan 20 11:16:49 2010 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Jan 20 11:16:49 2010 -0800
+
+C# Port:
+* Input validation
+* Turn some member fields to private and add properties
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6571]
+
+diff --git a/Antlr3.Test/ST4/TestSyntaxErrors.cs b/Antlr3.Test/ST4/TestSyntaxErrors.cs
+index 5c3cee0..a7fb2c3 100644
+--- a/Antlr3.Test/ST4/TestSyntaxErrors.cs
++++ b/Antlr3.Test/ST4/TestSyntaxErrors.cs
+@@ -55,7 +55,7 @@ namespace AntlrUnitTests.ST4
+catch (TemplateException se)
+{
+RecognitionException re = (RecognitionException)se.InnerException;
+-                result = 1 + ":" + re.charPositionInLine + ": " + se.Message;
++                result = 1 + ":" + re.CharPositionInLine + ": " + se.Message;
+}
+string expected = "1:1: mismatched input '<' expecting EOF";
+Assert.AreEqual(expected, result);
+@@ -74,7 +74,7 @@ namespace AntlrUnitTests.ST4
+catch (TemplateException se)
+{
+RecognitionException re = (RecognitionException)se.InnerException;
+-                result = 1 + ":" + re.charPositionInLine + ": " + se.Message;
++                result = 1 + ":" + re.CharPositionInLine + ": " + se.Message;
+}
+string expected = "1:4: invalid character: *";
+Assert.AreEqual(expected, result);
+diff --git a/Antlr3/Grammars/ANTLRParserHelper.cs b/Antlr3/Grammars/ANTLRParserHelper.cs
+index 2dd652c..dd68cfb 100644
+--- a/Antlr3/Grammars/ANTLRParserHelper.cs
++++ b/Antlr3/Grammars/ANTLRParserHelper.cs
+@@ -135,7 +135,7 @@ namespace Antlr3.Grammars
+if ( trappedException is MissingTokenException )
+{
+return "<missing type: " +
+-                           ( (MissingTokenException)trappedException ).GetMissingType() +
++                           ( (MissingTokenException)trappedException ).MissingType +
+">";
+}
+else if ( trappedException is UnwantedTokenException )
+@@ -146,11 +146,11 @@ namespace Antlr3.Grammars
+}
+else if ( trappedException is MismatchedTokenException )
+{
+-                    return "<mismatched token: " + trappedException.token + ", resync=" + Text + ">";
++                    return "<mismatched token: " + trappedException.Token + ", resync=" + Text + ">";
+}
+else if ( trappedException is NoViableAltException )
+{
+-                    return "<unexpected: " + trappedException.token +
++                    return "<unexpected: " + trappedException.Token +
+", resync=" + Text + ">";
+}
+return "<error: " + Text + ">";
+@@ -227,7 +227,7 @@ namespace Antlr3.Grammars
+
+PrefixWithSynPred( alt );
+
+-            GrammarAST block = (GrammarAST)adaptor.Create( BLOCK, "BLOCK" );
++            GrammarAST block = (GrammarAST)adaptor.Create( BLOCK, b.Token, "BLOCK" );
+adaptor.AddChild( block, alt );
+adaptor.AddChild( alt, adaptor.Create( EOB, "<end-of-block>" ) );
+
+@@ -244,7 +244,7 @@ namespace Antlr3.Grammars
+*/
+GrammarAST nalt = GrammarAST.DupTreeNoActions( alt, null );
+
+-            GrammarAST block = (GrammarAST)adaptor.Create( BLOCK, "BLOCK" );
++            GrammarAST block = (GrammarAST)adaptor.Create( BLOCK, alt.Token, "BLOCK" );
+adaptor.AddChild( block, nalt );
+adaptor.AddChild( block, adaptor.Create( EOB, "<end-of-block>" ) );
+
+@@ -342,7 +342,7 @@ namespace Antlr3.Grammars
+//{
+//    ErrorManager.internalError( "can't get token???", tse );
+//}
+-            IToken token = ex.token;
++            IToken token = ex.Token;
+ErrorManager.SyntaxError(
+ErrorManager.MSG_SYNTAX_ERROR,
+Grammar,
+diff --git a/Antlr3/Grammars/ANTLRTreePrinterHelper.cs b/Antlr3/Grammars/ANTLRTreePrinterHelper.cs
+index e4ad768..b62cc83 100644
+--- a/Antlr3/Grammars/ANTLRTreePrinterHelper.cs
++++ b/Antlr3/Grammars/ANTLRTreePrinterHelper.cs
+@@ -72,11 +72,11 @@ namespace Antlr3.Grammars
+IToken token = null;
+if ( ex is MismatchedTokenException )
+{
+-                token = ( (MismatchedTokenException)ex ).token;
++                token = ( (MismatchedTokenException)ex ).Token;
+}
+else if ( ex is NoViableAltException )
+{
+-                token = ( (NoViableAltException)ex ).token;
++                token = ( (NoViableAltException)ex ).Token;
+}
+ErrorManager.SyntaxError(
+ErrorManager.MSG_SYNTAX_ERROR,
+diff --git a/Antlr3/Grammars/AssignTokenTypesWalkerHelper.cs b/Antlr3/Grammars/AssignTokenTypesWalkerHelper.cs
+index 714aaf1..f46afe1 100644
+--- a/Antlr3/Grammars/AssignTokenTypesWalkerHelper.cs
++++ b/Antlr3/Grammars/AssignTokenTypesWalkerHelper.cs
+@@ -52,11 +52,11 @@ namespace Antlr3.Grammars
+IToken token = null;
+if ( ex is MismatchedTokenException )
+{
+-                token = ( (MismatchedTokenException)ex ).token;
++                token = ( (MismatchedTokenException)ex ).Token;
+}
+else if ( ex is NoViableAltException )
+{
+-                token = ( (NoViableAltException)ex ).token;
++                token = ( (NoViableAltException)ex ).Token;
+}
+ErrorManager.SyntaxError(
+ErrorManager.MSG_SYNTAX_ERROR,
+diff --git a/Antlr3/Grammars/CodeGenTreeWalkerHelper.cs b/Antlr3/Grammars/CodeGenTreeWalkerHelper.cs
+index 07d85b6..3ec0b19 100644
+--- a/Antlr3/Grammars/CodeGenTreeWalkerHelper.cs
++++ b/Antlr3/Grammars/CodeGenTreeWalkerHelper.cs
+@@ -70,11 +70,11 @@ namespace Antlr3.Grammars
+IToken token = null;
+if ( ex is MismatchedTokenException )
+{
+-                token = ( (MismatchedTokenException)ex ).token;
++                token = ( (MismatchedTokenException)ex ).Token;
+}
+else if ( ex is NoViableAltException )
+{
+-                token = ( (NoViableAltException)ex ).token;
++                token = ( (NoViableAltException)ex ).Token;
+}
+ErrorManager.SyntaxError(
+ErrorManager.MSG_SYNTAX_ERROR,
+diff --git a/Antlr3/Grammars/TreeToNFAConverterHelper.cs b/Antlr3/Grammars/TreeToNFAConverterHelper.cs
+index 683a9c7..5bd968f 100644
+--- a/Antlr3/Grammars/TreeToNFAConverterHelper.cs
++++ b/Antlr3/Grammars/TreeToNFAConverterHelper.cs
+@@ -158,11 +158,11 @@ namespace Antlr3.Grammars
+IToken token = null;
+if ( ex is MismatchedTokenException )
+{
+-                token = ( (MismatchedTokenException)ex ).token;
++                token = ( (MismatchedTokenException)ex ).Token;
+}
+else if ( ex is NoViableAltException )
+{
+-                token = ( (NoViableAltException)ex ).token;
++                token = ( (NoViableAltException)ex ).Token;
+}
+ErrorManager.SyntaxError(
+ErrorManager.MSG_SYNTAX_ERROR,
+

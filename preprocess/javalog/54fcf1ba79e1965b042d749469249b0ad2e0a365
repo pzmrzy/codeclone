@@ -1,0 +1,72 @@
+commit 54fcf1ba79e1965b042d749469249b0ad2e0a365
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Fri Dec 14 09:29:32 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Fri Dec 14 09:29:32 2012 -0600
+
+Add @Override annotations in generated code (including topdown/bottomup rules in tree rewriters)
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Java/Dbg.stg b/tool/src/main/resources/org/antlr/codegen/templates/Java/Dbg.stg
+index d7446a6..e422ed8 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Java/Dbg.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Java/Dbg.stg
+@@ -68,6 +68,7 @@ import java.io.IOException;
+return super.alreadyParsedRule(input, ruleIndex);
+}
+
++	@Override
+public void memoize(IntStream input,
+int ruleIndex,
+int ruleStartIndex)
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg b/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
+index d55b3c1..c4cc8d4 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Java/Java.stg
+@@ -139,6 +139,7 @@ public class <grammar.recognizerName> extends <@superClassName><superClass><@end
+*  at backtracking==1.
+*/
+filteringNextToken() ::= <<
++@Override
+public Token nextToken() {
+while (true) {
+if ( input.LA(1)==CharStream.EOF ) {
+@@ -180,6 +181,7 @@ public Token nextToken() {
+}
+}
+
++@Override
+public void memoize(IntStream input,
+int ruleIndex,
+int ruleStartIndex)
+@@ -187,6 +189,7 @@ public void memoize(IntStream input,
+if ( state.backtracking>1 ) super.memoize(input, ruleIndex, ruleStartIndex);
+}
+
++@Override
+public boolean alreadyParsedRule(IntStream input, int ruleIndex) {
+if ( state.backtracking>1 ) return super.alreadyParsedRule(input, ruleIndex);
+return false;
+@@ -369,6 +372,9 @@ rule(ruleName,ruleDescriptor,block,emptyRule,description,exceptions,finally,memo
+
+// $ANTLR start "<ruleName>"
+// <fileName>:<description>
++<if(isPredefinedRewriteRule.(ruleName) && filterMode && buildAST)>
++@Override
++<endif>
+public final <returnType(ruleDescriptor)> <ruleName>(<ruleDescriptor.parameterScope:parameterScope()>) throws <ruleDescriptor.throwsSpec:{x|<x>}; separator=", "> {
+<if(trace)>traceIn("<ruleName>", <ruleDescriptor.index>);<endif>
+<ruleScopeSetUp()>
+@@ -1462,6 +1468,12 @@ isDefaultLabelType ::= [
+default : false
+]
+
++isPredefinedRewriteRule ::= [
++	"topdown" : true,
++	"bottomup" : true,
++	default : false
++]
++
+castToLabelType(value) ::= <%
+<if(!isDefaultLabelType.(labelType))>
+(<labelType>)
+

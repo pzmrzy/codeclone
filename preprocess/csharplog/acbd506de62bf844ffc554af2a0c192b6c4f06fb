@@ -1,0 +1,22 @@
+commit acbd506de62bf844ffc554af2a0c192b6c4f06fb
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Thu Nov 22 14:03:29 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Thu Nov 22 14:03:29 2012 -0600
+
+Fix incorrect syntax in regular expression substitution
+
+diff --git a/Antlr4.StringTemplate/Template.cs b/Antlr4.StringTemplate/Template.cs
+index 425604a..fde2939 100644
+--- a/Antlr4.StringTemplate/Template.cs
++++ b/Antlr4.StringTemplate/Template.cs
+@@ -625,7 +625,7 @@ namespace Antlr4.StringTemplate
+
+public static string Format(int lineWidth, string template, params object[] attributes)
+{
+-            template = Regex.Replace(template, "[0-9]+", @"arg\0");
++            template = Regex.Replace(template, "[0-9]+", "arg$0");
+Console.WriteLine(template);
+
+Template st = new Template(template);
+

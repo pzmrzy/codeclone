@@ -1,0 +1,33 @@
+commit 51d164b527acedd4d65c6523db8489f6e701847b
+Author:     acondit <acondit@parrt.spork>
+AuthorDate: Sat Jan 28 11:24:18 2012 -0800
+Commit:     acondit <acondit@parrt.spork>
+CommitDate: Sat Jan 28 11:24:18 2012 -0800
+
+Changed skipOffChannelTokens to skipOffTokenChannels
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 9924]
+
+diff --git a/runtime/ObjC/Framework/CommonTokenStream.m b/runtime/ObjC/Framework/CommonTokenStream.m
+index 711a87e..53aac0e 100644
+--- a/runtime/ObjC/Framework/CommonTokenStream.m
++++ b/runtime/ObjC/Framework/CommonTokenStream.m
+@@ -111,7 +111,7 @@
+int n = 1;
+// find k good tokens looking backwards
+while ( n <= k ) {
+-		i = [self skipOffChannelTokensReverse:i-1];
++		i = [self skipOffTokenChannelsReverse:i-1];
+n++;
+}
+if ( i < 0 ) {
+@@ -128,7 +128,7 @@
+int i = index;
+int n = 1;
+while ( n < k ) {
+-		i = [self skipOffChannelTokens:i+1];
++		i = [self skipOffTokenChannels:i+1];
+n++;
+}
+//	if ( i >= (NSInteger)[tokens count] ) {
+

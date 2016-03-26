@@ -1,0 +1,32 @@
+commit b98b62b1c297b57c564c1a5e92d9d76cf264da6d
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Thu Nov 12 10:59:23 2015 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Thu Nov 12 10:59:23 2015 -0600
+
+Add README.md with Gitter and Build Status badges
+
+diff --git a/Antlr3.sln b/Antlr3.sln
+index caca523..49d01bd 100644
+--- a/Antlr3.sln
++++ b/Antlr3.sln
+@@ -10,6 +10,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution
+Antlr3.vsmdi = Antlr3.vsmdi
+AntlrTestConfig.testrunconfig = AntlrTestConfig.testrunconfig
+PublishingProcess.txt = PublishingProcess.txt
++		README.md = README.md
+EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Antlr3", "Antlr3\Antlr3.csproj", "{2AB8CAED-C046-4F05-8B18-6948100D2FE7}"
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..670da76
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,5 @@
++# ANTLR 3 C# Target
++
++[![Join the chat at https://gitter.im/antlr/antlrcs](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/antlr/antlrcs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
++
++[![Build status](https://ci.appveyor.com/api/projects/status/x21gyx4ikxsa9n3t/branch/master?svg=true)](https://ci.appveyor.com/project/sharwell/antlrcs/branch/master)
+

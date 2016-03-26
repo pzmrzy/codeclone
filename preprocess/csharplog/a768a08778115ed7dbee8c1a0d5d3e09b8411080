@@ -1,0 +1,24 @@
+commit a768a08778115ed7dbee8c1a0d5d3e09b8411080
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Nov 29 08:06:16 2010 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Nov 29 08:06:16 2010 -0800
+
+(C# 3) Fix extra DebugLocation(0,0) lines appearing in generated code
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7226]
+
+diff --git a/Antlr3/Grammars/CodeGenTreeWalker.g3 b/Antlr3/Grammars/CodeGenTreeWalker.g3
+index 9f00175..99077e3 100644
+--- a/Antlr3/Grammars/CodeGenTreeWalker.g3
++++ b/Antlr3/Grammars/CodeGenTreeWalker.g3
+@@ -509,7 +509,7 @@ alternative returns [StringTemplate code]
+(
+e=element[null,null]
+{
+-					if ( e!=null )
++					if (e != null && e.code != null)
+{
+$code.SetAttribute("elements.{el,line,pos}",
+$e.code,
+

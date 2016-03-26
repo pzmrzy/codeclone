@@ -1,0 +1,41 @@
+commit ffb0a6721e1a84941493b7cf9879d93a6a6ff693
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Jan 31 15:15:47 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Jan 31 15:15:47 2011 -0800
+
+(C# 3) code cleanup
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7586]
+
+diff --git a/Antlr4.Test.StringTemplate/TestRegions.cs b/Antlr4.Test.StringTemplate/TestRegions.cs
+index 203b281..700a8bb 100644
+--- a/Antlr4.Test.StringTemplate/TestRegions.cs
++++ b/Antlr4.Test.StringTemplate/TestRegions.cs
+@@ -181,8 +181,6 @@ namespace Antlr4.Test.StringTemplate
+[TestMethod]
+public void TestRegionOverrideStripsNewlines()
+{
+-            TemplateGroup.debug = true;
+-
+string dir = tmpdir;
+string g =
+"a() ::= \"X<@r()>Y\"" +
+@@ -198,16 +196,6 @@ namespace Antlr4.Test.StringTemplate
+subGroup.ImportTemplates(group);
+Template st = subGroup.GetInstanceOf("a");
+string result = st.Render();
+-
+-            Template st2 = group.GetInstanceOf("region__a__r");
+-            st2.impl.Dump();
+-            System.IO.StringWriter writer = new System.IO.StringWriter();
+-            ITemplateWriter wr = new AutoIndentWriter(writer);
+-            Interpreter interp = new Interpreter(st.groupThatCreatedThisInstance, System.Globalization.CultureInfo.CurrentCulture);
+-            interp.Execute(wr, st); // Render and track events
+-            foreach (var line in interp.GetExecutionTrace())
+-                System.Console.Error.WriteLine(line);
+-
+string expecting = "XAfooBY";
+Assert.AreEqual(expecting, result);
+}
+

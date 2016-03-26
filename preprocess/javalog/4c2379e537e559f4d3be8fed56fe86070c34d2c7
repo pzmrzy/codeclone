@@ -1,0 +1,23 @@
+commit 4c2379e537e559f4d3be8fed56fe86070c34d2c7
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Thu Apr 7 13:16:05 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Thu Apr 7 13:16:05 2011 -0800
+
+(C# 3) Version number for the tool and runtime match to reduce confusion
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8101]
+
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime/Properties/AssemblyInfo.cs b/runtime/CSharp3/Sources/Antlr3.Runtime/Properties/AssemblyInfo.cs
+index b425e95..5850e23 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime/Properties/AssemblyInfo.cs
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime/Properties/AssemblyInfo.cs
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.3.2.8079")]
+-[assembly: AssemblyFileVersion("3.3.2.8079")]
++[assembly: AssemblyVersion("3.3.2.8100")]
++[assembly: AssemblyFileVersion("3.3.2.8100")]
+

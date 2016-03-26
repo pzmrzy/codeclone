@@ -1,0 +1,26 @@
+commit 6924abe79d0d71580954b26872e94dc18115870a
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sat Mar 19 16:14:01 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sat Mar 19 16:14:01 2011 -0800
+
+(C# 3) Remove ANTLRCore.sti from the project
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7881]
+
+diff --git a/Antlr3/Antlr3.csproj b/Antlr3/Antlr3.csproj
+index 6cdbd61..cc46a81 100644
+--- a/Antlr3/Antlr3.csproj
++++ b/Antlr3/Antlr3.csproj
+@@ -220,10 +220,6 @@
+<Link>Codegen\Templates\ActionScript\ASTTreeParser.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+-    <EmbeddedResource Include="..\..\..\antlr\main\tool\src\main\resources\org\antlr\codegen\templates\ANTLRCore.sti">
+-      <Link>Codegen\Templates\ANTLRCore.sti</Link>
+-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+-    </EmbeddedResource>
+<Content Include="..\..\..\antlr\main\tool\src\main\resources\org\antlr\codegen\templates\CSharp3\AST.stg">
+<Link>Codegen\Templates\CSharp3\AST.stg</Link>
+<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+

@@ -1,0 +1,34 @@
+commit d4201326bca74bfc768f68766e589013111c7a23
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Jan 20 16:16:24 2010 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Jan 20 16:16:24 2010 -0800
+
+C# Port:
+* Merge CL6449, 6450, 6451, 6452, 6453
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6585]
+
+diff --git a/Antlr3/Tool/Interpreter.cs b/Antlr3/Tool/Interpreter.cs
+index 4129d49..9582985 100644
+--- a/Antlr3/Tool/Interpreter.cs
++++ b/Antlr3/Tool/Interpreter.cs
+@@ -109,7 +109,7 @@ namespace Antlr3.Tool
+}
+if ( input.LA( 1 ) == CharStreamConstants.EndOfFile )
+{
+-                return Tokens.EndOfFile;
++                return new CommonToken((ICharStream)input, CharStreamConstants.EndOfFile, TokenChannels.Default, input.Index, input.Index);
+}
+int start = input.Index;
+int charPos = ( (ICharStream)input ).CharPositionInLine;
+@@ -133,7 +133,7 @@ namespace Antlr3.Tool
+int stop = input.Index - 1;
+if ( token == null )
+{
+-                return Tokens.EndOfFile;
++                return new CommonToken((ICharStream)input, CharStreamConstants.EndOfFile, TokenChannels.Default, start, start);
+}
+token.Line = ( ( (ICharStream)input ).Line );
+token.StartIndex = start;
+

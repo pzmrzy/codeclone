@@ -1,0 +1,163 @@
+commit 29f440b6a64f6fc8a3375c606f7d7a136922985c
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Apr 13 13:27:51 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Apr 13 13:27:51 2011 -0800
+
+(C# 3) Avoid generating return scope classes for methods with no extra return values.
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8195]
+
+diff --git a/Antlr3.Runtime/Antlr3.Runtime.csproj b/Antlr3.Runtime/Antlr3.Runtime.csproj
+index f82a471..74a3b3b 100644
+--- a/Antlr3.Runtime/Antlr3.Runtime.csproj
++++ b/Antlr3.Runtime/Antlr3.Runtime.csproj
+@@ -89,6 +89,7 @@
+<Compile Include="RuleReturnScope.cs" />
+<Compile Include="TokenConstants.cs" />
+<Compile Include="TokenRewriteStream.cs" />
++    <Compile Include="Tree\AstTreeRuleReturnScope`1.cs" />
+<Compile Include="Tree\BaseTree.cs" />
+<Compile Include="Tree\BaseTreeAdaptor.cs" />
+<Compile Include="Tree\AntlrRuntime_BaseTreeDebugView.cs" />
+@@ -97,6 +98,7 @@
+<Compile Include="Tree\CommonTree.cs" />
+<Compile Include="Tree\CommonTreeAdaptor.cs" />
+<Compile Include="Tree\CommonTreeNodeStream.cs" />
++    <Compile Include="Tree\AstParserRuleReturnScope`1.cs" />
+<Compile Include="Tree\DotTreeGenerator.cs" />
+<Compile Include="Tree\ITree.cs" />
+<Compile Include="Tree\ITreeAdaptor.cs" />
+diff --git a/Antlr3.Runtime/Tree/AstParserRuleReturnScope`1.cs b/Antlr3.Runtime/Tree/AstParserRuleReturnScope`1.cs
+new file mode 100644
+index 0000000..b6598ce
+--- /dev/null
++++ b/Antlr3.Runtime/Tree/AstParserRuleReturnScope`1.cs
+@@ -0,0 +1,60 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2011 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2011 Sam Harwell, Pixel Mine, Inc.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace Antlr.Runtime.Tree
++{
++    public class AstParserRuleReturnScope<TTree> : ParserRuleReturnScope<TTree>, IAstRuleReturnScope<TTree>, IAstRuleReturnScope
++    {
++        private TTree _tree;
++
++        public TTree Tree
++        {
++            get
++            {
++                return _tree;
++            }
++
++            set
++            {
++                _tree = value;
++            }
++        }
++
++        object IAstRuleReturnScope.Tree
++        {
++            get
++            {
++                return Tree;
++            }
++        }
++    }
++}
+diff --git a/Antlr3.Runtime/Tree/AstTreeRuleReturnScope`1.cs b/Antlr3.Runtime/Tree/AstTreeRuleReturnScope`1.cs
+new file mode 100644
+index 0000000..b31ca9c
+--- /dev/null
++++ b/Antlr3.Runtime/Tree/AstTreeRuleReturnScope`1.cs
+@@ -0,0 +1,60 @@
++﻿/*
++ * [The "BSD licence"]
++ * Copyright (c) 2011 Terence Parr
++ * All rights reserved.
++ *
++ * Conversion to C#:
++ * Copyright (c) 2011 Sam Harwell, Pixel Mine, Inc.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++namespace Antlr.Runtime.Tree
++{
++    public class AstTreeRuleReturnScope<TTree> : TreeRuleReturnScope<TTree>, IAstRuleReturnScope<TTree>, IAstRuleReturnScope
++    {
++        private TTree _tree;
++
++        public TTree Tree
++        {
++            get
++            {
++                return _tree;
++            }
++
++            set
++            {
++                _tree = value;
++            }
++        }
++
++        object IAstRuleReturnScope.Tree
++        {
++            get
++            {
++                return Tree;
++            }
++        }
++    }
++}
+

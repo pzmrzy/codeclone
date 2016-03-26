@@ -1,0 +1,9 @@
+commit 6809d6166d2b807676d81d3a4df7cc1b8cbe4b91
+Merge: 0c71ad5 10a1356
+Author:     Terence Parr <parrt@antlr.org>
+AuthorDate: Tue Mar 27 14:58:21 2012 -0700
+Commit:     Terence Parr <parrt@antlr.org>
+CommitDate: Tue Mar 27 14:58:21 2012 -0700
+
+Merge branch 'maven-updates' of git://github.com/sharwell/antlr3
+

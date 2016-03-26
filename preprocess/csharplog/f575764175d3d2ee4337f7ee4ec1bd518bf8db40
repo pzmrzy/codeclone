@@ -1,0 +1,33 @@
+commit f575764175d3d2ee4337f7ee4ec1bd518bf8db40
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Thu Nov 25 09:22:10 2010 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Thu Nov 25 09:22:10 2010 -0800
+
+(C# 3) Optimized loop condition
+Ordinal string comparison
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7182]
+
+diff --git a/Antlr3/Tool/GrammarInsufficientPredicatesMessage.cs b/Antlr3/Tool/GrammarInsufficientPredicatesMessage.cs
+index 8e2c77e..882dc62 100644
+--- a/Antlr3/Tool/GrammarInsufficientPredicatesMessage.cs
++++ b/Antlr3/Tool/GrammarInsufficientPredicatesMessage.cs
+@@ -37,6 +37,7 @@ namespace Antlr3.Tool
+using Antlr3.Analysis;
+
+using IToken = Antlr.Runtime.IToken;
++    using StringComparer = System.StringComparer;
+using StringTemplate = Antlr3.ST.StringTemplate;
+
+public class GrammarInsufficientPredicatesMessage : Message
+@@ -67,7 +68,7 @@ namespace Antlr3.Tool
+}
+StringTemplate st = GetMessageTemplate();
+// convert to string key to avoid 3.1 ST bug
+-            var altToLocationsWithStringKey = new SortedList<string, ICollection<IToken>>();
++            var altToLocationsWithStringKey = new SortedList<string, ICollection<IToken>>(StringComparer.Ordinal);
+List<int> alts = new List<int>();
+alts.addAll( altToLocations.Keys );
+alts.Sort();
+

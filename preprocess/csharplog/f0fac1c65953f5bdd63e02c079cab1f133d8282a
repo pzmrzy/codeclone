@@ -1,0 +1,49 @@
+commit f0fac1c65953f5bdd63e02c079cab1f133d8282a
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Dec 9 19:01:50 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Dec 9 19:01:50 2009 -0800
+
+C# Port:
+* Fix bug in follow set name formation (thanks to Allon Guralnek for pointing this out)
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6462]
+
+diff --git a/Antlr3/Codegen/CodeGenerator.cs b/Antlr3/Codegen/CodeGenerator.cs
+index 9eabec1..4a5d04e 100644
+--- a/Antlr3/Codegen/CodeGenerator.cs
++++ b/Antlr3/Codegen/CodeGenerator.cs
+@@ -44,6 +44,7 @@ namespace Antlr3.Codegen
+using ANTLRParser = Antlr3.Grammars.ANTLRParser;
+using AntlrTool = Antlr3.AntlrTool;
+using ArgumentException = System.ArgumentException;
++    using ArgumentOutOfRangeException = System.ArgumentOutOfRangeException;
+using AttributeScope = Antlr3.Tool.AttributeScope;
+using BitSet = Antlr3.Misc.BitSet;
+using CLSCompliant = System.CLSCompliantAttribute;
+@@ -741,6 +742,11 @@ namespace Antlr3.Codegen
+string enclosingRuleName,
+int elementIndex )
+{
++            if (elementIndex < 0)
++            {
++                throw new ArgumentOutOfRangeException("elementIndex", "elementIndex cannot be less than zero.");
++            }
++
+/*
+JSystem.@out.println("compute FOLLOW "+grammar.name+"."+referencedElementNode.toString()+
+" for "+referencedElementName+"#"+elementIndex +" in "+
+diff --git a/Antlr3/Grammars/ANTLR.g3 b/Antlr3/Grammars/ANTLR.g3
+index f33dc25..506d5b9 100644
+--- a/Antlr3/Grammars/ANTLR.g3
++++ b/Antlr3/Grammars/ANTLR.g3
+@@ -607,7 +607,7 @@ GrammarAST save = currentBlockAST;
+{
+currentBlockAST = save;
+}
+-	:	(	-> BLOCK["BLOCK"]
++	:	(	-> BLOCK[$elemAST.Token, "BLOCK"]
+)
+{ blkRoot = (GrammarAST)$tree.GetChild(0); currentBlockAST = blkRoot; }
+(	// create alt
+

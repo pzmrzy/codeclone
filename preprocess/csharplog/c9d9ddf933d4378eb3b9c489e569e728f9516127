@@ -1,0 +1,42 @@
+commit c9d9ddf933d4378eb3b9c489e569e728f9516127
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Mar 7 12:42:25 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Mar 7 12:42:25 2011 -0800
+
+(C# 3) Silence console output
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7822]
+
+diff --git a/Antlr3/Tool/LeftRecursiveRuleAnalyzer.cs b/Antlr3/Tool/LeftRecursiveRuleAnalyzer.cs
+index 2f67f3e..a189cae 100644
+--- a/Antlr3/Tool/LeftRecursiveRuleAnalyzer.cs
++++ b/Antlr3/Tool/LeftRecursiveRuleAnalyzer.cs
+@@ -286,7 +286,7 @@ namespace Antlr3.Tool
+ruleST.SetAttribute("alts", altST);
+}
+
+-            Console.WriteLine(ruleST);
++            //Console.WriteLine(ruleST);
+
+return ruleST.ToString();
+}
+@@ -297,7 +297,7 @@ namespace Antlr3.Tool
+ruleST.SetAttribute("ruleName", ruleName);
+ruleST.SetAttribute("alts", prefixAlts);
+ruleST.SetAttribute("alts", otherAlts);
+-            Console.WriteLine(ruleST);
++            //Console.WriteLine(ruleST);
+return ruleST.ToString();
+}
+
+@@ -307,7 +307,7 @@ namespace Antlr3.Tool
+ruleST.SetAttribute("ruleName", ruleName);
+ruleST.SetAttribute("maxPrec", 0);
+
+-            Console.WriteLine("start: " + ruleST);
++            //Console.WriteLine("start: " + ruleST);
+return ruleST.ToString();
+}
+
+

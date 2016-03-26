@@ -1,0 +1,25 @@
+commit 6dffe88374afbab89efd7997b214c5ecbf772ff0
+Author:     Ivan Brezina <ibrezina@ibrezina.net>
+AuthorDate: Thu Jun 20 23:40:37 2013 +0200
+Commit:     Ivan Brezina <ibre5041@ibrezina.net>
+CommitDate: Mon Sep 9 11:13:11 2013 +0200
+
+Fix invalid charPositionInLine reported for the 1s line tokens
+
+Reported here:
+http://antlr.markmail.org/search/?q=Jim%20Idle#query:Jim%20Idle%20from%20list%3Aorg.antlr.antlr-interest%20from%3A%22Jim%20Idle%22+page:83+mid:rnvmkdec65rddzua+state:results
+
+diff --git a/runtime/Cpp/include/antlr3input.inl b/runtime/Cpp/include/antlr3input.inl
+index 6c9b136..f3362cd 100755
+--- a/runtime/Cpp/include/antlr3input.inl
++++ b/runtime/Cpp/include/antlr3input.inl
+@@ -283,7 +283,7 @@ ANTLR_INLINE void	InputStream<ImplTraits>::reset()
+{
+m_nextChar		= m_data;	/* Input at first character */
+m_line			= 1;		/* starts at line 1	    */
+-    m_charPositionInLine	= -1;
++    m_charPositionInLine	= 0;
+m_currentLine		= m_data;
+m_markDepth		= 0;		/* Reset markers	    */
+
+

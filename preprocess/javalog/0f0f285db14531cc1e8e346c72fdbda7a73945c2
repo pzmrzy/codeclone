@@ -1,0 +1,93 @@
+commit 0f0f285db14531cc1e8e346c72fdbda7a73945c2
+Author:     Zannick <jokeserver@gmail.com>
+AuthorDate: Tue Jun 26 23:04:40 2012 -0700
+Commit:     Zannick <jokeserver@gmail.com>
+CommitDate: Tue Jun 26 23:09:34 2012 -0700
+
+Fix last-minute bugs found by tests.
+
+- Subclasses of Tree that override toString should also redefine __str__
+to toString.
+- Test cases should assert that they get the string name of the token.
+- Use a try/except block to import grammar delegates, since the
+delineation between running in a package and not is not just
+__name__ == "__main__".
+
+diff --git a/runtime/Python3/antlr3/tree.py b/runtime/Python3/antlr3/tree.py
+index eb1509d..0a3214b 100644
+--- a/runtime/Python3/antlr3/tree.py
++++ b/runtime/Python3/antlr3/tree.py
+@@ -1458,6 +1458,8 @@ class CommonErrorNode(CommonTree):
+
+return "<error: "+self.getText()+">"
+
++    __str__ = toString
++
+
+class CommonTreeAdaptor(BaseTreeAdaptor):
+"""
+diff --git a/runtime/Python3/tests/t057autoAST.py b/runtime/Python3/tests/t057autoAST.py
+index 1d35975..63ce05a 100644
+--- a/runtime/Python3/tests/t057autoAST.py
++++ b/runtime/Python3/tests/t057autoAST.py
+@@ -997,7 +997,7 @@ class TestAutoAST(testbase.ANTLRTest):
+found, errors = self.execParser(grammar, "a", "*", expectErrors=True)
+self.assertEqual(["line 1:0 no viable alternative at input '*'"],
+errors)
+-        self.assertEqual("<unexpected: [@0,0:0='*',<6>,1:0], resync=*>",
++        self.assertEqual("<unexpected: [@0,0:0='*',<S>,1:0], resync=*>",
+found)
+
+
+diff --git a/runtime/Python3/tests/t058rewriteAST.py b/runtime/Python3/tests/t058rewriteAST.py
+index a8f007a..bb59b50 100644
+--- a/runtime/Python3/tests/t058rewriteAST.py
++++ b/runtime/Python3/tests/t058rewriteAST.py
+@@ -1497,7 +1497,7 @@ class TestRewriteAST(testbase.ANTLRTest):
+# ref to rule b (start of c). It then matches 34 in c.
+self.assertEqual(["line 1:0 no viable alternative at input '*'"],
+errors);
+-        self.assertEqual("<unexpected: [@0,0:0='*',<6>,1:0], resync=*>",
++        self.assertEqual("<unexpected: [@0,0:0='*',<S>,1:0], resync=*>",
+found)
+
+
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/Python3/Python3.stg b/tool/src/main/resources/org/antlr/codegen/templates/Python3/Python3.stg
+index 97c35ab..1649a05 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/Python3/Python3.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/Python3/Python3.stg
+@@ -103,12 +103,12 @@ if __name__ == '__main__':
+lexer(grammar, name, tokens, scopes, rules, numRules, filterMode,
+labelType="CommonToken", superClass="Lexer") ::= <<
+<if(grammar.directDelegates)>
+-if __name__ == "__main__":
+-    <grammar.directDelegates:
+-     {g|from <g.recognizerName> import <g.recognizerName>}; separator="\n">
+-else:
++try:
+<grammar.directDelegates:
+{g|from .<g.recognizerName> import <g.recognizerName>}; separator="\n">
++except ValueError:
++    <grammar.directDelegates:
++     {g|from <g.recognizerName> import <g.recognizerName>}; separator="\n">
+<endif>
+
+class <grammar.recognizerName>(<@superClassName><superClass><@end>):
+@@ -234,12 +234,12 @@ tokenNames = [
+<scopes:{it|<if(it.isDynamicGlobalScope)><globalAttributeScopeClass(scope=it)><endif>}>
+
+<if(grammar.directDelegates)>
+-if __name__ == "__main__":
+-    <grammar.directDelegates:
+-     {g|from <g.recognizerName> import <g.recognizerName>}; separator="\n">
+-else:
++try:
+<grammar.directDelegates:
+{g|from .<g.recognizerName> import <g.recognizerName>}; separator="\n">
++except ValueError:
++    <grammar.directDelegates:
++     {g|from <g.recognizerName> import <g.recognizerName>}; separator="\n">
+<endif>
+
+<rules:{it|<ruleAttributeScopeClass(scope=it.ruleDescriptor.ruleScope)>}>
+

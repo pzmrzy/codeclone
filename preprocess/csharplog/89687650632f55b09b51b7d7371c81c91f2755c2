@@ -1,0 +1,390 @@
+commit 89687650632f55b09b51b7d7371c81c91f2755c2
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Fri Dec 11 09:46:59 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Fri Dec 11 09:46:59 2009 -0800
+
+C# Port:
+* Merge CL6379
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6484]
+
+diff --git a/Antlr3.Test/ST4/TestCompiler.cs b/Antlr3.Test/ST4/TestCompiler.cs
+index 943ea05..a327eba 100644
+--- a/Antlr3.Test/ST4/TestCompiler.cs
++++ b/Antlr3.Test/ST4/TestCompiler.cs
+@@ -16,7 +16,7 @@
+public void TestAttr()
+{
+string template = "hi <name>";
+-            CompiledTemplate code = new Compiler().Compile(null, template);
++            CompiledTemplate code = new Compiler().Compile(template);
+string asmExpected =
+"load_str 0, " +
+"write, " +
+@@ -33,7 +33,7 @@
+public void TestInclude()
+{
+string template = "hi <foo()>";
+-            CompiledTemplate code = new Compiler().Compile(null, template);
++            CompiledTemplate code = new Compiler().Compile(template);
+string asmExpected =
+"load_str 0, write, new 1, write";
+string asmResult = code.Instructions();
+@@ -47,7 +47,7 @@
+public void TestProp()
+{
+string template = "hi <a.b>";
+-            CompiledTemplate code = new Compiler().Compile(null, template);
++            CompiledTemplate code = new Compiler().Compile(template);
+string asmExpected =
+"load_str 0, write, load_attr 1, load_prop 2, write";
+string asmResult = code.Instructions();
+@@ -61,7 +61,7 @@
+public void TestProp2()
+{
+string template = "<u.id>: <u.name>";
+-            CompiledTemplate code = new Compiler().Compile(null, template);
++            CompiledTemplate code = new Compiler().Compile(template);
+string asmExpected =
+"load_attr 0, load_prop 1, write, load_str 2, write, " +
+"load_attr 0, load_prop 3, write";
+@@ -76,7 +76,7 @@
+public void TestMap()
+{
+string template = "hi <name:bold>";
+-            CompiledTemplate code = new Compiler().Compile(null, template);
++            CompiledTemplate code = new Compiler().Compile(template);
+string asmExpected =
+"load_str 0, write, load_attr 1, load_str 2, map, write";
+string asmResult = code.Instructions();
+@@ -90,7 +90,7 @@
+public void TestRepeatedMap()
+{
+string template = "hi <name:bold:italics>";
+-            CompiledTemplate code = new Compiler().Compile(null, template);
++            CompiledTemplate code = new Compiler().Compile(template);
+string asmExpected =
+"load_str 0, " +
+"write, " +
+@@ -111,7 +111,7 @@
+public void TestRotMap()
+{
+string template = "hi <name:bold,italics>";
+-            CompiledTemplate code = new Compiler().Compile(null, template);
++            CompiledTemplate code = new Compiler().Compile(template);
+string asmExpected =
+"load_str 0, write, load_attr 1, load_str 2, load_str 3, rot_map 2, write";
+string asmResult = code.Instructions();
+@@ -125,7 +125,7 @@
+public void TestAnonMap()
+{
+string template = "hi <name:{n | <n>}>";
+-            CompiledTemplate code = new Compiler().Compile(null, template);
++            CompiledTemplate code = new Compiler().Compile(template);
+string asmExpected =
+"load_str 0, write, load_attr 1, load_str 2, map, write";
+string asmResult = code.Instructions();
+@@ -139,7 +139,7 @@
+public void TestIf()
+{
+string template = "go: <if(name)>hi, foo<endif>";
+-            CompiledTemplate code = new Compiler().Compile(null, template);
++            CompiledTemplate code = new Compiler().Compile(template);
+string asmExpected =
+"load_str 0, write, load_attr 1, brf 14, load_str 2, write";
+string asmResult = code.Instructions();
+@@ -153,7 +153,7 @@
+public void TestIfElse()
+{
+string template = "go: <if(name)>hi, foo<else>bye<endif>";
+-            CompiledTemplate code = new Compiler().Compile(null, template);
++            CompiledTemplate code = new Compiler().Compile(template);
+string asmExpected =
+"load_str 0, " +
+"write, " +
+@@ -175,7 +175,7 @@
+public void TestElseIf()
+{
+string template = "go: <if(name)>hi, foo<elseif(user)>a user<endif>";
+-            CompiledTemplate code = new Compiler().Compile(null, template);
++            CompiledTemplate code = new Compiler().Compile(template);
+string asmExpected =
+"load_str 0, " +
+"write, " +
+@@ -199,7 +199,7 @@
+public void TestElseIfElse()
+{
+string template = "go: <if(name)>hi, foo<elseif(user)>a user<else>bye<endif>";
+-            CompiledTemplate code = new Compiler().Compile(null, template);
++            CompiledTemplate code = new Compiler().Compile(template);
+string asmExpected =
+"load_str 0, " +
+"write, " +
+@@ -226,7 +226,7 @@
+public void TestOption()
+{
+string template = "hi <name; separator=\"x\">";
+-            CompiledTemplate code = new Compiler().Compile(null, template);
++            CompiledTemplate code = new Compiler().Compile(template);
+string asmExpected =
+"load_str 0, write, load_attr 1, options, load_str 2, store_option 3, write_opt";
+string asmResult = code.Instructions();
+@@ -240,7 +240,7 @@
+public void TestOptionAsTemplate()
+{
+string template = "hi <name; separator={, }>";
+-            CompiledTemplate code = new Compiler().Compile(null, template);
++            CompiledTemplate code = new Compiler().Compile(template);
+string asmExpected =
+"load_str 0, write, load_attr 1, options, new 2, store_option 3, write_opt";
+string asmResult = code.Instructions();
+@@ -254,7 +254,7 @@
+public void TestOptions()
+{
+string template = "hi <name; anchor, wrap=foo(), separator=\", \">";
+-            CompiledTemplate code = new Compiler().Compile(null, template);
++            CompiledTemplate code = new Compiler().Compile(template);
+string asmExpected =
+"load_str 0, write, load_attr 1, options, load_str 2, " +
+"store_option 0, new 3, store_option 4, load_str 4, " +
+@@ -271,7 +271,7 @@
+public void TestEmptyList()
+{
+string template = "<[]>";
+-            CompiledTemplate code = new Compiler().Compile(null, template);
++            CompiledTemplate code = new Compiler().Compile(template);
+string asmExpected = "list, write";
+string asmResult = code.Instructions();
+Assert.AreEqual(asmExpected, asmResult);
+@@ -284,7 +284,7 @@
+public void TestList()
+{
+string template = "<[a,b]>";
+-            CompiledTemplate code = new Compiler().Compile(null, template);
++            CompiledTemplate code = new Compiler().Compile(template);
+string asmExpected = "list, load_attr 0, add, load_attr 1, add, write";
+string asmResult = code.Instructions();
+Assert.AreEqual(asmExpected, asmResult);
+diff --git a/StringTemplate4/Compiler.cs b/StringTemplate4/Compiler.cs
+index b22d2c0..9f7d42c 100644
+--- a/StringTemplate4/Compiler.cs
++++ b/StringTemplate4/Compiler.cs
+@@ -40,9 +40,11 @@ namespace StringTemplate
+using Math = System.Math;
+using Path = System.IO.Path;
+
++    /// <summary>
++    /// A compiler for a single template
++    /// </summary>
+public class Compiler : ICodeGenerator
+{
+-        public static readonly string ATTR_NAME_REGEX = "[a-zA-Z/][a-zA-Z0-9_/]*";
+/** Given a template of length n, how much code will result?
+*  For now, let's assume n/5. Later, we can test in practice.
+*/
+@@ -87,36 +89,41 @@ namespace StringTemplate
+int ip = 0;
+CompiledTemplate code = new CompiledTemplate();
+
+-        // subdir context -- template reference prefix
+-        private string prefix;
++        /** subdir context.  If we're compiling templates in subdir a/b/c, then
++         *  /a/b/c is the path prefix to add to all ID refs; it fully qualifies them.
++         *  It's like resolving x to this.x in Java for field x.
++         */
++        private string templatePathPrefix;
++
++        private string nameOrEnclosingTemplateName;
+
+public static int subtemplateCount = 0; // public for testing access
+
+public Compiler()
+-            : this("/")
++            : this("/", "<unknown>")
+{
+}
+
+-        public Compiler(string prefix)
++        public Compiler(string templatePathPrefix, string enclosingTemplateName)
+{
+-            this.prefix = prefix;
++            this.templatePathPrefix = templatePathPrefix;
++            this.nameOrEnclosingTemplateName = enclosingTemplateName;
+}
+
+public string TemplateReferencePrefix
+{
+get
+{
+-                return this.prefix;
++                return this.templatePathPrefix;
+}
+}
+
+-        public CompiledTemplate Compile(string enclosingTemplateName, string template)
++        public CompiledTemplate Compile(string template)
+{
+-            return Compile(enclosingTemplateName, template, '<', '>');
++            return Compile(template, '<', '>');
+}
+
+-        public CompiledTemplate Compile(string enclosingTemplateName,
+-                                        string template,
++        public CompiledTemplate Compile(string template,
+char delimiterStartChar,
+char delimiterStopChar)
+{
+@@ -126,7 +133,7 @@ namespace StringTemplate
+
+TemplateLexer lexer = new TemplateLexer(new ANTLRStringStream(template), delimiterStartChar, delimiterStopChar);
+UnbufferedTokenStream tokens = new UnbufferedTokenStream(lexer);
+-            TemplateParser parser = new TemplateParser(tokens, this, enclosingTemplateName);
++            TemplateParser parser = new TemplateParser(tokens, this, nameOrEnclosingTemplateName);
+try
+{
+parser.templateAndEOF(); // parse, trigger compile actions for single expr
+@@ -145,10 +152,10 @@ namespace StringTemplate
+return code;
+}
+
+-        public CompiledTemplate Compile(string enclosingTemplateName, ITokenStream tokens, RecognizerSharedState state)
++        public CompiledTemplate Compile(ITokenStream tokens, RecognizerSharedState state)
+{
+instrs = new byte[SUBTEMPLATE_INITIAL_CODE_SIZE];
+-            TemplateParser parser = new TemplateParser(tokens, state, this, enclosingTemplateName);
++            TemplateParser parser = new TemplateParser(tokens, state, this, nameOrEnclosingTemplateName);
+try
+{
+parser.template(); // parse, trigger compile actions for single expr
+@@ -210,9 +217,9 @@ namespace StringTemplate
+RecognizerSharedState state)
+{
+subtemplateCount++;
+-            string name = prefix + "_sub" + subtemplateCount;
+-            Compiler c = new Compiler(prefix);
+-            CompiledTemplate sub = c.Compile(enclosingTemplateName, input, state);
++            string name = templatePathPrefix + "_sub" + subtemplateCount;
++            Compiler c = new Compiler(templatePathPrefix, enclosingTemplateName);
++            CompiledTemplate sub = c.Compile(input, state);
+if (code.implicitlyDefinedTemplates == null)
+code.implicitlyDefinedTemplates = new List<CompiledTemplate>();
+code.implicitlyDefinedTemplates.Add(sub);
+@@ -234,8 +241,8 @@ namespace StringTemplate
+ITokenStream input,
+RecognizerSharedState state)
+{
+-            Compiler c = new Compiler(prefix);
+-            CompiledTemplate sub = c.Compile(enclosingTemplateName, input, state);
++            Compiler c = new Compiler(templatePathPrefix, enclosingTemplateName);
++            CompiledTemplate sub = c.Compile(input, state);
+sub.name = regionName;
+if (code.implicitlyDefinedTemplates == null)
+{
+diff --git a/StringTemplate4/ICodeGenerator.cs b/StringTemplate4/ICodeGenerator.cs
+index 73376de..0e40d65 100644
+--- a/StringTemplate4/ICodeGenerator.cs
++++ b/StringTemplate4/ICodeGenerator.cs
+@@ -40,7 +40,8 @@ namespace StringTemplate
+public interface ICodeGenerator
+{
+/// <summary>
+-        /// If we're compiling templates in subdir or group file under root, what's the prefix to add?
++        /// If we're compiling templates in subdir or group file under root,
++        /// what's the templatePathPrefix to add?
+/// </summary>
+string TemplateReferencePrefix
+{
+diff --git a/StringTemplate4/TemplateGroup.cs b/StringTemplate4/TemplateGroup.cs
+index 1e292d8..c046b41 100644
+--- a/StringTemplate4/TemplateGroup.cs
++++ b/StringTemplate4/TemplateGroup.cs
+@@ -229,8 +229,8 @@ namespace StringTemplate
+{
+throw new ArgumentException("cannot have '.' in template names");
+}
+-            Compiler c = new Compiler(prefix);
+-            CompiledTemplate code = c.Compile(name, template);
++            Compiler c = new Compiler(prefix, name);
++            CompiledTemplate code = c.Compile(template);
+code.name = name;
+code.formalArguments = args;
+code.nativeGroup = this;
+@@ -242,8 +242,8 @@ namespace StringTemplate
+FormalArgument fa = args[a];
+if (fa.defaultValue != null)
+{
+-                        Compiler c2 = new Compiler(prefix);
+-                        fa.compiledDefaultValue = c2.Compile(null, template);
++                        Compiler c2 = new Compiler(prefix, name);
++                        fa.compiledDefaultValue = c2.Compile(template);
+}
+}
+}
+diff --git a/StringTemplate4/TemplateParser.g3 b/StringTemplate4/TemplateParser.g3
+index 4050161..f5ca91f 100644
+--- a/StringTemplate4/TemplateParser.g3
++++ b/StringTemplate4/TemplateParser.g3
+@@ -52,7 +52,7 @@ template
+:	(	options {backtrack=true; k=2;}
+:	i=INDENT         {Indent($i.text);}
+ifOnOneLine      {gen.Emit(Bytecode.INSTR_DEDENT);}
+-		|	i=INDENT {PushIFIndentation($i.text);} ifOnMultiLines {PopIFIndentation();}
++		|	i=INDENT ifOnMultiLines
+|	ifOnMultiLines
+|	i=INDENT       	 {Indent($i.text);}
+exprTag          {gen.Emit(Bytecode.INSTR_DEDENT);}
+diff --git a/StringTemplate4/TemplateParserHelper.cs b/StringTemplate4/TemplateParserHelper.cs
+index 2e50c14..aa6f6bd 100644
+--- a/StringTemplate4/TemplateParserHelper.cs
++++ b/StringTemplate4/TemplateParserHelper.cs
+@@ -39,8 +39,10 @@ namespace StringTemplate
+
+partial class TemplateParser
+{
+-        List<string> IFindents = new List<string>();
+-        /** Is this template a subtemplate or region of an enclosing template? */
++        /** The name of the template we are compiling or the name of the
++         *  enclosing template.  This template could be a subtemplate or region of
++         *  an enclosing template.
++         */
+private string _enclosingTemplateName;
+
+ICodeGenerator gen = new CodeGenerator();
+@@ -122,26 +124,8 @@ namespace StringTemplate
+gen.Emit(funcBytecode);
+}
+
+-        public void PushIFIndentation(string indent)
+-        {
+-            IFindents.Add(indent);
+-        }
+-
+-        public string PopIFIndentation()
+-        {
+-            var result = IFindents[IFindents.Count - 1];
+-            IFindents.RemoveAt(IFindents.Count - 1);
+-            return result;
+-        }
+-
+public void Indent(string indent)
+{
+-            /*
+-                    if ( IFindents.size()>0 ) {
+-                        String ifIndent = IFindents.get(IFindents.size()-1);
+-                        if ( indent.startsWith(ifIndent) ) indent = indent.substring(ifIndent.length());
+-                    }
+-                    */
+gen.Emit(Bytecode.INSTR_INDENT, indent);
+}
+
+@@ -179,7 +163,7 @@ namespace StringTemplate
+public string CompileAnonTemplate(string enclosingTemplateName, ITokenStream input, IList<IToken> ids, RecognizerSharedState state)
+{
+Compiler c = new Compiler();
+-                c.Compile(null, input, state);
++                c.Compile(input, state);
+return null;
+}
+
+

@@ -1,0 +1,23 @@
+commit ca7868cff205467521bfb968a4873b5b5b5385e4
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Fri Dec 7 11:39:30 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Fri Dec 7 11:39:30 2012 -0600
+
+Only show warnings and errors when building javadoc
+
+diff --git a/pom.xml b/pom.xml
+index 1ffec4c..c6e9fbe 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -238,6 +238,9 @@
+<goals>
+<goal>jar</goal>
+</goals>
++                        <configuration>
++                            <quiet>true</quiet>
++                        </configuration>
+</execution>
+</executions>
+</plugin>
+

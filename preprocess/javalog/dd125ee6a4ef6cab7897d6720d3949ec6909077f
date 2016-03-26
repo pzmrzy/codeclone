@@ -1,0 +1,100 @@
+commit dd125ee6a4ef6cab7897d6720d3949ec6909077f
+Author:     Alan Condit <acondit@ipns.com>
+AuthorDate: Wed Apr 4 11:09:31 2012 -0700
+Commit:     Alan Condit <acondit@ipns.com>
+CommitDate: Wed Apr 4 11:09:31 2012 -0700
+
+added toDescription method to print out keys.
+
+diff --git a/runtime/ObjC/Framework/ACBTree.h b/runtime/ObjC/Framework/ACBTree.h
+index ba19527..0656556 100644
+--- a/runtime/ObjC/Framework/ACBTree.h
++++ b/runtime/ObjC/Framework/ACBTree.h
+@@ -34,7 +34,8 @@ typedef enum {
++ (ACBKey *)newKeyWithKStr:(NSString *)aKey;
+- (id) init;
+- (id) initWithKStr:(NSString *)aKey;
+-
++- (void)dealloc;
++- (NSString *) description;
+@end
+
+@interface ACBTree : NSObject {
+@@ -74,6 +75,7 @@ typedef enum {
++ (ACBTree *) newNodeWithDictionary:(AMutableDictionary *)theDict;
+
+- (id)initWithDictionary:(AMutableDictionary *)theDict;
++- (void)dealloc;
+
+- (ACBTree *)createnode:(ACBKey *)kp0;
+- (ACBTree *)deletekey:(NSString *)dkey;
+@@ -93,5 +95,5 @@ typedef enum {
+- (void)rotateright:(NSInteger)j;
+- (NSInteger) keyWalkLeaves;
+- (NSInteger) objectWalkLeaves;
+-- (void)dealloc;
++- (NSString *) description;
+@end
+diff --git a/runtime/ObjC/Framework/ACBTree.m b/runtime/ObjC/Framework/ACBTree.m
+index 6678972..5bb5815 100644
+--- a/runtime/ObjC/Framework/ACBTree.m
++++ b/runtime/ObjC/Framework/ACBTree.m
+@@ -56,6 +56,19 @@ static NSInteger RECNUM = 0;
+return self;
+}
+
++- (void)dealloc
++{
++#ifdef DEBUG_DEALLOC
++    NSLog( @"called dealloc in ACBKey" );
++#endif
++    [super dealloc];
++}
++
++- (NSString *) description
++{
++    return [NSString stringWithFormat:@"len =%02d\nrecnum=%04d\nkey=%@\n", [key length], recnum, key];
++}
++
+@end
+
+@implementation ACBTree
+@@ -97,6 +110,14 @@ static NSInteger RECNUM = 0;
+return self;
+}
+
++- (void)dealloc
++{
++#ifdef DEBUG_DEALLOC
++    NSLog( @"called dealloc in ACBTree" );
++#endif
++    [super dealloc];
++}
++
+- (ACBTree *)createnode:(ACBKey *)kp
+{
+ACBTree *tmp;
+@@ -710,12 +731,17 @@ ACBTree *t;
+return( idx );
+}
+
+-- (void)dealloc
++- (NSString *) description
+{
+-#ifdef DEBUG_DEALLOC
+-    NSLog( @"called dealloc in ACBTree" );
+-#endif
+-    [super dealloc];
++    NSMutableString *str = [NSMutableString stringWithCapacity:16];
++    NSInteger i;
++    for (i = 0; i < numkeys; i++ ) {
++        [str appendString:[NSString stringWithFormat:@"key[%d]=%@", i, [keys[i] description]]];
++    }
++    for (i = 0; i < numkeys; i++ ) {
++        [str appendString:[NSString stringWithFormat:@"btnodes[%d]=%@\n", i, [btNodes[i] description]]];
++    }
++    return str;
+}
+
+@end
+

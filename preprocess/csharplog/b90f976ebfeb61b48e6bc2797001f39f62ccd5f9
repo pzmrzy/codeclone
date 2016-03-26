@@ -1,0 +1,217 @@
+commit b90f976ebfeb61b48e6bc2797001f39f62ccd5f9
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Thu Apr 7 12:40:36 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Thu Apr 7 12:40:36 2011 -0800
+
+(C# 3) Update assembly info for a first build of 3.3.2
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8099]
+
+diff --git a/Antlr3.Targets/Antlr3.Targets.CSharp3/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.CSharp3/Properties/AssemblyInfo.cs
+index b6656e8..8b62af6 100644
+--- a/Antlr3.Targets/Antlr3.Targets.CSharp3/Properties/AssemblyInfo.cs
++++ b/Antlr3.Targets/Antlr3.Targets.CSharp3/Properties/AssemblyInfo.cs
+@@ -1,10 +1,10 @@
+﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+* Conversion to C#:
+- * Copyright (c) 2008-2010 Sam Harwell, Pixel Mine, Inc.
++ * Copyright (c) 2011 Sam Harwell, Pixel Mine, Inc.
+* All rights reserved.
+*
+* Redistribution and use in source and binary forms, with or without
+@@ -42,7 +42,7 @@ using System.Runtime.InteropServices;
+[assembly: AssemblyConfiguration( "" )]
+[assembly: AssemblyCompany( "Pixel Mine, Inc." )]
+[assembly: AssemblyProduct( "Antlr3.Target.CSharp3" )]
+-[assembly: AssemblyCopyright( "Copyright © Pixel Mine 2010" )]
++[assembly: AssemblyCopyright( "Copyright © Sam Harwell 2011" )]
+[assembly: AssemblyTrademark( "" )]
+[assembly: AssemblyCulture( "" )]
+[assembly: CLSCompliant(true)]
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.3.1.7705")]
+-[assembly: AssemblyFileVersion("3.3.1.7705")]
++[assembly: AssemblyVersion("3.3.2.8095")]
++[assembly: AssemblyFileVersion("3.3.2.8095")]
+diff --git a/Antlr3.Targets/Antlr3.Targets.Python/Properties/AssemblyInfo.cs b/Antlr3.Targets/Antlr3.Targets.Python/Properties/AssemblyInfo.cs
+index 38b5d95..8616844 100644
+--- a/Antlr3.Targets/Antlr3.Targets.Python/Properties/AssemblyInfo.cs
++++ b/Antlr3.Targets/Antlr3.Targets.Python/Properties/AssemblyInfo.cs
+@@ -1,10 +1,10 @@
+﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+* Conversion to C#:
+- * Copyright (c) 2008-2010 Sam Harwell, Pixel Mine, Inc.
++ * Copyright (c) 2011 Sam Harwell, Pixel Mine, Inc.
+* All rights reserved.
+*
+* Redistribution and use in source and binary forms, with or without
+@@ -42,7 +42,7 @@ using System.Runtime.InteropServices;
+[assembly: AssemblyConfiguration( "" )]
+[assembly: AssemblyCompany( "Pixel Mine, Inc." )]
+[assembly: AssemblyProduct( "Antlr3.Targets.Python" )]
+-[assembly: AssemblyCopyright( "Copyright © Pixel Mine 2010" )]
++[assembly: AssemblyCopyright("Copyright © Sam Harwell 2011")]
+[assembly: AssemblyTrademark( "" )]
+[assembly: AssemblyCulture( "" )]
+[assembly: CLSCompliant(true)]
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.3.0.7239")]
+-[assembly: AssemblyFileVersion("3.3.0.7239")]
++[assembly: AssemblyVersion("3.3.2.8093")]
++[assembly: AssemblyFileVersion("3.3.2.8093")]
+diff --git a/Antlr3.Test/Properties/AssemblyInfo.cs b/Antlr3.Test/Properties/AssemblyInfo.cs
+index 0582f12..206b9c3 100644
+--- a/Antlr3.Test/Properties/AssemblyInfo.cs
++++ b/Antlr3.Test/Properties/AssemblyInfo.cs
+@@ -1,10 +1,10 @@
+﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+* Conversion to C#:
+- * Copyright (c) 2008-2009 Sam Harwell, Pixel Mine, Inc.
++ * Copyright (c) 2011 Sam Harwell, Pixel Mine, Inc.
+* All rights reserved.
+*
+* Redistribution and use in source and binary forms, with or without
+@@ -42,7 +42,7 @@ using System.Runtime.InteropServices;
+[assembly: AssemblyConfiguration( "" )]
+[assembly: AssemblyCompany( "Pixel Mine, Inc." )]
+[assembly: AssemblyProduct( "AntlrUnitTests" )]
+-[assembly: AssemblyCopyright( "Copyright © Pixel Mine 2008" )]
++[assembly: AssemblyCopyright( "Copyright © Sam Harwell 2011" )]
+[assembly: AssemblyTrademark( "" )]
+[assembly: AssemblyCulture( "" )]
+
+@@ -63,5 +63,5 @@ using System.Runtime.InteropServices;
+//
+// You can specify all the values or you can default the Revision and Build Numbers
+// by using the '*' as shown below:
+-[assembly: AssemblyVersion("3.2.0.6288")]
+-[assembly: AssemblyFileVersion("3.2.0.6288")]
++[assembly: AssemblyVersion("3.3.2.8093")]
++[assembly: AssemblyFileVersion("3.3.2.8093")]
+diff --git a/Antlr3/Properties/AssemblyInfo.cs b/Antlr3/Properties/AssemblyInfo.cs
+index 835187d..935fbd6 100644
+--- a/Antlr3/Properties/AssemblyInfo.cs
++++ b/Antlr3/Properties/AssemblyInfo.cs
+@@ -1,10 +1,10 @@
+﻿/*
+- * [The "BSD licence"]
+- * Copyright (c) 2005-2008 Terence Parr
++ * [The "BSD license"]
++ * Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+* Conversion to C#:
+- * Copyright (c) 2008-2010 Sam Harwell, Pixel Mine, Inc.
++ * Copyright (c) 2011 Sam Harwell, Pixel Mine, Inc.
+* All rights reserved.
+*
+* Redistribution and use in source and binary forms, with or without
+@@ -42,7 +42,7 @@ using System.Runtime.InteropServices;
+[assembly: AssemblyConfiguration( "" )]
+[assembly: AssemblyCompany( "Pixel Mine, Inc." )]
+[assembly: AssemblyProduct( "Antlr3" )]
+-[assembly: AssemblyCopyright( "Copyright © Pixel Mine 2010" )]
++[assembly: AssemblyCopyright("Copyright © Sam Harwell 2011")]
+[assembly: AssemblyTrademark( "" )]
+[assembly: AssemblyCulture( "" )]
+[assembly: CLSCompliant(true)]
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("3.3.1.7705")]
+-[assembly: AssemblyFileVersion("3.3.1.7705")]
++[assembly: AssemblyVersion("3.3.2.8096")]
++[assembly: AssemblyFileVersion("3.3.2.8096")]
+diff --git a/Antlr4.StringTemplate.Visualizer/Properties/AssemblyInfo.cs b/Antlr4.StringTemplate.Visualizer/Properties/AssemblyInfo.cs
+index 9e0d842..de7ccec 100644
+--- a/Antlr4.StringTemplate.Visualizer/Properties/AssemblyInfo.cs
++++ b/Antlr4.StringTemplate.Visualizer/Properties/AssemblyInfo.cs
+@@ -1,5 +1,5 @@
+﻿/*
+- * [The "BSD licence"]
++ * [The "BSD license"]
+* Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+@@ -83,5 +83,5 @@ using System.Windows;
+// You can specify all the values or you can default the Build and Revision Numbers
+// by using the '*' as shown below:
+// [assembly: AssemblyVersion("1.0.*")]
+-[assembly: AssemblyVersion("1.0.0.0")]
+-[assembly: AssemblyFileVersion("1.0.0.0")]
++[assembly: AssemblyVersion("4.0.0.8085")]
++[assembly: AssemblyFileVersion("4.0.0.8085")]
+diff --git a/Antlr4.StringTemplate/Properties/AssemblyInfo.cs b/Antlr4.StringTemplate/Properties/AssemblyInfo.cs
+index 20e7e30..1c9dcf4 100644
+--- a/Antlr4.StringTemplate/Properties/AssemblyInfo.cs
++++ b/Antlr4.StringTemplate/Properties/AssemblyInfo.cs
+@@ -1,5 +1,5 @@
+﻿/*
+- * [The "BSD licence"]
++ * [The "BSD license"]
+* Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+@@ -42,7 +42,7 @@ using System.Runtime.InteropServices;
+[assembly: AssemblyConfiguration("")]
+[assembly: AssemblyCompany("Tunnel Vision Laboratories, LLC")]
+[assembly: AssemblyProduct("Antlr4.StringTemplate")]
+-[assembly: AssemblyCopyright("Copyright © Sam Harwell 2010")]
++[assembly: AssemblyCopyright("Copyright © Sam Harwell 2011")]
+[assembly: AssemblyTrademark("")]
+[assembly: AssemblyCulture("")]
+[assembly: CLSCompliant(false)]
+@@ -66,5 +66,5 @@ using System.Runtime.InteropServices;
+*      the Major or Minor version is incremented.
+*   3. Revision is the Perforce changelist number associated with the release.
+*/
+-[assembly: AssemblyVersion("1.0.0.0")]
+-[assembly: AssemblyFileVersion("1.0.0.0")]
++[assembly: AssemblyVersion("4.0.0.8091")]
++[assembly: AssemblyFileVersion("4.0.0.8091")]
+diff --git a/Antlr4.Test.StringTemplate/Properties/AssemblyInfo.cs b/Antlr4.Test.StringTemplate/Properties/AssemblyInfo.cs
+index 3e43c26..1a86a78 100644
+--- a/Antlr4.Test.StringTemplate/Properties/AssemblyInfo.cs
++++ b/Antlr4.Test.StringTemplate/Properties/AssemblyInfo.cs
+@@ -1,5 +1,5 @@
+﻿/*
+- * [The "BSD licence"]
++ * [The "BSD license"]
+* Copyright (c) 2011 Terence Parr
+* All rights reserved.
+*
+@@ -64,5 +64,5 @@ using System.Runtime.InteropServices;
+//
+// You can specify all the values or you can default the Build and Revision Numbers
+// by using the '*' as shown below:
+-[assembly: AssemblyVersion("1.0.0.0")]
+-[assembly: AssemblyFileVersion("1.0.0.0")]
++[assembly: AssemblyVersion("4.0.0.8085")]
++[assembly: AssemblyFileVersion("4.0.0.8085")]
+

@@ -1,0 +1,181 @@
+commit 14bccc516ca40abde751049fd003a9fa9f46e78d
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Mon Apr 4 12:37:15 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Mon Apr 4 12:37:15 2011 -0800
+
+(C# 3) Use property instead of field
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 8054]
+
+diff --git a/Antlr3/Analysis/LL1Analyzer.cs b/Antlr3/Analysis/LL1Analyzer.cs
+index bc4a920..85bfc52 100644
+--- a/Antlr3/Analysis/LL1Analyzer.cs
++++ b/Antlr3/Analysis/LL1Analyzer.cs
+@@ -364,7 +364,7 @@ namespace Antlr3.Analysis
+//JSystem.@out.println("pred "+transition0.label);
+SemanticContext ctx = transition0.Label.SemanticContext;
+SemanticContext.Predicate p = (SemanticContext.Predicate)ctx;
+-                if ( p.predicateAST.Type != ANTLRParser.BACKTRACK_SEMPRED )
++                if ( p.PredicateAST.Type != ANTLRParser.BACKTRACK_SEMPRED )
+{
+return DETECT_PRED_FOUND;
+}
+@@ -479,7 +479,7 @@ namespace Antlr3.Analysis
+//JSystem.@out.println("pred "+transition0.label);
+p = transition0.Label.SemanticContext;
+// ignore backtracking preds not on left edge for this decision
+-                if ( ( (SemanticContext.Predicate)p ).predicateAST.Type ==
++                if ( ( (SemanticContext.Predicate)p ).PredicateAST.Type ==
+ANTLRParser.BACKTRACK_SEMPRED &&
+s == altStartState.transition[0].Target )
+{
+diff --git a/Antlr3/Analysis/LL1DFA.cs b/Antlr3/Analysis/LL1DFA.cs
+index a555456..c69a9aa 100644
+--- a/Antlr3/Analysis/LL1DFA.cs
++++ b/Antlr3/Analysis/LL1DFA.cs
+@@ -181,7 +181,7 @@ namespace Antlr3.Analysis
+if ( ctx.IsSyntacticPredicate )
+{
+SemanticContext.Predicate p = (SemanticContext.Predicate)ctx;
+-                    if ( p.predicateAST.Type == ANTLRParser.BACKTRACK_SEMPRED )
++                    if ( p.PredicateAST.Type == ANTLRParser.BACKTRACK_SEMPRED )
+{
+/*
+JSystem.@out.println("syn pred for alt "+walkAlt+" "+
+diff --git a/Antlr3/Analysis/SemanticContext.cs b/Antlr3/Analysis/SemanticContext.cs
+index ddcabb6..4a4c8d8 100644
+--- a/Antlr3/Analysis/SemanticContext.cs
++++ b/Antlr3/Analysis/SemanticContext.cs
+@@ -141,7 +141,7 @@ namespace Antlr3.Analysis
+public class Predicate : SemanticContext
+{
+/** The AST node in tree created from the grammar holding the predicate */
+-            public GrammarAST predicateAST;
++            private readonly GrammarAST _predicateAST;
+
+/** Is this a {...}?=> gating predicate or a normal disambiguating {..}?
+*  If any predicate in expression is gated, then expression is considered
+@@ -169,13 +169,13 @@ namespace Antlr3.Analysis
+
+public Predicate()
+{
+-                predicateAST = new GrammarAST();
++                _predicateAST = new GrammarAST();
+this._gated = false;
+}
+
+public Predicate( GrammarAST predicate )
+{
+-                this.predicateAST = predicate;
++                this._predicateAST = predicate;
+this._gated =
+predicate.Type == ANTLRParser.GATED_SEMPRED ||
+predicate.Type == ANTLRParser.SYN_SEMPRED;
+@@ -186,12 +186,20 @@ namespace Antlr3.Analysis
+
+public Predicate( Predicate p )
+{
+-                this.predicateAST = p.predicateAST;
++                this._predicateAST = p._predicateAST;
+this._gated = p._gated;
+this._synpred = p._synpred;
+this.constantValue = p.constantValue;
+}
+
++            public GrammarAST PredicateAST
++            {
++                get
++                {
++                    return _predicateAST;
++                }
++            }
++
+/** Two predicates are the same if they are literally the same
+*  text rather than same node in the grammar's AST.
+*  Or, if they have the same constant value, return equal.
+@@ -203,15 +211,15 @@ namespace Antlr3.Analysis
+if (p == null)
+return false;
+
+-                return predicateAST.Text.Equals(p.predicateAST.Text);
++                return _predicateAST.Text.Equals(p._predicateAST.Text);
+}
+
+public override int GetHashCode()
+{
+-                if ( predicateAST == null )
++                if ( _predicateAST == null )
+return 0;
+
+-                return predicateAST.Text.GetHashCode();
++                return _predicateAST.Text.GetHashCode();
+}
+
+public override StringTemplate GenExpr( CodeGenerator generator,
+@@ -230,7 +238,7 @@ namespace Antlr3.Analysis
+eST = templates.GetInstanceOf( "evalPredicate" );
+generator.grammar.decisionsWhoseDFAsUsesSemPreds.Add( dfa );
+}
+-                    string predEnclosingRuleName = predicateAST.enclosingRuleName;
++                    string predEnclosingRuleName = _predicateAST.enclosingRuleName;
+/*
+String decisionEnclosingRuleName =
+dfa.getNFADecisionStartState().getEnclosingRule();
+@@ -242,7 +250,7 @@ namespace Antlr3.Analysis
+if ( generator != null )
+{
+eST.SetAttribute( "pred",
+-                                         generator.TranslateAction( predEnclosingRuleName, predicateAST ) );
++                                         generator.TranslateAction( predEnclosingRuleName, _predicateAST ) );
+}
+}
+else
+@@ -277,9 +285,9 @@ namespace Antlr3.Analysis
+get
+{
+// user-specified sempred
+-                    return predicateAST != null &&
+-                           (predicateAST.Type == ANTLRParser.GATED_SEMPRED ||
+-                             predicateAST.Type == ANTLRParser.SEMPRED);
++                    return _predicateAST != null &&
++                           (_predicateAST.Type == ANTLRParser.GATED_SEMPRED ||
++                             _predicateAST.Type == ANTLRParser.SEMPRED);
+}
+}
+
+@@ -287,9 +295,9 @@ namespace Antlr3.Analysis
+{
+get
+{
+-                    return predicateAST != null &&
+-                        ( predicateAST.Type == ANTLRParser.SYN_SEMPRED ||
+-                          predicateAST.Type == ANTLRParser.BACKTRACK_SEMPRED );
++                    return _predicateAST != null &&
++                        ( _predicateAST.Type == ANTLRParser.SYN_SEMPRED ||
++                          _predicateAST.Type == ANTLRParser.BACKTRACK_SEMPRED );
+}
+}
+
+@@ -297,17 +305,17 @@ namespace Antlr3.Analysis
+{
+if ( _synpred )
+{
+-                    g.synPredNamesUsedInDFA.Add( predicateAST.Text );
++                    g.synPredNamesUsedInDFA.Add( _predicateAST.Text );
+}
+}
+
+public override string ToString()
+{
+-                if ( predicateAST == null )
++                if ( _predicateAST == null )
+{
+return "<nopred>";
+}
+-                return predicateAST.Text;
++                return _predicateAST.Text;
+}
+}
+
+

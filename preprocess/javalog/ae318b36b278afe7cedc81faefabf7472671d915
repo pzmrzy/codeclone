@@ -1,0 +1,114 @@
+commit ae318b36b278afe7cedc81faefabf7472671d915
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Tue Feb 21 23:40:10 2012 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Wed Feb 22 12:25:46 2012 -0600
+
+Remove stray ; (empty statement)
+
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/BufferedTokenStream.java b/runtime/Java/src/main/java/org/antlr/runtime/BufferedTokenStream.java
+index 571834b..beffc75 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/BufferedTokenStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/BufferedTokenStream.java
+@@ -68,7 +68,7 @@ public class BufferedTokenStream implements TokenStream {
+
+protected int range = -1; // how deep have we gone?
+
+-    public BufferedTokenStream() {;}
++    public BufferedTokenStream() {}
+
+public BufferedTokenStream(TokenSource tokenSource) {
+this.tokenSource = tokenSource;
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/CommonTokenStream.java b/runtime/Java/src/main/java/org/antlr/runtime/CommonTokenStream.java
+index c98be6c..48aeb75 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/CommonTokenStream.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/CommonTokenStream.java
+@@ -49,7 +49,7 @@ public class CommonTokenStream extends BufferedTokenStream {
+/** Skip tokens on any channel but this one; this is how we skip whitespace... */
+protected int channel = Token.DEFAULT_CHANNEL;
+
+-    public CommonTokenStream() { ; }
++    public CommonTokenStream() { }
+
+public CommonTokenStream(TokenSource tokenSource) {
+super(tokenSource);
+diff --git a/runtime/Java/src/main/java/org/antlr/runtime/RecognizerSharedState.java b/runtime/Java/src/main/java/org/antlr/runtime/RecognizerSharedState.java
+index ef46cea..04b1123 100644
+--- a/runtime/Java/src/main/java/org/antlr/runtime/RecognizerSharedState.java
++++ b/runtime/Java/src/main/java/org/antlr/runtime/RecognizerSharedState.java
+@@ -117,7 +117,7 @@ public class RecognizerSharedState {
+*/
+public String text;
+
+-    public RecognizerSharedState() {;}
++    public RecognizerSharedState() {}
+
+public RecognizerSharedState(RecognizerSharedState state) {
+if ( this.following.length < state.following.length ) {
+diff --git a/tool/src/main/java/org/antlr/analysis/DFA.java b/tool/src/main/java/org/antlr/analysis/DFA.java
+index 246efe5..72cba38 100644
+--- a/tool/src/main/java/org/antlr/analysis/DFA.java
++++ b/tool/src/main/java/org/antlr/analysis/DFA.java
+@@ -221,7 +221,7 @@ public class DFA {
+/** Which generator to use if we're building state tables */
+protected CodeGenerator generator = null;
+
+-	protected DFA() {;}
++	protected DFA() {}
+
+public DFA(int decisionNumber, NFAState decisionStartState) {
+this.decisionNumber = decisionNumber;
+diff --git a/tool/src/main/java/org/antlr/tool/Grammar.java b/tool/src/main/java/org/antlr/tool/Grammar.java
+index deca630..9628000 100644
+--- a/tool/src/main/java/org/antlr/tool/Grammar.java
++++ b/tool/src/main/java/org/antlr/tool/Grammar.java
+@@ -2349,7 +2349,7 @@ outer:
+ErrorManager.error(ErrorManager.MSG_TOKENS_FILE_SYNTAX_ERROR,
+vocabName+CodeGenerator.VOCAB_FILE_EXTENSION,
+Utils.integer(lineNum));
+-					while ( tokenizer.nextToken() != StreamTokenizer.TT_EOL ) {;}
++					while ( tokenizer.nextToken() != StreamTokenizer.TT_EOL ) {}
+token = tokenizer.nextToken();
+continue;
+}
+@@ -2358,7 +2358,7 @@ outer:
+ErrorManager.error(ErrorManager.MSG_TOKENS_FILE_SYNTAX_ERROR,
+vocabName+CodeGenerator.VOCAB_FILE_EXTENSION,
+Utils.integer(lineNum));
+-					while ( tokenizer.nextToken() != StreamTokenizer.TT_EOL ) {;}
++					while ( tokenizer.nextToken() != StreamTokenizer.TT_EOL ) {}
+token = tokenizer.nextToken();
+continue;
+}
+@@ -2367,7 +2367,7 @@ outer:
+ErrorManager.error(ErrorManager.MSG_TOKENS_FILE_SYNTAX_ERROR,
+vocabName+CodeGenerator.VOCAB_FILE_EXTENSION,
+Utils.integer(lineNum));
+-					while ( tokenizer.nextToken() != StreamTokenizer.TT_EOL ) {;}
++					while ( tokenizer.nextToken() != StreamTokenizer.TT_EOL ) {}
+token = tokenizer.nextToken();
+continue;
+}
+@@ -2381,7 +2381,7 @@ outer:
+ErrorManager.error(ErrorManager.MSG_TOKENS_FILE_SYNTAX_ERROR,
+vocabName+CodeGenerator.VOCAB_FILE_EXTENSION,
+Utils.integer(lineNum));
+-					while ( tokenizer.nextToken() != StreamTokenizer.TT_EOL ) {;}
++					while ( tokenizer.nextToken() != StreamTokenizer.TT_EOL ) {}
+token = tokenizer.nextToken();
+continue;
+}
+diff --git a/tool/src/main/java/org/antlr/tool/GrammarAST.java b/tool/src/main/java/org/antlr/tool/GrammarAST.java
+index 26d3820..4a86cdf 100644
+--- a/tool/src/main/java/org/antlr/tool/GrammarAST.java
++++ b/tool/src/main/java/org/antlr/tool/GrammarAST.java
+@@ -142,7 +142,7 @@ public class GrammarAST extends CommonTree {
+this.blockOptions = blockOptions;
+}
+
+-	public GrammarAST() {;}
++	public GrammarAST() {}
+
+public GrammarAST(int t, String txt) {
+initialize(t,txt);
+

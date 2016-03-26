@@ -1,0 +1,11 @@
+commit c73796e3fc21831c7bd7e3665e0491c4844537d9
+Merge: bff09d7 e32c7b0
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Thu Nov 12 00:55:45 2015 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Thu Nov 12 00:55:45 2015 -0600
+
+Merge pull request #44 from sharwell/appveyor
+
+AppVeyor configuration
+

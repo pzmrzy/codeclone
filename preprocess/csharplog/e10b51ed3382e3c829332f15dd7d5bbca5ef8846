@@ -1,0 +1,335 @@
+commit e10b51ed3382e3c829332f15dd7d5bbca5ef8846
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Thu Jul 30 14:20:00 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Thu Jul 30 14:20:00 2009 -0800
+
+C# Port:
+* StringTemplate marked as CLSCompliant
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 6157]
+
+diff --git a/Antlr3.StringTemplate/CommonGroupLoader.cs b/Antlr3.StringTemplate/CommonGroupLoader.cs
+index 697c24c..95ea99c 100644
+--- a/Antlr3.StringTemplate/CommonGroupLoader.cs
++++ b/Antlr3.StringTemplate/CommonGroupLoader.cs
+@@ -73,7 +73,7 @@ namespace Antlr3.ST
+protected override TextReader Locate( string name )
+{
+// check for templates on disk first
+-            foreach ( string dir in _dirs )
++            foreach ( string dir in Directories )
+{
+string fileName = System.IO.Path.Combine( dir, name );
+if ( System.IO.File.Exists( fileName ) )
+@@ -84,9 +84,8 @@ namespace Antlr3.ST
+select frame.GetMethod().DeclaringType.Assembly )
+.Distinct();
+
+-            for ( int i = 0; i < _dirs.Length; i++ )
++            foreach (string dir in Directories)
+{
+-                string dir = _dirs[i];
+string fileName = dir + "." + name;
+
+System.IO.Stream @is =
+diff --git a/Antlr3.StringTemplate/Language/ActionEvaluator.cs b/Antlr3.StringTemplate/Language/ActionEvaluator.cs
+index abbfa86..27e0f51 100644
+--- a/Antlr3.StringTemplate/Language/ActionEvaluator.cs
++++ b/Antlr3.StringTemplate/Language/ActionEvaluator.cs
+@@ -56,6 +56,8 @@ using ArrayList = System.Collections.Generic.List<object>;
+
+namespace Antlr3.ST.Language
+{
++[System.CodeDom.Compiler.GeneratedCode("ANTLR", "3.1.2")]
++[System.CLSCompliant(false)]
+public partial class ActionEvaluator : TreeParser
+{
+public static readonly string[] tokenNames = new string[] {
+@@ -4270,7 +4272,7 @@ public partial class ActionEvaluator : TreeParser
+
+
+#region Follow sets
+-	public static class Follow
++	private static class Follow
+{
+public static readonly BitSet _expr_in_action56 = new BitSet(new ulong[]{0x2UL});
+public static readonly BitSet _PLUS_in_expr79 = new BitSet(new ulong[]{0x4UL});
+diff --git a/Antlr3.StringTemplate/Language/ActionLexer.cs b/Antlr3.StringTemplate/Language/ActionLexer.cs
+index fa35950..02ec0f6 100644
+--- a/Antlr3.StringTemplate/Language/ActionLexer.cs
++++ b/Antlr3.StringTemplate/Language/ActionLexer.cs
+@@ -48,6 +48,8 @@ using Map = System.Collections.IDictionary;
+using HashMap = System.Collections.Generic.Dictionary<object, object>;
+namespace  Antlr3.ST.Language
+{
++[System.CodeDom.Compiler.GeneratedCode("ANTLR", "3.1.2")]
++[System.CLSCompliant(false)]
+public partial class ActionLexer : Lexer
+{
+public const int EOF=-1;
+diff --git a/Antlr3.StringTemplate/Language/ActionParser.cs b/Antlr3.StringTemplate/Language/ActionParser.cs
+index 13679ee..7b3a2b9 100644
+--- a/Antlr3.StringTemplate/Language/ActionParser.cs
++++ b/Antlr3.StringTemplate/Language/ActionParser.cs
+@@ -52,6 +52,8 @@ using RewriteRuleITokenStream = Antlr.Runtime.Tree.RewriteRuleTokenStream;
+
+namespace  Antlr3.ST.Language
+{
++[System.CodeDom.Compiler.GeneratedCode("ANTLR", "3.1.2")]
++[System.CLSCompliant(false)]
+public partial class ActionParser : Parser
+{
+internal static readonly string[] tokenNames = new string[] {
+@@ -3774,7 +3776,7 @@ public partial class ActionParser : Parser
+#endregion DFA
+
+#region Follow sets
+-	static class Follow
++	private static class Follow
+{
+public static readonly BitSet _templatesExpr_in_action192 = new BitSet(new ulong[]{0x400000000UL});
+public static readonly BitSet _SEMI_in_action195 = new BitSet(new ulong[]{0x20000UL});
+diff --git a/Antlr3.StringTemplate/Language/AngleBracketTemplateLexer.cs b/Antlr3.StringTemplate/Language/AngleBracketTemplateLexer.cs
+index 3c75858..ea48415 100644
+--- a/Antlr3.StringTemplate/Language/AngleBracketTemplateLexer.cs
++++ b/Antlr3.StringTemplate/Language/AngleBracketTemplateLexer.cs
+@@ -50,6 +50,8 @@ using Map = System.Collections.IDictionary;
+using HashMap = System.Collections.Generic.Dictionary<object, object>;
+namespace Antlr3.ST.Language
+{
++[System.CodeDom.Compiler.GeneratedCode("ANTLR", "3.1.2")]
++[System.CLSCompliant(false)]
+public partial class AngleBracketTemplateLexer : Lexer
+{
+public const int EOF=-1;
+diff --git a/Antlr3.StringTemplate/Language/GroupLexer.cs b/Antlr3.StringTemplate/Language/GroupLexer.cs
+index 7e6804a..b52850f 100644
+--- a/Antlr3.StringTemplate/Language/GroupLexer.cs
++++ b/Antlr3.StringTemplate/Language/GroupLexer.cs
+@@ -47,6 +47,8 @@ using ArrayList = System.Collections.Generic.List<object>;
+
+namespace Antlr3.ST.Language
+{
++[System.CodeDom.Compiler.GeneratedCode("ANTLR", "3.1.2")]
++[System.CLSCompliant(false)]
+public partial class GroupLexer : Lexer
+{
+public const int EOF=-1;
+diff --git a/Antlr3.StringTemplate/Language/GroupParser.cs b/Antlr3.StringTemplate/Language/GroupParser.cs
+index cf8c125..5f5f0b7 100644
+--- a/Antlr3.StringTemplate/Language/GroupParser.cs
++++ b/Antlr3.StringTemplate/Language/GroupParser.cs
+@@ -50,6 +50,8 @@ using ArrayList = System.Collections.Generic.List<object>;
+
+namespace Antlr3.ST.Language
+{
++[System.CodeDom.Compiler.GeneratedCode("ANTLR", "3.1.2")]
++[System.CLSCompliant(false)]
+public partial class GroupParser : Parser
+{
+public static readonly string[] tokenNames = new string[] {
+@@ -1097,7 +1099,7 @@ public partial class GroupParser : Parser
+
+
+#region Follow sets
+-	public static class Follow
++	private static class Follow
+{
+public static readonly BitSet _KWGROUP_in_group93 = new BitSet(new ulong[]{0x1000UL});
+public static readonly BitSet _ID_in_group97 = new BitSet(new ulong[]{0x808100UL});
+diff --git a/Antlr3.StringTemplate/Language/InterfaceLexer.cs b/Antlr3.StringTemplate/Language/InterfaceLexer.cs
+index f465c34..75564b9 100644
+--- a/Antlr3.StringTemplate/Language/InterfaceLexer.cs
++++ b/Antlr3.StringTemplate/Language/InterfaceLexer.cs
+@@ -47,6 +47,8 @@ using ArrayList = System.Collections.Generic.List<object>;
+
+namespace Antlr3.ST.Language
+{
++[System.CodeDom.Compiler.GeneratedCode("ANTLR", "3.1.2")]
++[System.CLSCompliant(false)]
+public partial class InterfaceLexer : Lexer
+{
+public const int EOF=-1;
+diff --git a/Antlr3.StringTemplate/Language/InterfaceParser.cs b/Antlr3.StringTemplate/Language/InterfaceParser.cs
+index d6dee2a..63b6b9e 100644
+--- a/Antlr3.StringTemplate/Language/InterfaceParser.cs
++++ b/Antlr3.StringTemplate/Language/InterfaceParser.cs
+@@ -47,6 +47,8 @@ using ArrayList = System.Collections.Generic.List<object>;
+
+namespace Antlr3.ST.Language
+{
++[System.CodeDom.Compiler.GeneratedCode("ANTLR", "3.1.2")]
++[System.CLSCompliant(false)]
+public partial class InterfaceParser : Parser
+{
+public static readonly string[] tokenNames = new string[] {
+@@ -317,7 +319,7 @@ public partial class InterfaceParser : Parser
+
+
+#region Follow sets
+-	public static class Follow
++	private static class Follow
+{
+public static readonly BitSet _INTERFACE_in_groupInterface88 = new BitSet(new ulong[]{0x40UL});
+public static readonly BitSet _ID_in_groupInterface92 = new BitSet(new ulong[]{0x1000UL});
+diff --git a/Antlr3.StringTemplate/Language/TemplateLexer.cs b/Antlr3.StringTemplate/Language/TemplateLexer.cs
+index 23a8596..6a80dc0 100644
+--- a/Antlr3.StringTemplate/Language/TemplateLexer.cs
++++ b/Antlr3.StringTemplate/Language/TemplateLexer.cs
+@@ -48,6 +48,8 @@ using Map = System.Collections.IDictionary;
+using HashMap = System.Collections.Generic.Dictionary<object, object>;
+namespace Antlr3.ST.Language
+{
++[System.CodeDom.Compiler.GeneratedCode("ANTLR", "3.1.2")]
++[System.CLSCompliant(false)]
+public partial class TemplateLexer : Lexer
+{
+public const int EOF=-1;
+diff --git a/Antlr3.StringTemplate/Language/TemplateParser.cs b/Antlr3.StringTemplate/Language/TemplateParser.cs
+index 963b3ca..f38f851 100644
+--- a/Antlr3.StringTemplate/Language/TemplateParser.cs
++++ b/Antlr3.StringTemplate/Language/TemplateParser.cs
+@@ -48,6 +48,8 @@ using ArrayList = System.Collections.Generic.List<object>;
+
+namespace Antlr3.ST.Language
+{
++[System.CodeDom.Compiler.GeneratedCode("ANTLR", "3.1.2")]
++[System.CLSCompliant(false)]
+public partial class TemplateParser : Parser
+{
+internal static readonly string[] tokenNames = new string[] {
+diff --git a/Antlr3.StringTemplate/PathGroupLoader.cs b/Antlr3.StringTemplate/PathGroupLoader.cs
+index 7cbb350..903671b 100644
+--- a/Antlr3.StringTemplate/PathGroupLoader.cs
++++ b/Antlr3.StringTemplate/PathGroupLoader.cs
+@@ -33,6 +33,7 @@
+namespace Antlr3.ST
+{
+using System;
++    using System.Collections.ObjectModel;
+using Antlr.Runtime.JavaExtensions;
+using Antlr3.ST.Language;
+
+@@ -41,6 +42,7 @@ namespace Antlr3.ST
+using Stream = System.IO.Stream;
+using StreamReader = System.IO.StreamReader;
+using TextReader = System.IO.TextReader;
++    using Path = System.IO.Path;
+
+/** <summary>
+*  A brain dead loader that looks only in the directory(ies) you
+@@ -55,17 +57,14 @@ namespace Antlr3.ST
+*/
+public class PathGroupLoader : IStringTemplateGroupLoader
+{
+-        /** <summary>List of ':' separated dirs to pull groups from</summary> */
+-        protected string[] _dirs = null;
+-
+-        IStringTemplateErrorListener _errors = null;
++        private IStringTemplateErrorListener _errors = null;
+
+/** <summary>
+*  How are the files encoded (ascii, UTF8, ...)?  You might want to read
+*  UTF8 for example on an ascii machine.
+*  </summary>
+*/
+-        Encoding _fileCharEncoding = Encoding.Default;
++        private Encoding _fileCharEncoding = Encoding.Default;
+
+public PathGroupLoader( IStringTemplateErrorListener errors )
+{
+@@ -80,7 +79,14 @@ namespace Antlr3.ST
+public PathGroupLoader( string dirStr, IStringTemplateErrorListener errors )
+{
+_errors = errors;
+-            _dirs = dirStr.Split( ':' );
++            Directories = new ReadOnlyCollection<string>(dirStr.Split(':'));
++        }
++
++        /** <summary>Gets a list of directories to pull groups from</summary> */
++        public ReadOnlyCollection<string> Directories
++        {
++            get;
++            private set;
+}
+
+/** <summary>
+@@ -168,10 +174,9 @@ namespace Antlr3.ST
+/** <summary>Look in each directory for the file called 'name'.</summary> */
+protected virtual TextReader Locate( string name )
+{
+-            for ( int i = 0; i < _dirs.Length; i++ )
++            foreach (string dir in Directories)
+{
+-                string dir = _dirs[i];
+-                string fileName = dir + "/" + name;
++                string fileName = Path.Combine(dir, name);
+if ( System.IO.File.Exists( fileName ) )
+{
+System.IO.FileStream fis = System.IO.File.OpenRead( fileName );
+diff --git a/Antlr3.StringTemplate/Properties/AssemblyInfo.cs b/Antlr3.StringTemplate/Properties/AssemblyInfo.cs
+index c838a1b..dfea45b 100644
+--- a/Antlr3.StringTemplate/Properties/AssemblyInfo.cs
++++ b/Antlr3.StringTemplate/Properties/AssemblyInfo.cs
+@@ -30,8 +30,8 @@
+* THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
++using System;
+using System.Reflection;
+-using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+
+// General Information about an assembly is controlled through the following
+@@ -45,6 +45,7 @@ using System.Runtime.InteropServices;
+[assembly: AssemblyCopyright( "Copyright © Pixel Mine 2008" )]
+[assembly: AssemblyTrademark( "" )]
+[assembly: AssemblyCulture( "" )]
++[assembly: CLSCompliant( true )]
+
+// Setting ComVisible to false makes the types in this assembly not visible
+// to COM components.  If you need to access a type in this assembly from
+diff --git a/Antlr3.StringTemplate/StringTemplateGroup.cs b/Antlr3.StringTemplate/StringTemplateGroup.cs
+index da04a0e..5ef50be 100644
+--- a/Antlr3.StringTemplate/StringTemplateGroup.cs
++++ b/Antlr3.StringTemplate/StringTemplateGroup.cs
+@@ -123,12 +123,10 @@ namespace Antlr3.ST
+Assembly _rootAssembly;
+
+/** <summary>Track all groups by name; maps name to StringTemplateGroup</summary> */
+-        //static Map _nameToGroupMap = System.Collections.Hashtable.Synchronized( new System.Collections.Hashtable() );
+-        public static IDictionary<string, StringTemplateGroup> _nameToGroupMap = new Dictionary<string, StringTemplateGroup>();
++        private static readonly IDictionary<string, StringTemplateGroup> _nameToGroupMap = new Dictionary<string, StringTemplateGroup>();
+
+/** <summary>Track all interfaces by name; maps name to StringTemplateGroupInterface</summary> */
+-        //static Map _nameToInterfaceMap = System.Collections.Hashtable.Synchronized( new System.Collections.Hashtable() );
+-        public static IDictionary<string, StringTemplateGroupInterface> _nameToInterfaceMap = new Dictionary<string, StringTemplateGroupInterface>();
++        private static readonly IDictionary<string, StringTemplateGroupInterface> _nameToInterfaceMap = new Dictionary<string, StringTemplateGroupInterface>();
+
+/** <summary>
+*  Are we derived from another group?  Templates not found in this group
+@@ -270,8 +268,8 @@ namespace Antlr3.ST
+this._rootDir = rootDir;
+this._rootAssembly = rootAssembly;
+_lastCheckedDisk = DateTime.Now;
+-            _nameToGroupMap[name] = this;
+TemplateLexerClass = lexer;
++            StringTemplateGroup._nameToGroupMap[name] = this;
+}
+
+/** <summary>
+@@ -493,6 +491,12 @@ namespace Antlr3.ST
+return result;
+}
+
++        public static void ResetNameMaps()
++        {
++            _nameToGroupMap.Clear();
++            _nameToInterfaceMap.Clear();
++        }
++
+public Antlr.Runtime.Lexer CreateLexer( StringTemplate template, TextReader reader )
+{
+if ( _templateLexerClassCtor != null )
+

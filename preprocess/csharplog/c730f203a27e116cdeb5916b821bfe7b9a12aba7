@@ -1,0 +1,58 @@
+commit c730f203a27e116cdeb5916b821bfe7b9a12aba7
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Tue Mar 17 07:36:12 2009 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Tue Mar 17 07:36:12 2009 -0800
+
+C# Port:
+* Support static methods and fields in StringTemplate property accessors
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 5901]
+
+diff --git a/Antlr3.StringTemplate/Language/ASTExpr.cs b/Antlr3.StringTemplate/Language/ASTExpr.cs
+index a6ccfad..a5dc0d6 100644
+--- a/Antlr3.StringTemplate/Language/ASTExpr.cs
++++ b/Antlr3.StringTemplate/Language/ASTExpr.cs
+@@ -570,10 +570,14 @@ namespace Antlr3.ST.Language
+
+static Func<object, object> BuildAccessor( MethodInfo method )
+{
+-            System.Reflection.Emit.DynamicMethod dm = new System.Reflection.Emit.DynamicMethod( method.DeclaringType.Name + method.Name + "Accessor", typeof( object ), new Type[] { typeof( object ) }, method.DeclaringType );
++            System.Reflection.Emit.DynamicMethod dm = new System.Reflection.Emit.DynamicMethod( method.DeclaringType.Name + method.Name + "MethodAccessor", typeof( object ), new Type[] { typeof( object ) }, method.DeclaringType );
+var gen = dm.GetILGenerator();
+-            gen.Emit( System.Reflection.Emit.OpCodes.Ldarg_0 );
+-            gen.Emit( System.Reflection.Emit.OpCodes.Castclass, method.DeclaringType );
++
++            if ( !method.IsStatic )
++            {
++                gen.Emit( System.Reflection.Emit.OpCodes.Ldarg_0 );
++                gen.Emit( System.Reflection.Emit.OpCodes.Castclass, method.DeclaringType );
++            }
+
+if ( method.IsVirtual && !method.IsFinal )
+gen.EmitCall( System.Reflection.Emit.OpCodes.Callvirt, method, null );
+@@ -589,11 +593,19 @@ namespace Antlr3.ST.Language
+
+static Func<object, object> BuildAccessor( FieldInfo field )
+{
+-            System.Reflection.Emit.DynamicMethod dm = new System.Reflection.Emit.DynamicMethod( field.DeclaringType.Name + field.Name + "Accessor", typeof( object ), new Type[] { typeof( object ) }, field.DeclaringType );
++            System.Reflection.Emit.DynamicMethod dm = new System.Reflection.Emit.DynamicMethod( field.DeclaringType.Name + field.Name + "FieldAccessor", typeof( object ), new Type[] { typeof( object ) }, field.DeclaringType );
++
+var gen = dm.GetILGenerator();
+-            gen.Emit( System.Reflection.Emit.OpCodes.Ldarg_0 );
+-            gen.Emit( System.Reflection.Emit.OpCodes.Castclass, field.DeclaringType );
+-            gen.Emit( System.Reflection.Emit.OpCodes.Ldfld, field );
++            if ( field.IsStatic )
++            {
++                gen.Emit( System.Reflection.Emit.OpCodes.Ldsfld, field );
++            }
++            else
++            {
++                gen.Emit( System.Reflection.Emit.OpCodes.Ldarg_0 );
++                gen.Emit( System.Reflection.Emit.OpCodes.Castclass, field.DeclaringType );
++                gen.Emit( System.Reflection.Emit.OpCodes.Ldfld, field );
++            }
+
+if ( field.FieldType.IsValueType )
+gen.Emit( System.Reflection.Emit.OpCodes.Box, field.FieldType );
+

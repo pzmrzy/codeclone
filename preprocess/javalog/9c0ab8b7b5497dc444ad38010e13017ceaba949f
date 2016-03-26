@@ -1,0 +1,46 @@
+commit 9c0ab8b7b5497dc444ad38010e13017ceaba949f
+Author:     acondit <acondit@parrt.spork>
+AuthorDate: Sat May 7 08:24:03 2011 -0800
+Commit:     acondit <acondit@parrt.spork>
+CommitDate: Sat May 7 08:24:03 2011 -0800
+
+XCode4 changes for ANTLR3.4 revision.
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8422]
+
+diff --git a/runtime/ObjC/Framework/ANTLR/ANTLR.xcodeproj/project.xcworkspace/xcuserdata/acondit.xcuserdatad/xcdebugger/Expressions.xcexplist b/runtime/ObjC/Framework/ANTLR/ANTLR.xcodeproj/project.xcworkspace/xcuserdata/acondit.xcuserdatad/xcdebugger/Expressions.xcexplist
+new file mode 100644
+index 0000000..8dd585d
+--- /dev/null
++++ b/runtime/ObjC/Framework/ANTLR/ANTLR.xcodeproj/project.xcworkspace/xcuserdata/acondit.xcuserdatad/xcdebugger/Expressions.xcexplist
+@@ -0,0 +1,29 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<VariablesStackState
++   version = "1.0">
++   <StackStates>
++      <StackState
++         stackFrameDescription = "-[ACBTree insertkey:value:]:ACBTree.m">
++         <expressions>
++         </expressions>
++      </StackState>
++      <StackState
++         stackFrameDescription = "-[ACBTree internalinsert:value:split:]:ACBTree.m">
++         <expressions>
++         </expressions>
++      </StackState>
++      <StackState
++         stackFrameDescription = "-[ACBTree insert:value:index:split:]:ACBTree.m">
++         <expressions>
++            <expression
++               value = "NSString">
++            </expression>
++         </expressions>
++      </StackState>
++      <StackState
++         stackFrameDescription = "-[TestDictionary test04remove]:TestDictionary.m">
++         <expressions>
++         </expressions>
++      </StackState>
++   </StackStates>
++</VariablesStackState>
+

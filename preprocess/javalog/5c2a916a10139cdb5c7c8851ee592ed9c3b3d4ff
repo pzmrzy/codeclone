@@ -1,0 +1,26 @@
+commit 5c2a916a10139cdb5c7c8851ee592ed9c3b3d4ff
+Author:     Terence Parr <parrt@cs.usfca.edu>
+AuthorDate: Wed Aug 19 11:40:06 2015 -0700
+Commit:     Terence Parr <parrt@cs.usfca.edu>
+CommitDate: Wed Aug 19 11:40:06 2015 -0700
+
+Update README.txt
+
+diff --git a/README.txt b/README.txt
+index d0a2e41..927f3c4 100644
+--- a/README.txt
++++ b/README.txt
+@@ -1,7 +1,11 @@
+ANTLR v3.5
+January 4, 2013
+
+-Given day-job constraints, my time working on this project is limited so I'll have to focus first on fixing bugs rather than changing/improving the feature set. Likely I'll do it in bursts every few months. Please do not be offended if your bug or pull request does not yield a response! --parrt
++Given day-job constraints, my time working on this project is limited
++so I'll have to focus first on fixing bugs rather than changing/improving
++the feature set. Likely I'll do it in bursts every few months. Please do
++not be offended if your bug or pull request does not yield a response!
++--parrt
+
+Terence Parr
+ANTLR project lead and supreme dictator for life
+

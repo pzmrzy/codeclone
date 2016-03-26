@@ -1,0 +1,9 @@
+commit 317bd697ce5f8405ce1d57ba50765e771a0e847a
+Merge: 1ce5ff8 8312471
+Author:     Terence Parr <parrt@antlr.org>
+AuthorDate: Thu Jul 5 11:41:19 2012 -0700
+Commit:     Terence Parr <parrt@antlr.org>
+CommitDate: Thu Jul 5 11:41:19 2012 -0700
+
+Merge branch 'master' of github.com:parrt/antlr3
+

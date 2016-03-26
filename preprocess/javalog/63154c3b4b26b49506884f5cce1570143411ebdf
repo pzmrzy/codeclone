@@ -1,0 +1,70 @@
+commit 63154c3b4b26b49506884f5cce1570143411ebdf
+Author:     parrt <parrt@antlr.org>
+AuthorDate: Thu Oct 27 08:50:28 2011 -0800
+Commit:     parrt <parrt@antlr.org>
+CommitDate: Thu Oct 27 08:50:28 2011 -0800
+
+* Dieter Habelitz reported bug in java code gen with synpreds. labels were
+being carried from grammar into synpreds but weren't typed properly (they
+were "void x=null;" for x=ruleref labels)
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 9207]
+
+diff --git a/tool/CHANGES.txt b/tool/CHANGES.txt
+index 5f00e69..650f537 100644
+--- a/tool/CHANGES.txt
++++ b/tool/CHANGES.txt
+@@ -7,6 +7,12 @@ University of San Francisco
+
+CHANGES
+
++October 27, 2011
++
++* Dieter Habelitz reported bug in java code gen with synpreds. labels were
++  being carried from grammar into synpreds but weren't typed properly (they
++  were "void x=null;" for x=ruleref labels)
++
+October 25, 2011
+
+* (Sam) Rule.setOption didn't do memoize option right.
+diff --git a/tool/src/main/java/org/antlr/tool/GrammarAST.java b/tool/src/main/java/org/antlr/tool/GrammarAST.java
+index 3d36cc8..d2c6a88 100644
+--- a/tool/src/main/java/org/antlr/tool/GrammarAST.java
++++ b/tool/src/main/java/org/antlr/tool/GrammarAST.java
+@@ -490,14 +490,31 @@ public class GrammarAST extends CommonTree {
+for (int i = 0; i < t.getChildCount(); i++){
+GrammarAST child = (GrammarAST)t.getChild(i);
+int ttype = child.getType();
+-			if (ttype == ANTLRParser.REWRITES || ttype == ANTLRParser.REWRITE || ttype==ANTLRParser.ACTION) {
++			if ( ttype == ANTLRParser.REWRITES ||
++				 ttype == ANTLRParser.REWRITE ||
++				 ttype==ANTLRParser.ACTION )
++			{
+continue;
+}
+
+-			if (ttype == ANTLRParser.BANG || ttype == ANTLRParser.ROOT) {
+-				for (GrammarAST subchild : getChildrenForDupTree(child))
++			// strip labels
++			if ( ttype == ANTLRParser.ASSIGN ||
++				 ttype == ANTLRParser.PLUS_ASSIGN )
++			{
++				// get element from (= x element)
++				result.add((GrammarAST)child.getChild(1));
++			}
++			// strip ast opts
++			else if ( ttype == ANTLRParser.BANG ||
++				 ttype == ANTLRParser.ROOT ||
++				 ttype == ANTLRParser.ASSIGN ||
++				 ttype == ANTLRParser.PLUS_ASSIGN )
++			{
++				for (GrammarAST subchild : getChildrenForDupTree(child)) {
+result.add(subchild);
+-			} else {
++				}
++			}
++			else {
+result.add(child);
+}
+}
+

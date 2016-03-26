@@ -1,0 +1,51 @@
+commit c5620186211a957f5f855867bfe38ca1d82abdba
+Author:     Sam Harwell <sam@tunnelvisionlabs.com>
+AuthorDate: Thu Dec 18 18:01:50 2014 -0600
+Commit:     Sam Harwell <sam@tunnelvisionlabs.com>
+CommitDate: Thu Dec 18 18:30:59 2014 -0600
+
+Add initial .gitattributes
+
+diff --git a/.gitattributes b/.gitattributes
+new file mode 100644
+index 0000000..14c7e3f
+--- /dev/null
++++ b/.gitattributes
+@@ -0,0 +1,36 @@
++# Source code files
++*.cs text
++*.vsixmanifest text
++*.config text
++*.resx text
++*.vstemplate text
++*.nuspec text
++*.md text
++*.txt text
++*.ps1 text
++*.stg text
++*.xml text
++LICENSE text
++
++# SHFB Content Files
++*.aml text
++*.content text
++*.tokens text
++
++# Projects and solutions
++*.sln text
++*.csproj text
++*.shfbproj text
++*.targets text
++*.props text
++
++# Certainly binary files
++*.exe binary
++*.dll binary
++*.pdb binary
++
++*.docx binary
++
++*.png binary
++*.ico binary
++*.snk binary
+

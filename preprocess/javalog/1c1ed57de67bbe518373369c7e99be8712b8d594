@@ -1,0 +1,1391 @@
+commit 1c1ed57de67bbe518373369c7e99be8712b8d594
+Author:     acondit <acondit@parrt.spork>
+AuthorDate: Sat May 14 12:31:12 2011 -0800
+Commit:     acondit <acondit@parrt.spork>
+CommitDate: Sat May 14 12:31:12 2011 -0800
+
+More work on resolving memory management issues
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8483]
+
+diff --git a/runtime/ObjC/Framework/ANTLRBaseMapElement.m b/runtime/ObjC/Framework/ANTLRBaseMapElement.m
+index 4ce706a..62a618f 100644
+--- a/runtime/ObjC/Framework/ANTLRBaseMapElement.m
++++ b/runtime/ObjC/Framework/ANTLRBaseMapElement.m
+@@ -63,6 +63,15 @@
+return (self);
+}
+
++- (void) dealloc
++{
++#ifdef DEBUG_DEALLOC
++    NSLog( @"called dealloc in ANTLRBaseMapElement" );
++#endif
++    if ( index ) [index release];
++    [super dealloc];
++}
++
+- (id) copyWithZone:(NSZone *)aZone
+{
+ANTLRBaseMapElement *copy;
+diff --git a/runtime/ObjC/Framework/ANTLRBaseRecognizer.m b/runtime/ObjC/Framework/ANTLRBaseRecognizer.m
+index e57a776..573e0dc 100644
+--- a/runtime/ObjC/Framework/ANTLRBaseRecognizer.m
++++ b/runtime/ObjC/Framework/ANTLRBaseRecognizer.m
+@@ -78,13 +78,19 @@ static NSString *NEXT_TOKEN_RULE_NAME;
+
++ (void)setTokenNames:(AMutableArray *)theTokNams
+{
++    if ( _tokenNames != theTokNams ) {
++        if ( _tokenNames ) [_tokenNames release];
++        [theTokNams retain];
++    }
+_tokenNames = theTokNams;
+-    [_tokenNames retain];
+}
+
++ (void)setGrammarFileName:(NSString *)aFileName
+{
+-    _grammarFileName = aFileName;
++    if ( _grammarFileName != aFileName ) {
++        if ( _grammarFileName ) [_grammarFileName release];
++        [aFileName retain];
++    }
+[_grammarFileName retain];
+}
+
+@@ -95,7 +101,9 @@ static NSString *NEXT_TOKEN_RULE_NAME;
+state = [[ANTLRRecognizerSharedState newANTLRRecognizerSharedState] retain];
+}
+tokenNames = _tokenNames;
++        if ( tokenNames ) [tokenNames retain];
+grammarFileName = _grammarFileName;
++        if ( grammarFileName ) [grammarFileName retain];
+state._fsp = -1;
+state.errorRecovery = NO;		// are we recovering?
+state.lastErrorIndex = -1;
+@@ -114,7 +122,9 @@ static NSString *NEXT_TOKEN_RULE_NAME;
+state = [[ANTLRRecognizerSharedState newANTLRRecognizerSharedStateWithRuleLen:aLen] retain];
+}
+tokenNames = _tokenNames;
++        if ( tokenNames ) [tokenNames retain];
+grammarFileName = _grammarFileName;
++        if ( grammarFileName ) [grammarFileName retain];
+state._fsp = -1;
+state.errorRecovery = NO;		// are we recovering?
+state.lastErrorIndex = -1;
+@@ -135,7 +145,9 @@ static NSString *NEXT_TOKEN_RULE_NAME;
+}
+[state retain];
+tokenNames = _tokenNames;
++        if ( tokenNames ) [tokenNames retain];
+grammarFileName = _grammarFileName;
++        if ( grammarFileName ) [grammarFileName retain];
+state._fsp = -1;
+state.errorRecovery = NO;		// are we recovering?
+state.lastErrorIndex = -1;
+@@ -152,7 +164,9 @@ static NSString *NEXT_TOKEN_RULE_NAME;
+#ifdef DEBUG_DEALLOC
+NSLog( @"called dealloc in ANTLRBaseRecognizer" );
+#endif
+-	[state release];
++	if ( grammarFileName ) [grammarFileName release];
++	if ( tokenNames ) [tokenNames release];
++	if ( state ) [state release];
+[super dealloc];
+}
+
+diff --git a/runtime/ObjC/Framework/ANTLRBaseTree.h b/runtime/ObjC/Framework/ANTLRBaseTree.h
+index 68fddaf..edb8075 100755
+--- a/runtime/ObjC/Framework/ANTLRBaseTree.h
++++ b/runtime/ObjC/Framework/ANTLRBaseTree.h
+@@ -177,6 +177,7 @@
+
+@interface ANTLRTreeNavigationNode : ANTLRBaseTree {
+}
++- (id) init;
+- (id) copyWithZone:(NSZone *)aZone;
+@end
+
+diff --git a/runtime/ObjC/Framework/ANTLRBaseTree.m b/runtime/ObjC/Framework/ANTLRBaseTree.m
+index 3a9c72b..a953819 100755
+--- a/runtime/ObjC/Framework/ANTLRBaseTree.m
++++ b/runtime/ObjC/Framework/ANTLRBaseTree.m
+@@ -98,6 +98,9 @@ static id<ANTLRBaseTree> invalidNode = nil;
+
+- (void) dealloc
+{
++#ifdef DEBUG_DEALLOC
++    NSLog( @"called dealloc in ANTLRBaseTree" );
++#endif
+if ( children ) [children release];
+children = nil;
+[super dealloc];
+@@ -121,6 +124,10 @@ static id<ANTLRBaseTree> invalidNode = nil;
+
+- (void) setChildren:(AMutableArray *)anArray
+{
++    if ( children != anArray ) {
++        if ( children ) [children release];
++        [anArray retain];
++    }
+children = anArray;
+}
+
+@@ -539,6 +546,12 @@ static id<ANTLRBaseTree> invalidNode = nil;
+#pragma mark -
+
+@implementation ANTLRTreeNavigationNode
++- (id)init
++{
++    self = (ANTLRTreeNavigationNode *)[super init];
++    return self;
++}
++
+- (id) copyWithZone:(NSZone *)aZone
+{
+return nil;
+@@ -553,6 +566,12 @@ static id<ANTLRBaseTree> invalidNode = nil;
+return navigationNodeDown;
+}
+
++- (id)init
++{
++    self = [super init];
++    return self;
++}
++
+- (NSInteger) tokenType { return ANTLRTokenTypeDOWN; }
+- (NSString *) description { return @"DOWN"; }
+@end
+@@ -566,6 +585,12 @@ static id<ANTLRBaseTree> invalidNode = nil;
+}
+
+
++- (id)init
++{
++    self = [super init];
++    return self;
++}
++
+- (NSInteger) tokenType { return ANTLRTokenTypeUP; }
+- (NSString *) description { return @"UP"; }
+@end
+@@ -578,6 +603,12 @@ static id<ANTLRBaseTree> invalidNode = nil;
+return navigationNodeEOF;
+}
+
++- (id)init
++{
++    self = [super init];
++    return self;
++}
++
+- (NSInteger) tokenType { return ANTLRTokenTypeEOF; }
+- (NSString *) description { return @"EOF"; }
+
+diff --git a/runtime/ObjC/Framework/ANTLRBitSet.h b/runtime/ObjC/Framework/ANTLRBitSet.h
+index a6e8eed..8fd75b1 100644
+--- a/runtime/ObjC/Framework/ANTLRBitSet.h
++++ b/runtime/ObjC/Framework/ANTLRBitSet.h
+@@ -38,7 +38,7 @@
+// This is fast, so there is no need to reinvent the wheel just yet.
+
+@interface ANTLRBitSet : NSObject < NSMutableCopying > {
+-	CFMutableBitVectorRef bitVector;
++	__strong CFMutableBitVectorRef bitVector;
+}
+
+#pragma mark Class Methods
+diff --git a/runtime/ObjC/Framework/ANTLRBufferedTokenStream.m b/runtime/ObjC/Framework/ANTLRBufferedTokenStream.m
+index 0ca396c..94802b5 100644
+--- a/runtime/ObjC/Framework/ANTLRBufferedTokenStream.m
++++ b/runtime/ObjC/Framework/ANTLRBufferedTokenStream.m
+@@ -93,6 +93,7 @@ extern NSInteger debug;
+NSLog( @"called dealloc in ANTLRBufferedTokenStream" );
+#endif
+if ( tokens ) [tokens release];
++    if ( tokenSource ) [tokenSource release];
+[super dealloc];
+}
+
+diff --git a/runtime/ObjC/Framework/ANTLRBufferedTreeNodeStream.h b/runtime/ObjC/Framework/ANTLRBufferedTreeNodeStream.h
+index d475c04..07555a5 100644
+--- a/runtime/ObjC/Framework/ANTLRBufferedTreeNodeStream.h
++++ b/runtime/ObjC/Framework/ANTLRBufferedTreeNodeStream.h
+@@ -105,6 +105,7 @@
+- (id) initWithTreeAdaptor:(ANTLRCommonTreeAdaptor *)anAdaptor Tree:(ANTLRCommonTree *)tree;
+- (id) initWithTreeAdaptor:(ANTLRCommonTreeAdaptor *)anAdaptor Tree:(ANTLRCommonTree *)tree WithBufferSize:(NSInteger)bufferSize;
+
++- (void)dealloc;
+- (id) copyWithZone:(NSZone *)aZone;
+
+// protected methods. DO NOT USE
+diff --git a/runtime/ObjC/Framework/ANTLRBufferedTreeNodeStream.m b/runtime/ObjC/Framework/ANTLRBufferedTreeNodeStream.m
+index dfbee3b..a8f73d8 100644
+--- a/runtime/ObjC/Framework/ANTLRBufferedTreeNodeStream.m
++++ b/runtime/ObjC/Framework/ANTLRBufferedTreeNodeStream.m
+@@ -175,6 +175,20 @@ extern NSInteger debug;
+return self;
+}
+
++- (void)dealloc
++{
++#ifdef DEBUG_DEALLOC
++    NSLog( @"called dealloc in ANTLRBufferedTreeNodeStream" );
++#endif
++    if ( adaptor ) [adaptor release];
++    if ( nodes ) [nodes release];
++    if ( root ) [root release];
++    if ( down ) [down release];
++    if ( up ) [up release];
++    if ( eof ) [eof release];
++	[super dealloc];
++}
++
+- (id) copyWithZone:(NSZone *)aZone
+{
+ANTLRBufferedTreeNodeStream *copy;
+diff --git a/runtime/ObjC/Framework/ANTLRCommonErrorNode.h b/runtime/ObjC/Framework/ANTLRCommonErrorNode.h
+index 5060bd8..d01af00 100644
+--- a/runtime/ObjC/Framework/ANTLRCommonErrorNode.h
++++ b/runtime/ObjC/Framework/ANTLRCommonErrorNode.h
+@@ -52,6 +52,8 @@ ANTLRRecognitionException *trappedException;
+From:(id<ANTLRToken>)startToken
+To:(id<ANTLRToken>)stopToken
+Exception:(ANTLRRecognitionException *) e;
++
++- (void)dealloc;
+- (BOOL) isNil;
+
+- (NSInteger)type;
+diff --git a/runtime/ObjC/Framework/ANTLRCommonErrorNode.m b/runtime/ObjC/Framework/ANTLRCommonErrorNode.m
+index ffaaa00..17fec33 100644
+--- a/runtime/ObjC/Framework/ANTLRCommonErrorNode.m
++++ b/runtime/ObjC/Framework/ANTLRCommonErrorNode.m
+@@ -46,7 +46,8 @@
+
+- (id) init
+{
+-    if ((self = [super init]) != nil ) {
++    self = [super init];
++    if ( self != nil ) {
+}
+return self;
+}
+@@ -56,12 +57,13 @@
+To:(id<ANTLRToken>)aStopToken
+Exception:(ANTLRRecognitionException *) e
+{
+-    if ((self = [super init]) != nil ) {
+-    //System.out.println("aStartToken: "+aStartToken+", aStopToken: "+aStopToken);
+-    if ( aStopToken == nil ||
+-        ([aStopToken getTokenIndex] < [aStartToken getTokenIndex] &&
+-         aStopToken.type != ANTLRTokenTypeEOF) )
+-    {
++    self = [super init];
++    if ( self != nil ) {
++        //System.out.println("aStartToken: "+aStartToken+", aStopToken: "+aStopToken);
++        if ( aStopToken == nil ||
++            ([aStopToken getTokenIndex] < [aStartToken getTokenIndex] &&
++             aStopToken.type != ANTLRTokenTypeEOF) )
++        {
+// sometimes resync does not consume a token (when LT(1) is
+// in follow set.  So, aStopToken will be 1 to left to aStartToken. adjust.
+// Also handle case where aStartToken is the first token and no token
+@@ -69,13 +71,29 @@
+aStopToken = aStartToken;
+}
+input = anInput;
++        if ( input ) [input retain];
+startToken = aStartToken;
++        if ( startToken ) [startToken retain];
+stopToken = aStopToken;
++        if ( stopToken ) [stopToken retain];
+trappedException = e;
++        if ( trappedException ) [trappedException retain];
+}
+return self;
+}
+
++- (void)dealloc
++{
++#ifdef DEBUG_DEALLOC
++    NSLog( @"called dealloc in ANTLRCommonErrorNode" );
++#endif
++    if ( input ) [input release];
++    if ( startToken ) [startToken release];
++    if ( stopToken ) [stopToken release];
++    if ( trappedException ) [trappedException release];
++	[super dealloc];
++}
++
+- (BOOL) isNil
+{
+return NO;
+diff --git a/runtime/ObjC/Framework/ANTLRCommonToken.m b/runtime/ObjC/Framework/ANTLRCommonToken.m
+index 1e50231..b9ba3e1 100644
+--- a/runtime/ObjC/Framework/ANTLRCommonToken.m
++++ b/runtime/ObjC/Framework/ANTLRCommonToken.m
+@@ -100,34 +100,34 @@ static ANTLRCommonToken *INVALID_TOKEN;
+// return the singleton EOF Token
++ (id<ANTLRToken>) eofToken
+{
+-	if (EOF_TOKEN == nil) {
+-		EOF_TOKEN = [[ANTLRCommonToken newToken:ANTLRTokenTypeEOF Text:@"EOF"] retain];
+-	}
+-	return EOF_TOKEN;
++    if (EOF_TOKEN == nil) {
++        EOF_TOKEN = [[ANTLRCommonToken newToken:ANTLRTokenTypeEOF Text:@"EOF"] retain];
++    }
++    return EOF_TOKEN;
+}
+
+// return the singleton skip Token
++ (id<ANTLRToken>) skipToken
+{
+-	if (SKIP_TOKEN == nil) {
+-		SKIP_TOKEN = [[ANTLRCommonToken newToken:ANTLRTokenTypeInvalid Text:@"Skip"] retain];
+-	}
+-	return SKIP_TOKEN;
++    if (SKIP_TOKEN == nil) {
++        SKIP_TOKEN = [[ANTLRCommonToken newToken:ANTLRTokenTypeInvalid Text:@"Skip"] retain];
++    }
++    return SKIP_TOKEN;
+}
+
+// return the singleton skip Token
++ (id<ANTLRToken>) invalidToken
+{
+-	if (INVALID_TOKEN == nil) {
+-		INVALID_TOKEN = [[ANTLRCommonToken newToken:ANTLRTokenTypeInvalid Text:@"Invalid"] retain];
+-	}
+-	return SKIP_TOKEN;
++    if (INVALID_TOKEN == nil) {
++        INVALID_TOKEN = [[ANTLRCommonToken newToken:ANTLRTokenTypeInvalid Text:@"Invalid"] retain];
++    }
++    return SKIP_TOKEN;
+}
+
+// the default channel for this class of Tokens
++ (ANTLRTokenChannel) defaultChannel
+{
+-	return ANTLRTokenChannelDefault;
++    return ANTLRTokenChannelDefault;
+}
+
+- (id) init
+@@ -151,6 +151,7 @@ static ANTLRCommonToken *INVALID_TOKEN;
+{
+if ((self = [super init]) != nil) {
+input = anInput;
++        if ( input ) [input retain];
+type = aTType;
+channel = aChannel;
+startIndex = aStart;
+@@ -159,6 +160,7 @@ static ANTLRCommonToken *INVALID_TOKEN;
+text = @"EOF";
+else
+text = [input substringWithRange:NSMakeRange(startIndex, (stopIndex-startIndex)+1)];
++        if ( text ) [text retain];
+}
+return self;
+}
+@@ -167,35 +169,38 @@ static ANTLRCommonToken *INVALID_TOKEN;
+{
+if ((self = [super init]) != nil) {
+text = [NSString stringWithString:oldToken.text];
++        if ( text ) [text retain];
+type = oldToken.type;
+line = oldToken.line;
+index = oldToken.index;
+charPositionInLine = oldToken.charPositionInLine;
+channel = oldToken.channel;
+input = oldToken.input;
++        if ( input ) [input retain];
+if ( [oldToken isKindOfClass:[ANTLRCommonToken class]] ) {
+startIndex = oldToken.startIndex;
+stopIndex = oldToken.stopIndex;
+}
+}
+-	return self;
++    return self;
+}
+
+- (id) initWithType:(ANTLRTokenType)aTType
+{
+-	if ((self = [super init]) != nil) {
++    if ((self = [super init]) != nil) {
+self.type = aTType;
+-	}
+-	return self;
++    }
++    return self;
+}
+
+- (id) initWithType:(ANTLRTokenType)aTType Text:(NSString *)tokenText
+{
+-	if ((self = [super init]) != nil) {
++    if ((self = [super init]) != nil) {
+self.type = aTType;
+-        self.text = tokenText;
+-	}
+-	return self;
++        self.text = [NSString stringWithString:tokenText];
++        [text retain];
++    }
++    return self;
+}
+
+- (void)dealloc
+@@ -203,9 +208,9 @@ static ANTLRCommonToken *INVALID_TOKEN;
+#ifdef DEBUG_DEALLOC
+NSLog( @"called dealloc in ANTLRCommonToken" );
+#endif
+-    input = nil;
+-    [self setText:nil];
+-	[super dealloc];
++    if ( input ) [input release];
++    if ( text ) [text release];
++    [super dealloc];
+}
+
+// create a copy, including the text if available
+@@ -233,7 +238,7 @@ static ANTLRCommonToken *INVALID_TOKEN;
+//----------------------------------------------------------
+- (NSUInteger) charPositionInLine
+{
+-	return charPositionInLine;
++    return charPositionInLine;
+}
+
+- (void) setCharPositionInLine:(NSUInteger)aCharPositionInLine
+@@ -246,7 +251,7 @@ static ANTLRCommonToken *INVALID_TOKEN;
+//----------------------------------------------------------
+- (NSUInteger) line
+{
+-	return line;
++    return line;
+}
+
+- (void) setLine:(NSUInteger)aLine
+@@ -259,13 +264,13 @@ static ANTLRCommonToken *INVALID_TOKEN;
+//----------------------------------------------------------
+- (NSString *) text
+{
+-	if (text != nil) {
+-		return text;
+-	}
+-	if (input == nil) {
+-		return nil;
+-	}
+-	return [input substringWithRange:NSMakeRange(startIndex, (stopIndex-startIndex)+1)];
++    if (text != nil) {
++        return text;
++    }
++    if (input == nil) {
++        return nil;
++    }
++    return [input substringWithRange:NSMakeRange(startIndex, (stopIndex-startIndex)+1)];
+}
+
+- (void) setText:(NSString *)aText
+@@ -317,9 +322,9 @@ static ANTLRCommonToken *INVALID_TOKEN;
+{
+if (input != anInput) {
+if ( input ) [input release];
+-        input = anInput;
+-        [input retain];
++        [anInput retain];
+}
++    input = anInput;
+}
+
+
+@@ -373,15 +378,15 @@ static ANTLRCommonToken *INVALID_TOKEN;
+if ( channel > 0 ) {
+channelStr = [NSString stringWithFormat:@",channel=%d\n", channel];
+}
+-	if ([self text] != nil) {
+-		txtString = [NSMutableString stringWithString:[self text]];
+-		[txtString replaceOccurrencesOfString:@"\n" withString:@"\\\\n" options:NSAnchoredSearch range:NSMakeRange(0, [txtString length])];
+-		[txtString replaceOccurrencesOfString:@"\r" withString:@"\\\\r" options:NSAnchoredSearch range:NSMakeRange(0, [txtString length])];
+-		[txtString replaceOccurrencesOfString:@"\t" withString:@"\\\\t" options:NSAnchoredSearch range:NSMakeRange(0, [txtString length])];
+-	} else {
+-		txtString = [NSMutableString stringWithString:@"<no text>"];
++    if ([self text] != nil) {
++        txtString = [NSMutableString stringWithString:[self text]];
++        [txtString replaceOccurrencesOfString:@"\n" withString:@"\\\\n" options:NSAnchoredSearch range:NSMakeRange(0, [txtString length])];
++        [txtString replaceOccurrencesOfString:@"\r" withString:@"\\\\r" options:NSAnchoredSearch range:NSMakeRange(0, [txtString length])];
++        [txtString replaceOccurrencesOfString:@"\t" withString:@"\\\\t" options:NSAnchoredSearch range:NSMakeRange(0, [txtString length])];
++    } else {
++        txtString = [NSMutableString stringWithString:@"<no text>"];
+}
+-	return [NSString stringWithFormat:@"[@%d, %d:%d='%@',<%d>%@,%d:%d]", index, startIndex, stopIndex, txtString, type, channelStr, line, charPositionInLine];
++    return [NSString stringWithFormat:@"[@%d, %d:%d='%@',<%d>%@,%d:%d]", index, startIndex, stopIndex, txtString, type, channelStr, line, charPositionInLine];
+}
+
+- (NSString *)toString
+diff --git a/runtime/ObjC/Framework/ANTLRCommonTree.m b/runtime/ObjC/Framework/ANTLRCommonTree.m
+index 9b825b8..fc062f3 100644
+--- a/runtime/ObjC/Framework/ANTLRCommonTree.m
++++ b/runtime/ObjC/Framework/ANTLRCommonTree.m
+@@ -83,6 +83,7 @@
+self = (ANTLRCommonTree *)[super init];
+if ( self != nil ) {
+token = aNode.token;
++        if ( token ) [token retain];
+startIndex = aNode.startIndex;
+stopIndex = aNode.stopIndex;
+parent = nil;
+@@ -95,7 +96,8 @@
+{
+self = (ANTLRCommonTree *)[super init];
+if ( self != nil ) {
+-		token = [aToken retain];
++		token = aToken;
++        if ( token ) [token retain];
+startIndex = -1;
+stopIndex = -1;
+parent = nil;
+@@ -140,6 +142,10 @@
+[token release];
+token = nil;
+}
++    if ( parent ) {
++        [parent release];
++        parent = nil;
++    }
+[super dealloc];
+}
+
+@@ -171,7 +177,7 @@
+- (void) setToken:(ANTLRCommonToken *) aToken
+{
+if ( token != aToken ) {
+-		[token release];
++		if ( token ) [token release];
+token = [aToken retain];
+}
+}
+diff --git a/runtime/ObjC/Framework/ANTLRCommonTreeAdaptor.m b/runtime/ObjC/Framework/ANTLRCommonTreeAdaptor.m
+index 740a164..651a5d9 100644
+--- a/runtime/ObjC/Framework/ANTLRCommonTreeAdaptor.m
++++ b/runtime/ObjC/Framework/ANTLRCommonTreeAdaptor.m
+@@ -177,14 +177,14 @@
+{
+if ( t == nil )
+return nil;
+-    return [(id<ANTLRBaseTree>) t getChild:i];
++    return [(id<ANTLRBaseTree>)t getChild:i];
+}
+
+- (void) setChild:(id<ANTLRBaseTree>)t At:(NSInteger)i Child:(id<ANTLRBaseTree>)child
+{
+if ( t == nil )
+return;
+-    [(id<ANTLRBaseTree>) t setChild:i With:child];
++    [(id<ANTLRBaseTree>)t setChild:i With:child];
+}
+
+- (id) deleteChild:(id<ANTLRBaseTree>)t Index:(NSInteger)anIndex
+diff --git a/runtime/ObjC/Framework/ANTLRCommonTreeNodeStream.m b/runtime/ObjC/Framework/ANTLRCommonTreeNodeStream.m
+index 3f5340d..6ad86e4 100644
+--- a/runtime/ObjC/Framework/ANTLRCommonTreeNodeStream.m
++++ b/runtime/ObjC/Framework/ANTLRCommonTreeNodeStream.m
+@@ -55,7 +55,7 @@
+{
+if ((self = [super init]) != nil ) {
+navigationNodeEOF = [[adaptor createTree:ANTLRTokenTypeEOF Text:@"EOF"] retain]; // set EOF
+-        root = theTree;
++        root = [theTree retain];
+adaptor = [[ANTLRCommonTreeAdaptor newTreeAdaptor] retain];
+it = [[ANTLRTreeIterator newANTRLTreeIteratorWithAdaptor:adaptor andTree:root] retain];
+calls = [[ANTLRIntArray newArrayWithLen:INITIAL_CALL_STACK_SIZE] retain];
+@@ -71,7 +71,7 @@
+if ((self = [super init]) != nil ) {
+adaptor = [anAdaptor retain];
+navigationNodeEOF = [[adaptor createTree:ANTLRTokenTypeEOF Text:@"EOF"] retain]; // set EOF
+-        root = theTree;
++        root = [theTree retain];
+//    it = [root objectEnumerator];
+it = [[ANTLRTreeIterator newANTRLTreeIteratorWithAdaptor:adaptor andTree:root] retain];
+calls = [[ANTLRIntArray newArrayWithLen:INITIAL_CALL_STACK_SIZE] retain];
+@@ -154,6 +154,10 @@
+
+- (void) setTokenStream:(id<ANTLRTokenStream>)theTokens
+{
++    if ( tokens != theTokens ) {
++        if ( tokens ) [tokens release];
++        [theTokens retain];
++    }
+tokens = theTokens;
+}
+
+@@ -164,6 +168,10 @@
+
+- (void) setTreeAdaptor:(ANTLRCommonTreeAdaptor *) anAdaptor
+{
++    if ( adaptor != anAdaptor ) {
++        if ( adaptor ) [adaptor release];
++        [anAdaptor retain];
++    }
+adaptor = anAdaptor;
+}
+
+diff --git a/runtime/ObjC/Framework/ANTLRIntArray.m b/runtime/ObjC/Framework/ANTLRIntArray.m
+index f66ecc1..f715372 100644
+--- a/runtime/ObjC/Framework/ANTLRIntArray.m
++++ b/runtime/ObjC/Framework/ANTLRIntArray.m
+@@ -55,7 +55,7 @@
+self = [super init];
+if ( self != nil ) {
+BuffSize  = (ANTLR_INT_ARRAY_INITIAL_SIZE * (sizeof(NSInteger)/sizeof(id)));
+-        count == 0;
++        count = 0;
+idx = -1;
+buffer = [[NSMutableData dataWithLength:(NSUInteger)BuffSize * sizeof(id)] retain];
+intBuffer = (NSInteger *)[buffer mutableBytes];
+diff --git a/runtime/ObjC/Framework/ANTLRLexerState.h b/runtime/ObjC/Framework/ANTLRLexerState.h
+index 00475d3..7132a48 100644
+--- a/runtime/ObjC/Framework/ANTLRLexerState.h
++++ b/runtime/ObjC/Framework/ANTLRLexerState.h
+@@ -39,7 +39,7 @@
+- (NSUInteger) getTokenType;
+- (void) setTokenType:(unsigned int) theTokenType;
+
+-- (NSUInteger) getChannel;
++- (NSUInteger) channel;
+- (void) setChannel:(unsigned int) theChannel;
+
+- (NSUInteger) getTokenStartLine;
+diff --git a/runtime/ObjC/Framework/ANTLRParseTree.m b/runtime/ObjC/Framework/ANTLRParseTree.m
+index 4bc0a0e..8339640 100644
+--- a/runtime/ObjC/Framework/ANTLRParseTree.m
++++ b/runtime/ObjC/Framework/ANTLRParseTree.m
+@@ -143,4 +143,7 @@
+
+@synthesize payload;
+@synthesize hiddenTokens;
++@synthesize children;
++@synthesize anException;
++
+@end
+diff --git a/runtime/ObjC/Framework/ANTLRRecognitionException.m b/runtime/ObjC/Framework/ANTLRRecognitionException.m
+index 58496a3..0d0e11f 100644
+--- a/runtime/ObjC/Framework/ANTLRRecognitionException.m
++++ b/runtime/ObjC/Framework/ANTLRRecognitionException.m
+@@ -53,14 +53,16 @@
+
+- (id) init
+{
+-	if ((self = [super initWithName:@"Recognition Exception" reason:@"Recognition Exception" userInfo:nil]) != nil) {
++	self = [super initWithName:@"Recognition Exception" reason:@"Recognition Exception" userInfo:nil];
++	if ( self != nil ) {
+}
+return self;
+}
+
+- (id) initWithStream:(id<ANTLRIntStream>)anInputStream reason:(NSString *)aReason
+{
+-	if ((self = [super initWithName:NSStringFromClass([self class]) reason:aReason userInfo:nil]) != nil) {
++	self = [super initWithName:NSStringFromClass([self class]) reason:aReason userInfo:nil];
++	if ( self != nil ) {
+[self setStream:anInputStream];
+index = input.index;
+
+@@ -86,14 +88,16 @@
+
+- (id) initWithStream:(id<ANTLRIntStream>)anInputStream
+{
+-	if ((self = [super initWithName:NSStringFromClass([self class]) reason:@"Runtime Exception" userInfo:nil]) != nil) {
++	self = [super initWithName:NSStringFromClass([self class]) reason:@"Runtime Exception" userInfo:nil];
++	if ( self != nil ) {
+}
+return self;
+}
+
+- (id) initWithName:(NSString *)aName reason:(NSString *)aReason userInfo:(NSDictionary *)aUserInfo
+{
+-    if ((self = [super initWithName:(NSString *)aName reason:(NSString *)aReason userInfo:(NSDictionary *)aUserInfo]) != nil) {
++	self = [super initWithName:aName reason:aReason userInfo:aUserInfo];
++	if ( self != nil ) {
+}
+return self;
+}
+@@ -103,9 +107,9 @@
+#ifdef DEBUG_DEALLOC
+NSLog( @"called dealloc in ANTLRRecognitionException" );
+#endif
+-	[self setStream:nil];
+-	[self setToken:nil];
+-	[self setNode:nil];
++	if ( input ) [input release];
++	if ( token ) [token release];
++	if ( node ) [node release];
+[super dealloc];
+}
+
+@@ -150,9 +154,9 @@
+
+- (void) setStream: (id<ANTLRIntStream>) aStream
+{
+-    if (input != aStream) {
+-        [aStream retain];
++    if ( input != aStream ) {
+if ( input ) [input release];
++        if ( aStream ) [aStream retain];
+input = aStream;
+}
+}
+@@ -168,8 +172,8 @@
+- (void) setToken: (id<ANTLRToken>) aToken
+{
+if (token != aToken) {
+-        [aToken retain];
+if ( token ) [token release];
++        if ( aToken ) [aToken retain];
+token = aToken;
+}
+}
+@@ -185,8 +189,8 @@
+- (void) setNode: (id<ANTLRBaseTree>) aNode
+{
+if (node != aNode) {
+-        [aNode retain];
+if ( node ) [node release];
++        if ( aNode ) [aNode retain];
+node = aNode;
+}
+}
+diff --git a/runtime/ObjC/Framework/ANTLRRuntimeException.m b/runtime/ObjC/Framework/ANTLRRuntimeException.m
+index 77373eb..827fc43 100644
+--- a/runtime/ObjC/Framework/ANTLRRuntimeException.m
++++ b/runtime/ObjC/Framework/ANTLRRuntimeException.m
+@@ -243,6 +243,12 @@
+return self;
+}
+
++- (id) initWithName:(NSString *)aName reason:(NSString *)aReason userInfo:(NSDictionary *)aUserInfo
++{
++    self = [super initWithName:aName reason:aReason userInfo:aUserInfo];
++    return(self);
++}
++
+- (NSString *) description
+{
+return [self name];
+diff --git a/runtime/ObjC/Framework/ANTLRTokenRewriteStream.m b/runtime/ObjC/Framework/ANTLRTokenRewriteStream.m
+index 6106fb1..e94f885 100644
+--- a/runtime/ObjC/Framework/ANTLRTokenRewriteStream.m
++++ b/runtime/ObjC/Framework/ANTLRTokenRewriteStream.m
+@@ -111,7 +111,7 @@ extern NSInteger debug;
+- (NSInteger) execute:(NSMutableString *)buf
+{
+[buf appendString:text];
+-    if ( [[tokens objectAtIndex:rwIndex] type] != ANTLRTokenTypeEOF ) {
++    if ( ((ANTLRCommonToken *)[tokens objectAtIndex:rwIndex]).type != ANTLRTokenTypeEOF ) {
+[buf appendString:[[tokens objectAtIndex:rwIndex] text]];
+}
+return rwIndex+1;
+@@ -641,7 +641,7 @@ extern NSInteger debug;
+[m setObject:op atIndex:op.rwIndex];
+}
+//System.out.println("rwIndex to op: "+m);
+-    if (debug > 1) NSLog(@"rwIndex to  op %d\n", m);
++    if (debug > 1) NSLog(@"rwIndex to  op %d\n", (NSInteger)m);
+return m;
+}
+
+diff --git a/runtime/ObjC/Framework/ANTLRTreeIterator.h b/runtime/ObjC/Framework/ANTLRTreeIterator.h
+index 256f98b..b5cf8c3 100644
+--- a/runtime/ObjC/Framework/ANTLRTreeIterator.h
++++ b/runtime/ObjC/Framework/ANTLRTreeIterator.h
+@@ -37,17 +37,22 @@
+
+@interface ANTLRTreeIterator : NSObject
+{
++	BOOL firstTime;
+__strong id<ANTLRTreeAdaptor> adaptor;
+__strong id<ANTLRBaseTree> root;
+__strong id<ANTLRBaseTree> tree;
+-	BOOL firstTime;
++
++	__strong ANTLRFastQueue *nodes;
+__strong id<ANTLRBaseTree> up;
+__strong id<ANTLRBaseTree> down;
+__strong id<ANTLRBaseTree> eof;
+-
+-	__strong ANTLRFastQueue *nodes;
+}
+
++@property BOOL firstTime;
++@property(retain) id<ANTLRTreeAdaptor> adaptor;
++@property(retain) id<ANTLRBaseTree> root;
++@property(retain) id<ANTLRBaseTree> tree;
++@property(retain) ANTLRFastQueue *nodes;
+@property(retain, readwrite) id<ANTLRBaseTree> up;
+@property(retain, readwrite) id<ANTLRBaseTree> down;
+@property(retain, readwrite) id<ANTLRBaseTree> eof;
+@@ -64,9 +69,4 @@
+- (id) nextObject;
+- (NSArray *) allObjects;
+
+-@property (retain) id<ANTLRTreeAdaptor> adaptor;
+-@property (retain) id<ANTLRBaseTree> root;
+-@property (retain) id<ANTLRBaseTree> tree;
+-@property BOOL firstTime;
+-@property (retain) ANTLRFastQueue *nodes;
+@end
+diff --git a/runtime/ObjC/Framework/ANTLRTreeIterator.m b/runtime/ObjC/Framework/ANTLRTreeIterator.m
+index 0442002..7f76c3b 100644
+--- a/runtime/ObjC/Framework/ANTLRTreeIterator.m
++++ b/runtime/ObjC/Framework/ANTLRTreeIterator.m
+@@ -81,7 +81,22 @@
+return self;
+}
+
+--(void) reset
++- (void)dealloc
++{
++#ifdef DEBUG_DEALLOC
++    NSLog( @"called dealloc in ANTLRTreeIterator" );
++#endif
++    if ( adaptor ) [adaptor release];
++    if ( nodes ) [nodes release];
++    if ( tree && tree != eof ) [tree release];
++    if ( root && root != tree && root != eof ) [root release];
++    if ( down ) [down release];
++    if ( up ) [up release];
++    if ( eof ) [eof release];
++    [super dealloc];
++}
++
++- (void)reset
+{
+firstTime = YES;
+tree = root;
+@@ -110,7 +125,7 @@
+// is this the first time we are using this method?
+if ( firstTime ) {
+firstTime = NO;
+-		if ([adaptor getChildCount:tree] == 0) {
++		if ( [adaptor getChildCount:tree] == 0 ) {
+[nodes addObject:eof];
+return tree;
+}
+@@ -163,13 +178,14 @@
+@throw [ANTLRRuntimeException newException:@"ANTLRUnsupportedOperationException"];
+}
+
+-@synthesize up;
+-@synthesize down;
+-@synthesize eof;
+-
++@synthesize firstTime;
+@synthesize adaptor;
+@synthesize root;
+@synthesize tree;
+-@synthesize firstTime;
+@synthesize nodes;
++
++@synthesize up;
++@synthesize down;
++@synthesize eof;
++
+@end
+diff --git a/runtime/ObjC/Framework/ANTLRTreePatternLexer.h b/runtime/ObjC/Framework/ANTLRTreePatternLexer.h
+index 629365d..430bc83 100644
+--- a/runtime/ObjC/Framework/ANTLRTreePatternLexer.h
++++ b/runtime/ObjC/Framework/ANTLRTreePatternLexer.h
+@@ -60,7 +60,7 @@ NSInteger n;
+
+/** Set when token type is ID or ARG (name mimics Java's StreamTokenizer) */
+NSMutableData *sval;
+-char *data;
++__strong char *data;
+
+BOOL error;
+
+@@ -77,6 +77,8 @@ BOOL error;
++ (ANTLRTreePatternLexer *)newANTLRTreePatternLexer:(NSString *)aPattern;
+- (id) init;
+- (id) initWithPattern:(NSString *)aPattern;
++
++- (void) dealloc;
+- (NSInteger) nextToken;
+- (void) consume;
+- (NSString *)toString;
+diff --git a/runtime/ObjC/Framework/ANTLRTreePatternLexer.m b/runtime/ObjC/Framework/ANTLRTreePatternLexer.m
+index 454dce6..cdf969f 100644
+--- a/runtime/ObjC/Framework/ANTLRTreePatternLexer.m
++++ b/runtime/ObjC/Framework/ANTLRTreePatternLexer.m
+@@ -56,6 +56,7 @@
+data = [sval mutableBytes];
+pattern = @"";
+n = [pattern length];
++        if ( pattern ) [pattern retain];
+[self consume];
+}
+return self;
+@@ -69,13 +70,23 @@
+error = NO;
+sval = [[NSMutableData dataWithLength:1000] retain];
+data = [sval mutableBytes];
+-        pattern = aPattern;
++        pattern = [aPattern retain];
+n = [pattern length];
+[self consume];
+}
+return self;
+}
+
++- (void) dealloc
++{
++#ifdef DEBUG_DEALLOC
++    NSLog( @"called dealloc in ANTLRTreePatternLexer" );
++#endif
++	if ( pattern ) [pattern release];
++	if ( sval ) [sval release];
++	[super dealloc];
++}
++
+- (NSInteger) nextToken
+{
+n = 0; // reset, but reuse buffer
+@@ -170,7 +181,11 @@
+
+- (void)setSval:(NSMutableData *)aSval
+{
+-    sval = [aSval retain];
++    if ( sval != aSval ) {
++        if ( sval ) [sval release];
++        [aSval retain];
++    }
++    sval = aSval;
+}
+
+@end
+diff --git a/runtime/ObjC/Framework/ANTLRTreePatternParser.h b/runtime/ObjC/Framework/ANTLRTreePatternParser.h
+index f3f82b6..2051b5e 100644
+--- a/runtime/ObjC/Framework/ANTLRTreePatternParser.h
++++ b/runtime/ObjC/Framework/ANTLRTreePatternParser.h
+@@ -50,6 +50,8 @@ id<ANTLRTreeAdaptor> adaptor;
+- (id) initWithTokenizer:(ANTLRTreePatternLexer *)tokenizer
+Wizard:(ANTLRTreeWizard *)aWizard
+Adaptor:(id<ANTLRTreeAdaptor>)anAdaptor;
++
++- (void) dealloc;
+- (id<ANTLRBaseTree>) pattern;
+- (id<ANTLRBaseTree>) parseTree;
+- (id<ANTLRBaseTree>) parseNode;
+diff --git a/runtime/ObjC/Framework/ANTLRTreePatternParser.m b/runtime/ObjC/Framework/ANTLRTreePatternParser.m
+index e421fc2..c95d995 100644
+--- a/runtime/ObjC/Framework/ANTLRTreePatternParser.m
++++ b/runtime/ObjC/Framework/ANTLRTreePatternParser.m
+@@ -57,14 +57,28 @@
+Adaptor:(id<ANTLRTreeAdaptor>)anAdaptor
+{
+if ((self = [super init]) != nil) {
++        adaptor = anAdaptor;
++        if ( adaptor ) [adaptor retain];
+tokenizer = aTokenizer;
++        if ( tokenizer ) [tokenizer retain];
+wizard = aWizard;
+-        adaptor = anAdaptor;
++        if ( wizard ) [wizard retain];
+ttype = [aTokenizer nextToken]; // kickstart
+}
+return self;
+}
+
++- (void) dealloc
++{
++#ifdef DEBUG_DEALLOC
++    NSLog( @"called dealloc in ANTLRTreePatternParser" );
++#endif
++	if ( adaptor ) [adaptor release];
++	if ( tokenizer ) [tokenizer release];
++	if ( wizard ) [wizard release];
++	[super dealloc];
++}
++
+- (id<ANTLRBaseTree>)pattern
+{
+if ( ttype==ANTLRLexerTokenTypeBEGIN ) {
+diff --git a/runtime/ObjC/Framework/ANTLRTreeRewriter.m b/runtime/ObjC/Framework/ANTLRTreeRewriter.m
+index 058c0b8..8495436 100644
+--- a/runtime/ObjC/Framework/ANTLRTreeRewriter.m
++++ b/runtime/ObjC/Framework/ANTLRTreeRewriter.m
+@@ -82,9 +82,11 @@
+
+if ((self = [super initWithStream:anInput]) != nil) {
+showTransformations = NO;
+-        state = [ANTLRRecognizerSharedState newANTLRRecognizerSharedState];
++        state = [[ANTLRRecognizerSharedState newANTLRRecognizerSharedState] retain];
+originalAdaptor = [input getTreeAdaptor];
++        if ( originalAdaptor ) [originalAdaptor retain];
+originalTokenStream = [input getTokenStream];
++        if ( originalTokenStream ) [originalTokenStream retain];
+aRuleSel = @selector(topdown);
+topdown_fptr = [ANTLRfptr newANTLRfptrWithRule:(SEL)aRuleSel withObject:self];
+aRuleSel = @selector(bottomup);
+@@ -100,8 +102,11 @@
+if ((self = [super initWithStream:anInput]) != nil) {
+showTransformations = NO;
+state = aState;
++        if ( state ) [state retain];
+originalAdaptor = [input getTreeAdaptor];
++        if ( originalAdaptor ) [originalAdaptor retain];
+originalTokenStream = [input getTokenStream];
++        if ( originalTokenStream ) [originalTokenStream retain];
+aRuleSel = @selector(topdown);
+topdown_fptr = [ANTLRfptr newANTLRfptrWithRule:(SEL)aRuleSel withObject:self];
+aRuleSel = @selector(bottomup);
+@@ -110,6 +115,17 @@
+return self;
+}
+
++- (void) dealloc
++{
++#ifdef DEBUG_DEALLOC
++    NSLog( @"called dealloc in ANTLRTreeRewriter" );
++#endif
++	if ( state ) [state release];
++	if ( originalAdaptor ) [originalAdaptor release];
++	if ( originalTokenStream ) [originalTokenStream release];
++	[super dealloc];
++}
++
+- (id) applyOnce:(ANTLRCommonTree *)t Rule:(ANTLRfptr *)whichRule
+{
+if ( t == nil ) return nil;
+diff --git a/runtime/ObjC/Framework/ANTLRTreeRuleReturnScope.h b/runtime/ObjC/Framework/ANTLRTreeRuleReturnScope.h
+index 22f4e8b..9937052 100644
+--- a/runtime/ObjC/Framework/ANTLRTreeRuleReturnScope.h
++++ b/runtime/ObjC/Framework/ANTLRTreeRuleReturnScope.h
+@@ -41,6 +41,9 @@
+
+/** First node or root node of tree matched for this rule. */
+
+++ (id) newReturnScope;
++- (id) init;
++- (void) dealloc;
+- (ANTLRCommonTree *)getStart;
+- (void)setStart:(ANTLRCommonTree *)aStart;
+
+diff --git a/runtime/ObjC/Framework/ANTLRTreeRuleReturnScope.m b/runtime/ObjC/Framework/ANTLRTreeRuleReturnScope.m
+index 9d90ef7..0043314 100644
+--- a/runtime/ObjC/Framework/ANTLRTreeRuleReturnScope.m
++++ b/runtime/ObjC/Framework/ANTLRTreeRuleReturnScope.m
+@@ -33,16 +33,40 @@
+
+
+@implementation ANTLRTreeRuleReturnScope
+-@synthesize startNode;
++@synthesize start;
++
+++ (id) newReturnScope
++{
++    return [[ANTLRTreeRuleReturnScope alloc] init];
++}
++
++- (id) init
++{
++    self = [super init];
++    return self;
++}
++
++- (void) dealloc
++{
++#ifdef DEBUG_DEALLOC
++    NSLog( @"called dealloc in ANTLRTreeRuleReturnScope" );
++#endif
++	if ( start ) [start release];
++	[super dealloc];
++}
+
+- (ANTLRCommonTree *)getStart
+{
+-    return startNode;
++    return start;
+}
+
+- (void)setStart:(ANTLRCommonTree *)aStart
+{
+-    startNode = aStart;
++    if ( start != aStart ) {
++        if ( start ) [start release];
++        [aStart retain];
++    }
++    start = aStart;
+}
+
+// create a copy, including the text if available
+@@ -50,7 +74,7 @@
+- (id) copyWithZone:(NSZone *)theZone
+{
+ANTLRTreeRuleReturnScope *copy = [super copyWithZone:theZone];
+-    copy.startNode = startNode;
++    copy.start = start;
+return copy;
+}
+
+diff --git a/runtime/ObjC/Framework/ANTLRTreeVisitor.m b/runtime/ObjC/Framework/ANTLRTreeVisitor.m
+index d710cc5..f500d6d 100644
+--- a/runtime/ObjC/Framework/ANTLRTreeVisitor.m
++++ b/runtime/ObjC/Framework/ANTLRTreeVisitor.m
+@@ -63,6 +63,9 @@
+
+- (void) dealloc
+{
++#ifdef DEBUG_DEALLOC
++    NSLog( @"called dealloc in ANTLRTreeVisitor" );
++#endif
+if ( adaptor ) [adaptor release];
+[super dealloc];
+}
+diff --git a/runtime/ObjC/Framework/ANTLRTreeWizard.h b/runtime/ObjC/Framework/ANTLRTreeWizard.h
+index 5a818d3..7a57c1e 100644
+--- a/runtime/ObjC/Framework/ANTLRTreeWizard.h
++++ b/runtime/ObjC/Framework/ANTLRTreeWizard.h
+@@ -89,13 +89,7 @@
+@interface ANTLRTreePatternTreeAdaptor : ANTLRCommonTreeAdaptor {
+}
++ (ANTLRTreePatternTreeAdaptor *)newTreeAdaptor;
+-#ifdef DONTUSENOMO
+-+ (ANTLRTreePatternTreeAdaptor *)newTreeAdaptor:(id<ANTLRToken>)payload;
+-#endif
+- (id) init;
+-#ifdef DONTUSENOMO
+-- initWithToken:(id<ANTLRToken>)payload;
+-#endif
+- (ANTLRCommonTree *)createTreePattern:(id<ANTLRToken>)payload;
+
+@end
+@@ -113,6 +107,7 @@
+- (id) initWithAdaptor:(id<ANTLRTreeAdaptor>)adaptor Map:(ANTLRMap *)tokenNameToTypeMap;
+- (id) initWithTokenNames:(NSArray *)theTokNams;
+- (id) initWithTokenNames:(id<ANTLRTreeAdaptor>)anAdaptor TokenNames:(NSArray *)theTokNams;
++- (void) dealloc;
+- (ANTLRMap *)computeTokenTypes:(NSArray *)theTokNams;
+- (NSInteger)getTokenType:(NSString *)tokenName;
+- (ANTLRMap *)index:(ANTLRCommonTree *)t;
+diff --git a/runtime/ObjC/Framework/ANTLRTreeWizard.m b/runtime/ObjC/Framework/ANTLRTreeWizard.m
+index 49fdfad..15165ec 100644
+--- a/runtime/ObjC/Framework/ANTLRTreeWizard.m
++++ b/runtime/ObjC/Framework/ANTLRTreeWizard.m
+@@ -45,13 +45,29 @@
+{
+if ((self = [super init]) != nil) {
+action = anAction;
++        if ( action ) [action retain];
+actor = anActor;
++        if ( actor ) [actor retain];
+object1 = anObject1;
++        if ( object1 ) [object1 retain];
+object2 = anObject2;
++        if ( object2 ) [object2 retain];
+}
+return self;
+}
+
++- (void) dealloc
++{
++#ifdef DEBUG_DEALLOC
++    NSLog( @"called dealloc in ANTLRVisitor" );
++#endif
++    if ( action ) [action release];
++    if ( actor ) [actor release];
++    if ( object1 ) [object1 release];
++    if ( object2 ) [object2 release];
++    [super dealloc];
++}
++
+- (void) visit:(ANTLRCommonTree *)t Parent:(ANTLRCommonTree *)parent ChildIndex:(NSInteger)childIndex Map:(ANTLRMap *)labels
+{
+switch (action) {
+@@ -98,11 +114,21 @@
+
+- (id) initWithToken:(id<ANTLRToken>)payload
+{
+-    if ((self = [super initWithToken:payload]) != nil ) {
++    self = [super initWithToken:payload];
++    if ( self != nil ) {
+}
+return (ANTLRCommonTree *)self;
+}
+
++- (void) dealloc
++{
++#ifdef DEBUG_DEALLOC
++    NSLog( @"called dealloc in ANTLRTreePattern" );
++#endif
++    if ( label ) [label release];
++    [super dealloc];
++}
++
+- (NSString *)toString
+{
+if ( label != nil ) {
+@@ -124,7 +150,8 @@
+
+- (id) initWithToken:(id<ANTLRToken>)payload
+{
+-    if ((self = [super initWithToken:payload]) != nil ) {
++    self = [super initWithToken:payload];
++    if ( self != nil ) {
+}
+return self;
+}
+@@ -139,29 +166,14 @@
+return [[ANTLRTreePatternTreeAdaptor alloc] init];
+}
+
+-#ifdef DONTUSENOMO
+-+ (ANTLRTreePatternTreeAdaptor *)newTreeAdaptor:(id<ANTLRToken>)payload
+-{
+-    return (ANTLRTreePatternTreeAdaptor *)[[ANTLRTreePatternTreeAdaptor alloc] initWithToken:payload];
+-}
+-#endif
+-
+- (id) init
+{
+-    if ((self = [super init]) != nil) {
++    self = [super init];
++    if ( self != nil ) {
+}
+return self;
+}
+
+-#ifdef DONTUSENOMO
+-- (id) initWithToken:(id<ANTLRToken>)payload
+-{
+-    if ((self = [super initWithToken:payload]) != nil) {
+-    }
+-    return self;
+-}
+-#endif
+-
+- (ANTLRCommonTree *)createTreePattern:(id<ANTLRToken>)payload
+{
+return (ANTLRCommonTree *)[super create:payload];
+@@ -223,6 +235,7 @@
+{
+if ((self = [super init]) != nil) {
+adaptor = anAdaptor;
++        if ( adaptor ) [adaptor retain];
+}
+return self;
+}
+@@ -231,6 +244,7 @@
+{
+if ((self = [super init]) != nil) {
+adaptor = anAdaptor;
++        if ( adaptor ) [adaptor retain];
+tokenNameToTypeMap = aTokenNameToTypeMap;
+}
+return self;
+@@ -242,7 +256,7 @@
+#pragma warning Fix initWithTokenNames.
+// adaptor = anAdaptor;
+//tokenNameToTypeMap = aTokenNameToTypeMap;
+-        tokenNameToTypeMap = [self computeTokenTypes:theTokNams];
++        tokenNameToTypeMap = [[self computeTokenTypes:theTokNams] retain];
+}
+return self;
+}
+@@ -251,12 +265,23 @@
+{
+if ((self = [super init]) != nil) {
+adaptor = anAdaptor;
++        if ( adaptor ) [adaptor retain];
+// tokenNameToTypeMap = aTokenNameToTypeMap;
+-        tokenNameToTypeMap = [self computeTokenTypes:theTokNams ];
++        tokenNameToTypeMap = [[self computeTokenTypes:theTokNams] retain];
+}
+return self;
+}
+
++- (void) dealloc
++{
++#ifdef DEBUG_DEALLOC
++    NSLog( @"called dealloc in ANTLRTreePatternTreeAdaptor" );
++#endif
++    if ( adaptor ) [adaptor release];
++    if ( tokenNameToTypeMap ) [tokenNameToTypeMap release];
++    [super dealloc];
++}
++
+/** Compute a Map<String, Integer> that is an inverted index of
+*  tokenNames (which maps int token types to names).
+*/
+diff --git a/runtime/ObjC/Framework/ANTLRUnbufferedTokenStream.m b/runtime/ObjC/Framework/ANTLRUnbufferedTokenStream.m
+index fe6dbb7..3b74e92 100644
+--- a/runtime/ObjC/Framework/ANTLRUnbufferedTokenStream.m
++++ b/runtime/ObjC/Framework/ANTLRUnbufferedTokenStream.m
+@@ -56,12 +56,22 @@
+{
+if ((self = [super init]) != nil) {
+tokenSource = aTokenSource;
++        if ( tokenSource ) [tokenSource retain];
+tokenIndex = 0;
+channel = ANTLRTokenChannelDefault;
+}
+return self;
+}
+
++- (void) dealloc
++{
++#ifdef DEBUG_DEALLOC
++    NSLog( @"called dealloc in ANTLRUnbufferedTokenStream" );
++#endif
++    if ( tokenSource ) [tokenSource release];
++    [super dealloc];
++}
++
+- (id<ANTLRToken>)nextElement
+{
+id<ANTLRToken> t = [tokenSource nextToken];
+diff --git a/runtime/ObjC/Framework/ANTLRUniqueIDMap.m b/runtime/ObjC/Framework/ANTLRUniqueIDMap.m
+index 7c6d98f..0d52092 100644
+--- a/runtime/ObjC/Framework/ANTLRUniqueIDMap.m
++++ b/runtime/ObjC/Framework/ANTLRUniqueIDMap.m
+@@ -73,6 +73,9 @@
+
+-(void)dealloc
+{
++#ifdef DEBUG_DEALLOC
++    NSLog( @"called dealloc in ANTLRUniqueIDMap" );
++#endif
+ANTLRNodeMapElement *tmp, *rtmp;
+NSInteger idx;
+
+@@ -82,7 +85,7 @@
+while ( tmp ) {
+rtmp = tmp;
+tmp = (ANTLRNodeMapElement *)tmp.fNext;
+-                [rtmp dealloc];
++                [rtmp release];
+}
+}
+}
+@@ -144,7 +147,7 @@
+{
+if ( np.fNext != nil )
+[self delete_chain:np.fNext];
+-	[np dealloc];
++	[np release];
+}
+
+- (id)getNode:(id<ANTLRBaseTree>)aNode
+@@ -170,7 +173,7 @@
+
+idx = [(id<ANTLRBaseTree>)aNode type];
+idx %= HASHSIZE;
+-    np = [ANTLRNodeMapElement newANTLRNodeMapElementWithIndex:anID Node:aNode];
++    np = [[ANTLRNodeMapElement newANTLRNodeMapElementWithIndex:anID Node:aNode] retain];
+np1 = ptrBuffer[idx];
+np.fNext = np1;
+ptrBuffer[idx] = np;
+

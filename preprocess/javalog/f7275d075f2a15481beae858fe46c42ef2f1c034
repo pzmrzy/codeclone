@@ -1,0 +1,136 @@
+commit f7275d075f2a15481beae858fe46c42ef2f1c034
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Sat Jul 30 11:26:12 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Sat Jul 30 11:26:12 2011 -0800
+
+(C# 2, 3) Automatically add the appropriate overridden methods for Topdown and Bottomup in tree filter parsers
+
+[git-p4: depot-paths = "//depot/code/antlr/antlr3-main/": change = 8955]
+
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/Composition/Reduce.g3 b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/Composition/Reduce.g3
+index 0ed570b..db61e42 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/Composition/Reduce.g3
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/Composition/Reduce.g3
+@@ -2,20 +2,14 @@
+
+options
+{
+-    tokenVocab=VecMath;
+-    ASTLabelType=CommonTree;
+-    output=AST;
+-    filter=true;
+-    language=CSharp3;
++	tokenVocab=VecMath;
++	ASTLabelType=CommonTree;
++	output=AST;
++	filter=true;
++	language=CSharp3;
+}
+
+-
+-@members
+-{
+-   //public override IAstRuleReturnScope Topdown() { return topdown(); }
+-   public override IAstRuleReturnScope Bottomup() { return bottomup(); }
+-}
+-
++@namespace{Antlr3.Runtime.Test.Composition}
+
+/** Rewrite: x+x to be 2*x, 2*x to be x<<1, x<<n<<m to be x<<(n+m) */
+bottomup
+diff --git a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/Composition/Simplify.g3 b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/Composition/Simplify.g3
+index fd1fded..f1c2550 100644
+--- a/runtime/CSharp3/Sources/Antlr3.Runtime.Test/Composition/Simplify.g3
++++ b/runtime/CSharp3/Sources/Antlr3.Runtime.Test/Composition/Simplify.g3
+@@ -9,12 +9,7 @@ options {
+//rewrite=true;
+}
+
+-@members
+-{
+-   public override IAstRuleReturnScope Topdown() { return topdown(); }
+-   public override IAstRuleReturnScope Bottomup() { return bottomup(); }
+-}
+-
++@namespace{Antlr3.Runtime.Test.Composition}
+
+topdown
+:   ^( MULT INT ^(VEC (e+=.)+) ) -> ^(VEC ^(MULT INT $e)+)
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/CSharp2.stg b/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/CSharp2.stg
+index 50d190d..d238caf 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/CSharp2.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/CSharp2/CSharp2.stg
+@@ -501,6 +501,24 @@ ruleBacktrackFailure() ::= <<
+<if(backtracking)>if (state.backtracking>0) {state.failed=true; <returnFromRule()>}<endif>
+>>
+
++ruleWrapperMap ::= [
++	"bottomup":{<ruleWrapperBottomup()>},
++	"topdown":{<ruleWrapperTopdown()>},
++	default:null
++]
++
++ruleWrapperBottomup() ::= <<
++<if(TREE_PARSER && filterMode)>
++public override IAstRuleReturnScope Bottomup() { return bottomup(); }
++<endif>
++>>
++
++ruleWrapperTopdown() ::= <<
++<if(TREE_PARSER && filterMode)>
++public override IAstRuleReturnScope Topdown() { return topdown(); }
++<endif>
++>>
++
+/** How to generate code for a rule.  This includes any return type
+*  data aggregates required for multiple return values.
+*/
+@@ -512,7 +530,7 @@ rule(ruleName,ruleDescriptor,block,emptyRule,description,exceptions,finally,memo
+protected virtual void EnterRule_<ruleName>() {}
+[Conditional("ANTLR_TRACE")]
+protected virtual void LeaveRule_<ruleName>() {}
+-
++<ruleWrapperMap.(ruleName)>
+// $ANTLR start "<ruleName>"
+// <fileName>:<description>
+[GrammarRule("<ruleName>")]
+diff --git a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg
+index 6ab1f1a..888c4ef 100644
+--- a/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg
++++ b/tool/src/main/resources/org/antlr/codegen/templates/CSharp3/CSharp3.stg
+@@ -482,6 +482,24 @@ ruleBacktrackFailure() ::= <<
+<if(backtracking)>if (state.backtracking>0) {state.failed=true; <returnFromRule()>}<endif>
+>>
+
++ruleWrapperMap ::= [
++	"bottomup":{<ruleWrapperBottomup()>},
++	"topdown":{<ruleWrapperTopdown()>},
++	default:null
++]
++
++ruleWrapperBottomup() ::= <<
++<if(TREE_PARSER && filterMode)>
++public override IAstRuleReturnScope Bottomup() { return bottomup(); }
++<endif>
++>>
++
++ruleWrapperTopdown() ::= <<
++<if(TREE_PARSER && filterMode)>
++public override IAstRuleReturnScope Topdown() { return topdown(); }
++<endif>
++>>
++
+/** How to generate code for a rule.  This includes any return type
+*  data aggregates required for multiple return values.
+*/
+@@ -490,7 +508,7 @@ rule(ruleName,ruleDescriptor,block,emptyRule,description,exceptions,finally,memo
+<returnScope(ruleDescriptor.returnScope)>
+partial void EnterRule_<ruleName>();
+partial void LeaveRule_<ruleName>();
+-
++<ruleWrapperMap.(ruleName)>
+// $ANTLR start "<ruleName>"
+// <fileName>:<description>
+[GrammarRule("<ruleName>")]
+

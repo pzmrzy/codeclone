@@ -1,0 +1,18 @@
+commit 423f7391a87a345b49d51a5e294d34d70d8c6ff6
+Author:     Douglas Campos <qmx@qmx.me>
+AuthorDate: Sun Sep 16 12:38:02 2012 -0300
+Commit:     Douglas Campos <qmx@qmx.me>
+CommitDate: Sun Sep 16 12:38:02 2012 -0300
+
+adding contributor sig as requested
+
+diff --git a/contributors.txt b/contributors.txt
+index 60c8b35..540c4d4 100644
+--- a/contributors.txt
++++ b/contributors.txt
+@@ -51,3 +51,4 @@ YYYY/MM/DD, github id, Full name, email
+2012/07/12, parrt, Terence Parr, parrt@antlr.org
+2012/08/08, Zannick, Benjamin S Wolf, jokeserver@gmail.com
+2012/09/15, martint, Martin Traverso, mtraverso@gmail.com
++2012/09/16, qmx, Douglas Campos, qmx@qmx.me
+

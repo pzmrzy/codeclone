@@ -1,0 +1,25 @@
+commit 7a1d59dd9758e3380d362fcdc127e41c5d13b61a
+Author:     sharwell <sharwell@pixelminegames.com>
+AuthorDate: Wed Feb 9 20:46:18 2011 -0800
+Commit:     sharwell <sharwell@pixelminegames.com>
+CommitDate: Wed Feb 9 20:46:18 2011 -0800
+
+(C# 3) Fix possible NullReferenceException
+
+[git-p4: depot-paths = "//depot/code/antlrcs/main/": change = 7661]
+
+diff --git a/Antlr4.StringTemplate/TemplateGroup.cs b/Antlr4.StringTemplate/TemplateGroup.cs
+index 36922cc..38ed5d7 100644
+--- a/Antlr4.StringTemplate/TemplateGroup.cs
++++ b/Antlr4.StringTemplate/TemplateGroup.cs
+@@ -711,6 +711,9 @@ namespace Antlr4.StringTemplate
+{
+get
+{
++                if (ErrorManager == null)
++                    return null;
++
+return ErrorManager.Listener;
+}
+
+
