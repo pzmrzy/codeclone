@@ -16,9 +16,9 @@ def ls(rootDir):
 dic = {}
 num = 0
 
-files = ls('csharplog')
+files = ls('javalog')
 for f in files:
-	if f == "csharplog/.DS_Store":
+	if f == "javalog/.DS_Store":
 		continue
 	fin = open(f)
 	cid = fin.readline().strip()
@@ -32,30 +32,32 @@ for f in files:
 	fname = ""
 	code = []
 	fcode = False
+	fat = False
 	while True:
-		
-		while (flag):
-			l = fin.readline()
-			if l[:10] == "diff --git":
-				fname = l
-				flag = False
-				break
-			elif l == '':
-				break
-			else:
-				comment.append(l)
-				continue
-
 		l = fin.readline()
-		
-		
 		if l[:10] == "diff --git":
+			fname = l.strip()
+			flag = False
+			continue
+		elif l == '':
+			break
+		else:
+			if flag:
+				if len(l.strip()) > 0:
+					comment.append(l.strip())
+				continue
+		
+		if (l[:3] == "@@ "):
+			fat = True
+			if len(code) == 0:
+				continue
 			dic[num] = {"cid":cid, "author":author, "authordate":authordate, "comment": comment, "fname": fname, "code":code}
 			code = []
 			num += 1
-			fname = l
 			continue
-		code.append(l)
+
+		if fat:
+			code.append(l.strip())
 		if l == '':
 			fin.close()
 			dic[num] = {"cid":cid, "author":author, "authordate":authordate, "comment": comment, "fname": fname, "code":code}
@@ -63,11 +65,13 @@ for f in files:
 			num += 1
 			
 			break
-print len(dic)
+	
+	
+#print len(dic)
 newdic = {}
 for key in dic:
 	if dic[key]["fname"].strip().split('.')[-1] == "cs":
 		newdic[key] = dic[key]
-print len(newdic)
+#print len(newdic)
 
 print json.dumps(newdic, sort_keys=True, indent=4, separators=(',', ': '))
