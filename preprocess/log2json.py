@@ -38,6 +38,7 @@ for f in files:
 		if l[:10] == "diff --git":
 			fname = l.strip()
 			flag = False
+			fat = False
 			continue
 		elif l == '':
 			break
