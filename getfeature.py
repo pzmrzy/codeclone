@@ -26,7 +26,7 @@ def getfname(fn):
 def getcommentbow(com):
     doc = []
     for l in com:
-        tmp = tokenizer.tokenize(l.strip())
+        tmp = tokenizer.tokenize(l.lower().strip())
         doc += tmp
     return tmp
 
@@ -65,4 +65,3 @@ for key in javadata:
     print tauthor
     print dat
     print comment
-    exit()
