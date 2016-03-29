@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -98,10 +99,21 @@ public class Main {
 			}
 		}
 		// System.out.println(diff.toJSONString());
-		FileWriter file = new FileWriter("D:/codeclone/preprocess/antlr3_csharp_new.json");
-		file.write(diff.toJSONString());
-		file.flush();
-		file.close();
+		PrintStream out = new PrintStream(new File("D:/codeclone/preprocess/antlr3_csharp_new.json"));
+		System.setOut(out);
+		System.out.println("{");
+		for(Object o : diff.entrySet()){
+			Entry entry = (Entry) o;
+			JSONObject val = (JSONObject) entry.getValue();
+			String key = (String) entry.getKey();
+			System.out.println(key + " : " + val.toJSONString() + ",");
+		}
+		System.out.println("}");
+		
+//		FileWriter file = new FileWriter("D:/codeclone/preprocess/antlr3_csharp_new.json");
+//		file.write(diff.toString());
+//		file.flush();
+//		file.close();
 //		System.out.println(diff.toJSONString());
 //		System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(diff.toJSONString()));
 	}
