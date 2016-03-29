@@ -64,46 +64,72 @@ def getcommentbow(com):
         doc += tmp
     return tmp
 
+def getcodebow(cod):
+    tmp = []
+    for w in cod.strip().split(' '):
+        if not (w == ''):
+            tmp.append(w)
+    return tmp
+
 def trainbow(docs):
     dictionary = corpora.Dictionary(docs)
     return dictionary
 
-with open('./preprocess/antlr3_java.json') as data_file:
+with open('./preprocess/antlr3_java_pretty.json') as data_file:
     javadata = dict(json.load(data_file))
 
-with open('./preprocess/antlr3_csharp.json') as data_file:
+with open('./preprocess/antlr3_csharp_pretty.json') as data_file:
     csdata = dict(json.load(data_file))
 
 feature = {}
 author = []
 docs = []
+codedocs = []
 
 for key in javadata:
+    #print javadata[key]['fname']
+    try:
+        codedocs.append(getcodebow(javadata[key]['token_stream']))
+    except:
+        continue
     author.append(getauthor(javadata[key]['author']))
     docs.append(getcommentbow(javadata[key]['comment']))
 
 for key in csdata:
+    try:
+        codedocs.append(getcodebow(csdata[key]['token_stream']))
+    except:
+        continue
     author.append(getauthor(csdata[key]['author']))
     docs.append(getcommentbow(csdata[key]['comment']))
 
 author = list(set(author))
 dictionary = trainbow(docs)
+codedictionary = trainbow(codedocs)
 
 dic = {}
 for key in javadata:
+    try:
+        code = codedictionary.doc2bow(getcodebow(javadata[key]['token_stream']))
+    except:
+        continue
     tauthor = getauthor(javadata[key]['author'])
     timestamp = getdate(javadata[key]['authordate'])
     fname = getfname(javadata[key]['fname'])
     comment = dictionary.doc2bow(getcommentbow(javadata[key]['comment']))
     tkey = 'java_'+key
-    dic[tkey] = {'author':tauthor, 'timestamp':timestamp, 'fname':fname, 'comment':comment}
+    dic[tkey] = {'author':tauthor, 'timestamp':timestamp, 'fname':fname, 'comment':comment, 'code':code}
 
 for key in csdata:
+    try:
+        code = codedictionary.doc2bow(getcodebow(csdata[key]['token_stream']))
+    except:
+        continue
     tauthor = getauthor(csdata[key]['author'])
     timestamp = getdate(csdata[key]['authordate'])
     fname = getfname(csdata[key]['fname'])
     comment = dictionary.doc2bow(getcommentbow(csdata[key]['comment']))
     tkey = 'cs_'+key
-    dic[tkey] = {'author':tauthor, 'timestamp':timestamp, 'fname':fname, 'comment':comment}
+    dic[tkey] = {'author':tauthor, 'timestamp':timestamp, 'fname':fname, 'comment':comment, 'code':code}
 
 print json.dumps(dic, sort_keys=True, indent=4, separators=(',', ': '))

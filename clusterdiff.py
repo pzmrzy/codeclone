@@ -30,7 +30,8 @@ def dist(v1, v2):
         audf = 1
     fndf = int(editdistance.eval(v1[3], v2[3]))
     comdf = L1dis(v1[1], v2[1])
-    return timedf + audf + fndf + comdf
+    codedf = L1dis(v1[5], v2[5])
+    return timedf + audf + fndf + comdf + codedf
 
 with open('feature.json') as data_file:
     jsdata = dict(json.load(data_file))
@@ -42,16 +43,16 @@ for key in jsdata:
     ts = jsdata[key]['timestamp']
     fname = jsdata[key]['fname']
     author = jsdata[key]['author']
-    data.append([key, comment, ts, fname, author])
+    code = jsdata[key]['code']
+    data.append([key, comment, ts, fname, author, code])
     k += 1
-print len(data)
 
 for u in data:
     tmp = []
     for v in data:
         tmp.append(dist(u, v))
     datanum.append(tmp)
-print '--'
+
 npdata = np.array(datanum, dtype=float)
 
 db = DBSCAN(eps=5, min_samples=1, metric = 'precomputed', algorithm = 'auto').fit(npdata)
