@@ -18,6 +18,8 @@ import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.json.simple.JSONArray;
 import org.json.simple.parser.ParseException;
 
+import com.google.gson.GsonBuilder;
+
 import xiao.clone.detect.util.Token;
 import xiao.clone.detect.util.Tokenizer;
 
@@ -98,5 +100,9 @@ public class Main {
 		// System.out.println(diff.toJSONString());
 		FileWriter file = new FileWriter("D:/codeclone/preprocess/antlr3_csharp_new.json");
 		file.write(diff.toJSONString());
+		file.flush();
+		file.close();
+//		System.out.println(diff.toJSONString());
+//		System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(diff.toJSONString()));
 	}
 }

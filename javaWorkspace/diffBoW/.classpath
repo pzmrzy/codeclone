@@ -12,5 +12,6 @@
 	<classpathentry kind="lib" path="D:/app/eclipse/plugins/org.eclipse.jdt.core_3.11.2.v20160128-0629.jar" sourcepath="C:/Users/xcheng/Downloads/eclipse.jdt.core-master.zip"/>
 	<classpathentry kind="lib" path="D:/app/eclipse/plugins/org.eclipse.osgi_3.10.102.v20160118-1700.jar"/>
 	<classpathentry kind="lib" path="D:/app/eclipse/plugins/org.eclipse.text_3.5.400.v20150505-1044.jar"/>
+	<classpathentry kind="lib" path="lib/gson-2.6.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
