@@ -50,18 +50,26 @@ for key in javadata:
 
 for key in csdata:
     author.append(getauthor(csdata[key]['author']))
-    docs.append(getcommentbow(javadata[key]['comment']))
+    docs.append(getcommentbow(csdata[key]['comment']))
 
 author = list(set(author))
 dictionary = trainbow(docs)
 
+dic = {}
 for key in javadata:
     tauthor = getauthor(javadata[key]['author'])
     dat = getdate(javadata[key]['authordate'])
     fname = getfname(javadata[key]['fname'])
     comment = dictionary.doc2bow(getcommentbow(javadata[key]['comment']))
+    tkey = 'java_'+key
+    dic[tkey] = {'author':tauthor, 'week':dat[0], 'year':dat[1], 'month':dat[2], 'day':dat[3], 'hout':dat[4], 'comment':comment}
 
-    print key
-    print tauthor
-    print dat
-    print comment
+for key in csdata:
+    tauthor = getauthor(csdata[key]['author'])
+    dat = getdate(csdata[key]['authordate'])
+    fname = getfname(csdata[key]['fname'])
+    comment = dictionary.doc2bow(getcommentbow(csdata[key]['comment']))
+    tkey = 'cs_'+key
+    dic[tkey] = {'author':tauthor, 'week':dat[0], 'year':dat[1], 'month':dat[2], 'day':dat[3], 'hout':dat[4], 'comment':comment}
+
+print json.dumps(dic, sort_keys=True, indent=4, separators=(',', ': '))
