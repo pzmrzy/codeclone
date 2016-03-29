@@ -3,6 +3,8 @@ import json
 from nltk.tokenize import RegexpTokenizer
 from gensim import corpora
 import re
+import time
+import datetime
 
 REauthor = re.compile(r'<(.*?)>')
 REdate = re.compile(r'AuthorDate: (.*?) (.*?) (.*?) (.*?):(.*?):(.*?) (.*?) (.*?)')
@@ -12,13 +14,45 @@ def getauthor(aut):
     return re.findall(REauthor, aut)[0]
 
 def getdate(dat):
+    def ch(s):
+        if s == 'Jan':
+            return 1
+        elif s == 'Feb':
+            return 2
+        elif s == 'Mar':
+            return 3
+        elif s == 'Apr':
+            return 4
+        elif s == 'May':
+            return 5
+        elif s == 'Jun':
+            return 6
+        elif s == 'Jul':
+            return 7
+        elif s == 'Aug':
+            return 8
+        elif s == 'Sep':
+            return 9
+        elif s == 'Oct':
+            return 10
+        elif s == 'Nov':
+            return 11
+        elif s == 'Dec':
+            return 12
+        else:
+            return 'false'
+
     tmp = re.findall(REdate, dat)[0]
     date = tmp[0]
-    month = tmp[1]
-    day = tmp[2]
-    hour = tmp[3]
-    year = tmp[6]
-    return (date, year, month, day, hour)
+    month = ch(tmp[1])
+    day = int(tmp[2])
+    hour = int(tmp[3])
+    minute = int(tmp[4])
+    second = int(tmp[5])
+    year = int(tmp[6])
+    dt = datetime.datetime(year, month, day, hour, minute, second)
+    ts = time.mktime(dt.timetuple())
+    return int(ts)
 
 def getfname(fn):
     return fn.split('/')[-1].split('.')[0]
@@ -58,18 +92,18 @@ dictionary = trainbow(docs)
 dic = {}
 for key in javadata:
     tauthor = getauthor(javadata[key]['author'])
-    dat = getdate(javadata[key]['authordate'])
+    timestamp = getdate(javadata[key]['authordate'])
     fname = getfname(javadata[key]['fname'])
     comment = dictionary.doc2bow(getcommentbow(javadata[key]['comment']))
     tkey = 'java_'+key
-    dic[tkey] = {'author':tauthor, 'week':dat[0], 'year':dat[1], 'month':dat[2], 'day':dat[3], 'hout':dat[4], 'comment':comment}
+    dic[tkey] = {'author':tauthor, 'timestamp':timestamp, 'fname':fname, 'comment':comment}
 
 for key in csdata:
     tauthor = getauthor(csdata[key]['author'])
-    dat = getdate(csdata[key]['authordate'])
+    timestamp = getdate(csdata[key]['authordate'])
     fname = getfname(csdata[key]['fname'])
     comment = dictionary.doc2bow(getcommentbow(csdata[key]['comment']))
     tkey = 'cs_'+key
-    dic[tkey] = {'author':tauthor, 'week':dat[0], 'year':dat[1], 'month':dat[2], 'day':dat[3], 'hout':dat[4], 'comment':comment}
+    dic[tkey] = {'author':tauthor, 'timestamp':timestamp, 'fname':fname, 'comment':comment}
 
 print json.dumps(dic, sort_keys=True, indent=4, separators=(',', ': '))

@@ -36,6 +36,10 @@ for f in files:
 	while True:
 		l = fin.readline()
 		if l[:10] == "diff --git":
+			if len(code) > 0:
+				dic[num] = {"cid":cid, "author":author, "authordate":authordate, "comment": comment, "fname": fname, "code":code}
+				code = []
+				num += 1
 			fname = l.strip()
 			flag = False
 			fat = False
@@ -47,7 +51,7 @@ for f in files:
 				if len(l.strip()) > 0:
 					comment.append(l.strip())
 				continue
-		
+
 		if (l[:3] == "@@ "):
 			fat = True
 			if len(code) == 0:
@@ -64,14 +68,13 @@ for f in files:
 			dic[num] = {"cid":cid, "author":author, "authordate":authordate, "comment": comment, "fname": fname, "code":code}
 			code = []
 			num += 1
-			
 			break
-	
-	
+
+
 #print len(dic)
 newdic = {}
 for key in dic:
-	if dic[key]["fname"].strip().split('.')[-1] == "cs":
+	if dic[key]["fname"].strip().split('.')[-1] == "java":
 		newdic[key] = dic[key]
 #print len(newdic)
 
