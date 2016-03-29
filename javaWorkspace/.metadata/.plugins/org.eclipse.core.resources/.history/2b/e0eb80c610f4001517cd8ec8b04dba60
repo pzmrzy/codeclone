@@ -1,0 +1,5 @@
+package xiao.clone.detect.code;
+
+public class BagOfWords {
+
+}

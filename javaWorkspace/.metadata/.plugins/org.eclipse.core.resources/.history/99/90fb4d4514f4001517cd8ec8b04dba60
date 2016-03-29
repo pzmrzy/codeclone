@@ -1,0 +1,33 @@
+package xiao.clone.detect.code.diff;
+
+import org.json.simple.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+
+import org.json.simple.JSONArray;
+import org.json.simple.parser.ParseException;
+import org.json.simple.parser.JSONParser;
+
+public class BagOfWords {
+	
+	public static void main(String [] args) throws IOException{
+		String json = readFile(new File(".").getParent()+"\\preprocess\\antlr3_java.json");
+		System.out.println(json);
+	}
+	
+	public static String readFile(String fName) throws IOException{
+		String str = "";
+		File file = new File(fName);
+		BufferedReader reader = new BufferedReader(new FileReader(file));
+		String line = null;
+		while((line = reader.readLine()) != null){
+			str += line + '\n';
+		}
+		return str;
+	}
+
+}

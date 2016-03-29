@@ -1,0 +1,56 @@
+package xiao.clone.detect.code.diff;
+
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.StringTokenizer;
+
+public class Dictionary {
+	HashMap<String,Integer> word2Index =null;  
+    Hashtable<String,Integer> word2Count = null;  
+    void loadFromLocalFile(String path) throws IOException  
+    {  
+        word2Index = new HashMap<String,Integer>();  
+        word2Count = new Hashtable<String,Integer>();  
+        int index = 0;  
+        File file = new File(path);  
+        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file),"utf-8"));  
+        while(true)  
+        {  
+            String line=br.readLine();  
+            if(line == null)  
+                break;  
+            StringTokenizer tokenizer=new StringTokenizer(line," ");  
+            while(tokenizer.hasMoreElements())  
+            {  
+                String term=tokenizer.nextToken();  
+                if(word2Count.containsKey(term))  
+                {  
+                      
+                    int freq=word2Count.get(term)+1;  
+                    word2Count.put(term, freq);  
+                      
+                }  
+                else  
+                {  
+                    word2Count.put(term, 1);  
+                    word2Index.put(term, index++);  
+                }  
+            }  
+        }  
+        br.close();  
+    }  
+      
+    public HashMap<String,Integer> getWord2Index() throws Throwable  
+    {  
+        if(word2Index==null)  
+            throw new Exception("has not loaded file!");  
+        return word2Index;  
+    }  
+      
+    public static void main(String[] args)   
+    {  
+        // TODO Auto-generated method stub  
+  
+    }  
+  
+}

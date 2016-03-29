@@ -1,0 +1,14 @@
+package xiao.clone.detect.code.diff;
+
+import org.json.simple.JSONObject;
+import org.json.simple.JSONArray;
+import org.json.simple.parser.ParseException;
+import org.json.simple.parser.JSONParser;
+
+public class BagOfWords {
+	
+	public static void main(String [] args){
+		
+	}
+
+}

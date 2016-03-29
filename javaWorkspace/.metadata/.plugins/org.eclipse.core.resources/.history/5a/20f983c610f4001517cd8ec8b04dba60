@@ -1,0 +1,5 @@
+package xiao.clone.detect.util;
+
+public class JSONLoader {
+
+}
